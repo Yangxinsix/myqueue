@@ -5,9 +5,10 @@ from pathlib import Path
 
 from q2.utils import chdir
 from q2.job import Job, jobstates
+from q2.jobs import Jobs
 
 
-class Jobs:
+class Queue:
     def __init__(self, queue):
         self.queue = queue
         self.jobs = []
@@ -47,31 +48,6 @@ class Jobs:
                 if job.state == 'running' and j.queue == 'slurm':
                     ...  # check for timeout
 
-
-def find_setup_function(name='workflow.py', cache={}):
-    here = Path().cwd()
-    paths = []
-    while True:
-        if here in cache:
-            return cache[here]
-        paths.append(here)
-        filename = here / name
-        if filename.is_file():
-            dct = {}
-            with open(str(filename)) as f:
-                exec(compile(f.read(), str(filename), 'exec'), dct)
-            func = dct['setup']
-            break
-        parent = here.parent
-        if parent == here:
-            func = None
-            break
-        here = parent
-
-    for path in paths:
-        cache[path] = func
-
-    return func
 
 
 def main():
@@ -167,7 +143,7 @@ def main():
                        shell=True)
         return
 
-    jobs = JobList(args.dry_run)
+    jobs = Jobs(args.dry_run)
 
     # n = self.queue.maxjobs
     # print('Can only submit {n} jobs!  Use "-N number" to increase the '
