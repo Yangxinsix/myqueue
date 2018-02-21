@@ -2,45 +2,51 @@ import json
 import subprocess
 from pathlib import Path
 
-from ase.utils import Lock
-
 from q2.job import Job
+from q2.utils import lock, Lock
 
-
-def lock(method):
-    def m(self, *args, **kwargs):
-        print(method)
-        with self.lock:
-            print(method, 2)
-            return method(self, *args, **kwargs)
-    return m
 
 class LocalRunner:
     def __init__(self):
-        self.path = Path.home() / '.cmr/local.json'
-        if not self.path.is_file():
-            self.running = 0
-        else:
-            self.running = json.loads(self.path.read_text())['running']
+        self.fname = Path.home() / '.q2' / 'runner.json'
+        self.lock = Lock(self.fname.with_name('runner.json.lock'))
+        self.jobs = None
 
-        self.size = 1
+    @lock
+    def submit(self, jobs):
+        self.jobs += jobs
 
-    def full(self):
-        return self.running >= self.size
+    def _read(self) -> None:
+        self.jobs = []
 
-    def submit(self, job):
-        if not self.full():
-            self.run(job)
+        if not self.fname.is_file():
+            return
+
+        data = json.loads(self.fname.read_text())
+
+        for tpl in data['jobs']:
+            job = Job.fromtuple(tpl)
+            self.jobs.append(job)
+
+    def _write(self):
+        text = json.dumps({'jobs': [job.astuple()
+                                    for job in self.jobs]})
+        self.fname.write_text(text)
+
+    @lock
+    def kick(self):
+        for job in self.jobs:
+            if job.state == 'running':
+                return
 
     def run(self, job):
         cmd = job.command()
-        done = 'python3 -m c2dm.jobs.joblist done {}'.format(job.uid)
-        fail = 'python3 -m c2dm.jobs.joblist FAILED {}'.format(job.uid)
+        done = 'python3 -m q2.jobs done {}'.format(job.uid)
+        fail = 'python3 -m q2.jobs FAILED {}'.format(job.uid)
         cmd = '(({cmd} && {done}) || {fail})&'.format(cmd=cmd, done=done,
                                                       fail=fail)
         print(cmd)
         p = subprocess.run(cmd, shell=True)
-        print(p.pid)
         job.state = 'running'
         self.running += 1
         self.write()
@@ -49,34 +55,10 @@ class LocalRunner:
         text = json.dumps({'running': self.running})
         self.path.write_text(text)
 
-class JobList:
-    def __init__(self, size=1, dry_run=False, max_submit=100):
-        self.size = size
-        self.dry_run = dry_run
-        self.max_submit = max_submit
-
-        folder = self.fname = Path.home() / '.cmr'
-
-        if not folder.is_dir():
-            folder.mkdir()
-
-        self.fname = folder / 'queue.json'
         self.lock = Lock(self.fname.with_name('queue.json.lock'))
 
         self.running = 0
         self.nextid = 1
-
-    @lock
-    def submit(self, job):
-        jobs = self._read()
-        job.state = 'queued'
-        id = self.nextid
-        self.nextid += 1
-        job.jobid = id
-        jobs[id] = job
-        self._write(jobs)
-        self._step(jobs)
-        return id
 
     def _step(self, jobs: dict) -> None:
         if self.running >= self.size:

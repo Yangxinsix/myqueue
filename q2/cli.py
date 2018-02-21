@@ -3,9 +3,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from q2.utils import chdir
 from q2.job import Job, jobstates
 from q2.jobs import Jobs
+from q2.runner import get_runner
+from q2.utils import chdir
 
 
 class Queue:
@@ -138,6 +139,10 @@ def main():
 
     args = parser.parse_args()
 
+    if args.command is None:
+        parser.print_help()
+        return
+
     if args.command == 'list' and sys.stdout.isatty():
         # Pipe output through less:
         subprocess.run('python3 -m q2 ' +
@@ -167,13 +172,7 @@ def main():
         return
 
     if not args.dry_run:
-        if args.runner == 'local':
-            from q2.local import LocalRunner
-            runner = LocalRunner()
-        elif args.runner == 'slurm':
-            ...
-        else:
-            1 / 0
+        runner = get_runner(args.runner)
 
     if args.command == 'submit':
         for folder in args.folder:
@@ -182,6 +181,8 @@ def main():
                 print(job)
             else:
                 jobs.submit(job, runner)
+        if not args.dry_run:
+            runner.kick()
 
     elif args.command == 'reset':
         for folder in folders(args.folder):

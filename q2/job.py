@@ -7,15 +7,13 @@ module:func@1,2.3,txt
 
 """
 
+from pathlib import Path
+
 
 jobstates = ['todo', 'queued', 'running', 'done', 'FAILED', 'TIMEOUT']
 
 
-class JobsError(Exception):
-    pass
-
-
-class TooManyJobs(JobsError):
+class JobError(Exception):
     pass
 
 
@@ -76,6 +74,18 @@ class Job:
                 self.state,
                 self.queue,
                 self.flow)
+
+    @staticmethod
+    def fromtuple(tpl):
+        id, folder, name, deps, state, queue, flow = tpl
+        job = Job(name,
+                  deps=deps,
+                  folder=Path(folder),
+                  flow=flow,
+                  state=state,
+                  queue=queue)
+        job.id = id
+        return job
 
     def submit(self, queue):
         if self.state == 'todo':

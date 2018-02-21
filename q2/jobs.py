@@ -1,26 +1,10 @@
 import json
 from pathlib import Path
-from typing import Set
+from typing import Set, List
 
 from q2.job import Job
 from q2.runner import Runner
-from q2.utils import Lock
-
-
-def lock(method=None, readonly=False):
-    if method is None and readonly:
-        return lambda method: lock(method, True)
-
-    def m(self, *args, **kwargs):
-        print(method)
-        with self.lock:
-            print(method, 2)
-            self._read()
-            result = method(self, *args, **kwargs)
-            if not readonly:
-                self._write()
-            return result
-    return m
+from q2.utils import Lock, lock
 
 
 class Jobs:
@@ -37,8 +21,6 @@ class Jobs:
 
         self.jobs = None
 
-        self.runners = {}
-
     @lock(readonly=True)
     def list(self, states: Set[str]) -> None:
         for job in self.jobs:
@@ -46,10 +28,11 @@ class Jobs:
                 print(job)
 
     @lock
-    def submit(self, job: Job, runner: Runner) -> None:
-        job.state = 'queued'
-        job.id = runner.submit(job)
-        self.jobs[job.uid] = job
+    def submit(self, jobs: List[Job], runner: Runner) -> None:
+        for job in jobs:
+            job.state = 'queued'
+        runner.submit(jobs)
+        self.jobs += jobs
 
     @lock
     def update(self, state: str, uid: str) -> None:
@@ -81,26 +64,20 @@ class Jobs:
                     runner.run(job)
 
     def _read(self) -> None:
-        self.jobs = {}
+        self.jobs = []
 
         if not self.fname.is_file():
             return
 
         data = json.loads(self.fname.read_text())
 
-        for id, folder, name, deps, state, queue, flow in data['jobs']:
-            job = Job(name,
-                      deps=deps,
-                      folder=Path(folder),
-                      flow=flow,
-                      state=state,
-                      queue=queue)
-            job.jobid = id
-            self.jobs[job.uid] = job
+        for tpl in data['jobs']:
+            job = Job.fromtuple(tpl)
+            self.jobs.append(job)
 
     def _write(self):
         text = json.dumps({'jobs': [job.astuple()
-                                    for job in self.jobs.values]})
+                                    for job in self.jobs]})
         self.fname.write_text(text)
 
 

@@ -51,3 +51,19 @@ class Lock:
 
     def __exit__(self, type, value, tb):
         self.release()
+
+
+def lock(method=None, readonly=False):
+    if method is None and readonly:
+        return lambda method: lock(method, True)
+
+    def m(self, *args, **kwargs):
+        print(method)
+        with self.lock:
+            print(method, 2)
+            self._read()
+            result = method(self, *args, **kwargs)
+            if not readonly:
+                self._write()
+            return result
+    return m
