@@ -49,11 +49,13 @@ class Queue:
                     ...  # check for timeout
 
 
-
 def main():
     parser = argparse.ArgumentParser(
         prog='q2',
-        description='Submit jobs to queue.')
+        description='Manage jobs in queue.')
+
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-q', '--quiet', action='store_true')
 
     subparsers = parser.add_subparsers(dest='command')
 
@@ -76,7 +78,7 @@ def main():
         help=help)
     submit.add_argument('script')
     submit.add_argument(
-        '-r', '--resources',
+        '-R', '--resources',
         help='Examples: "8x1h", 8 cores for 1 hour. Use "m" for minutes, '
         '"h" for hours and "d" for days.')
     submit.add_argument(
@@ -127,7 +129,7 @@ def main():
         p.add_argument('-n', '--dry-run',
                        action='store_true',
                        help='Show what will happen before it happens.')
-        p.add_argument('-q', '--queue', default='slurm',
+        p.add_argument('-r', '--runner', default='slurm',
                        help='Which queue to use: slurm or local.  Default '
                        'is slurm.')
         p.add_argument('-N', '--number-of-jobs',
@@ -138,36 +140,48 @@ def main():
 
     if args.command == 'list' and sys.stdout.isatty():
         # Pipe output through less:
-        subprocess.run('python3 -m c2dm.tasks ' +
+        subprocess.run('python3 -m q2 ' +
                        ' '.join(sys.argv[1:]) + ' | less -FX',
                        shell=True)
         return
 
-    jobs = Jobs(args.dry_run)
+    verbosity = 1 - int(args.quiet) + int(args.verbose)
+
+    jobs = Jobs(verbosity)
+
+    states = set()
+    for s in args.states.split(','):
+        for state in jobstates:
+            if s == state or s == state[0]:
+                break
+        else:
+            raise ValueError('Unknown state: ' + s)
+        states.add(state)
 
     # n = self.queue.maxjobs
     # print('Can only submit {n} jobs!  Use "-N number" to increase the '
     #       'limit.'.format(n=n))
 
     if args.command == 'list':
-        states = set()
-        for s in args.states.split(','):
-            for state in jobstates:
-                if s == state or s == state[0]:
-                    break
-            else:
-                raise ValueError('Unknown state: ' + s)
-            states.add(state)
+        jobs.list(states)
+        return
 
-        for job in tasks.tasks:
-            if job.state in states:
-                print('{!s:20} {}'.format(folder, job))
+    if not args.dry_run:
+        if args.runner == 'local':
+            from q2.local import LocalRunner
+            runner = LocalRunner()
+        elif args.runner == 'slurm':
+            ...
+        else:
+            1 / 0
 
-    elif args.command == 'submit':
+    if args.command == 'submit':
         for folder in args.folder:
-            jobs.folder = folder
-            jobs.add(args.script)
-        jobs.submit()
+            job = Job(args.script, folder=folder)
+            if args.dry_run:
+                print(job)
+            else:
+                jobs.submit(job, runner)
 
     elif args.command == 'reset':
         for folder in folders(args.folder):

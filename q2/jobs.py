@@ -1,27 +1,33 @@
 import json
 from pathlib import Path
+from typing import Set
 
-from q2.utils import Lock
 from q2.job import Job
+from q2.runner import Runner
+from q2.utils import Lock
 
 
-def lock(method):
+def lock(method=None, readonly=False):
+    if method is None and readonly:
+        return lambda method: lock(method, True)
+
     def m(self, *args, **kwargs):
         print(method)
         with self.lock:
             print(method, 2)
             self._read()
             result = method(self, *args, **kwargs)
-            self._write()
+            if not readonly:
+                self._write()
             return result
     return m
 
 
-class JobList:
-    def __init__(self, dry_run=False):
-        self.dry_run = dry_run
+class Jobs:
+    def __init__(self, verbosity=1):
+        self.verbosity = verbosity
 
-        folder = self.fname = Path.home() / '.cmr'
+        folder = Path.home() / '.q2'
 
         if not folder.is_dir():
             folder.mkdir()
@@ -33,21 +39,17 @@ class JobList:
 
         self.runners = {}
 
-    def get_runner(self, name):
-        if name not in self.runners:
-            if name == 'local':
-                self.runners[name] = LocalRunner()
-            elif name == 'slurm':
-                ...
-        return self.runners[name]
+    @lock(readonly=True)
+    def list(self, states: Set[str]) -> None:
+        for job in self.jobs:
+            if job.state in states:
+                print(job)
 
     @lock
-    def submit(self, newjobs):
-        for job in newjobs:
-            job.state = 'queued'
-            runner = self.get_runner(job.queue)
-            job.jobid = runner.submit(job)
-            self.jobs.append(job)
+    def submit(self, job: Job, runner: Runner) -> None:
+        job.state = 'queued'
+        job.id = runner.submit(job)
+        self.jobs[job.uid] = job
 
     @lock
     def update(self, state: str, uid: str) -> None:
@@ -78,13 +80,14 @@ class JobList:
                 if ready:
                     runner.run(job)
 
-    def _read(self):
+    def _read(self) -> None:
+        self.jobs = {}
+
         if not self.fname.is_file():
-            return {}
+            return
 
         data = json.loads(self.fname.read_text())
 
-        self.jobs = {}
         for id, folder, name, deps, state, queue, flow in data['jobs']:
             job = Job(name,
                       deps=deps,
@@ -101,9 +104,7 @@ class JobList:
         self.fname.write_text(text)
 
 
-
-
 if __name__ == '__main__':
     import sys
     state, uname = sys.argv[1:3]
-    JobList().update(state, uname)
+    Jobs().update(state, uname)

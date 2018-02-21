@@ -2,6 +2,7 @@ import errno
 import os
 import time
 from contextlib import contextmanager
+from typing import IO, Union
 
 
 @contextmanager
@@ -12,7 +13,7 @@ def chdir(folder):
     os.chdir(dir)
 
 
-def opencew(filename):
+def opencew(filename: str) -> Union[IO[bytes], None]:
     """Create and open filename exclusively for writing.
 
     If master cpu gets exclusive write access to filename, a file
@@ -21,7 +22,7 @@ def opencew(filename):
     returned on all processors."""
 
     try:
-        fd = os.open(filename, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        fd = os.open(str(filename), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except OSError as ex:
         if ex.errno == errno.EEXIST:
             return None
@@ -32,24 +33,18 @@ def opencew(filename):
 
 
 class Lock:
-    def __init__(self, name='lock', world=None):
+    def __init__(self, name: str):
         self.name = str(name)
-
-        if world is None:
-            from ase.parallel import world
-        self.world = world
 
     def acquire(self):
         while True:
-            fd = opencew(self.name, self.world)
+            fd = opencew(self.name)
             if fd is not None:
                 break
             time.sleep(1.0)
 
     def release(self):
-        self.world.barrier()
-        if self.world.rank == 0:
-            os.remove(self.name)
+        os.remove(self.name)
 
     def __enter__(self):
         self.acquire()

@@ -3,8 +3,8 @@
 
 Put this in your .bashrc::
 
-    alias tasks="python3 -m c2dm.tasks"
-    complete -o default -C "python3 -m c2dm.tasks.complete" tasks
+    alias q2="python3 -m q2"
+    complete -o default -C "python3 -m q2.complete" q2
 
 """
 
