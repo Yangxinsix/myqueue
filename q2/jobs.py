@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Set, List
 
 from q2.job import Job
-from q2.runner import Runner
-from q2.utils import Lock, lock
+from q2.runner import Runner, get_runner
+from q2.utils import Lock, lock, f
 
 
 class Jobs:
@@ -29,39 +29,53 @@ class Jobs:
 
     @lock
     def submit(self, jobs: List[Job], runner: Runner) -> None:
+        self._read()
         for job in jobs:
             job.state = 'queued'
         runner.submit(jobs)
         self.jobs += jobs
+        self._write()
+        runner.kick()
 
     @lock
     def update(self, state: str, uid: str) -> None:
-        if state == 'done':
-            job = self.jobs.pop(uid)
-            for j in self.jobs.values():
-                if uid in j.deps:
-                    j.deps.remove(uid)
+        self._read()
+        for job in self.jobs:
+            if job.uid == uid:
+                break
+        else:
+            raise ValueError(f**'No such job: {uid}, {state}')
+
+        if state == 'running':
+            job.state = 'running'
+        elif state == 'done':
+            jobs = []
+            for j in self.jobs:
+                if j is not job:
+                    if uid in j.deps:
+                        j.deps.remove(uid)
+                    jobs.append(j)
+            self.jobs = jobs
         else:
             assert state == 'FAILED'
-            job = self.jobs[uid]
+            jobs = []
             job.state = 'FAILED'
-            self.jobs = {uid: j
-                         for uid, j in self.jobs.items()
-                         if uid not in j.deps}
+            for j in self.jobs:
+                if j is not job:
+                    if uid in j.deps:
+                        j.deps.remove(uid)
+                    j.state = 'CANCELED'
+                    jobs.append(j)
+            self.jobs = jobs
+
+        self._write()
 
         if job.runner == 'local':
-            # Process local queue:
-            runner = self.get_runner('local')
-            runner.running -= 1
-            runner.write()
-            for job in self.jobs:
-                if runner.full():
-                    break
-                ready = (not job.deps and
-                         job.state == 'queued' and
-                         job.queue == 'local')
-                if ready:
-                    runner.run(job)
+            if state != 'running':
+                # Process local queue:
+                runner = get_runner('local')
+                runner.update(uid, state)
+                runner.kick()
 
     def _read(self) -> None:
         self.jobs = []
@@ -83,5 +97,9 @@ class Jobs:
 
 if __name__ == '__main__':
     import sys
-    state, uname = sys.argv[1:3]
-    Jobs().update(state, uname)
+    uid, state = sys.argv[1:3]
+    jobs = Jobs()
+    try:
+        jobs.update(uid, state)
+    except Exception as x:
+        raise

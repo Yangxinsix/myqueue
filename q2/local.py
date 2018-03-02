@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 
 from q2.job import Job
-from q2.utils import lock, Lock
+from q2.utils import lock, Lock, f
 
 
 class LocalRunner:
@@ -14,11 +14,14 @@ class LocalRunner:
 
     @lock
     def submit(self, jobs):
+        self._read()
         self.jobs += jobs
+        self._write()
 
     def _read(self) -> None:
         self.jobs = []
 
+        print(self)
         if not self.fname.is_file():
             return
 
@@ -34,22 +37,55 @@ class LocalRunner:
         self.fname.write_text(text)
 
     @lock
+    def update(self, state: str, uid: str) -> None:
+        self._read()
+        for job in self.jobs:
+            if job.uid == uid:
+                break
+        else:
+            raise ValueError(f**'No such job: {uid}, {state}')
+
+        if state == 'done':
+            jobs = []
+            for j in self.jobs:
+                if j is not job:
+                    if uid in j.deps:
+                        j.deps.remove(uid)
+                    jobs.append(j)
+            self.jobs = jobs
+        else:
+            assert state == 'FAILED'
+            jobs = []
+            for j in self.jobs:
+                if j is not job and uid not in j.deps:
+                    jobs.append(j)
+            self.jobs = jobs
+
+        self._write()
+
+    @lock
     def kick(self):
+        self._read()
         for job in self.jobs:
             if job.state == 'running':
                 return
 
-    def run(self, job):
+        for job in self.jobs:
+            if job.state == 'queued' and not job.deps:
+                break
+        else:
+            return
+
+        self._run(job)
+        self._write()
+
+    def _run(self, job):
         cmd = job.command()
-        done = 'python3 -m q2.jobs done {}'.format(job.uid)
-        fail = 'python3 -m q2.jobs FAILED {}'.format(job.uid)
-        cmd = '(({cmd} && {done}) || {fail})&'.format(cmd=cmd, done=done,
-                                                      fail=fail)
-        print(cmd)
-        p = subprocess.run(cmd, shell=True)
+        msg = 'python3 -m q2.jobs {}'.format(job.uid)
+        cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)&'
+               .format(cmd=cmd, msg=msg))
+        subprocess.run(cmd, shell=True)
         job.state = 'running'
-        self.running += 1
-        self.write()
 
     def write(self):
         text = json.dumps({'running': self.running})
@@ -112,7 +148,7 @@ class LocalRunner:
     def read(self):
         return self._read()
 
-    def _read(self):
+    def _readdddd(self):
         if not self.fname.is_file():
             return {}
 
@@ -133,7 +169,7 @@ class LocalRunner:
 
         return jobs
 
-    def _write(self, jobs):
+    def _writeeee(self, jobs):
         text = json.dumps({'nextid': self.nextid,
                            'running': self.running,
                            'jobs': [job.astuple() for task in jobs.values()]})

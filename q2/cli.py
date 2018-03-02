@@ -175,14 +175,14 @@ def main():
         runner = get_runner(args.runner)
 
     if args.command == 'submit':
-        for folder in args.folder:
-            job = Job(args.script, folder=folder)
-            if args.dry_run:
-                print(job)
-            else:
-                jobs.submit(job, runner)
-        if not args.dry_run:
-            runner.kick()
+        newjobs = [Job(args.script, folder=folder)
+                   for folder in args.folder]
+        if args.dry_run:
+            print(newjobs)
+        else:
+            jobs.submit(newjobs, runner)
+        # if not args.dry_run:
+        #     runner.kick()
 
     elif args.command == 'reset':
         for folder in folders(args.folder):

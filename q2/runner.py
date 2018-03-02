@@ -7,7 +7,7 @@ def get_runner(name: str) -> Runner:
         from q2.local import LocalRunner
         return LocalRunner()
     if 'slurm'.startswith(name):
-        from q2.sluirml import SLURMRunner
+        from q2.slurm import SLURMRunner
         return SLURMRunner()
     else:
         1 / 0
