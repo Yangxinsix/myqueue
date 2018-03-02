@@ -58,6 +58,7 @@ class Lock:
 def lock(method):
     def m(self, *args, **kwargs):
         with self.lock:
+            print(method, args)
             return method(self, *args, **kwargs)
     return m
 

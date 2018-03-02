@@ -4,7 +4,7 @@ from typing import Set, List
 
 from q2.job import Job
 from q2.runner import Runner, get_runner
-from q2.utils import Lock, lock, f
+from q2.utils import Lock, lock
 
 
 class Jobs:
@@ -21,8 +21,9 @@ class Jobs:
 
         self.jobs = None
 
-    @lock(readonly=True)
+    @lock
     def list(self, states: Set[str]) -> None:
+        self._read()
         for job in self.jobs:
             if job.state in states:
                 print(job)
@@ -38,13 +39,13 @@ class Jobs:
         runner.kick()
 
     @lock
-    def update(self, state: str, uid: str) -> None:
+    def update(self, uid: str, state: str) -> None:
         self._read()
         for job in self.jobs:
             if job.uid == uid:
                 break
         else:
-            raise ValueError(f**'No such job: {uid}, {state}')
+            raise ValueError('No such job: {uid}, {state}')
 
         if state == 'running':
             job.state = 'running'
@@ -58,17 +59,17 @@ class Jobs:
             self.jobs = jobs
         else:
             assert state == 'FAILED'
-            jobs = []
             job.state = 'FAILED'
             for j in self.jobs:
                 if j is not job:
                     if uid in j.deps:
                         j.deps.remove(uid)
                     j.state = 'CANCELED'
-                    jobs.append(j)
-            self.jobs = jobs
 
         self._write()
+
+        if state != 'running':
+            job.remove_empty_output_files()
 
         if job.runner == 'local':
             if state != 'running':

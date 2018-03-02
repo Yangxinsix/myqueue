@@ -21,7 +21,6 @@ class LocalRunner:
     def _read(self) -> None:
         self.jobs = []
 
-        print(self)
         if not self.fname.is_file():
             return
 
@@ -37,7 +36,7 @@ class LocalRunner:
         self.fname.write_text(text)
 
     @lock
-    def update(self, state: str, uid: str) -> None:
+    def update(self, uid: str, state: str) -> None:
         self._read()
         for job in self.jobs:
             if job.uid == uid:
@@ -54,7 +53,7 @@ class LocalRunner:
                     jobs.append(j)
             self.jobs = jobs
         else:
-            assert state == 'FAILED'
+            assert state == 'FAILED', state
             jobs = []
             for j in self.jobs:
                 if j is not job and uid not in j.deps:
@@ -84,7 +83,8 @@ class LocalRunner:
         msg = 'python3 -m q2.jobs {}'.format(job.uid)
         cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)&'
                .format(cmd=cmd, msg=msg))
-        subprocess.run(cmd, shell=True)
+        p = subprocess.run(cmd, shell=True)
+        assert p.returncode == 0
         job.state = 'running'
 
     def write(self):
@@ -124,7 +124,7 @@ class LocalRunner:
         self._step(jobs)
 
     @lock
-    def update(self, state: str, id: int) -> None:
+    def updateeee(self, state: str, id: int) -> None:
         jobs = self._read()
         if state == 'done':
             job = jobs.pop(id)
@@ -147,37 +147,3 @@ class LocalRunner:
     @lock
     def read(self):
         return self._read()
-
-    def _readdddd(self):
-        if not self.fname.is_file():
-            return {}
-
-        data = json.loads(self.fname.read_text())
-
-        self.nextid = data['nextid']
-        self.running = data['running']
-
-        jobs = {}
-        for id, folder, name, deps, state, queue, flow in data['jobs']:
-            jobs[id] = Job(name,
-                            deps=deps,
-                            folder=Path(folder),
-                            flow=flow,
-                            state=state,
-                            queue=queue)
-            jobs[id].jobid = id
-
-        return jobs
-
-    def _writeeee(self, jobs):
-        text = json.dumps({'nextid': self.nextid,
-                           'running': self.running,
-                           'jobs': [job.astuple() for task in jobs.values()]})
-        self.fname.write_text(text)
-
-
-if __name__ == '__main__':
-    import sys
-    state = sys.argv[1]
-    id = int(sys.argv[2])
-    Queue().update(state, id)

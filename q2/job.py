@@ -10,7 +10,8 @@ module:func@1,2.3,txt
 from pathlib import Path
 
 
-jobstates = ['todo', 'queued', 'running', 'done', 'FAILED', 'TIMEOUT']
+jobstates = ['todo', 'queued', 'running', 'done',
+             'FAILED', 'CANCELED', 'TIMEOUT']
 
 
 class JobError(Exception):
@@ -26,7 +27,7 @@ def T(t):
 
 class Job:
     def __init__(self, name, deps=[], cores=None, time='1m', folder=None,
-                 flow=True, state='UNKNOWN', queue='local'):
+                 flow=True, state='UNKNOWN', runner='local'):
         name, _, resources = name.partition('@')
         if resources:
             assert cores is None and time is None
@@ -46,7 +47,7 @@ class Job:
         self.time = T(time)
         self.folder = folder
         self.flow = flow
-        self.queue = queue
+        self.runner = runner
 
         self.uid = str(folder) + ',' + name
 
@@ -59,10 +60,10 @@ class Job:
     def __str__(self):
         s = '{}:{}[{}],{},{}{}'.format(
             self.jobid,
-            self.uname,
+            self.uid,
             ','.join(str(id) for id in self.deps),
             self.state,
-            self.queue,
+            self.runner,
             '*' if self.flow else '')
         return s
 
@@ -72,37 +73,26 @@ class Job:
                 self.name,
                 self.deps,
                 self.state,
-                self.queue,
+                self.runner,
                 self.flow)
 
     @staticmethod
     def fromtuple(tpl):
-        id, folder, name, deps, state, queue, flow = tpl
+        id, folder, name, deps, state, runner, flow = tpl
         job = Job(name,
                   deps=deps,
                   folder=Path(folder),
                   flow=flow,
                   state=state,
-                  queue=queue)
+                  runner=runner)
         job.id = id
         return job
 
-    def submit(self, queue):
-        if self.state == 'todo':
-            ids = []
-            for dep in self.deps:
-                if dep.state in {'FAILED', 'TIMEOUT'}:
-                    return 0
-                id = dep.submit(queue)
-                if id:
-                    ids.append(id)
-
-            self.jobid = queue.submit(self, ids)
-            print('Submitted:', self, ids)
-            append(self.name, 'queued', self.jobid)
-            self.state = 'queued'
-
-        return self.jobid
+    def remove_empty_output_files(self):
+        for ext in ['.out', '.err']:
+            path = self.folder / (self.name + ext)
+            if path.is_file() and path.stat().st_size == 0:
+                path.unlink()
 
     def command(self):
         if self.script:
@@ -116,19 +106,6 @@ class Job:
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
 
-        cmd = ('cd {folder} && python3 {args} 2> {err} > {out}'
-               .format(folder=self.folder, args=args, err=err, out=out))
+        cmd = f'cd {self.folder} && python3 {args} 2> {err} > {out}'
 
         return cmd
-
-    def update(self, queue, queued):
-        if self.jobid not in queued:
-            if self.state == 'running':
-                if queue.timeout(self.name, self.jobid):
-                    self.state = 'TIMEOUT'
-                else:
-                    self.state = 'FAILED'
-            if self.state == 'queued':
-                self.state = 'todo'
-            self.jobid = 0
-
