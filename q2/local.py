@@ -1,19 +1,21 @@
 import json
 import subprocess
 from pathlib import Path
+from typing import List
 
 from q2.job import Job
 from q2.utils import lock, Lock, f
+from q2.runner import Runner
 
 
-class LocalRunner:
+class LocalRunner(Runner):
     def __init__(self):
         self.fname = Path.home() / '.q2' / 'runner.json'
         self.lock = Lock(self.fname.with_name('runner.json.lock'))
         self.jobs = None
 
     @lock
-    def submit(self, jobs):
+    def submit(self, jobs: List[Job]) -> None:
         self._read()
         self.jobs += jobs
         self._write()
@@ -63,7 +65,7 @@ class LocalRunner:
         self._write()
 
     @lock
-    def kick(self):
+    def kick(self) -> None:
         self._read()
         for job in self.jobs:
             if job.state == 'running':
@@ -86,64 +88,3 @@ class LocalRunner:
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         job.state = 'running'
-
-    def write(self):
-        text = json.dumps({'running': self.running})
-        self.path.write_text(text)
-
-        self.lock = Lock(self.fname.with_name('queue.json.lock'))
-
-        self.running = 0
-        self.nextid = 1
-
-    def _step(self, jobs: dict) -> None:
-        if self.running >= self.size:
-            return
-
-        for id in sorted(jobs):
-            job = jobs[id]
-            if (not job.deps and
-                job.state == 'queued' and
-                job.queue == 'local'):
-                break
-        else:
-            return
-
-        cmd = job.command()
-        done = 'python3 -m c2dm.jobs.queue done {}'.format(id)
-        fail = 'python3 -m c2dm.jobs.queue FAILED {}'.format(id)
-        cmd = '(({cmd} && {done}) || {fail})&'.format(cmd=cmd, done=done,
-                                                      fail=fail)
-        print(cmd)
-        subprocess.run(cmd, shell=True)
-
-        job.state = 'running'
-        self.running += 1
-        self._write(jobs)
-
-        self._step(jobs)
-
-    @lock
-    def updateeee(self, state: str, id: int) -> None:
-        jobs = self._read()
-        if state == 'done':
-            job = jobs.pop(id)
-            for t in jobs.values():
-                if id in t.deps:
-                    t.deps.remove(id)
-        else:
-            assert state == 'FAILED'
-            job = jobs[id]
-            job.state = 'FAILED'
-            jobs = {id: t for id, t in jobs.items() if id not in t.deps}
-
-        if job.queue == 'local':
-            self.running -= 1
-
-        self._write(jobs)
-
-        self._step(jobs)
-
-    @lock
-    def read(self):
-        return self._read()

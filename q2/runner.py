@@ -1,5 +1,16 @@
+from typing import List
+from q2.job import Job
+
+
 class Runner:
-    pass
+    def submit(self, jobs: List[Job]) -> None:
+        pass
+
+    def update(self, uid: str, state: str) -> None:
+        pass
+
+    def kick(self) -> None:
+        pass
 
 
 def get_runner(name: str) -> Runner:
@@ -10,4 +21,4 @@ def get_runner(name: str) -> Runner:
         from q2.slurm import SLURMRunner
         return SLURMRunner()
     else:
-        1 / 0
+        assert 0

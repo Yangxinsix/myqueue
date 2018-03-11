@@ -30,12 +30,11 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
             return None
         raise
     else:
-        fd = os.fdopen(fd, 'wb')
-        return fd
+        return os.fdopen(fd, 'wb')
 
 
 class Lock:
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = str(name)
 
     def acquire(self):
