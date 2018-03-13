@@ -13,17 +13,21 @@ class LocalRunner(Runner):
         self.fname = Path.home() / '.q2' / 'runner.json'
         self.lock = Lock(self.fname.with_name('runner.json.lock'))
         self.jobs = None
+        self.number = None
 
     @lock
     def submit(self, jobs: List[Job]) -> None:
         self._read()
-        self.jobs += jobs
+        for job in jobs:
+            self.number += 1
+            job.id = self.number
+            self.jobs.append(job)
         self._write()
 
     def _read(self) -> None:
-        self.jobs = []
-
         if not self.fname.is_file():
+            self.jobs = []
+            self.number = 0
             return
 
         data = json.loads(self.fname.read_text())
@@ -32,9 +36,12 @@ class LocalRunner(Runner):
             job = Job.fromtuple(tpl)
             self.jobs.append(job)
 
+        self.number = data['number']
+
     def _write(self):
         text = json.dumps({'jobs': [job.astuple()
-                                    for job in self.jobs]})
+                                    for job in self.jobs],
+                           'number': self.number})
         self.fname.write_text(text)
 
     @lock

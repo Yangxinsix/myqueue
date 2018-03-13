@@ -49,17 +49,19 @@ class Job:
         self.flow = flow
         self.runner = runner
 
-        self.uid = str(folder) + ',' + name
-
         # state is one of:
         # UNKNOWN, todo, queued, running, done, FAILED, TIMEOUT
         self.state = state
 
-        self.jobid = 0
+        self.id = None
+
+    @property
+    def uid(self):
+        return '{}:{}'.format(self.runner, self.id)
 
     def __str__(self):
         s = '{}:{}[{}],{},{}{}'.format(
-            self.jobid,
+            self.id,
             self.uid,
             ','.join(str(id) for id in self.deps),
             self.state,
@@ -68,7 +70,7 @@ class Job:
         return s
 
     def astuple(self):
-        return (self.jobid,
+        return (self.id,
                 str(self.folder),
                 self.name,
                 self.deps,
@@ -106,6 +108,7 @@ class Job:
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
 
-        cmd = f'cd {self.folder} && python3 {args} 2> {err} > {out}'
+        cmd = 'cd {} && python3 {} 2> {} > {}'.format(self.folder, args,
+                                                      err, out)
 
         return cmd
