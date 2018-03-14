@@ -16,6 +16,7 @@ def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
         args = rest.split('_')
 
     cmd, _, func = cmd.partition(':')
+
     if func:
         if type is not None and type != 'python-module':
             raise ValueError
@@ -32,7 +33,7 @@ def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
     if type == 'python-script':
         return PythonScript(cmd, args)
     if type == 'python-module':
-        return ShellCommand(cmd, func, args)
+        return PythonModule(cmd, args, func)
 
     raise ValueError
 

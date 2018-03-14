@@ -4,23 +4,25 @@ from pathlib import Path
 from typing import List
 
 from q2.job import Job
-from q2.utils import lock, Lock, f
 from q2.runner import Runner
 
 
 class LocalRunner(Runner):
     def __init__(self):
-        self.fname = Path.home() / '.q2' / 'runner.json'
-        self.lock = Lock(self.fname.with_name('runner.json.lock'))
+        self.fname = Path.home() / '.q2' / 'local.json'
         self.jobs = None
         self.number = None
 
-    @lock
-    def submit(self, jobs: List[Job]) -> None:
+    def submit(self, jobs: List[Job], dry_run: bool = False) -> None:
+        if dry_run:
+            for job in jobs:
+                print(job)
+            return
         self._read()
         for job in jobs:
             self.number += 1
             job.id = self.number
+            job.deps = [dep.id for dep in job.deps]
             self.jobs.append(job)
         self._write()
 
@@ -45,7 +47,6 @@ class LocalRunner(Runner):
                            'number': self.number})
         self.fname.write_text(text)
 
-    @lock
     def update(self, uid: str, state: str) -> None:
         self._read()
         for job in self.jobs:
@@ -72,7 +73,6 @@ class LocalRunner(Runner):
 
         self._write()
 
-    @lock
     def kick(self) -> None:
         self._read()
         for job in self.jobs:

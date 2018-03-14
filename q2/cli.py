@@ -6,48 +6,6 @@ from pathlib import Path
 from q2.job import Job, jobstates
 from q2.jobs import Jobs
 from q2.runner import get_runner
-from q2.utils import chdir
-
-
-class Queue:
-    def __init__(self, queue):
-        self.queue = queue
-        self.jobs = []
-        self.flags = set()
-        self.folder = None
-        self.done = set()
-
-    def add(self, name, resources=None, deps=[], cores=1, time='1m',
-            flow=False):
-        if resources is not None:
-            cores, time = resources.split('x')
-            cores = int(cores)
-
-        job = Job(name, deps, cores, time, self.folder, flow)
-
-        if name in self.done:
-            job.state = 'done'
-
-        self.jobs.append(task)
-
-        return job
-
-    def update(self):
-        jobs = self.queue.read()
-        map = {j.uname: j for j in jobs.values()}
-        for job in self.tasks:
-            if job.state != 'UNKNOWN':
-                assert job.state == 'done'
-                assert job.uname not in map
-                continue
-
-            j = map.get(job.uname)
-            if j is None:
-                job.state = 'todo'
-            else:
-                job.state = j.state
-                if job.state == 'running' and j.queue == 'slurm':
-                    ...  # check for timeout
 
 
 def main():
@@ -83,7 +41,7 @@ def main():
         help='Examples: "8x1h", 8 cores for 1 hour. Use "m" for minutes, '
         '"h" for hours and "d" for days.')
     submit.add_argument(
-        '-d', '--done')
+        '-d', '--dependencies')
 
     # flow command:
     help = 'Put available jobs in queue.'
@@ -99,6 +57,8 @@ def main():
     reset = subparsers.add_parser('reset',
                                   description=help,
                                   help=help)
+    reset.add_argument('-S', '--resubmit', action='store_true')
+    reset.add_argument('-i', '--id', type=int)
 
     # Cancel subcommand:
     help = 'Cancel job(s).'
@@ -107,7 +67,9 @@ def main():
         description=help,
         help=help)
 
-    default = ','.join(s[0] for s in jobstates)
+    default_states = {'list': 'qrFCT',
+                      'reset': 'FCT',
+                      'cancel': 'qr'}
 
     # Common options:
     for p in [list_, submit, workflow, reset, cancel]:
@@ -118,15 +80,24 @@ def main():
         p.add_argument('-f', '--filter',
                        help='Select only jobs named "TASK".')
 
-        p.add_argument(
-            '-s', '--states',
-            metavar='STATE1,STATE2,...',
-            default=default,
-            help='Comma-separated list of states to show. '
-            'Possible states: "{}".  First letter '
-            'also works: "-s F,T" (same as "-s FAILED,TIMEOUT"). '
-            'Default is "-s {}".'
-            .format('", "'.join(jobstates), default))
+        if p is list_:
+            default = default_states['list']
+        elif p is reset:
+            default = default_states['reset']
+
+        elif p is cancel:
+            default = default_states['cancel']
+        else:
+            default = ''
+
+        if default:
+            p.add_argument(
+                '-s', '--states',
+                metavar=default,
+                default=default,
+                help='States to show. First letters of "{}".'
+                .format('", "'.join(s for s in jobstates if s[0] in default)))
+
         p.add_argument('-n', '--dry-run',
                        action='store_true',
                        help='Show what will happen before it happens.')
@@ -154,56 +125,44 @@ def main():
 
     jobs = Jobs(verbosity)
 
-    states = set()
-    for s in args.states.split(','):
-        for state in jobstates:
-            if s == state or s == state[0]:
-                break
-        else:
-            raise ValueError('Unknown state: ' + s)
-        states.add(state)
+    if args.command in default_states:
+        states = set()
+        for s in args.states:
+            assert s in default_states[args.command]
+            for state in jobstates:
+                if s == state[0]:
+                    states.add(state)
+                    break
+            else:
+                raise ValueError('Unknown state: ' + s)
 
-    # n = self.queue.maxjobs
-    # print('Can only submit {n} jobs!  Use "-N number" to increase the '
-    #       'limit.'.format(n=n))
+    home = Path.home()
+    folders = ['~' / Path(folder).absolute().relative_to(home)
+               for folder in args.folder]
 
     if args.command == 'list':
         jobs.list(states)
-        return
 
-    if not args.dry_run:
+    elif args.command == 'submit':
+        deps = []
+        if args.dependencies:
+            for dep in args.dependencies.split(','):
+                reldir, _, script = dep.rpartition('/')
+                if not reldir:
+                    reldir = '.'
+                deps.append((script, reldir))
+
+        newjobs = [Job(args.script, folder=folder, deps=deps)
+                   for folder in folders]
+
+        # n = self.queue.maxjobs
+        # print('Can only submit {n} jobs!  Use "-N number" to increase the '
+        #       'limit.'.format(n=n))
         runner = get_runner(args.runner)
-
-    if args.command == 'submit':
-        newjobs = [Job(args.script, folder=folder)
-                   for folder in args.folder]
-        if args.dry_run:
-            print(newjobs)
-        else:
-            jobs.submit(newjobs, runner)
-        # if not args.dry_run:
-        #     runner.kick()
+        jobs.submit(newjobs, runner, args.dry_run)
 
     elif args.command == 'reset':
-        for folder in folders(args.folder):
-            with chdir(folder):
-                append(args.job, args.state)
-
-    elif args.command == 'run':
-        name = args.job
-        module, _, function = name.partition(':')
-        for folder in folders(args.folder):
-            with chdir(folder):
-                cmd = 'python3 ' + command(module, function)
-                if args.dry_run:
-                    print(folder, cmd)
-                else:
-                    print(folder)
-                    err = subprocess.call(cmd, shell=True)
-                    if err:
-                        append(name, 'FAILED')
-                        break
-                    append(name, 'done')
+        jobs.reset(states, args.id, folders, args.resubmit, args.dry_run)
 
     elif args.command == 'cancel':
         ...

@@ -13,8 +13,10 @@ from pathlib import Path
 
 from q2.commands import command
 
-jobstates = ['todo', 'queued', 'running', 'done',
+jobstates = ['queued', 'running',
              'FAILED', 'CANCELED', 'TIMEOUT']
+
+INFINITY = 100
 
 
 class JobError(Exception):
@@ -55,7 +57,7 @@ class Job:
                 if repeat:
                     repeat = int(repeat)
                 else:
-                    repeat = 999999999
+                    repeat = INFINITY
             time = T(time)
 
         self.cmd = cmd
@@ -63,15 +65,14 @@ class Job:
         self.cores = cores
         self.time = time
         self.repeat = repeat
-        self.folder = Path(folder)
+        self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
+            Path.home())
         self.flow = flow
         self.runner = runner
-
-        # state is one of:
-        # UNKNOWN, todo, queued, running, done, FAILED, TIMEOUT
         self.state = state
-
         self.id = id
+
+        self._done = None
 
     @property
     def uid(self):
@@ -89,7 +90,7 @@ class Job:
                 rep = '+' + str(self.repeat)
         else:
             rep = ''
-        s = '{}: {}/{}@{}x{}s{}({}) {}{}'.format(
+        s = '{} {} {}@{}x{}s{}({}) {}{}'.format(
             self.uid,
             self.folder,
             self.cmd.name,
@@ -117,9 +118,18 @@ class Job:
     def fromdict(dct):
         return Job(cmd=command(**dct.pop('cmd')), **dct)
 
+    def infolder(self, folder):
+        return folder == self.folder or folder in self.folder.parents
+
+    def done(self):
+        if self._done is None:
+            p = self.folder / '{}.done'.format(self.cmd.name)
+            self._done = p.is_file()
+        return self._done
+
     def remove_empty_output_files(self):
         for ext in ['.out', '.err']:
-            path = self.folder / (self.name + ext)
+            path = (self.folder / (self.name + ext)).expanduser()
             if path.is_file() and path.stat().st_size == 0:
                 path.unlink()
 

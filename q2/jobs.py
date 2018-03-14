@@ -1,13 +1,27 @@
 import json
+from collections import defaultdict
 from pathlib import Path
 from typing import Set, List
 
 from q2.job import Job
 from q2.runner import Runner, get_runner
-from q2.utils import Lock, lock
+from q2.utils import Lock
 
 
-class Jobs:
+def pjoin(folder, reldir):
+    assert reldir == '.'
+    return folder
+
+
+def print(jobs):
+    lengths = [0, 0, 0, 0]
+    for job in jobs:
+        lengths = [max(n, len(part))
+                   for n, part in zip(lengths, str(job).split())]
+    for job in jobs:
+        print()
+
+class Jobs(Lock):
     def __init__(self, verbosity=1):
         self.verbosity = verbosity
 
@@ -17,28 +31,115 @@ class Jobs:
             folder.mkdir()
 
         self.fname = folder / 'queue.json'
-        self.lock = Lock(self.fname.with_name('queue.json.lock'))
+
+        Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
         self.jobs = None
 
-    @lock
     def list(self, states: Set[str]) -> None:
         self._read()
         for job in self.jobs:
             if job.state in states:
-                print(job)
+                parts = str(job).split()
+                print('{:12} {:20} {:40} {:8}'.format(*parts))
 
-    @lock
-    def submit(self, jobs: List[Job], runner: Runner) -> None:
-        self._read()
+    def submit(self,
+               jobs: List[Job],
+               runner: Runner,
+               dry_run: bool = False) -> None:
+
+        n1 = len(jobs)
+        jobs = [job for job in jobs if not job.done()]
+        n2 = len(jobs)
+
+        if n2 < n1:
+            print(n2 - n1, 'jobs already done')
+
+        if self.jobs is None:
+            self._read()
+
+        current = {(job.folder, job.cmd.name): job
+                   for job in self.jobs}
+
+        jobs = [job for job in jobs
+                if (job.folder, job.cmd.name) not in current]
+        n3 = len(jobs)
+
+        if n3 < n2:
+            print(n3 - n2, 'jobs already in the queue')
+
+        ready = []
         for job in jobs:
-            job.state = 'queued'
-        runner.submit(jobs)
-        self.jobs += jobs
-        self._write()
-        runner.kick()
+            deps = []
+            for dep in job.deps:
+                if isinstance(dep, tuple):
+                    name, reldir = dep
+                    folder = pjoin(job.folder, reldir)
+                    dep = current.get((folder, name))
+                    if dep is None:
+                        if not (folder / (name + '.done')).is_file():
+                            print('Missing dependency: {}/{}'
+                                  .format(folder, name))
+                            break
+                    elif dep.state not in ['queued', 'running']:
+                        print('Dependency ({}) in bad state: {}'
+                              .format(dep.name, dep.state))
+                        break
 
-    @lock
+                if dep is not None:
+                    deps.append(dep)
+            else:
+                job.deps = deps
+                ready.append(job)
+
+        for job in ready:
+            job.deps = [dep for dep in job.deps if not dep.done()]
+            job.state = 'queued'
+
+        if dry_run:
+            print(len(ready), 'jobs to submit:')
+        else:
+            runner.submit(ready)
+            print(len(ready), 'jobs submitted:')
+
+        print(ready)
+
+        if not dry_run:
+            self.jobs += ready
+            self._write()
+            runner.kick()
+
+    def reset(self,
+              states: Set[str],
+              id: int,
+              folders: List[str],
+              resubmit: bool,
+              dry_run: bool) -> None:
+        self._read()
+        jobs = []
+        for job in self.jobs:
+            if job.state in states:
+                if id is None or job.id == id:
+                    if not folders or any(job.infolder(f) for f in folders):
+                        jobs.append(job)
+        if id is not None:
+            assert len(jobs) == 1, jobs
+
+        if resubmit:
+            runners = defaultdict(list)
+            for job in jobs:
+                runners[job.runner].append(job)
+            for runner, jobs in runners.items():
+                runner = get_runner(runner)
+                self.submit(jobs, runner, dry_run)
+        else:
+            for job in jobs:
+                if dry_run:
+                    print(job)
+                else:
+                    self.jobs.remove(job)
+            self._write()
+
     def update(self, uid: str, state: str) -> None:
         self._read()
         for job in self.jobs:
@@ -63,8 +164,7 @@ class Jobs:
             for j in self.jobs:
                 if j is not job:
                     if uid in j.deps:
-                        j.deps.remove(uid)
-                    j.state = 'CANCELED'
+                        j.state = 'CANCELED'
 
         self._write()
 
@@ -101,6 +201,7 @@ if __name__ == '__main__':
     uid, state = sys.argv[1:3]
     jobs = Jobs()
     try:
-        jobs.update(uid, state)
+        with jobs:
+            jobs.update(uid, state)
     except Exception as x:
         raise
