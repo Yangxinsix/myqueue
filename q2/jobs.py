@@ -159,24 +159,23 @@ class Jobs(Lock):
         else:
             raise ValueError('No such job: {uid}, {state}')
 
-        if state == 'running':
-            job.state = 'running'
-        elif state == 'done':
-            jobs = []
+        job.state = state
+
+        if state == 'done':
             for j in self.jobs:
-                if j is not job:
-                    if uid in j.deps:
-                        j.deps.remove(uid)
-                    jobs.append(j)
-            self.jobs = jobs
+                if uid in j.deps:
+                    j.deps.remove(uid)
+            job.write_done_file()
+        elif state == 'FAILED':
+            for j in self.jobs:
+                if uid in j.deps:
+                    j.state = 'CANCELED'
+            job.read_error()
+            if job.out_of_memory and len(job.cores) > 1:
+                del job.cores[0]
+                job.state = 'run with more cores'
         else:
-            assert state == 'FAILED'
-            job.state = 'FAILED'
-            for j in self.jobs:
-                if j is not job:
-                    if uid in j.deps:
-                        j.state = 'CANCELED'
-                j.read_error()
+            assert state == 'running'
 
         self._write()
 
@@ -189,6 +188,9 @@ class Jobs(Lock):
                 runner = get_runner('local')
                 runner.update(uid, state)
                 runner.kick()
+
+        if job.state == 'run with more cores':
+            self.submit([job], get_runner(job.runner))
 
     def _read(self) -> None:
         self.jobs = []

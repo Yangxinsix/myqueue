@@ -40,7 +40,6 @@ class Job:
                  time='1m',
                  repeat=0,
                  folder='.',
-                 flow=True,
                  state='UNKNOWN',
                  runner='local',
                  id=None):
@@ -69,7 +68,6 @@ class Job:
         self.repeat = repeat
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
             Path.home())
-        self.flow = flow
         self.runner = runner
         self.state = state
         self.id = id
@@ -95,7 +93,7 @@ class Job:
                 rep = '+' + str(self.repeat)
         else:
             rep = ''
-        s = '{} {} {}@{}x{}s{}({}) {}{}'.format(
+        s = '{} {} {}@{}x{}s{}({}) {}'.format(
             self.uid,
             self.folder,
             self.cmd.name,
@@ -103,8 +101,8 @@ class Job:
             self.time,
             rep,
             ','.join(str(id) for id in self.deps),
-            self.state,
-            '*' if self.flow else '')
+            self.state)
+
         return s
 
     def todict(self):
@@ -116,8 +114,7 @@ class Job:
                 'time': self.time,
                 'repeat': self.repeat,
                 'state': self.state,
-                'runner': self.runner,
-                'flow': self.flow}
+                'runner': self.runner}
 
     @staticmethod
     def fromdict(dct):
@@ -128,9 +125,13 @@ class Job:
 
     def done(self):
         if self._done is None:
-            p = self.folder / '{}.done'.format(self.cmd.name)
+            p = (self.folder / '.{}.done'.format(self.cmd.name)).expanduser()
             self._done = p.is_file()
         return self._done
+
+    def write_done_file(self):
+        p = (self.folder / '.{}.done'.format(self.cmd.name)).expanduser()
+        p.write_text('')
 
     def remove_empty_output_files(self):
         for ext in ['.out', '.err']:
