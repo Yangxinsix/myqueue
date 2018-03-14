@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from q2.job import Job, jobstates
+from q2.job import Job, jobstates, _workflow
 from q2.jobs import Jobs
 from q2.runner import get_runner
 
@@ -166,3 +166,15 @@ def main():
 
     elif args.command == 'cancel':
         ...
+
+    elif args.command == 'workflow':
+        _workflow['jobs'] = []
+        code = Path(args.workflow).read_text()
+        exec(compile(code, args.workflow, 'exec'))
+
+        runner = get_runner(args.runner)
+
+        for folder in folders:
+            for job in _workflow['jobs']:
+                job.folder = folder
+            jobs.submit(_workflow['jobs'], runner, args.dry_run)

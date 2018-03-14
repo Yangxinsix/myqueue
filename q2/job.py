@@ -18,6 +18,8 @@ jobstates = ['queued', 'running',
 
 INFINITY = 100
 
+_workflow = {}
+
 
 class JobError(Exception):
     pass
@@ -73,6 +75,9 @@ class Job:
         self.id = id
 
         self._done = None
+
+        if 'jobs' in _workflow:
+            _workflow['jobs'].append(self)
 
     @property
     def uid(self):
@@ -135,7 +140,10 @@ class Job:
 
     def read_error(self):
         path = (self.folder / (self.name + '.err')).expanduser()
-        lines = path.read_text().splitlines()
+        try:
+            lines = path.read_text().splitlines()
+        except FileNotFoundError:
+            return
         for line in lines[::-1]:
             if 'Error: ' in line:
                 self.error = line

@@ -52,7 +52,7 @@ class SLURM(Runner):
         assert p.returncode == 0
         job.state = 'running'
         script = ('#!/bin/bash -l\n'
-                  'id=$SLURM_ID\n'
+                  'id=$SLURM_JOB_ID\n'
                   '({msg} $id running && '
                   '{mpi} && {msg} $id done) || {msg} $id FAILED\n'
                   .format(mpi=mpicmd, msg=msg))
