@@ -1,16 +1,26 @@
 import os
 from pathlib import Path
 import subprocess
+from typing import List
+
+from q2.job import Job
+from q2.runner import Runner
 
 
-class SLURM:
-    def __init__(self, dry_run):
-        self.dry_run = dry_run
+class SLURM(Runner):
+    def submit(self, jobs: List[Job]) -> None:
+        if len(jobs) != 1:
+            for job in jobs:
+                self.submit([job])
+            return
 
-    def submit(self, job, deps):
+        # Submit one job:
+        job = jobs[0]
+
+        cores = job.cores[0]
         for size in [24, 16, 8]:
-            if job.cores % size == 0:
-                nodes = job.cores // size
+            if cores % size == 0:
+                nodes = cores // size
                 break
         else:
             if job.cores == 1:
@@ -23,37 +33,37 @@ class SLURM:
                '--partition=xeon{}'.format(size),
                '--job-name={}'.format(job.name),
                '--time={}'.format(job.time // 60),
-               '--njobs={}'.format(job.cores),
+               '--njobs={}'.format(cores),
                '--nodes={}'.format(nodes),
                '--output={}.out'.format(job.name),
                '--error={}.err'.format(job.name)]
 
-        if deps:
-            ids = ':'.join(str(dep.jobid) for dep in deps)
+        if job.deps:
+            ids = ':'.join(str(dep.id) for dep in job.deps)
             cmd.append('--dependency=afterok:{}'.format(ids))
 
-        mpi = 'mpirun'
+        mpicmd = 'mpirun'
         if size == 24:
-            mpi += ' -mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1'
+            mpicmd += ' -mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1'
+        mpicmd += str(job.cmd).replace('python3', 'gpaw-python')
 
-        args = command(job.module, job.function)
-
+        msg = 'python3 -m q2.jobs'
+        p = subprocess.run(cmd, shell=True)
+        assert p.returncode == 0
+        job.state = 'running'
         script = ('#!/bin/bash -l\n'
-                  'python3 -m c2dm.jobs clear -s running {name} . && '
-                  '{mpi} gpaw-python {args} && '
-                  'python3 -m c2dm.jobs clear -s done {name} .\n'
-                  .format(mpi=mpi, args=args, name=job.name))
-
-        if self.dry_run:
-            return 42
+                  'id=$SLURM_ID\n'
+                  '({msg} $id running && '
+                  '{mpi} && {msg} $id done) || {msg} $id FAILED\n'
+                  .format(mpi=mpicmd, msg=msg))
 
         p = subprocess.Popen(cmd,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
-        jobid = int(out.split()[-1])
-        return jobid
+        id = int(out.split()[-1])
+        job.id = id
 
     def timeout(self, name, id):
         err = Path('slurm-{}-{}.err'.format(name, id))

@@ -13,13 +13,22 @@ def pjoin(folder, reldir):
     return folder
 
 
-def print(jobs):
+def S(n, thing):
+    if n == 1:
+        return '1 ' + thing
+    return '{} {}s'.format(n, thing)
+
+
+def pprint(jobs):
     lengths = [0, 0, 0, 0]
     for job in jobs:
-        lengths = [max(n, len(part))
-                   for n, part in zip(lengths, str(job).split())]
+        lengths = [max(n, len(word))
+                   for n, word in zip(lengths, str(job).split())]
     for job in jobs:
-        print()
+        print(' '.join(word.ljust(n)
+                       for n, word in
+                       zip(lengths, str(job).split())))
+
 
 class Jobs(Lock):
     def __init__(self, verbosity=1):
@@ -38,10 +47,7 @@ class Jobs(Lock):
 
     def list(self, states: Set[str]) -> None:
         self._read()
-        for job in self.jobs:
-            if job.state in states:
-                parts = str(job).split()
-                print('{:12} {:20} {:40} {:8}'.format(*parts))
+        pprint([job for job in self.jobs if job.state in states])
 
     def submit(self,
                jobs: List[Job],
@@ -53,7 +59,7 @@ class Jobs(Lock):
         n2 = len(jobs)
 
         if n2 < n1:
-            print(n2 - n1, 'jobs already done')
+            print(S(n2 - n1, 'job'), 'already done')
 
         if self.jobs is None:
             self._read()
@@ -66,7 +72,7 @@ class Jobs(Lock):
         n3 = len(jobs)
 
         if n3 < n2:
-            print(n3 - n2, 'jobs already in the queue')
+            print(S(n3 - n2, 'job'), 'already in the queue')
 
         ready = []
         for job in jobs:
@@ -97,12 +103,12 @@ class Jobs(Lock):
             job.state = 'queued'
 
         if dry_run:
-            print(len(ready), 'jobs to submit:')
+            print(S(len(ready), 'job'), 'to submit:')
         else:
             runner.submit(ready)
-            print(len(ready), 'jobs submitted:')
+            print(S(len(ready), 'job'), 'submitted:')
 
-        print(ready)
+        pprint(ready)
 
         if not dry_run:
             self.jobs += ready
@@ -134,11 +140,16 @@ class Jobs(Lock):
                 self.submit(jobs, runner, dry_run)
         else:
             for job in jobs:
-                if dry_run:
-                    print(job)
-                else:
+                job.state = 'REMOVED'
+            if dry_run:
+                print(S(len(jobs), 'job'), 'to reset')
+                pprint(jobs)
+            else:
+                print(S(len(jobs), 'job'), 'to reset')
+                pprint(jobs)
+                for job in jobs:
                     self.jobs.remove(job)
-            self._write()
+                self._write()
 
     def update(self, uid: str, state: str) -> None:
         self._read()
@@ -165,6 +176,7 @@ class Jobs(Lock):
                 if j is not job:
                     if uid in j.deps:
                         j.state = 'CANCELED'
+                j.read_error()
 
         self._write()
 

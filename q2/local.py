@@ -13,11 +13,7 @@ class LocalRunner(Runner):
         self.jobs = None
         self.number = None
 
-    def submit(self, jobs: List[Job], dry_run: bool = False) -> None:
-        if dry_run:
-            for job in jobs:
-                print(job)
-            return
+    def submit(self, jobs: List[Job]) -> None:
         self._read()
         for job in jobs:
             self.number += 1
@@ -53,7 +49,8 @@ class LocalRunner(Runner):
             if job.uid == uid:
                 break
         else:
-            raise ValueError(f**'No such job: {uid}, {state}')
+            raise ValueError('No such job: {uid}, {state}'
+                             .format(uid=uid, state=state))
 
         if state == 'done':
             jobs = []

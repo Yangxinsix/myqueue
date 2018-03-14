@@ -133,6 +133,15 @@ class Job:
             if path.is_file() and path.stat().st_size == 0:
                 path.unlink()
 
+    def read_error(self):
+        path = (self.folder / (self.name + '.err')).expanduser()
+        lines = path.read_text().splitlines()
+        for line in lines[::-1]:
+            if 'Error: ' in line:
+                self.error = line
+                return
+        self.error = lines[-1]
+
     def command(self):
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
