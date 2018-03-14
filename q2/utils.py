@@ -85,3 +85,78 @@ class F:
 
 
 f = F()
+
+
+def update_completion():
+    """Update commands dict.
+
+    Run this when ever options are changed::
+
+        python3 -m q2.utils
+
+    """
+
+    import argparse
+    import collections
+    import textwrap
+    from q2.cli import main
+
+    # Path of the complete.py script:
+    my_dir, _ = os.path.split(os.path.realpath(__file__))
+    filename = os.path.join(my_dir, 'complete.py')
+
+    dct = collections.defaultdict(list)
+
+    class MyException(Exception):
+        pass
+
+    class Parser:
+        def __init__(self, **kwargs):
+            pass
+
+        def add_argument(self, *args, **kwargs):
+            pass
+
+        def add_subparsers(self, **kwargs):
+            return self
+
+        def add_parser(self, cmd, **kwargs):
+            return Subparser(cmd)
+
+        def parse_args(self):
+            raise MyException
+
+    class Subparser:
+        def __init__(self, command):
+            self.command = command
+
+        def add_argument(self, *args, **kwargs):
+            dct[self.command].extend(arg for arg in args
+                                     if arg.startswith('-'))
+
+    argparse.ArgumentParser = Parser
+    try:
+        main()
+    except MyException:
+        pass
+
+    txt = 'commands = {'
+    for command, opts in sorted(dct.items()):
+        txt += "\n    '" + command + "':\n        ["
+        txt += '\n'.join(textwrap.wrap("'" + "', '".join(opts) + "'],",
+                         width=65,
+                         break_on_hyphens=False,
+                         subsequent_indent='         '))
+    txt = txt[:-1] + '}\n'
+    with open(filename) as fd:
+        lines = fd.readlines()
+        a = lines.index('# Beginning of computer generated data:\n')
+        b = lines.index('# End of computer generated data\n')
+    lines[a + 1:b] = [txt]
+    with open(filename + '.new', 'w') as fd:
+        print(''.join(lines), end='', file=fd)
+    os.rename(filename + '.new', filename)
+
+
+if __name__ == '__main__':
+    update_completion()

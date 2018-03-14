@@ -145,7 +145,7 @@ class Jobs(Lock):
                 print(S(len(jobs), 'job'), 'to reset')
                 pprint(jobs)
             else:
-                print(S(len(jobs), 'job'), 'to reset')
+                print(S(len(jobs), 'job'), 'reset')
                 pprint(jobs)
                 for job in jobs:
                     self.jobs.remove(job)

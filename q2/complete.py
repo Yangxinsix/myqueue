@@ -3,7 +3,6 @@
 
 Put this in your .bashrc::
 
-    alias q2="python3 -m q2"
     complete -o default -C "python3 -m q2.complete" q2
 
 """
@@ -18,11 +17,26 @@ def match(word, *suffixes):
             if any(w.endswith(suffix) for suffix in suffixes)]
 
 
+# Beginning of computer generated data:
 commands = {
-    'list': ['-s', '--states'],
-    'submit': ['-o', '--only'],
-    'run': ['-0', '--dry-run'],
-    'clear': ['-s', '--status']}
+    'cancel':
+        ['-f', '--filter', '-s', '--states', '-n', '--dry-run', '-r',
+         '--runner', '-N', '--number-of-jobs'],
+    'list':
+        ['-f', '--filter', '-s', '--states', '-n', '--dry-run', '-r',
+         '--runner', '-N', '--number-of-jobs'],
+    'reset':
+        ['-S', '--resubmit', '-i', '--id', '-f', '--filter', '-s',
+         '--states', '-n', '--dry-run', '-r', '--runner', '-N',
+         '--number-of-jobs'],
+    'submit':
+        ['-R', '--resources', '-d', '--dependencies', '-f', '--filter',
+         '-n', '--dry-run', '-r', '--runner', '-N',
+         '--number-of-jobs'],
+    'workflow':
+        ['-f', '--filter', '-n', '--dry-run', '-r', '--runner', '-N',
+         '--number-of-jobs']}
+# End of computer generated data
 
 
 def complete(word, previous, line, point):
@@ -32,8 +46,7 @@ def complete(word, previous, line, point):
                 command = w
                 break
     else:
-        opts = ['-h', '--help', '-v', '--verbose', '--flags',
-                '-w', '--workflow']
+        opts = ['-h', '--help', '-v', '--verbose', '-q', '--quiet']
         if word[:1] == '-':
             return opts
         return list(commands.keys()) + opts

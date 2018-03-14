@@ -44,14 +44,14 @@ def main():
         '-d', '--dependencies')
 
     # flow command:
-    help = 'Put available jobs in queue.'
+    help = 'Put many jobs in queue.'
     workflow = subparsers.add_parser(
         'workflow',
         description=help,
         help=help)
-    workflow.add_argument('-w', '--workflow', default='workflow.py',
-                          help='Work-flow description file.  Default: '
-                          'workflow.py.')
+    workflow.add_argument('workflow',
+                          help='Work-flow description file.')
+
     # Reset subcommand:
     help = 'Reset state for job(s).'
     reset = subparsers.add_parser('reset',
