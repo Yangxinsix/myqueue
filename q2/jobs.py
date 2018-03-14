@@ -86,12 +86,12 @@ class Jobs:
 
         data = json.loads(self.fname.read_text())
 
-        for tpl in data['jobs']:
-            job = Job.fromtuple(tpl)
+        for dct in data['jobs']:
+            job = Job.fromdict(dct)
             self.jobs.append(job)
 
     def _write(self):
-        text = json.dumps({'jobs': [job.astuple()
+        text = json.dumps({'jobs': [job.todict()
                                     for job in self.jobs]})
         self.fname.write_text(text)
 

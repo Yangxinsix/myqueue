@@ -4,11 +4,14 @@ module@1,2.3,txt
 module:func@1,2.3,txt
 ~/folder/script.py@a,2.3,txt
 
-
+c2dm.relax:run_1_Cu.12234.err
+relax.py_Cu
+echo_hello
 """
 
 from pathlib import Path
 
+from q2.commands import command
 
 jobstates = ['todo', 'queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
@@ -26,26 +29,41 @@ def T(t):
 
 
 class Job:
-    def __init__(self, name, deps=[], cores=None, time='1m', folder=None,
-                 flow=True, state='UNKNOWN', runner='local'):
-        name, _, resources = name.partition('@')
-        if resources:
-            assert cores is None and time is None
-            cores, time = resources.split('x')
-            cores = int(cores)
+    def __init__(self, cmd,
+                 args=[],
+                 deps=[],
+                 cores=[1],
+                 time='1m',
+                 repeat=0,
+                 folder='.',
+                 flow=True,
+                 state='UNKNOWN',
+                 runner='local',
+                 id=None):
+        if isinstance(cmd, str):
+            cmd, _, resources = cmd.partition('@')
+            if resources:
+                assert cores is None and time is None
+                cores, time = resources.split('x')
+                cores = [int(c) for c in cores.split(',')]
+            cmd = command(cmd, args)
 
-        self.module, _, self.function = name.partition(':')
-        if self.module.endswith('.py'):
-            self.script = self.module
-            self.module = None
-        else:
-            self.script = None
+        if isinstance(time, str):
+            if '+' in time:
+                assert repeat is None
+                time, _, repeat = time.partition('+')
+                if repeat:
+                    repeat = int(repeat)
+                else:
+                    repeat = 999999999
+            time = T(time)
 
-        self.name = name
+        self.cmd = cmd
         self.deps = deps
         self.cores = cores
-        self.time = T(time)
-        self.folder = folder
+        self.time = time
+        self.repeat = repeat
+        self.folder = Path(folder)
         self.flow = flow
         self.runner = runner
 
@@ -53,42 +71,51 @@ class Job:
         # UNKNOWN, todo, queued, running, done, FAILED, TIMEOUT
         self.state = state
 
-        self.id = None
+        self.id = id
 
     @property
     def uid(self):
         return '{}:{}'.format(self.runner, self.id)
 
+    @property
+    def name(self):
+        return '{}.{}'.format(self.cmd.name, self.id)
+
     def __str__(self):
-        s = '{}:{}[{}],{},{}{}'.format(
-            self.id,
+        if self.repeat:
+            if self.repeat == INFINITY:
+                rep = '+'
+            else:
+                rep = '+' + str(self.repeat)
+        else:
+            rep = ''
+        s = '{}: {}/{}@{}x{}s{}({}) {}{}'.format(
             self.uid,
+            self.folder,
+            self.cmd.name,
+            ','.join(str(c) for c in self.cores),
+            self.time,
+            rep,
             ','.join(str(id) for id in self.deps),
             self.state,
-            self.runner,
             '*' if self.flow else '')
         return s
 
-    def astuple(self):
-        return (self.id,
-                str(self.folder),
-                self.name,
-                self.deps,
-                self.state,
-                self.runner,
-                self.flow)
+    def todict(self):
+        return {'cmd': self.cmd.todict(),
+                'id': self.id,
+                'folder': str(self.folder),
+                'deps': self.deps,
+                'cores': self.cores,
+                'time': self.time,
+                'repeat': self.repeat,
+                'state': self.state,
+                'runner': self.runner,
+                'flow': self.flow}
 
     @staticmethod
-    def fromtuple(tpl):
-        id, folder, name, deps, state, runner, flow = tpl
-        job = Job(name,
-                  deps=deps,
-                  folder=Path(folder),
-                  flow=flow,
-                  state=state,
-                  runner=runner)
-        job.id = id
-        return job
+    def fromdict(dct):
+        return Job(cmd=command(**dct.pop('cmd')), **dct)
 
     def remove_empty_output_files(self):
         for ext in ['.out', '.err']:
@@ -97,18 +124,9 @@ class Job:
                 path.unlink()
 
     def command(self):
-        if self.script:
-            args = self.script
-        elif self.function:
-            args = ('-c "import {module}; {module}.{function}()"'
-                    .format(module=self.module, function=self.function))
-        else:
-            args = '-m ' + self.module
-
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
 
-        cmd = 'cd {} && python3 {} 2> {} > {}'.format(self.folder, args,
-                                                      err, out)
+        cmd = 'cd {} && {} 2> {} > {}'.format(self.folder, self.cmd, err, out)
 
         return cmd

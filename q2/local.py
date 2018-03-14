@@ -25,21 +25,22 @@ class LocalRunner(Runner):
         self._write()
 
     def _read(self) -> None:
+        self.jobs = []
+
         if not self.fname.is_file():
-            self.jobs = []
             self.number = 0
             return
 
         data = json.loads(self.fname.read_text())
 
-        for tpl in data['jobs']:
-            job = Job.fromtuple(tpl)
+        for dct in data['jobs']:
+            job = Job.fromdict(dct)
             self.jobs.append(job)
 
         self.number = data['number']
 
     def _write(self):
-        text = json.dumps({'jobs': [job.astuple()
+        text = json.dumps({'jobs': [job.todict()
                                     for job in self.jobs],
                            'number': self.number})
         self.fname.write_text(text)
