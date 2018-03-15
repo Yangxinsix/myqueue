@@ -1,5 +1,6 @@
 from typing import List
 from pathlib import Path
+from importlib.util import find_spec
 
 
 class Command:
@@ -15,25 +16,33 @@ def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
         cmd, _, rest = cmd.partition('_')
         args = rest.split('_')
 
-    cmd, _, func = cmd.partition(':')
-
-    if func:
-        if type is not None and type != 'python-module':
-            raise ValueError
-        type = 'python-module'
-
     if type is None:
         if cmd.endswith('.py'):
             type = 'python-script'
         else:
             type = 'python-module'
+            mod = cmd
+            func = None
+            try:
+                find_spec(mod)
+            except AttributeError:
+                mod, _, func = cmd.rpartition('.')
+                if func:
+                    try:
+                        find_spec(mod)
+                    except AttributeError:
+                        type = 'shell-script'
+                    else:
+                        type = 'python-function'
 
     if type == 'shell-command':
         return ShellCommand(cmd, args)
     if type == 'python-script':
         return PythonScript(cmd, args)
     if type == 'python-module':
-        return PythonModule(cmd, args, func)
+        return PythonModule(cmd, args)
+    if type == 'python-function':
+        return PythonFunction(cmd, args)
 
     raise ValueError
 
@@ -67,22 +76,30 @@ class PythonScript(Command):
 
 
 class PythonModule(Command):
-    def __init__(self, mod, args, func):
-        name = mod
-        if func:
-            name += ':' + func
-        Command.__init__(self, name, args)
+    def __init__(self, mod, args):
+        Command.__init__(self, mod, args)
         self.mod = mod
-        self.func = func
 
     def __str__(self):
-        if self.func:
-            args = ', '.join(self.args)
-            return ('python3 -c "import {mod}; {mod}.{func}({args})"'
-                    .format(mod=self.mod, func=self.func, args=args))
         return ' '.join(['python3', '-m', self.mod] + self. args)
 
     def todict(self):
         return {'type': 'python-module',
+                'cmd': self.name.split('_')[0],
+                'args': self.args}
+
+
+class PythonFunction(Command):
+    def __init__(self, cmd, args):
+        self.mod, self.func = cmd.rsplit('.')
+        Command.__init__(self, cmd, args)
+
+    def __str__(self):
+        args = ', '.join(self.args)
+        return ('python3 -c "import {mod}; {mod}.{func}({args})"'
+                .format(mod=self.mod, func=self.func, args=args))
+
+    def todict(self):
+        return {'type': 'python-function',
                 'cmd': self.name.split('_')[0],
                 'args': self.args}

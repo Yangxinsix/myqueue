@@ -9,7 +9,7 @@ from q2.runner import Runner
 
 class LocalRunner(Runner):
     def __init__(self):
-        self.fname = Path.home() / '.q2' / 'local.json'
+        self.fname = Path.home() / '.q2' / 'local-runner.json'
         self.jobs = None
         self.number = None
 
@@ -43,28 +43,28 @@ class LocalRunner(Runner):
                            'number': self.number})
         self.fname.write_text(text)
 
-    def update(self, uid: str, state: str) -> None:
+    def update(self, id: int, state: str) -> None:
         self._read()
         for job in self.jobs:
-            if job.uid == uid:
+            if job.id == id:
                 break
         else:
-            raise ValueError('No such job: {uid}, {state}'
-                             .format(uid=uid, state=state))
+            raise ValueError('No such job: {id}, {state}'
+                             .format(id=id, state=state))
 
         if state == 'done':
             jobs = []
             for j in self.jobs:
                 if j is not job:
-                    if uid in j.deps:
-                        j.deps.remove(uid)
+                    if id in j.deps:
+                        j.deps.remove(id)
                     jobs.append(j)
             self.jobs = jobs
         else:
             assert state == 'FAILED', state
             jobs = []
             for j in self.jobs:
-                if j is not job and uid not in j.deps:
+                if j is not job and id not in j.deps:
                     jobs.append(j)
             self.jobs = jobs
 
@@ -87,7 +87,7 @@ class LocalRunner(Runner):
 
     def _run(self, job):
         cmd = job.command()
-        msg = 'python3 -m q2.queue {}'.format(job.uid)
+        msg = 'python3 -m q2.queue local {}'.format(job.id)
         cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)&'
                .format(cmd=cmd, msg=msg))
         p = subprocess.run(cmd, shell=True)

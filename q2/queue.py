@@ -209,7 +209,7 @@ class Queue(Lock):
                     self.jobs.remove(job)
                 self._write()
 
-    def update(self, id: str, state: str) -> None:
+    def update(self, id: int, state: str) -> None:
         self._read()
         for job in self.jobs:
             if job.id == id:
@@ -265,7 +265,8 @@ class Queue(Lock):
 
     def _write(self):
         text = json.dumps({'jobs': [job.todict()
-                                    for job in self.jobs]})
+                                    for job in self.jobs]},
+                          indent=1)
         self.fname.write_text(text)
 
 
