@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 from q2.commands import command
@@ -21,17 +22,28 @@ def T(t):
     return t
 
 
+def seconds_to_time_string(n):
+    n = int(n)
+    h, n = divmod(n, 3600)
+    m, s = divmod(n, 60)
+    if h:
+        return '{}:{:02}:{:02}'.format(h, m, s)
+    return '{}:{:02}'.format(m, s)
+
+
 class Job:
     def __init__(self, cmd,
                  args=[],
                  deps=[],
                  cores=None,
-                 time=None,
+                 tmax=None,
                  repeat=0,
                  folder='.',
                  state='UNKNOWN',
-                 tstart=None,
-                 error='',
+                 tqueued=None,
+                 trunning=None,
+                 tstop=None,
+                 error=None,
                  id=None):
         """Description of a job.
 
@@ -43,31 +55,33 @@ class Job:
         if isinstance(cmd, str):
             cmd, _, resources = cmd.partition('@')
             if resources:
-                assert cores is None and time is None
-                cores, time = resources.split('x')
+                assert cores is None and tmax is None
+                cores, tmax = resources.split('x')
                 cores = [int(c) for c in cores.split(',')]
             cmd = command(cmd, args)
 
-        if isinstance(time, str):
-            if '+' in time:
+        if isinstance(tmax, str):
+            if '+' in tmax:
                 assert repeat is None
-                time, _, repeat = time.partition('+')
+                tmax, _, repeat = tmax.partition('+')
                 if repeat:
                     repeat = int(repeat)
                 else:
                     repeat = INFINITY
-            time = T(time)
+            tmax = T(tmax)
 
         self.cmd = cmd
         self.deps = deps
         self.cores = cores or [1]
-        self.time = time or 600
+        self.tmax = tmax or 600
         self.repeat = repeat
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
             Path.home())
         self.state = state
         self.id = id
-        self.tstart = tstart
+        self.tqueued = tqueued
+        self.trunning = trunning
+        self.tstop = tstop
 
         self._done = None
         self.error = error
@@ -82,22 +96,27 @@ class Job:
 
     def __str__(self):
         if self.repeat:
-            if self.repeat == INFINITY:
-                rep = '+'
-            else:
-                rep = '+' + str(self.repeat)
+            rep = 'x' + str(self.repeat)
         else:
             rep = ''
+        t = time.time()
+        if self.state == 'queued':
+            dt = t - self.tqueued
+        elif self.state == 'running':
+            dt = t - self.trunning
+        else:
+            dt = self.tstop - self.trunning
         s = '{} {} {}@{}x{}s{}({}) {} {} {}'.format(
             self.id,
             self.folder,
             self.cmd.name,
             ','.join(str(c) for c in self.cores),
-            self.time,
+            self.tmax,
             rep,
             ','.join(str(id) for id in self.deps),
+            seconds_to_time_string(dt),
             self.state,
-            self.tstart, self.error)
+            self.error or '')
 
         return s
 
@@ -107,10 +126,12 @@ class Job:
                 'folder': str(self.folder),
                 'deps': self.deps,
                 'cores': self.cores,
-                'time': self.time,
+                'tmax': self.tmax,
                 'repeat': self.repeat,
                 'state': self.state,
-                'tstart': self.tstart,
+                'tqueued': self.tqueued,
+                'trunning': self.trunning,
+                'tstop': self.tstop,
                 'error': self.error}
 
     @staticmethod
@@ -138,12 +159,10 @@ class Job:
 
     def read_error(self):
         path = (self.folder / (self.name + '.err')).expanduser()
-        print(path)
         try:
             lines = path.read_text().splitlines()
         except FileNotFoundError:
             return
-        print(lines)
         for line in lines[::-1]:
             if 'error: ' in line.lower():
                 self.error = line

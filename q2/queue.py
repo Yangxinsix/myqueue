@@ -24,11 +24,11 @@ def pprint(jobs):
     for job in jobs:
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, str(job).split())]
-        lengths.append(1)
+    lengths.append(1)
     for job in jobs:
         print(' '.join(word.ljust(n)
                        for n, word in
-                       zip(lengths, str(job).split())))
+                       zip(lengths, str(job).split(None, 5))))
 
 
 class Queue(Lock):
@@ -51,23 +51,32 @@ class Queue(Lock):
         self._read()
 
         write = False
-        repeats = []
+        again = []
         t = time.time()
         for job in self.jobs:
             if job.state == 'running':
-                if t - job.tstart > job.time and self.runner.timeout(job):
+                if t - job.trunning > job.tmax and self.runner.timeout(job):
                     job.state = 'TIMEOUT'
+                    job.remove_empty_output_files()
                     write = True
                     if job.repeat > 0:
-                        repeats.append(job)
+                        job.repeat -= 1
+                        again.append(job)
+            elif job.state == 'FAILED':
+                if job.error is None:
+                    job.read_error()
+                    write = True
+                if len(job.cores) > 1 and job.out_of_memory:
+                    del job.cores[0]
+                    again.append(job)
+
+        for job in again:
+            self.jobs.remove(job)
 
         pprint([job for job in self.jobs if job.state in states])
 
-        if repeats:
-            for job in repeats:
-                self.jobs.remove(job)
-                job.repeats -= 1
-            self.submit(repeats)
+        if again:
+            self.submit(again)
         elif write:
             self._write()
 
@@ -90,8 +99,9 @@ class Queue(Lock):
         current = {(job.folder, job.cmd.name): job
                    for job in self.jobs}
 
-        jobs = [job for job in jobs
-                if (job.folder, job.cmd.name) not in current]
+        if workflow:
+            jobs = [job for job in jobs
+                    if (job.folder, job.cmd.name) not in current]
         n3 = len(jobs)
 
         if n3 < n2:
@@ -121,9 +131,11 @@ class Queue(Lock):
                 job.deps = deps
                 ready.append(job)
 
+        t = time.time()
         for job in ready:
             job.deps = [dep for dep in job.deps if not dep.done()]
             job.state = 'queued'
+            job.tqueued = t
 
         if dry_run:
             print(S(len(ready), 'job'), 'to submit:')
@@ -208,23 +220,23 @@ class Queue(Lock):
 
         job.state = state
 
+        t = time.time()
+
         if state == 'done':
             for j in self.jobs:
                 if id in j.deps:
                     j.deps.remove(id)
             job.write_done_file()
+            job.tstop = t
 
         elif state == 'FAILED':
             for j in self.jobs:
                 if id in j.deps:
                     j.state = 'CANCELED'
-            job.read_error()
-            if job.out_of_memory and len(job.cores) > 1:
-                del job.cores[0]
-                job.state = 'run with more cores'
+            job.tstop = t
 
         elif state == 'running':
-            job.tstart = time.time()
+            job.trunning = t
 
         else:
             1 / 0
@@ -238,9 +250,6 @@ class Queue(Lock):
             # Process local queue:
             self.runner.update(id, state)
             self.runner.kick()
-
-        if job.state == 'run with more cores':
-            self.submit([job])
 
     def _read(self) -> None:
         self.jobs = []

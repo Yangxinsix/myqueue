@@ -31,7 +31,7 @@ class SLURM(Runner):
         cmd = ['sbatch',
                '--partition=xeon{}'.format(size),
                '--job-name={}'.format(name),
-               '--time={}'.format(job.time // 60),
+               '--time={}'.format(job.tmax // 60),
                '--ntasks={}'.format(cores),
                '--nodes={}'.format(nodes),
                '--output={}.%j.out'.format(name),
