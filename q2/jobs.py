@@ -30,7 +30,7 @@ def pprint(jobs):
                        zip(lengths, str(job).split())))
 
 
-class Jobs(Lock):
+class Queue(Lock):
     def __init__(self, verbosity=1):
         self.verbosity = verbosity
 
@@ -114,6 +114,39 @@ class Jobs(Lock):
             self.jobs += ready
             self._write()
             runner.kick()
+
+    def cancel(self,
+               states: Set[str],
+               id: int,
+               folders: List[str],
+               dry_run: bool) -> None:
+        """Cancel jobs."""
+
+        self._read()
+
+        jobs = []
+        for job in self.jobs:
+            if job.state in states:
+                if id is None or job.id == id:
+                    if not folders or any(job.infolder(f) for f in folders):
+                        jobs.append(job)
+        if id is not None:
+            assert len(jobs) == 1, jobs
+
+        for job in jobs:
+            job.state = 'CANCELED'
+
+        if dry_run:
+            print(S(len(jobs), 'job'), 'to be canceled')
+            pprint(jobs)
+        else:
+            print(S(len(jobs), 'job'), 'canceled')
+            pprint(jobs)
+            for job in jobs:
+                runner = get_runner(job.runner)
+                runner.cancel(job)
+                self.jobs.remove(job)
+            self._write()
 
     def reset(self,
               states: Set[str],
@@ -213,9 +246,9 @@ class Jobs(Lock):
 if __name__ == '__main__':
     import sys
     uid, state = sys.argv[1:3]
-    jobs = Jobs()
+    q = Queue()
     try:
-        with jobs:
-            jobs.update(uid, state)
+        with q:
+            q.update(uid, state)
     except Exception as x:
         raise

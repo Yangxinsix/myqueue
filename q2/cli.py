@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from q2.job import Job, jobstates, _workflow
-from q2.jobs import Jobs
+from q2.queue import Queue
 from q2.runner import get_runner
 
 
@@ -18,79 +18,57 @@ def main():
 
     subparsers = parser.add_subparsers(dest='command')
 
-    # List subcommand:
-    help = 'List jobs in queue.'
-    list_ = subparsers.add_parser('list',
-                                  description=help,
-                                  help=help)
-    list_.add_argument(
-        'folder',
-        nargs='*',
-        help='List of folders.  Defaults to current '
-        'folder and its folders and its folders and ...')
-
-    # Submit subcommand:
-    help = 'Submit job(s) to queue.'
-    submit = subparsers.add_parser(
-        'submit',
-        description=help,
-        help=help)
-    submit.add_argument('script')
-    submit.add_argument(
-        '-R', '--resources',
-        help='Examples: "8x1h", 8 cores for 1 hour. Use "m" for minutes, '
-        '"h" for hours and "d" for days.')
-    submit.add_argument(
-        '-d', '--dependencies')
-
-    # flow command:
-    help = 'Put many jobs in queue.'
-    workflow = subparsers.add_parser(
-        'workflow',
-        description=help,
-        help=help)
-    workflow.add_argument('workflow',
-                          help='Work-flow description file.')
-
-    # Reset subcommand:
-    help = 'Reset state for job(s).'
-    reset = subparsers.add_parser('reset',
-                                  description=help,
-                                  help=help)
-    reset.add_argument('-S', '--resubmit', action='store_true')
-    reset.add_argument('-i', '--id', type=int)
-
-    # Cancel subcommand:
-    help = 'Cancel job(s).'
-    cancel = subparsers.add_parser(
-        'cancel',
-        description=help,
-        help=help)
-
     default_states = {'list': 'qrFCT',
                       'reset': 'FCT',
                       'cancel': 'qr'}
 
-    # Common options:
-    for p in [list_, submit, workflow, reset, cancel]:
-        if p is not list_:
+    for cmd, help in [
+        ('list', 'List jobs in queue.'),
+        ('submit', 'Submit job(s) to queue.'),
+        ('workflow', 'Put many jobs in queue.'),
+        ('reset', 'Reset state for job(s).'),
+        ('cancel', 'Cancel job(s).')]:
+
+        p = subparsers.add_parser(cmd, description=help, help=help)
+
+        if cmd == 'list':
+            p.add_argument(
+                'folder',
+                nargs='*',
+                help='List of folders.  Defaults to current '
+                'folder and its folders and its folders and ...')
+
+        elif cmd == 'submit':
+            p.add_argument('script')
+            p.add_argument(
+                '-R', '--resources',
+                help='Examples: "8x1h", 8 cores for 1 hour. '
+                'Use "m" for minutes, '
+                '"h" for hours and "d" for days.')
+            p.add_argument(
+                '-d', '--dependencies')
+
+        elif cmd == 'workflow':
+            p.add_argument('workflow',
+                           help='Work-flow description file.')
+
+        elif cmd == 'reset':
+            p.add_argument('-S', '--resubmit', action='store_true')
+
+        if cmd in ['cancel', 'list', 'reset']:
+            p.add_argument('-i', '--id', type=int)
+
+        if cmd != 'list':
             p.add_argument('folder',
                            nargs='+',
                            help='List of folders.')
-        p.add_argument('-f', '--filter',
-                       help='Select only jobs named "TASK".')
 
-        if p is list_:
-            default = default_states['list']
-        elif p is reset:
-            default = default_states['reset']
+        if 0:
+            p.add_argument('-f', '--filter',
+                           help='Select only jobs named "TASK".')
 
-        elif p is cancel:
-            default = default_states['cancel']
-        else:
-            default = ''
-
-        if default:
+        if cmd in default_states:
+            default = default_states[cmd]
             p.add_argument(
                 '-s', '--states',
                 metavar=default,
@@ -123,7 +101,7 @@ def main():
 
     verbosity = 1 - int(args.quiet) + int(args.verbose)
 
-    jobs = Jobs(verbosity)
+    queue = Queue(verbosity)
 
     if args.command in default_states:
         states = set()
@@ -141,7 +119,7 @@ def main():
                for folder in args.folder]
 
     if args.command == 'list':
-        jobs.list(states)
+        queue.list(states)
 
     elif args.command == 'submit':
         deps = []
@@ -152,20 +130,23 @@ def main():
                     reldir = '.'
                 deps.append((script, reldir))
 
-        newjobs = [Job(args.script, folder=folder, deps=deps)
+        newjobs = [Job(args.script,
+                       folder=folder,
+                       deps=deps,
+                       runner=args.runner)
                    for folder in folders]
 
         # n = self.queue.maxjobs
         # print('Can only submit {n} jobs!  Use "-N number" to increase the '
         #       'limit.'.format(n=n))
         runner = get_runner(args.runner)
-        jobs.submit(newjobs, runner, args.dry_run)
+        queue.submit(newjobs, runner, args.dry_run)
 
     elif args.command == 'reset':
-        jobs.reset(states, args.id, folders, args.resubmit, args.dry_run)
+        queue.reset(states, args.id, folders, args.resubmit, args.dry_run)
 
     elif args.command == 'cancel':
-        ...
+        queue.cancel(states, args.id, folders, args.dry_run)
 
     elif args.command == 'workflow':
         _workflow['jobs'] = []
@@ -177,4 +158,4 @@ def main():
         for folder in folders:
             for job in _workflow['jobs']:
                 job.folder = folder
-            jobs.submit(_workflow['jobs'], runner, args.dry_run)
+            queue.submit(_workflow['jobs'], runner, args.dry_run)

@@ -1,14 +1,3 @@
-"""
-
-module@1,2.3,txt
-module:func@1,2.3,txt
-~/folder/script.py@a,2.3,txt
-
-c2dm.relax:run_1_Cu.12234.err
-relax.py_Cu
-echo_hello
-"""
-
 from pathlib import Path
 
 from q2.commands import command
@@ -36,13 +25,20 @@ class Job:
     def __init__(self, cmd,
                  args=[],
                  deps=[],
-                 cores=[1],
-                 time='1m',
+                 cores=None,
+                 time=None,
                  repeat=0,
                  folder='.',
                  state='UNKNOWN',
-                 runner='local',
+                 runner='slurm',
                  id=None):
+        """Description of a job.
+
+        ::
+
+            task_A1_A2@C1,C2,C3xTxR
+
+        """
         if isinstance(cmd, str):
             cmd, _, resources = cmd.partition('@')
             if resources:
@@ -63,8 +59,8 @@ class Job:
 
         self.cmd = cmd
         self.deps = deps
-        self.cores = cores
-        self.time = time
+        self.cores = cores or [1]
+        self.time = time or 600
         self.repeat = repeat
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
             Path.home())

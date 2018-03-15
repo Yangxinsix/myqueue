@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import subprocess
 from typing import List
@@ -23,39 +22,36 @@ class SLURM(Runner):
                 nodes = cores // size
                 break
         else:
-            if job.cores == 1:
+            if cores == 1:
                 size = 8
                 nodes = 1
             else:
                 1 / 0
 
+        name = job.cmd.name
         cmd = ['sbatch',
                '--partition=xeon{}'.format(size),
-               '--job-name={}'.format(job.name),
+               '--job-name={}'.format(name),
                '--time={}'.format(job.time // 60),
-               '--njobs={}'.format(cores),
+               '--ntasks={}'.format(cores),
                '--nodes={}'.format(nodes),
-               '--output={}.out'.format(job.name),
-               '--error={}.err'.format(job.name)]
+               '--output={}.%j.out'.format(name),
+               '--error={}.%j.err'.format(name)]
 
         if job.deps:
             ids = ':'.join(str(dep.id) for dep in job.deps)
             cmd.append('--dependency=afterok:{}'.format(ids))
 
-        mpicmd = 'mpirun'
+        mpicmd = 'mpirun '
         if size == 24:
-            mpicmd += ' -mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1'
+            mpicmd += '-mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1 '
         mpicmd += str(job.cmd).replace('python3', 'gpaw-python')
 
-        msg = 'python3 -m q2.jobs'
-        p = subprocess.run(cmd, shell=True)
-        assert p.returncode == 0
-        job.state = 'running'
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
-                  '({msg} $id running && '
-                  '{mpi} && {msg} $id done) || {msg} $id FAILED\n'
-                  .format(mpi=mpicmd, msg=msg))
+                  'msg="python3 -m q2.jobs $id"\n'
+                  '($msg running && {mpi} && $msg done) || $msg FAILED\n'
+                  .format(mpi=mpicmd))
 
         p = subprocess.Popen(cmd,
                              stdin=subprocess.PIPE,
@@ -74,16 +70,5 @@ class SLURM(Runner):
                         return True
         return False
 
-    def cancel(self, ids):
-        subprocess.run(['scancel'] + [str[id] for id in ids])
-
-    def jobs(self):
-        user = os.environ['USER']
-        cmd = ['squeue', '--user', user]
-        try:
-            p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        except FileNotFoundError:
-            cmd[:0] = ['ssh', os.environ.get('SLURM_FRONTEND', 'sylg')]
-            p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
-        return queued
+    def cancel(self, job):
+        subprocess.run(['scancel', str(job.id)])
