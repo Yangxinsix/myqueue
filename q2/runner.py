@@ -6,11 +6,14 @@ class Runner:
     def submit(self, jobs: List[Job]) -> None:
         pass
 
-    def update(self, uid: str, state: str) -> None:
+    def update(self, id: str, state: str) -> None:
         pass
 
     def kick(self) -> None:
         pass
+
+    def timeout(self, job):
+        return False
 
 
 def get_runner(name: str) -> Runner:

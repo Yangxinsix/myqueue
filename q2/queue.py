@@ -1,10 +1,10 @@
 import json
-from collections import defaultdict
+import time
 from pathlib import Path
 from typing import Set, List
 
 from q2.job import Job
-from q2.runner import Runner, get_runner
+from q2.runner import get_runner
 from q2.utils import Lock
 
 
@@ -20,10 +20,11 @@ def S(n, thing):
 
 
 def pprint(jobs):
-    lengths = [0, 0, 0, 0]
+    lengths = [0, 0, 0, 0, 0]
     for job in jobs:
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, str(job).split())]
+        lengths.append(1)
     for job in jobs:
         print(' '.join(word.ljust(n)
                        for n, word in
@@ -31,7 +32,8 @@ def pprint(jobs):
 
 
 class Queue(Lock):
-    def __init__(self, verbosity=1):
+    def __init__(self, runner, verbosity=1):
+        self.runner = get_runner(runner)
         self.verbosity = verbosity
 
         folder = Path.home() / '.q2'
@@ -39,27 +41,48 @@ class Queue(Lock):
         if not folder.is_dir():
             folder.mkdir()
 
-        self.fname = folder / 'queue.json'
+        self.fname = folder / (runner + '.json')
 
-        Lock.__init__(self, self.fname.with_name('queue.json.lock'))
+        Lock.__init__(self, self.fname.with_name(runner + '.json.lock'))
 
         self.jobs = None
 
     def list(self, states: Set[str]) -> None:
         self._read()
+
+        write = False
+        repeats = []
+        t = time.time()
+        for job in self.jobs:
+            if job.state == 'running':
+                if t - job.tstart > job.time and self.runner.timeout(job):
+                    job.state = 'TIMEOUT'
+                    write = True
+                    if job.repeat > 0:
+                        repeats.append(job)
+
         pprint([job for job in self.jobs if job.state in states])
+
+        if repeats:
+            for job in repeats:
+                self.jobs.remove(job)
+                job.repeats -= 1
+            self.submit(repeats)
+        elif write:
+            self._write()
 
     def submit(self,
                jobs: List[Job],
-               runner: Runner,
+               workflow: bool = False,
                dry_run: bool = False) -> None:
 
         n1 = len(jobs)
-        jobs = [job for job in jobs if not job.done()]
+        if workflow:
+            jobs = [job for job in jobs if not job.done()]
         n2 = len(jobs)
 
         if n2 < n1:
-            print(S(n2 - n1, 'job'), 'already done')
+            print(S(n1 - n2, 'job'), 'already done')
 
         if self.jobs is None:
             self._read()
@@ -72,7 +95,7 @@ class Queue(Lock):
         n3 = len(jobs)
 
         if n3 < n2:
-            print(S(n3 - n2, 'job'), 'already in the queue')
+            print(S(n2 - n3, 'job'), 'already in the queue')
 
         ready = []
         for job in jobs:
@@ -105,7 +128,7 @@ class Queue(Lock):
         if dry_run:
             print(S(len(ready), 'job'), 'to submit:')
         else:
-            runner.submit(ready)
+            self.runner.submit(ready)
             print(S(len(ready), 'job'), 'submitted:')
 
         pprint(ready)
@@ -113,7 +136,7 @@ class Queue(Lock):
         if not dry_run:
             self.jobs += ready
             self._write()
-            runner.kick()
+            self.runner.kick()
 
     def cancel(self,
                states: Set[str],
@@ -130,8 +153,6 @@ class Queue(Lock):
                 if id is None or job.id == id:
                     if not folders or any(job.infolder(f) for f in folders):
                         jobs.append(job)
-        if id is not None:
-            assert len(jobs) == 1, jobs
 
         for job in jobs:
             job.state = 'CANCELED'
@@ -143,8 +164,7 @@ class Queue(Lock):
             print(S(len(jobs), 'job'), 'canceled')
             pprint(jobs)
             for job in jobs:
-                runner = get_runner(job.runner)
-                runner.cancel(job)
+                self.runner.cancel(job)
                 self.jobs.remove(job)
             self._write()
 
@@ -161,16 +181,9 @@ class Queue(Lock):
                 if id is None or job.id == id:
                     if not folders or any(job.infolder(f) for f in folders):
                         jobs.append(job)
-        if id is not None:
-            assert len(jobs) == 1, jobs
 
         if resubmit:
-            runners = defaultdict(list)
-            for job in jobs:
-                runners[job.runner].append(job)
-            for runner, jobs in runners.items():
-                runner = get_runner(runner)
-                self.submit(jobs, runner, dry_run)
+            self.submit(jobs, dry_run)
         else:
             for job in jobs:
                 job.state = 'REMOVED'
@@ -184,46 +197,50 @@ class Queue(Lock):
                     self.jobs.remove(job)
                 self._write()
 
-    def update(self, uid: str, state: str) -> None:
+    def update(self, id: str, state: str) -> None:
         self._read()
         for job in self.jobs:
-            if job.uid == uid:
+            if job.id == id:
                 break
         else:
-            raise ValueError('No such job: {uid}, {state}')
+            raise ValueError('No such job: {id}, {state}'
+                             .format(id=id, state=state))
 
         job.state = state
 
         if state == 'done':
             for j in self.jobs:
-                if uid in j.deps:
-                    j.deps.remove(uid)
+                if id in j.deps:
+                    j.deps.remove(id)
             job.write_done_file()
+
         elif state == 'FAILED':
             for j in self.jobs:
-                if uid in j.deps:
+                if id in j.deps:
                     j.state = 'CANCELED'
             job.read_error()
             if job.out_of_memory and len(job.cores) > 1:
                 del job.cores[0]
                 job.state = 'run with more cores'
+
+        elif state == 'running':
+            job.tstart = time.time()
+
         else:
-            assert state == 'running'
+            1 / 0
 
         self._write()
 
         if state != 'running':
             job.remove_empty_output_files()
 
-        if job.runner == 'local':
-            if state != 'running':
-                # Process local queue:
-                runner = get_runner('local')
-                runner.update(uid, state)
-                runner.kick()
+        if state != 'running':
+            # Process local queue:
+            self.runner.update(id, state)
+            self.runner.kick()
 
         if job.state == 'run with more cores':
-            self.submit([job], get_runner(job.runner))
+            self.submit([job])
 
     def _read(self) -> None:
         self.jobs = []
@@ -245,10 +262,10 @@ class Queue(Lock):
 
 if __name__ == '__main__':
     import sys
-    uid, state = sys.argv[1:3]
-    q = Queue()
+    runner, id, state = sys.argv[1:4]
+    q = Queue(runner, 0)
     try:
         with q:
-            q.update(uid, state)
+            q.update(int(id), state)
     except Exception as x:
         raise

@@ -13,7 +13,7 @@ class LocalRunner(Runner):
         self.jobs = None
         self.number = None
 
-    def submit(self, jobs: List[Job]) -> None:
+    def submit(self, jobs: List[Job], extra: str = None) -> None:
         self._read()
         for job in jobs:
             self.number += 1
@@ -87,7 +87,7 @@ class LocalRunner(Runner):
 
     def _run(self, job):
         cmd = job.command()
-        msg = 'python3 -m q2.jobs {}'.format(job.uid)
+        msg = 'python3 -m q2.queue {}'.format(job.uid)
         cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)&'
                .format(cmd=cmd, msg=msg))
         p = subprocess.run(cmd, shell=True)

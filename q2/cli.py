@@ -5,7 +5,6 @@ from pathlib import Path
 
 from q2.job import Job, jobstates, _workflow
 from q2.queue import Queue
-from q2.runner import get_runner
 
 
 def main():
@@ -18,8 +17,8 @@ def main():
 
     subparsers = parser.add_subparsers(dest='command')
 
-    default_states = {'list': 'qrFCT',
-                      'reset': 'FCT',
+    default_states = {'list': 'qrdFCT',
+                      'reset': 'dFCT',
                       'cancel': 'qr'}
 
     for cmd, help in [
@@ -47,6 +46,8 @@ def main():
                 '"h" for hours and "d" for days.')
             p.add_argument(
                 '-d', '--dependencies')
+            p.add_argument(
+                '-x', '--extra')
 
         elif cmd == 'workflow':
             p.add_argument('workflow',
@@ -101,7 +102,7 @@ def main():
 
     verbosity = 1 - int(args.quiet) + int(args.verbose)
 
-    queue = Queue(verbosity)
+    queue = Queue(args.runner, verbosity)
 
     if args.command in default_states:
         states = set()
@@ -132,15 +133,13 @@ def main():
 
         newjobs = [Job(args.script,
                        folder=folder,
-                       deps=deps,
-                       runner=args.runner)
+                       deps=deps)
                    for folder in folders]
 
         # n = self.queue.maxjobs
         # print('Can only submit {n} jobs!  Use "-N number" to increase the '
         #       'limit.'.format(n=n))
-        runner = get_runner(args.runner)
-        queue.submit(newjobs, runner, args.dry_run)
+        queue.submit(newjobs, False, args.dry_run)
 
     elif args.command == 'reset':
         queue.reset(states, args.id, folders, args.resubmit, args.dry_run)
@@ -153,9 +152,7 @@ def main():
         code = Path(args.workflow).read_text()
         exec(compile(code, args.workflow, 'exec'))
 
-        runner = get_runner(args.runner)
-
         for folder in folders:
             for job in _workflow['jobs']:
                 job.folder = folder
-            queue.submit(_workflow['jobs'], runner, args.dry_run)
+            queue.submit(_workflow['jobs'], True, args.dry_run)

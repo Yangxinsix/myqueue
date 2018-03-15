@@ -1,4 +1,3 @@
-from pathlib import Path
 import subprocess
 from typing import List
 
@@ -38,6 +37,8 @@ class SLURM(Runner):
                '--output={}.%j.out'.format(name),
                '--error={}.%j.err'.format(name)]
 
+        cmd.append('--reservation=jensj')
+
         if job.deps:
             ids = ':'.join(str(dep.id) for dep in job.deps)
             cmd.append('--dependency=afterok:{}'.format(ids))
@@ -49,7 +50,7 @@ class SLURM(Runner):
 
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
-                  'msg="python3 -m q2.jobs $id"\n'
+                  'msg="python3 -m q2.queue slurm $id"\n'
                   '($msg running && {mpi} && $msg done) || $msg FAILED\n'
                   .format(mpi=mpicmd))
 
@@ -61,13 +62,16 @@ class SLURM(Runner):
         id = int(out.split()[-1])
         job.id = id
 
-    def timeout(self, name, id):
-        err = Path('slurm-{}-{}.err'.format(name, id))
-        if err.is_file():
-            with open(str(err)) as f:
-                for line in f:
-                    if line.endswith('DUE TO TIME LIMIT ***\n'):
-                        return True
+    def timeout(self, job):
+        path = (job.folder /
+                '{}.{}.err'.format(job.cmd.name, job.id)).expanduser()
+        print(path)
+        if path.is_file():
+            lines = path.read_text().splitlines()
+            for line in lines:
+                print(line)
+                if line.endswith('DUE TO TIME LIMIT ***'):
+                    return True
         return False
 
     def cancel(self, job):

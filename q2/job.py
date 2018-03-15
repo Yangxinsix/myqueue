@@ -2,7 +2,7 @@ from pathlib import Path
 
 from q2.commands import command
 
-jobstates = ['queued', 'running',
+jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
 
 INFINITY = 100
@@ -30,7 +30,8 @@ class Job:
                  repeat=0,
                  folder='.',
                  state='UNKNOWN',
-                 runner='slurm',
+                 tstart=None,
+                 error='',
                  id=None):
         """Description of a job.
 
@@ -64,18 +65,16 @@ class Job:
         self.repeat = repeat
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
             Path.home())
-        self.runner = runner
         self.state = state
         self.id = id
+        self.tstart = tstart
 
         self._done = None
+        self.error = error
+        self.out_of_memory = False
 
         if 'jobs' in _workflow:
             _workflow['jobs'].append(self)
-
-    @property
-    def uid(self):
-        return '{}:{}'.format(self.runner, self.id)
 
     @property
     def name(self):
@@ -89,15 +88,16 @@ class Job:
                 rep = '+' + str(self.repeat)
         else:
             rep = ''
-        s = '{} {} {}@{}x{}s{}({}) {}'.format(
-            self.uid,
+        s = '{} {} {}@{}x{}s{}({}) {} {} {}'.format(
+            self.id,
             self.folder,
             self.cmd.name,
             ','.join(str(c) for c in self.cores),
             self.time,
             rep,
             ','.join(str(id) for id in self.deps),
-            self.state)
+            self.state,
+            self.tstart, self.error)
 
         return s
 
@@ -110,7 +110,8 @@ class Job:
                 'time': self.time,
                 'repeat': self.repeat,
                 'state': self.state,
-                'runner': self.runner}
+                'tstart': self.tstart,
+                'error': self.error}
 
     @staticmethod
     def fromdict(dct):
@@ -121,12 +122,12 @@ class Job:
 
     def done(self):
         if self._done is None:
-            p = (self.folder / '.{}.done'.format(self.cmd.name)).expanduser()
+            p = (self.folder / '{}.done'.format(self.cmd.name)).expanduser()
             self._done = p.is_file()
         return self._done
 
     def write_done_file(self):
-        p = (self.folder / '.{}.done'.format(self.cmd.name)).expanduser()
+        p = (self.folder / '{}.done'.format(self.cmd.name)).expanduser()
         p.write_text('')
 
     def remove_empty_output_files(self):
@@ -137,13 +138,17 @@ class Job:
 
     def read_error(self):
         path = (self.folder / (self.name + '.err')).expanduser()
+        print(path)
         try:
             lines = path.read_text().splitlines()
         except FileNotFoundError:
             return
+        print(lines)
         for line in lines[::-1]:
-            if 'Error: ' in line:
+            if 'error: ' in line.lower():
                 self.error = line
+                if line.endswith('memory limit at some point.'):
+                    self.out_of_memory = True
                 return
         self.error = lines[-1]
 
