@@ -1,6 +1,7 @@
 import subprocess
 from typing import List
 
+from q2.config import read_config
 from q2.job import Job
 from q2.runner import Runner
 
@@ -21,23 +22,24 @@ class SLURM(Runner):
                 nodes = cores // size
                 break
         else:
-            if cores == 1:
+            if cores < 8:
                 size = 8
                 nodes = 1
             else:
-                1 / 0
+                raise ValueError('...')
 
         name = job.cmd.name
         cmd = ['sbatch',
                '--partition=xeon{}'.format(size),
                '--job-name={}'.format(name),
-               '--time={}'.format(job.tmax // 60),
+               '--time={}'.format(max(job.tmax // 60, 1)),
                '--ntasks={}'.format(cores),
                '--nodes={}'.format(nodes),
                '--output={}.%j.out'.format(name),
                '--error={}.%j.err'.format(name)]
 
-        cmd.append('--reservation=jensj')
+        cfg = read_config()
+        cmd += cfg.get('slurm', {}).get('extra', [])
 
         if job.deps:
             ids = ':'.join(str(dep.id) for dep in job.deps)
@@ -65,11 +67,10 @@ class SLURM(Runner):
     def timeout(self, job):
         path = (job.folder /
                 '{}.{}.err'.format(job.cmd.name, job.id)).expanduser()
-        print(path)
         if path.is_file():
+            job.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
             for line in lines:
-                print(line)
                 if line.endswith('DUE TO TIME LIMIT ***'):
                     return True
         return False

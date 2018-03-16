@@ -20,21 +20,24 @@ def match(word, *suffixes):
 # Beginning of computer generated data:
 commands = {
     'agts':
-        ['-z', '--dry-run', '-r', '--runner'],
+        ['-z', '--dry-run'],
     'delete':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
-         '--dry-run', '-r', '--runner'],
+         '--dry-run'],
+    'kick':
+        ['-z', '--dry-run'],
     'list':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-r',
-         '--runner'],
+        ['-s', '--states', '-i', '--id', '-n', '--name'],
     'resubmit':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
-         '--dry-run', '-r', '--runner'],
+         '--dry-run'],
+    'runner':
+        ['-z', '--dry-run'],
     'submit':
         ['-R', '--resources', '-d', '--dependencies', '-a', '--arguments',
-         '-z', '--dry-run', '-r', '--runner'],
+         '-z', '--dry-run'],
     'workflow':
-        ['-z', '--dry-run', '-r', '--runner']}
+        ['-z', '--dry-run']}
 # End of computer generated data
 
 

@@ -16,7 +16,10 @@ class JobError(Exception):
 def T(t):
     """Convert string to seconds."""
     if isinstance(t, str):
-        t = {'m': 60, 'h': 3600, 'd': 24 * 3600}[t[-1]] * int(t[:-1])
+        t = {'s': 1,
+             'm': 60,
+             'h': 3600,
+             'd': 24 * 3600}[t[-1]] * int(t[:-1])
     return t
 
 
@@ -55,7 +58,7 @@ class Job:
             cmd, _, resources = cmd.partition('@')
             if resources:
                 assert cores is None and tmax is None
-                cores, tmax = resources.split('x')
+                cores, tmax = resources.split('x', 1)
                 cores = [int(c) for c in cores.split(',')]
             cmd = command(cmd, args)
 
@@ -63,7 +66,7 @@ class Job:
             if 'x' in tmax:
                 assert repeat is None
                 tmax, _, repeat = tmax.partition('x')
-                repeat = int(repeat)
+                repeat = int(repeat) - 1
             tmax = T(tmax)
 
         self.cmd = cmd
@@ -93,7 +96,7 @@ class Job:
 
     def __str__(self):
         if self.repeat:
-            rep = 'x' + str(self.repeat)
+            rep = 'x' + str(self.repeat + 1)
         else:
             rep = ''
 

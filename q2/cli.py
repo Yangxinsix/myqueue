@@ -29,6 +29,7 @@ def main():
         ('workflow', 'Put many jobs in queue.'),
         ('delete', 'Delete or cancel job(s).'),
         ('runner', 'Set runner.'),
+        ('kick', 'XXX'),
         ('agts', 'XXX')]:
 
         p = subparsers.add_parser(cmd, description=help, help=help)
@@ -100,6 +101,10 @@ def main():
 
     queue = Queue(runner, verbosity)
 
+    if args.command == 'kick':
+        queue.kick()
+        return
+
     if args.command in possible_states:
         states = set()
         for s in args.states:
@@ -147,6 +152,9 @@ def main():
         _workflow['jobs'] = []
         code = Path(args.workflow).read_text()
         exec(compile(code, args.workflow, 'exec'))
+
+        if not folders:
+            folders = [Path('.')]
 
         for folder in folders:
             for job in _workflow['jobs']:

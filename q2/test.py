@@ -1,3 +1,6 @@
-from q2.job import Job
-j1 = Job('a.b:f')
-Job('a.b:g', deps=[j1])
+print('hej')
+if __name__ == '__main__':
+    print('hej2')
+    from q2.job import Job
+    j1 = Job('q2.test.f')
+    Job('q2.test.g', deps=[j1])

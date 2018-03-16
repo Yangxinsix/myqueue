@@ -47,11 +47,9 @@ class Queue(Lock):
 
         self.jobs = None
 
-    def list(self, states: Set[str], folders) -> None:
+    def check(self) -> None:
         self._read()
-
         write = False
-        again = []
         t = time.time()
         for job in self.jobs:
             if job.state == 'running':
@@ -59,28 +57,41 @@ class Queue(Lock):
                     job.state = 'TIMEOUT'
                     job.remove_empty_output_files()
                     write = True
-                    if job.repeat > 0:
-                        job.repeat -= 1
-                        again.append(job)
             elif job.state == 'FAILED':
                 if job.error is None:
                     job.read_error()
                     write = True
-                if len(job.cores) > 1 and job.out_of_memory:
-                    del job.cores[0]
-                    again.append(job)
+        if write:
+            self._write()
+
+    def kick(self) -> None:
+        self.check()
+
+        again = []
+        for job in self.jobs:
+            if job.state == 'TIMEOUT' and job.repeat > 0:
+                job.repeat -= 1
+                again.append(job)
+            elif (job.state == 'FAILED' and
+                  len(job.cores) > 1 and
+                  job.out_of_memory):
+                del job.cores[0]
+                again.append(job)
 
         for job in again:
             self.jobs.remove(job)
 
+        if again:
+            for job in again:
+                job.error = None
+            self.submit(again)
+
+    def list(self, states: Set[str], folders) -> None:
+        self.check()
+
         pprint([job for job in self.jobs
                 if job.state in states and
                 (not folders or any(job.infolder(f) for f in folders))])
-
-        if again:
-            self.submit(again)
-        elif write:
-            self._write()
 
     def submit(self,
                jobs: List[Job],
