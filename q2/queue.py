@@ -86,12 +86,10 @@ class Queue(Lock):
                 job.error = None
             self.submit(again)
 
-    def list(self, states: Set[str], folders) -> None:
+    def list(self, id: int, states: Set[str], folders) -> None:
         self.check()
-
-        pprint([job for job in self.jobs
-                if job.state in states and
-                (not folders or any(job.infolder(f) for f in folders))])
+        jobs = self.select(id, states, folders)
+        pprint(jobs)
 
     def submit(self,
                jobs: List[Job],
@@ -176,8 +174,8 @@ class Queue(Lock):
         return jobs
 
     def delete(self,
-               states: Set[str],
                id: int,
+               states: Set[str],
                folders: List[str],
                dry_run: bool) -> None:
         """Delete or cancel jobs."""
@@ -205,8 +203,8 @@ class Queue(Lock):
             self._write()
 
     def resubmit(self,
-                 states: Set[str],
                  id: int,
+                 states: Set[str],
                  folders: List[str],
                  dry_run: bool) -> None:
 

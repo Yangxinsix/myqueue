@@ -102,7 +102,17 @@ class PythonFunction(Command):
         Command.__init__(self, cmd, args)
 
     def __str__(self):
-        args = ', '.join(self.args)
+        args = []
+        for arg in self.args:
+            for t in [int, float]:
+                try:
+                    arg = t(arg)
+                    break
+                except ValueError:
+                    pass
+            args.append(repr(arg))
+        args = ', '.join(args)
+
         return ('python3 -c "import {mod}; {mod}.{func}({args})"'
                 .format(mod=self.mod, func=self.func, args=args))
 

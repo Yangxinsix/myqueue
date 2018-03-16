@@ -118,7 +118,7 @@ def main():
             assert args.states is None and len(folders) == 0
 
     if args.command == 'list':
-        queue.list(states, folders)
+        queue.list(args.id, states, folders)
 
     elif args.command == 'submit':
         deps = []
@@ -140,10 +140,10 @@ def main():
         queue.submit(newjobs, args.dry_run)
 
     elif args.command == 'delete':
-        queue.delete(states, args.id, folders, args.dry_run)
+        queue.delete(args.id, states, folders, args.dry_run)
 
     elif args.command == 'resubmit':
-        queue.resubmit(states, args.id, folders, args.dry_run)
+        queue.resubmit(args.id, states, folders, args.dry_run)
 
     elif args.command == 'workflow':
         _workflow['jobs'] = []
