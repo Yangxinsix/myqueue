@@ -109,7 +109,8 @@ class Job:
             dt = self.tstop - self.trunning
 
         if self.deps:
-            deps = '(' + ','.join(str(id) for id in self.deps) + ')'
+            deps = '(' + ','.join(str(dep if isinstance(dep, int) else dep.id)
+                                      for dep in self.deps) + ')'
         else:
             deps = ''
 
@@ -132,7 +133,8 @@ class Job:
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
                 'folder': str(self.folder),
-                'deps': self.deps,
+                'deps': [dep if isinstance(dep, int) else dep.id
+                         for dep in self.deps],
                 'cores': self.cores,
                 'tmax': self.tmax,
                 'repeat': self.repeat,

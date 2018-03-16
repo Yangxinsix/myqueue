@@ -98,7 +98,7 @@ class PythonModule(Command):
 
 class PythonFunction(Command):
     def __init__(self, cmd, args):
-        self.mod, self.func = cmd.rsplit('.')
+        self.mod, self.func = cmd.rsplit('.', 1)
         Command.__init__(self, cmd, args)
 
     def __str__(self):

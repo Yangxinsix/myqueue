@@ -17,10 +17,6 @@ def main():
 
     subparsers = parser.add_subparsers(dest='command')
 
-    possible_states = {'list': 'qrdFCT',
-                       'resubmit': 'FCT',
-                       'delete': 'qrdFCT'}
-
     for cmd, help in [
         ('help', 'Show how to use this tool.'),
         ('list', 'List jobs in queue.'),
@@ -59,12 +55,10 @@ def main():
         elif cmd == 'workflow':
             a('workflow', help='Work-flow description file.')
 
-        states = possible_states.get(cmd)
-        if states is not None:
-            a('-s', '--states', metavar=states,
-              default=states if cmd == 'list' else '',
+        if cmd in ['list', 'delete', 'resubmit']:
+            a('-s', '--states', metavar='qrdFCT',
               help='Selection of states. First letters of "{}".'
-              .format('", "'.join(s for s in jobstates if s[0] in states)))
+              .format('", "'.join(s for s in jobstates if s[0] in 'qrdFCT')))
             a('-i', '--id', type=int)
             a('-n', '--name',
               help='Select only jobs named "NAME".')
@@ -105,10 +99,14 @@ def main():
         queue.kick()
         return
 
-    if args.command in possible_states:
+    home = Path.home()
+    folders = ['~' / Path(folder).absolute().relative_to(home)
+               for folder in args.folder]
+
+    if args.command in ['list', 'delete', 'resubmit']:
+        default = 'qrdFCT' if args.command == 'list' else ''
         states = set()
-        for s in args.states:
-            assert s in possible_states[args.command]
+        for s in args.states if args.states is not None else default:
             for state in jobstates:
                 if s == state[0]:
                     states.add(state)
@@ -116,9 +114,8 @@ def main():
             else:
                 raise ValueError('Unknown state: ' + s)
 
-    home = Path.home()
-    folders = ['~' / Path(folder).absolute().relative_to(home)
-               for folder in args.folder]
+        if args.id:
+            assert args.states is None and len(folders) == 0
 
     if args.command == 'list':
         queue.list(states, folders)

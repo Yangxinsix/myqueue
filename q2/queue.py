@@ -149,10 +149,10 @@ class Queue(Lock):
             job.tqueued = t
 
         if dry_run:
-            print(S(len(ready), 'job'), 'to submit:')
+            print(S(len(ready), 'job'), 'to submit')
         else:
             self.runner.submit(ready)
-            print(S(len(ready), 'job'), 'submitted:')
+            print(S(len(ready), 'job'), 'submitted')
 
         pprint(ready)
 
@@ -160,6 +160,20 @@ class Queue(Lock):
             self.jobs += ready
             self._write()
             self.runner.kick()
+
+    def select(self, id, states, folders):
+        jobs = []
+        if id is not None:
+            for job in self.jobs:
+                if job.id == id:
+                    return [job]
+
+        for job in self.jobs:
+            if job.state in states:
+                if not folders or any(job.infolder(f) for f in folders):
+                    jobs.append(job)
+
+        return jobs
 
     def delete(self,
                states: Set[str],
@@ -170,15 +184,13 @@ class Queue(Lock):
 
         self._read()
 
-        jobs = []
-        for job in self.jobs:
-            if job.state in states:
-                if id is None or job.id == id:
-                    if not folders or any(job.infolder(f) for f in folders):
-                        jobs.append(job)
+        jobs = self.select(id, states, folders)
 
+        t = time.time()
         for job in jobs:
             job.state = 'DELETED'
+            if job.tstop is None:
+                job.tstop = t
 
         if dry_run:
             print(S(len(jobs), 'job'), 'to be deleted')
@@ -191,6 +203,16 @@ class Queue(Lock):
                     self.runner.cancel(job)
                 self.jobs.remove(job)
             self._write()
+
+    def resubmit(self,
+                 states: Set[str],
+                 id: int,
+                 folders: List[str],
+                 dry_run: bool) -> None:
+
+        self._read()
+        jobs = self.select(id, states, folders)
+        self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
         self._read()
