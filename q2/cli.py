@@ -28,10 +28,10 @@ def main():
         ('resubmit', 'Resubmit failed or timed-out jobs.'),
         ('workflow', 'Put many jobs in queue.'),
         ('delete', 'Delete or cancel job(s).'),
+        ('runner', 'Set runner.'),
         ('agts', 'XXX')]:
 
-        p = subparsers.add_parser(cmd, description=help, help=help,
-                                  alias=cmd[0])
+        p = subparsers.add_parser(cmd, description=help, help=help)
 
         if cmd == 'help':
             continue
@@ -43,7 +43,10 @@ def main():
           help='List of folders.  Defaults to current '
           'folder and its folders and its folders and ...')
 
-        if cmd == 'submit':
+        if cmd == 'runner':
+            a('runner', help='Set runner to RUNNER (local or slurm).')
+
+        elif cmd == 'submit':
             a('script')
             a('-R', '--resources',
               help='Examples: "8x1h", 8 cores for 1 hour. '
@@ -70,17 +73,13 @@ def main():
               action='store_true',
               help='Show what will happen before it happens.')
 
-        a('-r', '--runner', default='slurm',
-          help='Which queue to use: slurm or local.  Default '
-          'is slurm.')
-
     args = parser.parse_args()
 
     if args.command is None:
         parser.print_help()
         return
 
-    if args.command == 'list' and sys.stdout.isatty():
+    if args.command in ['list', 'help'] and sys.stdout.isatty():
         # Pipe output through less:
         subprocess.run('python3 -m q2 ' +
                        ' '.join(sys.argv[1:]) + ' | less -FX',
@@ -89,7 +88,17 @@ def main():
 
     verbosity = 1 - int(args.quiet) + int(args.verbose)
 
-    queue = Queue(args.runner, verbosity)
+    if args.command == 'runner':
+        (Path.home() / '.q2' / 'runner').write_text(args.runner)
+        return
+
+    path = Path.home() / '.q2' / 'runner'
+    if path.is_file():
+        runner = path.read_text()
+    else:
+        runner = 'local'
+
+    queue = Queue(runner, verbosity)
 
     if args.command in possible_states:
         states = set()
@@ -107,7 +116,7 @@ def main():
                for folder in args.folder]
 
     if args.command == 'list':
-        queue.list(states)
+        queue.list(states, folders)
 
     elif args.command == 'submit':
         deps = []
@@ -118,12 +127,15 @@ def main():
                     reldir = '.'
                 deps.append((script, reldir))
 
+        if not folders:
+            folders = [Path('.')]
+
         newjobs = [Job(args.script,
                        folder=folder,
                        deps=deps)
                    for folder in folders]
 
-        queue.submit(newjobs, False, args.dry_run)
+        queue.submit(newjobs, args.dry_run)
 
     elif args.command == 'delete':
         queue.delete(states, args.id, folders, args.dry_run)
@@ -139,4 +151,5 @@ def main():
         for folder in folders:
             for job in _workflow['jobs']:
                 job.folder = folder
-            queue.submit(_workflow['jobs'], True, args.dry_run)
+                job.workflow = True
+            queue.submit(_workflow['jobs'], args.dry_run)

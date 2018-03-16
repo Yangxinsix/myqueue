@@ -19,23 +19,22 @@ def match(word, *suffixes):
 
 # Beginning of computer generated data:
 commands = {
-    'cancel':
-        ['-f', '--filter', '-s', '--states', '-n', '--dry-run', '-r',
-         '--runner', '-N', '--number-of-jobs'],
+    'agts':
+        ['-z', '--dry-run', '-r', '--runner'],
+    'delete':
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
+         '--dry-run', '-r', '--runner'],
     'list':
-        ['-f', '--filter', '-s', '--states', '-n', '--dry-run', '-r',
-         '--runner', '-N', '--number-of-jobs'],
-    'reset':
-        ['-S', '--resubmit', '-i', '--id', '-f', '--filter', '-s',
-         '--states', '-n', '--dry-run', '-r', '--runner', '-N',
-         '--number-of-jobs'],
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-r',
+         '--runner'],
+    'resubmit':
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
+         '--dry-run', '-r', '--runner'],
     'submit':
-        ['-R', '--resources', '-d', '--dependencies', '-f', '--filter',
-         '-n', '--dry-run', '-r', '--runner', '-N',
-         '--number-of-jobs'],
+        ['-R', '--resources', '-d', '--dependencies', '-a', '--arguments',
+         '-z', '--dry-run', '-r', '--runner'],
     'workflow':
-        ['-f', '--filter', '-n', '--dry-run', '-r', '--runner', '-N',
-         '--number-of-jobs']}
+        ['-z', '--dry-run', '-r', '--runner']}
 # End of computer generated data
 
 

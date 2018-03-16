@@ -9,6 +9,14 @@ class Command:
         self.name = '_'.join([name] + self.args)
 
 
+def is_module(mod):
+    try:
+        m = find_spec(mod)
+        return m is not None
+    except AttributeError:
+        return False
+
+
 def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
     if '_' in cmd:
         if args:
@@ -20,23 +28,22 @@ def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
         if cmd.endswith('.py'):
             type = 'python-script'
         else:
-            type = 'python-module'
             mod = cmd
             func = None
-            try:
-                find_spec(mod)
-            except AttributeError:
+            if is_module(mod):
+                type = 'python-module'
+            else:
                 mod, _, func = cmd.rpartition('.')
                 if func:
-                    try:
-                        find_spec(mod)
-                    except AttributeError:
-                        type = 'shell-script'
-                    else:
+                    if is_module(mod):
                         type = 'python-function'
+                    else:
+                        type = 'shell-script'
+                else:
+                    type = 'shell-script'
 
-    if type == 'shell-command':
-        return ShellCommand(cmd, args)
+    if type == 'shell-script':
+        return ShellScript(cmd, args)
     if type == 'python-script':
         return PythonScript(cmd, args)
     if type == 'python-module':
@@ -47,7 +54,7 @@ def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
     raise ValueError
 
 
-class ShellCommand(Command):
+class ShellScript(Command):
     def __init__(self, cmd, args):
         Command.__init__(self, Path(cmd).name, args)
         self.cmd = cmd
@@ -56,7 +63,7 @@ class ShellCommand(Command):
         return ' '.join([self.cmd] + self.args)
 
     def todict(self):
-        return {'type': 'shell-command',
+        return {'type': 'shell-script',
                 'cmd': self.cmd,
                 'args': self.args}
 

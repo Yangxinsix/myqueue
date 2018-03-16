@@ -6,8 +6,6 @@ from q2.commands import command
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
 
-INFINITY = 100
-
 _workflow = {}
 
 
@@ -37,9 +35,10 @@ class Job:
                  deps=[],
                  cores=None,
                  tmax=None,
-                 repeat=0,
+                 repeat=None,
                  folder='.',
                  state='UNKNOWN',
+                 workflow=False,
                  tqueued=None,
                  trunning=None,
                  tstop=None,
@@ -61,23 +60,21 @@ class Job:
             cmd = command(cmd, args)
 
         if isinstance(tmax, str):
-            if '+' in tmax:
+            if 'x' in tmax:
                 assert repeat is None
-                tmax, _, repeat = tmax.partition('+')
-                if repeat:
-                    repeat = int(repeat)
-                else:
-                    repeat = INFINITY
+                tmax, _, repeat = tmax.partition('x')
+                repeat = int(repeat)
             tmax = T(tmax)
 
         self.cmd = cmd
         self.deps = deps
         self.cores = cores or [1]
         self.tmax = tmax or 600
-        self.repeat = repeat
+        self.repeat = repeat or 0
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
             Path.home())
         self.state = state
+        self.workflow = workflow
         self.id = id
         self.tqueued = tqueued
         self.trunning = trunning
@@ -99,6 +96,7 @@ class Job:
             rep = 'x' + str(self.repeat)
         else:
             rep = ''
+
         t = time.time()
         if self.state == 'queued':
             dt = t - self.tqueued
@@ -106,14 +104,21 @@ class Job:
             dt = t - self.trunning
         else:
             dt = self.tstop - self.trunning
-        s = '{} {} {}@{}x{}s{}({}) {} {} {}'.format(
+
+        if self.deps:
+            deps = '(' + ','.join(str(id) for id in self.deps) + ')'
+        else:
+            deps = ''
+
+        s = '{} {} {}@{}x{}s{}{}{} {} {} {}'.format(
             self.id,
             self.folder,
             self.cmd.name,
             ','.join(str(c) for c in self.cores),
             self.tmax,
             rep,
-            ','.join(str(id) for id in self.deps),
+            deps,
+            '*' if self.workflow else '',
             seconds_to_time_string(dt),
             self.state,
             self.error or '')
@@ -128,6 +133,7 @@ class Job:
                 'cores': self.cores,
                 'tmax': self.tmax,
                 'repeat': self.repeat,
+                'workflow': self.workflow,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,

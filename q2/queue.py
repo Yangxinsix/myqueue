@@ -47,7 +47,7 @@ class Queue(Lock):
 
         self.jobs = None
 
-    def list(self, states: Set[str]) -> None:
+    def list(self, states: Set[str], folders) -> None:
         self._read()
 
         write = False
@@ -73,7 +73,9 @@ class Queue(Lock):
         for job in again:
             self.jobs.remove(job)
 
-        pprint([job for job in self.jobs if job.state in states])
+        pprint([job for job in self.jobs
+                if job.state in states and
+                (not folders or any(job.infolder(f) for f in folders))])
 
         if again:
             self.submit(again)
@@ -82,12 +84,10 @@ class Queue(Lock):
 
     def submit(self,
                jobs: List[Job],
-               workflow: bool = False,
                dry_run: bool = False) -> None:
 
         n1 = len(jobs)
-        if workflow:
-            jobs = [job for job in jobs if not job.done()]
+        jobs = [job for job in jobs if not job.workflow or not job.done()]
         n2 = len(jobs)
 
         if n2 < n1:
@@ -99,9 +99,9 @@ class Queue(Lock):
         current = {(job.folder, job.cmd.name): job
                    for job in self.jobs}
 
-        if workflow:
-            jobs = [job for job in jobs
-                    if (job.folder, job.cmd.name) not in current]
+        jobs = [job for job in jobs
+                if not job.workflow or
+                (job.folder, job.cmd.name) not in current]
         n3 = len(jobs)
 
         if n3 < n2:
@@ -150,12 +150,12 @@ class Queue(Lock):
             self._write()
             self.runner.kick()
 
-    def cancel(self,
+    def delete(self,
                states: Set[str],
                id: int,
                folders: List[str],
                dry_run: bool) -> None:
-        """Cancel jobs."""
+        """Delete or cancel jobs."""
 
         self._read()
 
@@ -167,47 +167,19 @@ class Queue(Lock):
                         jobs.append(job)
 
         for job in jobs:
-            job.state = 'CANCELED'
+            job.state = 'DELETED'
 
         if dry_run:
-            print(S(len(jobs), 'job'), 'to be canceled')
+            print(S(len(jobs), 'job'), 'to be deleted')
             pprint(jobs)
         else:
-            print(S(len(jobs), 'job'), 'canceled')
+            print(S(len(jobs), 'job'), 'deleted')
             pprint(jobs)
             for job in jobs:
-                self.runner.cancel(job)
+                if job.state in ['running', 'queued']:
+                    self.runner.cancel(job)
                 self.jobs.remove(job)
             self._write()
-
-    def reset(self,
-              states: Set[str],
-              id: int,
-              folders: List[str],
-              resubmit: bool,
-              dry_run: bool) -> None:
-        self._read()
-        jobs = []
-        for job in self.jobs:
-            if job.state in states:
-                if id is None or job.id == id:
-                    if not folders or any(job.infolder(f) for f in folders):
-                        jobs.append(job)
-
-        if resubmit:
-            self.submit(jobs, dry_run)
-        else:
-            for job in jobs:
-                job.state = 'REMOVED'
-            if dry_run:
-                print(S(len(jobs), 'job'), 'to reset')
-                pprint(jobs)
-            else:
-                print(S(len(jobs), 'job'), 'reset')
-                pprint(jobs)
-                for job in jobs:
-                    self.jobs.remove(job)
-                self._write()
 
     def update(self, id: int, state: str) -> None:
         self._read()
@@ -226,7 +198,8 @@ class Queue(Lock):
             for j in self.jobs:
                 if id in j.deps:
                     j.deps.remove(id)
-            job.write_done_file()
+            if job.workflow:
+                job.write_done_file()
             job.tstop = t
 
         elif state == 'FAILED':
