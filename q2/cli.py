@@ -181,4 +181,3 @@ def convert_dot_tasks_file(jobs, folder):
                 d = folder / (job.cmd.name + '.done')
                 d.write_text()
                 print(d)
-

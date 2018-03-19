@@ -6,7 +6,9 @@ from importlib.util import find_spec
 class Command:
     def __init__(self, name: str, args: List[str]) -> None:
         self.args = args or []
-        self.name = '_'.join([name] + self.args)
+        if args:
+            name += '+' + '_'.join(self.args)
+        self.name = name
 
 
 def is_module(mod):
@@ -18,10 +20,10 @@ def is_module(mod):
 
 
 def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
-    if '_' in cmd:
+    if '+' in cmd:
         if args:
             raise ValueError
-        cmd, _, rest = cmd.partition('_')
+        cmd, _, rest = cmd.partition('+')
         args = rest.split('_')
 
     if type is None:
@@ -92,7 +94,7 @@ class PythonModule(Command):
 
     def todict(self):
         return {'type': 'python-module',
-                'cmd': self.name.split('_')[0],
+                'cmd': self.name.split('+')[0],
                 'args': self.args}
 
 
@@ -118,5 +120,5 @@ class PythonFunction(Command):
 
     def todict(self):
         return {'type': 'python-function',
-                'cmd': self.name.split('_')[0],
+                'cmd': self.name.split('+')[0],
                 'args': self.args}
