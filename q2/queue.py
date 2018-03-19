@@ -20,15 +20,15 @@ def S(n, thing):
 
 
 def pprint(jobs):
-    lengths = [0, 0, 0, 0, 0]
+    lengths = [0, 0, 0, 0, 0, 0]
     for job in jobs:
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, str(job).split())]
-    lengths.append(1)
     for job in jobs:
+        words = job.words()
         print(' '.join(word.ljust(n)
-                       for n, word in
-                       zip(lengths, str(job).split(None, 5))))
+                       for n, word in zip(lengths, words[:5])) +
+              ' {:>{}} {}'.format(words[5], lengths[5], words[6]))
 
 
 class Queue(Lock):
@@ -64,31 +64,9 @@ class Queue(Lock):
         if write:
             self._write()
 
-    def kick(self) -> None:
+    def list(self, id: int, name: str, states: Set[str], folders) -> None:
         self.check()
-
-        again = []
-        for job in self.jobs:
-            if job.state == 'TIMEOUT' and job.repeat > 0:
-                job.repeat -= 1
-                again.append(job)
-            elif (job.state == 'FAILED' and
-                  len(job.cores) > 1 and
-                  job.out_of_memory):
-                del job.cores[0]
-                again.append(job)
-
-        for job in again:
-            self.jobs.remove(job)
-
-        if again:
-            for job in again:
-                job.error = None
-            self.submit(again)
-
-    def list(self, id: int, states: Set[str], folders) -> None:
-        self.check()
-        jobs = self.select(id, states, folders)
+        jobs = self.select(id, name, states, folders)
         pprint(jobs)
 
     def submit(self,
@@ -160,22 +138,28 @@ class Queue(Lock):
             self._write()
             self.runner.kick()
 
-    def select(self, id, states, folders):
-        jobs = []
+    def select(self, id: int,
+               name: str,
+               states: Set[str],
+               folders: List[str]) -> List[Job]:
         if id is not None:
             for job in self.jobs:
                 if job.id == id:
                     return [job]
+            return []
 
+        jobs = []
         for job in self.jobs:
             if job.state in states:
-                if not folders or any(job.infolder(f) for f in folders):
-                    jobs.append(job)
+                if not name and job.name == name:
+                    if not folders or any(job.infolder(f) for f in folders):
+                        jobs.append(job)
 
         return jobs
 
     def delete(self,
                id: int,
+               name: str,
                states: Set[str],
                folders: List[str],
                dry_run: bool) -> None:
@@ -183,7 +167,7 @@ class Queue(Lock):
 
         self._read()
 
-        jobs = self.select(id, states, folders)
+        jobs = self.select(id, name, states, folders)
 
         t = time.time()
         for job in jobs:
@@ -205,12 +189,13 @@ class Queue(Lock):
 
     def resubmit(self,
                  id: int,
+                 name: str,
                  states: Set[str],
                  folders: List[str],
                  dry_run: bool) -> None:
 
         self._read()
-        jobs = self.select(id, states, folders)
+        jobs = self.select(id, name, states, folders)
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
@@ -267,6 +252,8 @@ class Queue(Lock):
         for dct in data['jobs']:
             job = Job.fromdict(dct)
             self.jobs.append(job)
+
+        self.check()
 
     def _write(self):
         text = json.dumps({'jobs': [job.todict()

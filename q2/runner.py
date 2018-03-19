@@ -6,7 +6,7 @@ class Runner:
     def submit(self, jobs: List[Job]) -> None:
         pass
 
-    def update(self, id: str, state: str) -> None:
+    def update(self, id: int, state: str) -> None:
         pass
 
     def kick(self) -> None:

@@ -1,12 +1,11 @@
 import time
 from pathlib import Path
+from typing import Dict, List
 
 from q2.commands import command
 
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
-
-_workflow = {}
 
 
 class JobError(Exception):
@@ -59,7 +58,7 @@ class Job:
             if resources:
                 assert cores is None and tmax is None
                 cores, tmax = resources.split('x', 1)
-                cores = [int(c) for c in cores.split(',')]
+                cores = int(cores)
             cmd = command(cmd, args)
 
         if isinstance(tmax, str):
@@ -71,7 +70,7 @@ class Job:
 
         self.cmd = cmd
         self.deps = deps
-        self.cores = cores or [1]
+        self.cores = cores or 1
         self.tmax = tmax or 600
         self.repeat = repeat or 0
         self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
@@ -94,12 +93,7 @@ class Job:
     def name(self):
         return '{}.{}'.format(self.cmd.name, self.id)
 
-    def __str__(self):
-        if self.repeat:
-            rep = 'x' + str(self.repeat + 1)
-        else:
-            rep = ''
-
+    def words(self):
         t = time.time()
         if self.state == 'queued':
             dt = t - self.tqueued
@@ -109,25 +103,22 @@ class Job:
             dt = self.tstop - self.trunning
 
         if self.deps:
-            deps = '(' + ','.join(str(dep if isinstance(dep, int) else dep.id)
-                                  for dep in self.deps) + ')'
+            deps = '({})'.format(len(self.deps))
         else:
             deps = ''
 
-        s = '{} {} {}@{}x{}s{}{}{} {} {} {}'.format(
-            self.id,
-            self.folder,
-            self.cmd.name,
-            ','.join(str(c) for c in self.cores),
-            self.tmax,
-            rep,
-            deps,
-            '*' if self.workflow else '',
-            seconds_to_time_string(dt),
-            self.state,
-            self.error or '')
+        return (self.id,
+                self.folder,
+                self.cmd.name,
+                '{}x{}s'.format(self.cores, self.tmax) +
+                deps +
+                '*' if self.workflow else '',
+                self.state,
+                seconds_to_time_string(dt),
+                self.error or '')
 
-        return s
+    def __str__(self):
+        return ' '.join(self.words())
 
     def todict(self):
         return {'cmd': self.cmd.todict(),
@@ -189,3 +180,6 @@ class Job:
         cmd = 'cd {} && {} 2> {} > {}'.format(self.folder, self.cmd, err, out)
 
         return cmd
+
+
+_workflow: Dict[str, List[Job]] = {}

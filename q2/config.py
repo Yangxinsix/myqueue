@@ -1,7 +1,7 @@
-import json
 from pathlib import Path
+from typing import Dict
 
-_config = {}
+_config: Dict[str, Dict] = {}
 
 
 def read_config():
