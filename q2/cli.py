@@ -5,6 +5,7 @@ from pathlib import Path
 
 from q2.job import Job, jobstates, _workflow
 from q2.queue import Queue
+from q2.utils import chdir
 
 
 def main():
@@ -22,10 +23,8 @@ def main():
         ('list', 'List jobs in queue.'),
         ('submit', 'Submit job(s) to queue.'),
         ('resubmit', 'Resubmit failed or timed-out jobs.'),
-        ('workflow', 'Put many jobs in queue.'),
         ('delete', 'Delete or cancel job(s).'),
         ('runner', 'Set runner.'),
-        ('kick', 'XXX'),
         ('agts', 'XXX')]:
 
         p = subparsers.add_parser(cmd, description=help, help=help)
@@ -37,23 +36,20 @@ def main():
 
         a('folder',
           nargs='*',
-          help='List of folders.  Defaults to current '
-          'folder and its folders and its folders and ...')
+          help='List of folders.')
 
         if cmd == 'runner':
             a('runner', help='Set runner to RUNNER (local or slurm).')
 
         elif cmd == 'submit':
-            a('script')
+            a('script', nargs='?')
             a('-R', '--resources',
               help='Examples: "8x1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days.')
             a('-d', '--dependencies')
             a('-a', '--arguments')
-
-        elif cmd == 'workflow':
-            a('workflow', help='Work-flow description file.')
+            a('-w', '--workflow')
 
         if cmd in ['list', 'delete', 'resubmit']:
             a('-s', '--states', metavar='qrdFCT',
@@ -93,12 +89,6 @@ def main():
     else:
         runner = 'local'
 
-    queue = Queue(runner, verbosity)
-
-    if args.command == 'kick':
-        queue.kick()
-        return
-
     home = Path.home()
     folders = ['~' / Path(folder).absolute().relative_to(home)
                for folder in args.folder]
@@ -117,44 +107,78 @@ def main():
         if args.id:
             assert args.states is None and len(folders) == 0
 
-    if args.command == 'list':
-        queue.list(args.id, states, folders)
+    with Queue(runner, verbosity) as queue:
 
-    elif args.command == 'submit':
-        deps = []
-        if args.dependencies:
-            for dep in args.dependencies.split(','):
-                reldir, _, script = dep.rpartition('/')
-                if not reldir:
-                    reldir = '.'
-                deps.append((script, reldir))
+        if args.command == 'list':
+            queue.list(args.id, states, folders)
 
-        if not folders:
-            folders = [Path('.')]
+        elif args.command == 'delete':
+            queue.delete(args.id, states, folders, args.dry_run)
 
-        newjobs = [Job(args.script,
-                       folder=folder,
-                       deps=deps)
-                   for folder in folders]
+        elif args.command == 'resubmit':
+            queue.resubmit(args.id, states, folders, args.dry_run)
 
-        queue.submit(newjobs, args.dry_run)
+        elif args.command == 'submit':
+            if args.workflow:
+                workflow(args, queue, folders)
+                return
 
-    elif args.command == 'delete':
-        queue.delete(args.id, states, folders, args.dry_run)
+            if args.dependencies:
+                deps = args.dependencies.split(',')
+            else:
+                deps = []
 
-    elif args.command == 'resubmit':
-        queue.resubmit(args.id, states, folders, args.dry_run)
+            if not folders:
+                folders = [Path('.')]
 
-    elif args.command == 'workflow':
-        _workflow['jobs'] = []
-        code = Path(args.workflow).read_text()
-        exec(compile(code, args.workflow, 'exec'))
+            newjobs = [Job(args.script,
+                           folder=folder,
+                           deps=deps)
+                       for folder in folders]
 
-        if not folders:
-            folders = [Path('.')]
+            queue.submit(newjobs, args.dry_run)
 
-        for folder in folders:
-            for job in _workflow['jobs']:
-                job.folder = folder
-                job.workflow = True
-            queue.submit(_workflow['jobs'], args.dry_run)
+
+def workflow(args, queue, folders):
+    _workflow['jobs'] = []
+    filename = args.workflow
+    script = Path(filename).read_text()
+    code = compile(script, filename, 'exec')
+    jobs = _workflow['jobs']
+
+    if not folders:
+        folders = [Path('.')]
+
+    alljobs = []
+    for folder in folders:
+        with chdir(folder):
+            exec(code)  # magically fills up jobs from workflow script
+
+        for job in jobs:
+            job.folder = folder
+            job.workflow = True
+
+        if args.convert:
+            convert_dot_tasks_file(jobs, folder)
+        else:
+            alljobs += jobs
+
+        del jobs[:]  # ready for next exec(code) call
+
+    if not args.convert:
+        queue.submit(jobs, args.dry_run)
+
+
+def convert_dot_tasks_file(jobs, folder):
+    tasks = Path(folder / '.tasks')
+    if tasks.is_file():
+        done = {}
+        for line in tasks.read_text().splitlines():
+            date, state, name, *_ = line.split()
+            done[name] = (state == 'done')
+        for job in jobs:
+            if done.get(job.cmd.name):
+                d = folder / (job.cmd.name + '.done')
+                d.write_text()
+                print(d)
+
