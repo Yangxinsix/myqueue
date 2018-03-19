@@ -5,6 +5,7 @@ from pathlib import Path
 
 from q2.job import Job, jobstates, _workflow
 from q2.queue import Queue
+from q2.utils import chdir
 
 
 def main():
@@ -147,14 +148,38 @@ def main():
 
     elif args.command == 'workflow':
         _workflow['jobs'] = []
-        code = Path(args.workflow).read_text()
-        exec(compile(code, args.workflow, 'exec'))
+        script = Path(args.workflow).read_text()
+        code = compile(script, args.workflow, 'exec')
+        jobs = _workflow['jobs']
 
         if not folders:
             folders = [Path('.')]
 
         for folder in folders:
-            for job in _workflow['jobs']:
+            with chdir(folder):
+                exec(code)
+
+            for job in jobs:
                 job.folder = folder
                 job.workflow = True
-            queue.submit(_workflow['jobs'], args.dry_run)
+
+            if args.convert:
+                convert(jobs, folder)
+            else:
+                queue.submit(jobs, args.dry_run)
+
+            del jobs[:]
+
+
+def convert(jobs, folder):
+    tasks = Path(folder / '.tasks')
+    if tasks.is_file():
+        done = {}
+        for line in tasks.read_text().splitlines():
+            date, state, name, *_ = line.split()
+            done[name] = (state == 'done')
+        for job in jobs:
+            if done.get(job.cmd.name):
+                d = folder / (job.cmd.name + '.done')
+                d.write_text()
+                print(d)

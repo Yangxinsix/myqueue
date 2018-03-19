@@ -110,7 +110,7 @@ class Job:
 
         if self.deps:
             deps = '(' + ','.join(str(dep if isinstance(dep, int) else dep.id)
-                                      for dep in self.deps) + ')'
+                                  for dep in self.deps) + ')'
         else:
             deps = ''
 
