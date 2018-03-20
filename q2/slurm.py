@@ -35,6 +35,7 @@ class SLURM(Runner):
                '--time={}'.format(max(job.tmax // 60, 1)),
                '--ntasks={}'.format(cores),
                '--nodes={}'.format(nodes),
+               '--workdir={}'.format(job.folder.expanduser()),
                '--output={}.%j.out'.format(name),
                '--error={}.%j.err'.format(name)]
 

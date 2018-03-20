@@ -17,7 +17,7 @@ def timeout(file):
 
 
 def memory():
-    if world.size == 2:
+    if world.size > 1:
         return
     x = []
     while True:

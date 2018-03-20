@@ -34,22 +34,19 @@ def main():
 
         a = p.add_argument
 
-        a('folder',
-          nargs='*',
-          help='List of folders.')
-
         if cmd == 'runner':
             a('runner', help='Set runner to RUNNER (local or slurm).')
 
         elif cmd == 'submit':
-            a('script', nargs='?')
+            a('script')
             a('-R', '--resources',
               help='Examples: "8x1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days.')
             a('-d', '--dependencies')
             a('-a', '--arguments')
-            a('-w', '--workflow')
+            a('-w', '--workflow', action='store_true')
+            a('--convert', action='store_true')
 
         if cmd in ['list', 'delete', 'resubmit']:
             a('-s', '--states', metavar='qrdFCT',
@@ -63,6 +60,10 @@ def main():
             a('-z', '--dry-run',
               action='store_true',
               help='Show what will happen before it happens.')
+
+        a('folder',
+          nargs='*',
+          help='List of folders.')
 
     args = parser.parse_args()
 
@@ -141,9 +142,8 @@ def main():
 
 def workflow(args, queue, folders):
     _workflow['jobs'] = []
-    filename = args.workflow
-    script = Path(filename).read_text()
-    code = compile(script, filename, 'exec')
+    script = Path(args.script).read_text()
+    code = compile(script, args.script, 'exec')
     jobs = _workflow['jobs']
 
     if not folders:
@@ -151,22 +151,21 @@ def workflow(args, queue, folders):
 
     alljobs = []
     for folder in folders:
-        with chdir(folder):
+        with chdir(folder.expanduser()):
             exec(code)  # magically fills up jobs from workflow script
-
         for job in jobs:
             job.folder = folder
             job.workflow = True
 
         if args.convert:
-            convert_dot_tasks_file(jobs, folder)
+            convert_dot_tasks_file(jobs, folder.expanduser())
         else:
             alljobs += jobs
 
         del jobs[:]  # ready for next exec(code) call
 
     if not args.convert:
-        queue.submit(jobs, args.dry_run)
+        queue.submit(alljobs, args.dry_run)
 
 
 def convert_dot_tasks_file(jobs, folder):
@@ -179,5 +178,5 @@ def convert_dot_tasks_file(jobs, folder):
         for job in jobs:
             if done.get(job.cmd.name):
                 d = folder / (job.cmd.name + '.done')
-                d.write_text()
+                d.write_text('')
                 print(d)
