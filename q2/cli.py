@@ -135,7 +135,16 @@ def main():
             if not folders:
                 folders = [Path('.')]
 
+            if args.resources:
+                cores, tmax = args.resources.slpit('x')
+            else:
+                cores = None
+                tmax = None
+
             newjobs = [Job(args.script,
+                           args=args.arguments,
+                           tmax=tmax,
+                           cores=cores,
                            folder=folder,
                            deps=deps)
                        for folder in folders]

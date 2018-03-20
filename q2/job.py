@@ -31,6 +31,15 @@ def seconds_to_time_string(n):
     return '{}:{:02}'.format(m, s)
 
 
+def seconds_to_short_time_string(n):
+    for s, t in [('d', 24 * 3600),
+                 ('h', 3600),
+                 ('m', 60),
+                 ('s', 1)]:
+        if n % t == 0:
+            return '{}{}'.format(n // t, s)
+
+
 class Job:
     def __init__(self, cmd,
                  args=[],
@@ -114,7 +123,7 @@ class Job:
                 deps +
                 '*' if self.workflow else '',
                 self.state,
-                seconds_to_time_string(dt),
+                seconds_to_short_time_string(dt),
                 self.error or '')
 
     def __str__(self):

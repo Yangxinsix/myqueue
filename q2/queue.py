@@ -87,20 +87,22 @@ class Queue(Lock):
             deps = []
             for dep in job.deps:
                 if isinstance(dep, str):
+                    # convert str to Job:
                     reldir, _, name = dep.rpartition('/')
                     if not reldir:
                         reldir = '.'
                     folder = pjoin(job.folder, reldir)
-                    dep = current.get((folder, name))
-                    if dep is None:
+                    j = current.get((folder, name))
+                    if j is None:
                         if not (folder / (name + '.done')).is_file():
                             print('Missing dependency: {}/{}'
                                   .format(folder, name))
                             break
-                    elif dep.state not in ['queued', 'running']:
+                    elif j.state not in ['queued', 'running']:
                         print('Dependency ({}) in bad state: {}'
-                              .format(dep.name, dep.state))
+                              .format(j.name, j.state))
                         break
+                    dep = j
 
                 if dep is not None:
                     deps.append(dep)
