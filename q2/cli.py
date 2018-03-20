@@ -10,6 +10,7 @@ def main():
 
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-q', '--quiet', action='store_true')
+    parser.add_argument('-T', '--traceback', action='store_true')
 
     subparsers = parser.add_subparsers(dest='command')
 
@@ -76,6 +77,21 @@ def main():
                        shell=True)
         return
 
+    try:
+        run(args)
+    except KeyboardInterrupt:
+        pass
+    except Exception as x:
+        if args.traceback:
+            raise
+        else:
+            print('{}: {}'.format(x.__class__.__name__, x),
+                  file=sys.stderr)
+            print('To get a full traceback, use: q2 -T {} ...'
+                  .format(args.command), file=sys.stderr)
+
+
+def run(args):
     verbosity = 1 - int(args.quiet) + int(args.verbose)
 
     from pathlib import Path
@@ -121,6 +137,13 @@ def main():
 
         elif args.command == 'resubmit':
             queue.resubmit(args.id, args.name, states, folders, args.dry_run)
+
+        elif args.command == 'completion':
+            print('Add tab-completion for Bash by copying the following '
+                  'line to your ~/.bashrc (or similar):\n')
+            print('    complete -o default -C "{py} {filename}" q2\n'
+                  .format(py=sys.executable,
+                          filename=Path(__file__).with_name('complete.py')))
 
         elif args.command == 'submit':
             if args.workflow:
