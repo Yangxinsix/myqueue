@@ -107,8 +107,8 @@ class Job:
         else:
             deps = ''
 
-        return (self.id,
-                self.folder,
+        return (str(self.id),
+                str(self.folder),
                 self.cmd.name,
                 '{}x{}s'.format(self.cores, self.tmax) +
                 deps +

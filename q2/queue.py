@@ -21,11 +21,13 @@ def S(n, thing):
 
 def pprint(jobs):
     lengths = [0, 0, 0, 0, 0, 0]
-    for job in jobs:
-        lengths = [max(n, len(word))
-                   for n, word in zip(lengths, str(job).split())]
+    lines = []
     for job in jobs:
         words = job.words()
+        lines.append(words)
+        lengths = [max(n, len(word))
+                   for n, word in zip(lengths, words)]
+    for words in lines:
         print(' '.join(word.ljust(n)
                        for n, word in zip(lengths, words[:5])) +
               ' {:>{}} {}'.format(words[5], lengths[5], words[6]))
@@ -47,25 +49,8 @@ class Queue(Lock):
 
         self.jobs = None
 
-    def check(self) -> None:
-        self._read()
-        write = False
-        t = time.time()
-        for job in self.jobs:
-            if job.state == 'running':
-                if t - job.trunning > job.tmax and self.runner.timeout(job):
-                    job.state = 'TIMEOUT'
-                    job.remove_empty_output_files()
-                    write = True
-            elif job.state == 'FAILED':
-                if job.error is None:
-                    job.read_error()
-                    write = True
-        if write:
-            self._write()
-
     def list(self, id: int, name: str, states: Set[str], folders) -> None:
-        self.check()
+        self._read()
         jobs = self.select(id, name, states, folders)
         pprint(jobs)
 
@@ -152,7 +137,7 @@ class Queue(Lock):
         jobs = []
         for job in self.jobs:
             if job.state in states:
-                if not name and job.name == name:
+                if not name or job.cmd.name == name:
                     if not folders or any(job.infolder(f) for f in folders):
                         jobs.append(job)
 
@@ -260,6 +245,22 @@ class Queue(Lock):
                                     for job in self.jobs]},
                           indent=1)
         self.fname.write_text(text)
+
+    def check(self) -> None:
+        write = False
+        t = time.time()
+        for job in self.jobs:
+            if job.state == 'running':
+                if t - job.trunning > job.tmax and self.runner.timeout(job):
+                    job.state = 'TIMEOUT'
+                    job.remove_empty_output_files()
+                    write = True
+            elif job.state == 'FAILED':
+                if job.error is None:
+                    job.read_error()
+                    write = True
+        if write:
+            self._write()
 
 
 if __name__ == '__main__':

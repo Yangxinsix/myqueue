@@ -16,13 +16,12 @@ class SLURM(Runner):
         # Submit one job:
         job = jobs[0]
 
-        cores = job.cores[0]
         for size in [24, 16, 8]:
-            if cores % size == 0:
-                nodes = cores // size
+            if job.cores % size == 0:
+                nodes = job.cores // size
                 break
         else:
-            if cores < 8:
+            if job.cores < 8:
                 size = 8
                 nodes = 1
             else:
@@ -33,7 +32,7 @@ class SLURM(Runner):
                '--partition=xeon{}'.format(size),
                '--job-name={}'.format(name),
                '--time={}'.format(max(job.tmax // 60, 1)),
-               '--ntasks={}'.format(cores),
+               '--ntasks={}'.format(job.cores),
                '--nodes={}'.format(nodes),
                '--workdir={}'.format(job.folder.expanduser()),
                '--output={}.%j.out'.format(name),
