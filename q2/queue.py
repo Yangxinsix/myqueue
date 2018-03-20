@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from pathlib import Path
 from typing import Set, List
@@ -20,6 +21,7 @@ def S(n, thing):
 
 
 def pprint(jobs):
+    N = os.get_terminal_size().columns
     lengths = [0, 0, 0, 0, 0, 0]
     lines = []
     for job in jobs:
@@ -27,10 +29,11 @@ def pprint(jobs):
         lines.append(words)
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, words)]
+    cut = N - sum(lengths) - 6
     for words in lines:
         print(' '.join(word.ljust(n)
                        for n, word in zip(lengths, words[:5])) +
-              ' {:>{}} {}'.format(words[5], lengths[5], words[6]))
+              ' {:>{}} {}'.format(words[5], lengths[5], words[6][:cut]))
 
 
 class Queue(Lock):

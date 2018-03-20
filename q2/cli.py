@@ -69,7 +69,7 @@ def main():
         parser.print_help()
         return
 
-    if args.command in ['list', 'help'] and sys.stdout.isatty():
+    if 0:  # args.command in ['list', 'help'] and sys.stdout.isatty():
         # Pipe output through less:
         subprocess.run('python3 -m q2 ' +
                        ' '.join(sys.argv[1:]) + ' | less -FX',
