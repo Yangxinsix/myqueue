@@ -164,8 +164,12 @@ def run(args):
                 cores = None
                 tmax = None
 
+            if args.arguments:
+                arguments = args.arguments.split(',')
+            else:
+                arguments = None
             newjobs = [Job(args.script,
-                           args=args.arguments,
+                           args=arguments,
                            tmax=tmax,
                            cores=cores,
                            folder=folder,
