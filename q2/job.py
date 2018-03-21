@@ -32,6 +32,7 @@ def seconds_to_time_string(n):
 
 
 def seconds_to_short_time_string(n):
+    n = int(n)
     for s, t in [('d', 24 * 3600),
                  ('h', 3600),
                  ('m', 60),
@@ -119,11 +120,12 @@ class Job:
         return (str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                '{}x{}s'.format(self.cores, self.tmax) +
+                '{}x{}s'.format(self.cores,
+                                seconds_to_short_time_string(self.tmax)) +
                 deps +
-                '*' if self.workflow else '',
+                ('*' if self.workflow else ''),
                 self.state,
-                seconds_to_short_time_string(dt),
+                seconds_to_time_string(dt),
                 self.error or '')
 
     def __str__(self):

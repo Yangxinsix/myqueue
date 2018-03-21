@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Set, List
@@ -20,8 +21,16 @@ def S(n, thing):
     return '{} {}s'.format(n, thing)
 
 
+def colored(state):
+    if state.isupper():
+        return '\033[91m' + state + '\033[0m'
+    if state.startswith('done'):
+        return '\033[92m' + state + '\033[0m'
+    return state
+
+
 def pprint(jobs):
-    N = os.get_terminal_size().columns
+    color = sys.stdout.isatty()
     lengths = [0, 0, 0, 0, 0, 0]
     lines = []
     for job in jobs:
@@ -29,11 +38,20 @@ def pprint(jobs):
         lines.append(words)
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, words)]
-    cut = N - sum(lengths) - 6
-    for words in lines:
+    try:
+        N = os.get_terminal_size().columns
+        cut = N - sum(lengths) - 6
+    except OSError:
+        cut = 9999
+    *lengths, Lstate, Lt = lengths
+    for *words, state, t, error in lines:
+        state = state.ljust(Lstate)
+        if color:
+            state = colored(state)
         print(' '.join(word.ljust(n)
-                       for n, word in zip(lengths, words[:5])) +
-              ' {:>{}} {}'.format(words[5], lengths[5], words[6][:cut]))
+                       for n, word in zip(lengths, words)) +
+              ' {} {:>{}} {}'
+              .format(state, t, Lt, error[:cut]))
 
 
 class Queue(Lock):
@@ -269,7 +287,6 @@ class Queue(Lock):
 
 
 if __name__ == '__main__':
-    import sys
     runner, id, state = sys.argv[1:4]
     q = Queue(runner, 0)
     try:
