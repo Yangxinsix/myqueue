@@ -120,8 +120,8 @@ class Job:
         return (str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                '{}x{}s'.format(self.cores,
-                                seconds_to_short_time_string(self.tmax)) +
+                '{}x{}'.format(self.cores,
+                               seconds_to_short_time_string(self.tmax)) +
                 deps +
                 ('*' if self.workflow else ''),
                 self.state,
