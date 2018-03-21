@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, Any
 
 from q2.commands import command
 
@@ -96,7 +96,7 @@ class Job:
         self.error = error
         self.out_of_memory = False
 
-        if 'jobs' in _workflow:
+        if _workflow['active']:
             _workflow['jobs'].append(self)
 
     @property
@@ -189,7 +189,7 @@ class Job:
                 return
         self.error = lines[-1]
 
-    def command(self):
+    def command(self) -> str:
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
 
@@ -198,4 +198,5 @@ class Job:
         return cmd
 
 
-_workflow: Dict[str, List[Job]] = {}
+_workflow: Dict[str, Any] = {'active'; False,
+                             'jobs': []}

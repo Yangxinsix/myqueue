@@ -184,7 +184,7 @@ def workflow(args, queue, folders):
     from q2.job import _workflow
     from q2.utils import chdir
 
-    _workflow['jobs'] = []
+    _workflow['active'] = True
     script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
     jobs = _workflow['jobs']
@@ -195,7 +195,7 @@ def workflow(args, queue, folders):
     alljobs = []
     for folder in folders:
         with chdir(folder.expanduser()):
-            exec(code)  # magically fills up jobs from workflow script
+            exec(code, {})  # magically fills up jobs from workflow script
         for job in jobs:
             job.folder = folder
             job.workflow = True
