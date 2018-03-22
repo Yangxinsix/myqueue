@@ -1,15 +1,11 @@
 import time
 from pathlib import Path
-from typing import Dict, Any
 
 from q2.commands import command
 
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
-
-
-class JobError(Exception):
-    pass
+_workflow = {'active': False, 'jobs': []}  # type: Dict[str, Any]
 
 
 def T(t):
@@ -39,6 +35,24 @@ def seconds_to_short_time_string(n):
                  ('s', 1)]:
         if n % t == 0:
             return '{}{}'.format(n // t, s)
+
+
+def seconds_to_short_approximate_time_string(n):
+    n = int(n)
+    result = ''
+    m = 0
+    for s, t in [('d', 24 * 3600),
+                 ('h', 3600),
+                 ('m', 60),
+                 ('s', 1)]:
+        x = n // t
+        if x > 0:
+            result += '{}{}'.format(x, s)
+            m += 1
+            if m == 2:
+                break
+            n -= x * t
+    return result
 
 
 class Job:
@@ -107,10 +121,13 @@ class Job:
         t = time.time()
         if self.state == 'queued':
             dt = t - self.tqueued
+            age = dt
         elif self.state == 'running':
             dt = t - self.trunning
+            age = dt
         else:
             dt = self.tstop - self.trunning
+            age = t - self.tstop
 
         if self.deps:
             deps = '({})'.format(len(self.deps))
@@ -124,12 +141,19 @@ class Job:
                                seconds_to_short_time_string(self.tmax)) +
                 deps +
                 ('*' if self.workflow else ''),
+                seconds_to_short_approximate_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
                 self.error or '')
 
     def __str__(self):
         return ' '.join(self.words())
+
+    def __repr__(self):
+        dct = self.todict()
+        return 'Job({!r}, {})'.format(
+            dct.pop('cmd').name,
+            ', '.join('{}={!r}'.format(k, v) for k, v in dct.items()))
 
     def todict(self):
         deps = []
@@ -196,7 +220,3 @@ class Job:
         cmd = 'cd {} && {} 2> {} > {}'.format(self.folder, self.cmd, err, out)
 
         return cmd
-
-
-_workflow: Dict[str, Any] = {'active': False,
-                             'jobs': []}
