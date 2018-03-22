@@ -1,15 +1,16 @@
 import json
 import subprocess
-from pathlib import Path
 from typing import List
 
+
+from q2.config import home_folder
 from q2.job import Job
 from q2.runner import Runner
 
 
 class LocalRunner(Runner):
     def __init__(self):
-        self.fname = Path.home() / '.q2' / 'local-runner.json'
+        self.fname = home_folder() / 'local-runner.json'
         self.jobs = None
         self.number = None
 

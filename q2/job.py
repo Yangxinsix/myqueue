@@ -198,5 +198,5 @@ class Job:
         return cmd
 
 
-_workflow: Dict[str, Any] = {'active'; False,
+_workflow: Dict[str, Any] = {'active': False,
                              'jobs': []}

@@ -2,12 +2,13 @@ import json
 import os
 import sys
 import time
-from pathlib import Path
+from collections import defaultdict
 from typing import Set, List
 
 from q2.job import Job
 from q2.runner import get_runner
 from q2.utils import Lock
+from q2.config import home_folder
 
 
 def pjoin(folder, reldir):
@@ -59,7 +60,7 @@ class Queue(Lock):
         self.runner = get_runner(runner)
         self.verbosity = verbosity
 
-        folder = Path.home() / '.q2'
+        folder = home_folder()
 
         if not folder.is_dir():
             folder.mkdir()
@@ -71,6 +72,7 @@ class Queue(Lock):
         self.jobs = None
 
     def list(self, id: int, name: str, states: Set[str], folders) -> None:
+        print(id, name, states, folders)
         self._read()
         jobs = self.select(id, name, states, folders)
         pprint(jobs)
@@ -194,6 +196,26 @@ class Queue(Lock):
                     self.runner.cancel(job)
                 self.jobs.remove(job)
             self._write()
+
+    def find_depending(self, jobs):
+        map = {(job.folder, job.cmd.name): job for job in self.jobs}
+        d = defaultdict(list)
+        for job in self.jobs:
+            for dep in job.deps:
+                j = map[(job.folder, dep)]
+                d[j].append(job)
+
+        removed = []
+
+        def remove(job):
+            removed.apend(job)
+            for j in d[job]:
+                remove(j)
+
+        for job in jobs:
+            remove(job)
+
+        return removed
 
     def resubmit(self,
                  id: int,

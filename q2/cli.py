@@ -3,6 +3,25 @@ import subprocess
 import sys
 
 
+intro = """
+Examples:
+
+    q2 submit job.py@8x10h folder*/
+    q2 submit time.sleep -a 25 -R 1x1m
+    q2 submit time.sleep+25@1x1m
+    q2 submit echo -a hello
+    q2 submit module
+    q2 submit module.function
+    q2 list
+    q2 list -F
+    q2 delete -s F
+    q2 help submit
+    q2 completions -q >> ~/.bashrc
+    q2 resubmit -R 64x2d -n long_job.py
+
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog='q2',
@@ -21,7 +40,8 @@ def main():
         ('resubmit', 'Resubmit failed or timed-out jobs.'),
         ('delete', 'Delete or cancel job(s).'),
         ('runner', 'Set runner.'),
-        ('completion', 'Set up tab-completion.')]:
+        ('completion', 'Set up tab-completion.'),
+        ('test', 'Run tests.')]:
 
         p = subparsers.add_parser(cmd, description=help, help=help)
 
@@ -70,11 +90,25 @@ def main():
         parser.print_help()
         return
 
-    if 0:  # args.command in ['list', 'help'] and sys.stdout.isatty():
+    if args.command == 'help' and sys.stdout.isatty():
         # Pipe output through less:
         subprocess.run('python3 -m q2 ' +
                        ' '.join(sys.argv[1:]) + ' | less -FX',
                        shell=True)
+        return
+
+    if args.command == 'help':
+        parser.print_help()
+        print(intro)
+        for name, p in subparsers.choices.items():
+            print('\n\n{} command\n{}\n'
+                  .format(name.upper(), '=' * (len(name) + 8)))
+            p.print_help()
+        return
+
+    if args.command == 'test':
+        from q2.test.tests import run_tests
+        run_tests()
         return
 
     try:
