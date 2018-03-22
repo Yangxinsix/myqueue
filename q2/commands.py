@@ -15,7 +15,7 @@ def is_module(mod):
     try:
         m = find_spec(mod)
         return m is not None
-    except (AttributeError, ModuleNotFoundError):
+    except (AttributeError):#, ModuleNotFoundError):
         return False
 
 

@@ -31,7 +31,7 @@ def colored(state):
 
 def pprint(jobs):
     color = sys.stdout.isatty()
-    lengths = [0, 0, 0, 0, 0, 0]
+    lengths = [0, 0, 0, 0, 0, 0, 0]
     lines = []
     for job in jobs:
         words = job.words()
@@ -40,7 +40,7 @@ def pprint(jobs):
                    for n, word in zip(lengths, words)]
     try:
         N = os.get_terminal_size().columns
-        cut = N - sum(lengths) - 6
+        cut = N - sum(lengths) - 7
     except OSError:
         cut = 9999
     *lengths, Lstate, Lt = lengths

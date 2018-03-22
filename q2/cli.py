@@ -185,7 +185,10 @@ def workflow(args, queue, folders):
     from q2.utils import chdir
 
     _workflow['active'] = True
-    script = Path(args.script).read_text()
+    if args.script == '-':
+        script = sys.stdin.read()
+    else:
+        script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
     jobs = _workflow['jobs']
 
