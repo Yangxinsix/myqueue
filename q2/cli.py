@@ -255,6 +255,7 @@ def convert_dot_tasks_file(jobs, folder):
         done = {}
         for line in tasks.read_text().splitlines():
             date, state, name, *_ = line.split()
+            name = name.replace('c2dm', 'c2db')
             done[name] = (state == 'done')
         for job in jobs:
             if done.get(job.cmd.name):
