@@ -15,7 +15,7 @@ def is_module(mod):
     try:
         m = find_spec(mod)
         return m is not None
-    except (AttributeError):#, ModuleNotFoundError):
+    except (AttributeError):  # , ModuleNotFoundError):
         return False
 
 
@@ -72,8 +72,9 @@ class ShellScript(Command):
 
 class PythonScript(Command):
     def __init__(self, script, args):
-        Command.__init__(self, Path(script).name, args)
-        self.script = script
+        path = Path(script)
+        Command.__init__(self, path.name, args)
+        self.script = str(path.absolute())
 
     def __str__(self):
         return 'python3 ' + ' '.join([self.script] + self.args)
