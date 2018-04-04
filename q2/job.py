@@ -52,7 +52,7 @@ def seconds_to_short_approximate_time_string(n):
             if m == 2:
                 break
             n -= x * t
-    return result
+    return result or '0s'
 
 
 class Job:
@@ -97,8 +97,7 @@ class Job:
         self.cores = cores or 1
         self.tmax = tmax or 600
         self.repeat = repeat or 0
-        self.folder = '~' / Path(folder).expanduser().absolute().relative_to(
-            Path.home())
+        self.folder = Path(folder).expanduser().absolute()
         self.state = state
         self.workflow = workflow
         self.id = id
@@ -125,6 +124,9 @@ class Job:
         elif self.state == 'running':
             dt = t - self.trunning
             age = dt
+        elif self.state == 'CANCELED':
+            dt = self.tstop - self.tqueued
+            age = t - self.tstop
         else:
             dt = self.tstop - self.trunning
             age = t - self.tstop
@@ -134,7 +136,7 @@ class Job:
         else:
             deps = ''
 
-        return (str(self.id),
+        return [str(self.id),
                 str(self.folder),
                 self.cmd.name,
                 '{}x{}'.format(self.cores,
@@ -144,7 +146,7 @@ class Job:
                 seconds_to_short_approximate_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
-                self.error or '')
+                self.error or '']
 
     def __str__(self):
         return ' '.join(self.words())
@@ -152,13 +154,13 @@ class Job:
     def __repr__(self):
         dct = self.todict()
         return 'Job({!r}, {})'.format(
-            dct.pop('cmd').name,
+            dct.pop('cmd')['cmd'],
             ', '.join('{}={!r}'.format(k, v) for k, v in dct.items()))
 
     def todict(self):
         deps = []
         for dep in self.deps:
-            if not isinstance(dep, str):
+            if not isinstance(dep, (str, int)):
                 assert dep.folder == self.folder
                 dep = dep.cmd.name
             deps.append(dep)
@@ -185,22 +187,22 @@ class Job:
 
     def done(self):
         if self._done is None:
-            p = (self.folder / '{}.done'.format(self.cmd.name)).expanduser()
+            p = self.folder / '{}.done'.format(self.cmd.name)
             self._done = p.is_file()
         return self._done
 
     def write_done_file(self):
-        p = (self.folder / '{}.done'.format(self.cmd.name)).expanduser()
+        p = self.folder / '{}.done'.format(self.cmd.name)
         p.write_text('')
 
     def remove_empty_output_files(self):
         for ext in ['.out', '.err']:
-            path = (self.folder / (self.name + ext)).expanduser()
+            path = self.folder / (self.name + ext)
             if path.is_file() and path.stat().st_size == 0:
                 path.unlink()
 
     def read_error(self):
-        path = (self.folder / (self.name + '.err')).expanduser()
+        path = self.folder / (self.name + '.err')
         try:
             lines = path.read_text().splitlines()
         except FileNotFoundError:

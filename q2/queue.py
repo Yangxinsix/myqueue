@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path
 from typing import Set, List
 
 from q2.job import Job
@@ -30,12 +31,18 @@ def colored(state):
     return state
 
 
-def pprint(jobs):
+def pprint(jobs, verbosity=1):
+    if verbosity < 0:
+        return
     color = sys.stdout.isatty()
+    home = str(Path.home())
     lengths = [2, 6, 4, 4, 3, 5, 4]
     lines = [('id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error')]
     for job in jobs:
         words = job.words()
+        folder = words[1]
+        if folder.startswith(home):
+            words[1] = '~/' + folder[len(home):]
         lines.append(words)
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, words)]
@@ -44,7 +51,7 @@ def pprint(jobs):
         cut = N - sum(lengths) - 7
     except OSError:
         cut = 9999
-    *length5, Lstate, Lt = lengths
+    *lengths5, Lstate, Lt = lengths
     for *words, state, t, error in lines:
         state = state.ljust(Lstate)
         if color:
@@ -54,7 +61,7 @@ def pprint(jobs):
               ' {} {:>{}} {}'
               .format(state, t, Lt, error[:cut]))
         if words[0] == 'id':
-            print(' '.join('=' * L for L in lengths), '=====')
+            print(' '.join('-' * L for L in lengths), '-----')
 
 
 class Queue(Lock):
@@ -76,7 +83,8 @@ class Queue(Lock):
     def list(self, id: int, name: str, states: Set[str], folders) -> None:
         self._read()
         jobs = self.select(id, name, states, folders)
-        pprint(jobs)
+        pprint(jobs, self.verbosity)
+        return jobs
 
     def submit(self,
                jobs: List[Job],
@@ -119,10 +127,13 @@ class Queue(Lock):
                             print('Missing dependency: {}/{}'
                                   .format(folder, name))
                             break
+                    elif j.state == 'done':
+                        j = None
                     elif j.state not in ['queued', 'running']:
                         print('Dependency ({}) in bad state: {}'
                               .format(j.name, j.state))
                         break
+
                     dep = j
 
                 if dep is not None:
@@ -230,6 +241,7 @@ class Queue(Lock):
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
+        print(id,state)
         self._read()
         for job in self.jobs:
             if job.id == id:
@@ -254,6 +266,7 @@ class Queue(Lock):
             for j in self.jobs:
                 if id in j.deps:
                     j.state = 'CANCELED'
+                    j.tstop = t
             job.tstop = t
 
         elif state == 'running':

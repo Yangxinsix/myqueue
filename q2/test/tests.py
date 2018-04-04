@@ -1,12 +1,42 @@
 import os
-from q2.queue import Queue
-from q2.job import Job, jobstates
+import sys
+import tempfile
+import time
+from q2.cli import main
+
+
+def q2(cmd):
+    return main('--traceback ' + cmd)
+
+
+tmpdir = tempfile.mkdtemp(prefix='q2-test-')
+
+
+def wait(timeout=10.0):
+    t0 = time.time()
+    while q2('-qq list -s qr'):
+        time.sleep(0.1)
+        if time.time() - t0 > timeout:
+            raise TimeoutError
 
 
 def run_tests():
-    os.environ['Q2_HOME'] = 'testing'
-    q = Queue('local')
-    q.submit([Job('time')])
-    q.list(None, None, jobstates, [])
-    q.list(None, None, jobstates, [])
-    
+    print(tmpdir)
+    os.chdir(tmpdir)
+    os.environ['Q2_HOME'] = tmpdir
+
+    q2('submit time.sleep+2')
+    q2('submit echo+hello -d time.sleep+2')
+    wait()
+    for job in q2('list'):
+        assert job.state == 'done'
+    q2('submit q2.test.fail+2')
+    q2('submit echo+hello -d q2.test.fail+2')
+    wait()
+    for job in q2('list'):
+        print(job.state)
+    q2('submit sleep+20@1x1s')
+    q2('submit echo+hello -d sleep+20')
+    wait()
+    for job in q2('list'):
+        print(job.state)

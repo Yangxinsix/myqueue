@@ -23,6 +23,17 @@ class LocalRunner(Runner):
             self.jobs.append(job)
         self._write()
 
+    def cancel(self, job):
+        assert job.state == 'queued', job
+        self._read()
+        for i, j in enumerate(self.jobs):
+            if job.id == j.id:
+                break
+        else:
+            raise ValueError('No such job!')
+        del self.jobs[i]
+        self._write()
+
     def _read(self) -> None:
         self.jobs = []
 
@@ -87,10 +98,15 @@ class LocalRunner(Runner):
         self._write()
 
     def _run(self, job):
-        cmd = job.command()
+        cmd1 = job.command()
         msg = 'python3 -m q2.queue local {}'.format(job.id)
-        cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)&'
-               .format(cmd=cmd, msg=msg))
+        err = job.folder / (job.name + '.err')
+        cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)& '
+               'export p1=$!; echo $p1; (sleep {tmax}; kill -9 $p1; echo timeout) & '
+               'export p2=$!; echo $p2; (wait $p1; '
+               'if [ $? -eq 0 ]; then kill -9 $p2; fi) &'
+               .format(cmd=cmd1, msg=msg, tmax=job.tmax, err=err))
+        print(cmd)
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         job.state = 'running'

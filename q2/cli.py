@@ -22,13 +22,13 @@ Examples:
 """
 
 
-def main():
+def main(arguments=None):
     parser = argparse.ArgumentParser(
         prog='q2',
         description='Manage jobs in queue.')
 
-    parser.add_argument('-v', '--verbose', action='store_true')
-    parser.add_argument('-q', '--quiet', action='store_true')
+    parser.add_argument('-v', '--verbose', action='count', default=0)
+    parser.add_argument('-q', '--quiet', action='count', default=0)
     parser.add_argument('-T', '--traceback', action='store_true')
 
     subparsers = parser.add_subparsers(dest='command')
@@ -75,7 +75,7 @@ def main():
             a('-n', '--name',
               help='Select only jobs named "NAME".')
 
-        if cmd != 'list':
+        if cmd not in ['list', 'completion']:
             a('-z', '--dry-run',
               action='store_true',
               help='Show what will happen before it happens.')
@@ -84,7 +84,10 @@ def main():
           nargs='*',
           help='List of folders.')
 
-    args = parser.parse_args()
+    if isinstance(arguments, str):
+        arguments = arguments.split()
+
+    args = parser.parse_args(arguments)
 
     if args.command is None:
         parser.print_help()
@@ -112,7 +115,7 @@ def main():
         return
 
     try:
-        run(args)
+        return run(args)
     except KeyboardInterrupt:
         pass
     except Exception as x:
@@ -126,7 +129,7 @@ def main():
 
 
 def run(args):
-    verbosity = 1 - int(args.quiet) + int(args.verbose)
+    verbosity = 1 - args.quiet + args.verbose
 
     from pathlib import Path
 
@@ -143,9 +146,7 @@ def run(args):
     else:
         runner = 'local'
 
-    home = Path.home()
-    folders = ['~' / Path(folder).absolute().relative_to(home)
-               for folder in args.folder]
+    folders = [Path(folder).expanduser().absolute() for folder in args.folder]
 
     if args.command in ['list', 'delete', 'resubmit']:
         default = 'qrdFCT' if args.command == 'list' else ''
@@ -164,20 +165,25 @@ def run(args):
     with Queue(runner, verbosity) as queue:
 
         if args.command == 'list':
-            queue.list(args.id, args.name, states, folders)
+            jobs = queue.list(args.id, args.name, states, folders)
+            return jobs
 
-        elif args.command == 'delete':
+        if args.command == 'delete':
             queue.delete(args.id, args.name, states, folders, args.dry_run)
 
         elif args.command == 'resubmit':
             queue.resubmit(args.id, args.name, states, folders, args.dry_run)
 
         elif args.command == 'completion':
-            print('Add tab-completion for Bash by copying the following '
-                  'line to your ~/.bashrc (or similar):\n')
-            print('    complete -o default -C "{py} {filename}" q2\n'
-                  .format(py=sys.executable,
-                          filename=Path(__file__).with_name('complete.py')))
+            cmd = ('complete -o default -C "{py} {filename}" q2\n'
+                   .format(py=sys.executable,
+                           filename=Path(__file__).with_name('complete.py')))
+            if verbosity > 0:
+                print('Add tab-completion for Bash by copying the following '
+                      'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
+                      .format(cmd=cmd))
+            else:
+                print(cmd)
 
         elif args.command == 'submit':
             if args.workflow:
@@ -190,7 +196,7 @@ def run(args):
                 deps = []
 
             if not folders:
-                folders = [Path('.')]
+                folders = [Path.cwd()]
 
             if args.resources:
                 cores, tmax = args.resources.split('x')
@@ -228,7 +234,7 @@ def workflow(args, queue, folders):
     jobs = _workflow['jobs']
 
     if not folders:
-        folders = [Path('.')]
+        folders = [Path.cwd()]
 
     alljobs = []
     for folder in folders:
