@@ -193,7 +193,8 @@ def run(args):
                 folders = [Path('.')]
 
             if args.resources:
-                cores, tmax = args.resources.slpit('x')
+                cores, tmax = args.resources.split('x')
+                cores = int(cores)
             else:
                 cores = None
                 tmax = None
