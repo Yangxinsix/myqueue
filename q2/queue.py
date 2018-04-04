@@ -32,8 +32,8 @@ def colored(state):
 
 def pprint(jobs):
     color = sys.stdout.isatty()
-    lengths = [0, 0, 0, 0, 0, 0, 0]
-    lines = []
+    lengths = [2, 6, 4, 4, 3, 5, 4]
+    lines = [('id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error')]
     for job in jobs:
         words = job.words()
         lines.append(words)
@@ -44,15 +44,17 @@ def pprint(jobs):
         cut = N - sum(lengths) - 7
     except OSError:
         cut = 9999
-    *lengths, Lstate, Lt = lengths
+    *length5, Lstate, Lt = lengths
     for *words, state, t, error in lines:
         state = state.ljust(Lstate)
         if color:
             state = colored(state)
         print(' '.join(word.ljust(n)
-                       for n, word in zip(lengths, words)) +
+                       for n, word in zip(lengths5, words)) +
               ' {} {:>{}} {}'
               .format(state, t, Lt, error[:cut]))
+        if words[0] == 'id':
+            print(' '.join('=' * L for L in lengths), '=====')
 
 
 class Queue(Lock):
@@ -72,7 +74,6 @@ class Queue(Lock):
         self.jobs = None
 
     def list(self, id: int, name: str, states: Set[str], folders) -> None:
-        print(id, name, states, folders)
         self._read()
         jobs = self.select(id, name, states, folders)
         pprint(jobs)
