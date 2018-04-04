@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
-_config: Dict[str, Dict] = {}
+_config = {}  # type: Dict[str, Dict]
 
 
 def read_config():
