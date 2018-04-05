@@ -97,14 +97,24 @@ class LocalRunner(Runner):
         self._run(job)
         self._write()
 
+    def timeout(self, job):
+        path = job.folder / (job.name + '.err')
+        if path.is_file():
+            job.tstop = path.stat().st_mtime
+            lines = path.read_text().splitlines()
+            for line in lines[::-1]:
+                if line.endswith('timeout'):
+                    return True
+        return False
+
     def _run(self, job):
         cmd1 = job.command()
         msg = 'python3 -m q2.queue local {}'.format(job.id)
         err = job.folder / (job.name + '.err')
-        cmd = ('(({msg} running && {cmd} && {msg} done) || {msg} FAILED)& '
-               'export p1=$!; echo $p1; (sleep {tmax}; kill -9 $p1; echo timeout) & '
-               'export p2=$!; echo $p2; (wait $p1; '
-               'if [ $? -eq 0 ]; then kill -9 $p2; fi) &'
+        cmd = ('(({msg} running ; {cmd} ; {msg} $?)& '
+               'p1=$!; (sleep {tmax}; kill $p1 > /dev/null 2>&1; echo timeout >> {err})& '
+               'p2=$!; wait $p1; '
+               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
                .format(cmd=cmd1, msg=msg, tmax=job.tmax, err=err))
         print(cmd)
         p = subprocess.run(cmd, shell=True)

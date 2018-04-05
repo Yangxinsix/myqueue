@@ -250,11 +250,10 @@ class Queue(Lock):
             raise ValueError('No such job: {id}, {state}'
                              .format(id=id, state=state))
 
-        job.state = state
-
         t = time.time()
 
-        if state == 'done':
+        if state == '0':
+            job.state = 'done'
             for j in self.jobs:
                 if id in j.deps:
                     j.deps.remove(id)
@@ -262,27 +261,26 @@ class Queue(Lock):
                 job.write_done_file()
             job.tstop = t
 
-        elif state == 'FAILED':
+        elif state == 'running':
+            job.state = 'running'
+            job.trunning = t
+
+        else:
+            job.state = 'FAILED'
             for j in self.jobs:
                 if id in j.deps:
                     j.state = 'CANCELED'
                     j.tstop = t
             job.tstop = t
 
-        elif state == 'running':
-            job.trunning = t
-
-        else:
-            1 / 0
-
         self._write()
 
-        if state != 'running':
+        if job.state != 'running':
             job.remove_empty_output_files()
 
-        if state != 'running':
+        if job.state != 'running':
             # Process local queue:
-            self.runner.update(id, state)
+            self.runner.update(id, job.state)
             self.runner.kick()
 
     def _read(self) -> None:
