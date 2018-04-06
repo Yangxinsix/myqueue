@@ -5,7 +5,6 @@ from q2.commands import command
 
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
-_workflow = {'active': False, 'jobs': []}  # type: Dict[str, Any]
 
 
 def T(t):
@@ -20,8 +19,11 @@ def T(t):
 
 def seconds_to_time_string(n):
     n = int(n)
+    d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)
     m, s = divmod(n, 60)
+    if d:
+        return '{}:{:02}:{:02}:{:02}'.format(d, h, m, s)
     if h:
         return '{}:{:02}:{:02}'.format(h, m, s)
     return '{}:{:02}'.format(m, s)
@@ -109,9 +111,6 @@ class Job:
         self.error = error
         self.out_of_memory = False
 
-        if _workflow['active']:
-            _workflow['jobs'].append(self)
-
     @property
     def name(self):
         return '{}.{}'.format(self.cmd.name, self.id)
@@ -132,7 +131,9 @@ class Job:
             age = t - self.tstop
 
         if self.deps:
-            deps = '({})'.format(','.join(str(dep) for dep in self.deps))
+            deps = '({})'.format(','.join(str(dep if isinstance(dep, int)
+                                              else dep.id)
+                                          for dep in self.deps))
         else:
             deps = ''
 
@@ -143,7 +144,7 @@ class Job:
                                seconds_to_short_time_string(self.tmax)) +
                 deps +
                 ('*' if self.workflow else ''),
-                seconds_to_short_approximate_time_string(age),
+                seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
                 self.error or '']

@@ -179,7 +179,6 @@ def run(args):
     if args.command in ['list', 'submit', 'delete', 'resubmit']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder or ['.']]
-        print(folders)
 
     with Queue(runner, verbosity) as queue:
 
@@ -238,21 +237,21 @@ def run(args):
 
 def workflow(args, queue, folders):
     from pathlib import Path
-    from q2.job import _workflow
     from q2.utils import chdir
 
-    _workflow['active'] = True
     if args.script == '-':
         script = sys.stdin.read()
     else:
         script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
-    jobs = _workflow['jobs']
+    namespace = {}
+    exec(code, namespace)
+    func = namespace['workflow']
 
     alljobs = []
     for folder in folders:
-        with chdir(folder.expanduser()):
-            exec(code, {})  # magically fills up jobs from workflow script
+        with chdir(folder):
+            jobs = func()
         for job in jobs:
             job.folder = folder
             job.workflow = True
@@ -261,8 +260,6 @@ def workflow(args, queue, folders):
             convert_dot_tasks_file(jobs, folder.expanduser())
         else:
             alljobs += jobs
-
-        del jobs[:]  # ready for next exec(code) call
 
     if not args.convert:
         queue.submit(alljobs, args.dry_run)
