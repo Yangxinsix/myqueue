@@ -131,7 +131,7 @@ class Job:
             age = t - self.tstop
 
         if self.deps:
-            deps = '({})'.format(','.join(str(dep if isinstance(dep, int)
+            deps = '({})'.format(','.join(str(dep if isinstance(dep, (int, str))
                                               else dep.id)
                                           for dep in self.deps))
         else:
