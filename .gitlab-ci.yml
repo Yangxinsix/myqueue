@@ -1,0 +1,10 @@
+tests:
+  script:
+    - apt-get update -qy
+    - apt-get install -qy python3-pip > install.out
+    - pip3 install --user flake8 mypy
+    - pip3 install -e . --user
+    - export PATH=~/.local/bin/:$PATH
+    - flake8 q2
+    - mypy -m q2
+    - q2 test
