@@ -1,7 +1,5 @@
 import time
 from pathlib import Path
-import numpy as np
-from ase.parallel import world
 
 
 def create(file, n):
@@ -9,6 +7,8 @@ def create(file, n):
 
 
 def memory():
+    import numpy as np
+    from ase.parallel import world
     if world.size > 1:
         return
     x = []
