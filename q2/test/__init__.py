@@ -20,4 +20,3 @@ def memory():
 def fail(t):
     time.sleep(t)
     print(1 / 0)
-    

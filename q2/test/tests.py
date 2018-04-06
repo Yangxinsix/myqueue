@@ -1,5 +1,4 @@
 import os
-import sys
 import tempfile
 import time
 from q2.cli import main
