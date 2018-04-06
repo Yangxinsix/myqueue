@@ -6,7 +6,7 @@ from q2.cli import main
 
 
 def q2(cmd):
-    return main('--traceback ' + cmd)
+    return main(cmd + ' --traceback')
 
 
 tmpdir = tempfile.mkdtemp(prefix='q2-test-')
@@ -14,7 +14,7 @@ tmpdir = tempfile.mkdtemp(prefix='q2-test-')
 
 def wait(timeout=10.0):
     t0 = time.time()
-    while q2('-qq list -s qr'):
+    while q2('list -s qr -qq'):
         time.sleep(0.1)
         if time.time() - t0 > timeout:
             raise TimeoutError

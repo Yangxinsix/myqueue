@@ -132,7 +132,7 @@ class Job:
             age = t - self.tstop
 
         if self.deps:
-            deps = '({})'.format(len(self.deps))
+            deps = '({})'.format(','.join(str(dep) for dep in self.deps))
         else:
             deps = ''
 
@@ -182,8 +182,9 @@ class Job:
     def fromdict(dct):
         return Job(cmd=command(**dct.pop('cmd')), **dct)
 
-    def infolder(self, folder):
-        return folder == self.folder or folder in self.folder.parents
+    def infolder(self, folder, recursive):
+        return folder == self.folder or (recursive and
+                                         folder in self.folder.parents)
 
     def done(self):
         if self._done is None:

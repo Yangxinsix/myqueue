@@ -46,7 +46,7 @@ def complete(word, previous, line, point):
                 command = w
                 break
     else:
-        opts = ['-h', '--help', '-v', '--verbose', '-q', '--quiet']
+        opts = ['-h', '--help']
         if word[:1] == '-':
             return opts
         return list(commands.keys()) + opts

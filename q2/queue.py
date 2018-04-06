@@ -35,10 +35,16 @@ def pprint(jobs, verbosity=1):
     if verbosity < 0:
         return
 
+    if not jobs:
+        print('No jobs')
+        return
+
     color = sys.stdout.isatty()
     home = str(Path.home())
-    lengths = [2, 6, 4, 4, 3, 5, 4]
+
     lines = [('id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error')]
+    lengths = [len(name) for name in lines[0][:7]]
+
     count = defaultdict(int)
     for job in jobs:
         words = job.words()
@@ -50,24 +56,30 @@ def pprint(jobs, verbosity=1):
                    for n, word in zip(lengths, words)]
         state = words[5]
         count[state] += 1
+
     try:
         N = os.get_terminal_size().columns
         cut = N - sum(lengths) - 7
     except OSError:
         cut = 9999
+
     *lengths5, Lstate, Lt = lengths
     separator = ' '.join('-' * L for L in lengths) + ' -----'
     for *words, state, t, error in lines:
         state = state.ljust(Lstate)
         if color:
             state = colored(state)
+
         print(' '.join(word.ljust(n)
                        for n, word in zip(lengths5, words)) +
               ' {} {:>{}} {}'
               .format(state, t, Lt, error[:cut]))
+
         if words[0] == 'id':
             print(separator)
+
     print(separator)
+
     print(', '.join('{}: {}'.format(state, n) for state, n in count.items()))
 
 
@@ -89,7 +101,7 @@ class Queue(Lock):
 
     def list(self, id: int, name: str, states: Set[str], folders) -> None:
         self._read()
-        jobs = self.select(id, name, states, folders)
+        jobs = self.select(id, name, states, folders, recursive=True)
         pprint(jobs, self.verbosity)
         return jobs
 
@@ -171,7 +183,8 @@ class Queue(Lock):
     def select(self, id: int,
                name: str,
                states: Set[str],
-               folders: List[str]) -> List[Job]:
+               folders: List[str],
+               recursive: bool = False) -> List[Job]:
         if id is not None:
             for job in self.jobs:
                 if job.id == id:
@@ -182,7 +195,7 @@ class Queue(Lock):
         for job in self.jobs:
             if job.state in states:
                 if not name or job.cmd.name == name:
-                    if not folders or any(job.infolder(f) for f in folders):
+                    if any(job.infolder(f, recursive) for f in folders):
                         jobs.append(job)
 
         return jobs

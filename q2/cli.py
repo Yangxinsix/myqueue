@@ -27,10 +27,6 @@ def main(arguments=None):
         prog='q2',
         description='Manage jobs in queue.')
 
-    parser.add_argument('-v', '--verbose', action='count', default=0)
-    parser.add_argument('-q', '--quiet', action='count', default=0)
-    parser.add_argument('-T', '--traceback', action='store_true')
-
     subparsers = parser.add_subparsers(dest='command')
 
     aliases = {'rm': 'delete',
@@ -84,9 +80,15 @@ def main(arguments=None):
               action='store_true',
               help='Show what will happen before it happens.')
 
-        a('folder',
-          nargs='*',
-          help='List of folders.')
+        a('-v', '--verbose', action='count', default=0, help='More output.')
+        a('-q', '--quiet', action='count', default=0, help='Less output.')
+        a('-T', '--traceback', action='store_true',
+          help='Show full traceback.')
+
+        if cmd in ['list', 'submit', 'delete', 'resubmit']:
+            a('folder',
+              nargs='*',
+              help='List of folders.')
 
     if isinstance(arguments, str):
         arguments = arguments.split()
@@ -110,6 +112,8 @@ def main(arguments=None):
         parser.print_help()
         print(intro)
         for name, p in subparsers.choices.items():
+            if name in ['help', 'rm', 'ls']:
+                continue
             print('\n\n{} command\n{}\n'
                   .format(name.upper(), '=' * (len(name) + 8)))
             p.print_help()
@@ -132,7 +136,7 @@ def main(arguments=None):
         else:
             print('{}: {}'.format(x.__class__.__name__, x),
                   file=sys.stderr)
-            print('To get a full traceback, use: q2 -T {} ...'
+            print('To get a full traceback, use: q2 {} ... -T'
                   .format(args.command), file=sys.stderr)
             return 1
 
@@ -155,8 +159,6 @@ def run(args):
     else:
         runner = 'local'
 
-    folders = [Path(folder).expanduser().absolute() for folder in args.folder]
-
     if args.command in ['list', 'delete', 'resubmit']:
         default = 'qrdFCT' if args.command == 'list' else ''
         states = set()
@@ -169,7 +171,15 @@ def run(args):
                 raise ValueError('Unknown state: ' + s)
 
         if args.id:
-            assert args.states is None and len(folders) == 0
+            if args.states is not None:
+                raise ValueError("You can't use both -i and -s!")
+            if len(args.folder) > 0:
+                raise ValueError("You can't use both -i and folder(s)!")
+
+    if args.command in ['list', 'submit', 'delete', 'resubmit']:
+        folders = [Path(folder).expanduser().absolute().resolve()
+                   for folder in args.folder or ['.']]
+        print(folders)
 
     with Queue(runner, verbosity) as queue:
 
@@ -183,17 +193,6 @@ def run(args):
         elif args.command == 'resubmit':
             queue.resubmit(args.id, args.name, states, folders, args.dry_run)
 
-        elif args.command == 'completion':
-            cmd = ('complete -o default -C "{py} {filename}" q2\n'
-                   .format(py=sys.executable,
-                           filename=Path(__file__).with_name('complete.py')))
-            if verbosity > 0:
-                print('Add tab-completion for Bash by copying the following '
-                      'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
-                      .format(cmd=cmd))
-            else:
-                print(cmd)
-
         elif args.command == 'submit':
             if args.workflow:
                 workflow(args, queue, folders)
@@ -203,9 +202,6 @@ def run(args):
                 deps = args.dependencies.split(',')
             else:
                 deps = []
-
-            if not folders:
-                folders = [Path.cwd()]
 
             if args.resources:
                 cores, tmax = args.resources.split('x')
@@ -228,6 +224,17 @@ def run(args):
 
             queue.submit(newjobs, args.dry_run)
 
+        elif args.command == 'completion':
+            cmd = ('complete -o default -C "{py} {filename}" q2\n'
+                   .format(py=sys.executable,
+                           filename=Path(__file__).with_name('complete.py')))
+            if verbosity > 0:
+                print('Add tab-completion for Bash by copying the following '
+                      'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
+                      .format(cmd=cmd))
+            else:
+                print(cmd)
+
 
 def workflow(args, queue, folders):
     from pathlib import Path
@@ -241,9 +248,6 @@ def workflow(args, queue, folders):
         script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
     jobs = _workflow['jobs']
-
-    if not folders:
-        folders = [Path.cwd()]
 
     alljobs = []
     for folder in folders:

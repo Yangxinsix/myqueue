@@ -121,7 +121,6 @@ class LocalRunner(Runner):
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
                .format(cmd=cmd1, msg=msg, tmax=job.tmax, err=err))
-        print(cmd)
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         job.state = 'running'
