@@ -205,12 +205,13 @@ class Queue(Lock):
                name: str,
                states: Set[str],
                folders: List[str],
+               recursive: bool,
                dry_run: bool) -> None:
         """Delete or cancel jobs."""
 
         self._read()
 
-        jobs = self.select(id, name, states, folders)
+        jobs = self.select(id, name, states, folders, recursive)
 
         t = time.time()
         for job in jobs:
@@ -254,10 +255,11 @@ class Queue(Lock):
                  name: str,
                  states: Set[str],
                  folders: List[str],
+                 recursive: bool,
                  dry_run: bool) -> None:
 
         self._read()
-        jobs = self.select(id, name, states, folders)
+        jobs = self.select(id, name, states, folders, recursive)
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
