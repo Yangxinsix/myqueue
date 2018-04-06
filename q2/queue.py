@@ -34,24 +34,29 @@ def colored(state):
 def pprint(jobs, verbosity=1):
     if verbosity < 0:
         return
+
     color = sys.stdout.isatty()
     home = str(Path.home())
     lengths = [2, 6, 4, 4, 3, 5, 4]
     lines = [('id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error')]
+    count = defaultdict(int)
     for job in jobs:
         words = job.words()
         folder = words[1]
         if folder.startswith(home):
-            words[1] = '~/' + folder[len(home):]
+            words[1] = '~' + folder[len(home):]
         lines.append(words)
         lengths = [max(n, len(word))
                    for n, word in zip(lengths, words)]
+        state = words[5]
+        count[state] += 1
     try:
         N = os.get_terminal_size().columns
         cut = N - sum(lengths) - 7
     except OSError:
         cut = 9999
     *lengths5, Lstate, Lt = lengths
+    separator = ' '.join('-' * L for L in lengths) + ' -----'
     for *words, state, t, error in lines:
         state = state.ljust(Lstate)
         if color:
@@ -61,7 +66,9 @@ def pprint(jobs, verbosity=1):
               ' {} {:>{}} {}'
               .format(state, t, Lt, error[:cut]))
         if words[0] == 'id':
-            print(' '.join('-' * L for L in lengths), '-----')
+            print(separator)
+    print(separator)
+    print(', '.join('{}: {}'.format(state, n) for state, n in count.items()))
 
 
 class Queue(Lock):
@@ -241,7 +248,12 @@ class Queue(Lock):
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
-        print(id,state)
+        if not state.isalpha():
+            if state == '0':
+                state = 'done'
+            else:
+                state = 'FAILED'
+
         self._read()
         for job in self.jobs:
             if job.id == id:
@@ -252,8 +264,9 @@ class Queue(Lock):
 
         t = time.time()
 
-        if state == '0':
-            job.state = 'done'
+        job.state = state
+
+        if state == 'done':
             for j in self.jobs:
                 if id in j.deps:
                     j.deps.remove(id)
@@ -262,25 +275,29 @@ class Queue(Lock):
             job.tstop = t
 
         elif state == 'running':
-            job.state = 'running'
             job.trunning = t
 
-        else:
-            job.state = 'FAILED'
+        elif state == 'FAILED':
             for j in self.jobs:
                 if id in j.deps:
                     j.state = 'CANCELED'
                     j.tstop = t
             job.tstop = t
 
+        elif state == 'TIMEOUT':
+            job.state = 'running'
+
+        else:
+            1 / 0
+
         self._write()
 
-        if job.state != 'running':
+        if state != 'running':
             job.remove_empty_output_files()
 
-        if job.state != 'running':
+        if state != 'running':
             # Process local queue:
-            self.runner.update(id, job.state)
+            self.runner.update(id, state)
             self.runner.kick()
 
     def _read(self) -> None:
@@ -311,6 +328,10 @@ class Queue(Lock):
                 if t - job.trunning > job.tmax and self.runner.timeout(job):
                     job.state = 'TIMEOUT'
                     job.remove_empty_output_files()
+                    for j in self.jobs:
+                        if job.id in j.deps:
+                            j.state = 'CANCELED'
+                            j.tstop = t
                     write = True
             elif job.state == 'FAILED':
                 if job.error is None:

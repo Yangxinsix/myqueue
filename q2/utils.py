@@ -124,7 +124,7 @@ def update_completion():
         def add_parser(self, cmd, **kwargs):
             return Subparser(cmd)
 
-        def parse_args(self):
+        def parse_args(self, args=None):
             raise MyException
 
     class Subparser:

@@ -73,12 +73,17 @@ class LocalRunner(Runner):
                     jobs.append(j)
             self.jobs = jobs
         else:
-            assert state == 'FAILED', state
+            assert state in ['FAILED', 'TIMEOUT'], state
             jobs = []
             for j in self.jobs:
                 if j is not job and id not in j.deps:
                     jobs.append(j)
             self.jobs = jobs
+
+            if state == 'TIMEOUT':
+                path = job.folder / (job.name + '.err')
+                with open(str(path), 'a') as fd:
+                    fd.write('\nTIMEOUT\n')
 
         self._write()
 
@@ -103,7 +108,7 @@ class LocalRunner(Runner):
             job.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
             for line in lines[::-1]:
-                if line.endswith('timeout'):
+                if line.endswith('TIMEOUT'):
                     return True
         return False
 
@@ -111,8 +116,8 @@ class LocalRunner(Runner):
         cmd1 = job.command()
         msg = 'python3 -m q2.queue local {}'.format(job.id)
         err = job.folder / (job.name + '.err')
-        cmd = ('(({msg} running ; {cmd} ; {msg} $?)& '
-               'p1=$!; (sleep {tmax}; kill $p1 > /dev/null 2>&1; echo timeout >> {err})& '
+        cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
+               '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
                .format(cmd=cmd1, msg=msg, tmax=job.tmax, err=err))

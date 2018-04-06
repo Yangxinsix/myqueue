@@ -33,6 +33,9 @@ def main(arguments=None):
 
     subparsers = parser.add_subparsers(dest='command')
 
+    aliases = {'rm': 'delete',
+               'ls': 'list'}
+
     for cmd, help in [
         ('help', 'Show how to use this tool.'),
         ('list', 'List jobs in queue.'),
@@ -43,8 +46,9 @@ def main(arguments=None):
         ('completion', 'Set up tab-completion.'),
         ('test', 'Run tests.')]:
 
-        p = subparsers.add_parser(cmd, description=help, help=help)
-
+        p = subparsers.add_parser(cmd, description=help, help=help,
+                                  aliases=[alias for alias in aliases
+                                           if aliases[alias] == cmd])
         if cmd == 'help':
             continue
 
@@ -89,6 +93,8 @@ def main(arguments=None):
 
     args = parser.parse_args(arguments)
 
+    args.command = aliases.get(args.command, args.command)
+
     if args.command is None:
         parser.print_help()
         return
@@ -115,7 +121,9 @@ def main(arguments=None):
         return
 
     try:
-        return run(args)
+        results = run(args)
+        if arguments:
+            return results
     except KeyboardInterrupt:
         pass
     except Exception as x:
@@ -126,6 +134,7 @@ def main(arguments=None):
                   file=sys.stderr)
             print('To get a full traceback, use: q2 -T {} ...'
                   .format(args.command), file=sys.stderr)
+            return 1
 
 
 def run(args):
