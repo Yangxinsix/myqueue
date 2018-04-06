@@ -85,10 +85,13 @@ def main(arguments=None):
         a('-T', '--traceback', action='store_true',
           help='Show full traceback.')
 
+        if cmd in ['delete', 'resubmit']:
+            a('-r', '--recursive', action='store_true')
+
         if cmd in ['list', 'submit', 'delete', 'resubmit']:
             a('folder',
               nargs='*',
-              help='List of folders.')
+              help='List of folders.  Defaults to current folder.')
 
     if isinstance(arguments, str):
         arguments = arguments.split()
@@ -187,10 +190,12 @@ def run(args):
             return jobs
 
         if args.command == 'delete':
-            queue.delete(args.id, args.name, states, folders, args.dry_run)
+            queue.delete(args.id, args.name, states, folders, args.recursive,
+                         args.dry_run)
 
         elif args.command == 'resubmit':
-            queue.resubmit(args.id, args.name, states, folders, args.dry_run)
+            queue.resubmit(args.id, args.name, states, folders, args.recursive,
+                           args.dry_run)
 
         elif args.command == 'submit':
             if args.workflow:
