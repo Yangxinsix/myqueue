@@ -20,22 +20,29 @@ def match(word, *suffixes):
 # Beginning of computer generated data:
 commands = {
     'completion':
-        [''],
+        ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'delete':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
-         '--dry-run'],
+         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'list':
-        ['-s', '--states', '-i', '--id', '-n', '--name'],
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'resubmit':
         ['-R', '--resources', '-s', '--states', '-i', '--id', '-n',
-         '--name', '-z', '--dry-run'],
+         '--name', '-z', '--dry-run', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback'],
     'runner':
-        ['-z', '--dry-run'],
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'submit':
         ['-d', '--dependencies', '-a', '--arguments', '-w', '--workflow',
-         '--convert', '-R', '--resources', '-z', '--dry-run'],
+         '--convert', '-R', '--resources', '-z', '--dry-run',
+         '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'test':
-        ['-z', '--dry-run']}
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback']}
 # End of computer generated data
 
 
