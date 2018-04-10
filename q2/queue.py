@@ -99,7 +99,7 @@ class Queue(Lock):
 
         self.jobs = None
 
-    def list(self, id: int, name: str, states: Set[str], folders) -> None:
+    def list(self, id: int, name: str, states: Set[str], folders) -> List[Job]:
         self._read()
         jobs = self.select(id, name, states, folders, recursive=True)
         pprint(jobs, self.verbosity)

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict
+# from typing import Dict
 
 _config = {}  # type: Dict[str, Dict]
 

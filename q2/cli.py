@@ -32,15 +32,14 @@ def main(arguments=None):
     aliases = {'rm': 'delete',
                'ls': 'list'}
 
-    for cmd, help in [
-        ('help', 'Show how to use this tool.'),
-        ('list', 'List jobs in queue.'),
-        ('submit', 'Submit job(s) to queue.'),
-        ('resubmit', 'Resubmit failed or timed-out jobs.'),
-        ('delete', 'Delete or cancel job(s).'),
-        ('runner', 'Set runner.'),
-        ('completion', 'Set up tab-completion.'),
-        ('test', 'Run tests.')]:
+    for cmd, help in [('help', 'Show how to use this tool.'),
+                      ('list', 'List jobs in queue.'),
+                      ('submit', 'Submit job(s) to queue.'),
+                      ('resubmit', 'Resubmit failed or timed-out jobs.'),
+                      ('delete', 'Delete or cancel job(s).'),
+                      ('runner', 'Set runner.'),
+                      ('completion', 'Set up tab-completion.'),
+                      ('test', 'Run tests.')]:
 
         p = subparsers.add_parser(cmd, description=help, help=help,
                                   aliases=[alias for alias in aliases
