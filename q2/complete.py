@@ -24,23 +24,27 @@ commands = {
     'delete':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
+         '--traceback', '-r', '--recursive'],
     'list':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-v',
-         '--verbose', '-q', '--quiet', '-T', '--traceback'],
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
+         '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'resubmit':
-        ['-R', '--resources', '-s', '--states', '-i', '--id', '-n',
-         '--name', '-z', '--dry-run', '-v', '--verbose', '-q',
-         '--quiet', '-T', '--traceback'],
+        ['-R', '--resources', '-w', '--workflow', '-s', '--states', '-i',
+         '--id', '-n', '--name', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
+         '--recursive'],
     'runner':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'submit':
-        ['-d', '--dependencies', '-a', '--arguments', '-w', '--workflow',
-         '--convert', '-R', '--resources', '-z', '--dry-run',
-         '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
+        ['-d', '--dependencies', '-a', '--arguments', '-R', '--resources',
+         '-w', '--workflow', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'test':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
+    'workflow':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback']}
 # End of computer generated data
