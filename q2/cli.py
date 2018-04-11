@@ -203,7 +203,8 @@ def run(args):
     with Queue(runner, verbosity) as queue:
 
         if args.command == 'list':
-            jobs = queue.list(args.id, args.name, states, folders)
+            jobs = queue.list(args.id, args.name, states, folders,
+                              args.columns)
             return jobs
 
         if args.command == 'delete':

@@ -113,10 +113,15 @@ class Queue(Lock):
 
         self.jobs = None  # type: List[Job]
 
-    def list(self, id: int, name: str, states: Set[str], folders) -> List[Job]:
+    def list(self,
+             id: int,
+             name: str,
+             states: Set[str],
+             folders,
+             columns: str) -> List[Job]:
         self._read()
         jobs = self.select(id, name, states, folders, recursive=True)
-        pprint(jobs, self.verbosity)
+        pprint(jobs, self.verbosity, columns)
         return jobs
 
     def submit(self,
@@ -286,7 +291,6 @@ class Queue(Lock):
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
-        print('***********', id, state)
         if not state.isalpha():
             if state == '0':
                 state = 'done'

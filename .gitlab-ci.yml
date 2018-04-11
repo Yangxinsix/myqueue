@@ -6,5 +6,5 @@ tests:
     - pip3 install -e . --user
     - export PATH=~/.local/bin/:$PATH
     - flake8 q2
-    - mypy -p q2
+    - mypy -p q2 --ignore-missing-imports
     - q2 test
