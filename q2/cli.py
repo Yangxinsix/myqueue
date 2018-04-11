@@ -5,20 +5,71 @@ from typing import List, Any
 
 
 intro = """
-Examples:
+Jobs
+====
 
-    q2 submit job.py@8x10h folder*/
-    q2 submit time.sleep -a 25 -R 1x1m
-    q2 submit time.sleep+25@1x1m
-    q2 submit echo -a hello
-    q2 submit module
-    q2 submit module.function
-    q2 list
-    q2 list -F
-    q2 delete -s F
-    q2 help submit
-    q2 completions -q >> ~/.bashrc
-    q2 resubmit -R 64x2d -n long_job.py
+A job can be one of these:
+
+* a Python script (job.py)
+* a Python module (module)
+* a function in a Python module (module.function)
+* an executable or shell-script
+
+Examples
+========
+
+Run job.py on 8 cores for 1 hour in folder1 and folder2:
+
+    $ q2 submit job.py@8x10h folder1/ foldder2/
+
+Sleep for 25 seconds on 1 core using the time.sleep() function:
+
+    $ q2 submit time.sleep -a 25 -R 1x1m
+
+or equivalently:
+
+    $ q2 submit time.sleep+25@1x1m
+
+Say "hello" (using the defaults of 1 core for 10 minutes):
+
+    $ q2 submit echo -a hello
+
+You can see the status of your jobs with:
+
+    $ q2 list
+    id folder name       res.   age state time error
+    -- ------ ---------- ----- ---- ----- ---- -----
+    1  ~      echo+hello 1x10m 0:06 done  0:00
+    -- ------ ---------- ----- ---- ----- ---- -----
+    done: 1
+
+Delete the job from the list with:
+
+    $ q2 delete -s d .
+
+The output from the job will be in ~/echo+hello.1.out and
+~/echo+hello.1.err (if there was any output).
+
+    $ cat echo+hello.1.out
+    hello
+
+If a job fails or times out, then you can resubmit it with more resources:
+
+    $ q2 submit sleep+3000@1x30m
+    ...
+    $ q2 list
+    id folder name       res.   age state   time  error
+    -- ------ ---------- ----- ---- ------- ----- -----
+    2  ~      sleep+3000 1x30m 1:16 TIMEOUT 50:00
+    -- ------ ---------- ----- ---- ------- ----- -----
+    FAILED: 1
+    $ q2 resubmit -i 2 -R 1x1h
+
+
+Tab-completion
+==============
+
+    $ q2 completions -q >> ~/.bashrc
 
 """
 
@@ -28,7 +79,7 @@ def main(arguments: List[str] = None) -> Any:
         prog='q2',
         description='Manage jobs in queue.')
 
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(title='Commands', dest='command')
 
     aliases = {'rm': 'delete',
                'ls': 'list'}
@@ -55,8 +106,8 @@ def main(arguments: List[str] = None) -> Any:
             a('runner', help='Set runner to RUNNER (local or slurm).')
 
         if cmd == 'test':
-            a('tests', nargs='*',
-              help='Which tests to run.  Default behaviour is to run all.')
+            a('test', nargs='*',
+              help='Test to run.  Default behaviour is to run all.')
 
         elif cmd == 'submit':
             a('script')
@@ -89,7 +140,7 @@ def main(arguments: List[str] = None) -> Any:
         if cmd not in ['list', 'completion']:
             a('-z', '--dry-run',
               action='store_true',
-              help='Show what will happen before it happens.')
+              help='Show what will happen without doing anything.')
 
         a('-v', '--verbose', action='count', default=0, help='More output.')
         a('-q', '--quiet', action='count', default=0, help='Less output.')
@@ -98,11 +149,22 @@ def main(arguments: List[str] = None) -> Any:
 
         if cmd in ['delete', 'resubmit']:
             a('-r', '--recursive', action='store_true')
-
-        if cmd in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
             a('folder',
               nargs='*',
-              help='List of folders.  Defaults to current folder.')
+              help='Job-folder.  Use --recursive (or -r) to include '
+              'subfolders.')
+
+        if cmd == 'list':
+            a('folder',
+              nargs='*', default=['.'],
+              help='List jobs in this folder and its subfolders.  '
+              'Defaults to current folder.')
+
+        if cmd in ['submit', 'workflow']:
+            a('folder',
+              nargs='*', default=['.'],
+              help='Submit jobs in this folder.  '
+              'Defaults to current folder.')
 
     args = parser.parse_args(arguments)
 
@@ -126,13 +188,13 @@ def main(arguments: List[str] = None) -> Any:
             if name in ['help', 'rm', 'ls']:
                 continue
             print('\n\n{} command\n{}\n'
-                  .format(name.upper(), '=' * (len(name) + 8)))
+                  .format(name.title(), '=' * (len(name) + 8)))
             p.print_help()
         return
 
     if args.command == 'test':
         from q2.test.tests import run_tests
-        run_tests(args.tests)
+        run_tests(args.test)
         return
 
     try:
@@ -189,7 +251,10 @@ def run(args):
 
     if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
-                   for folder in args.folder or ['.']]
+                   for folder in args.folder]
+        if args.command in ['delete', 'resubmit']:
+            if not args.id and not folders:
+                raise ValueError('Missing folder!')
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
