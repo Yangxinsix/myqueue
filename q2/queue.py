@@ -4,10 +4,10 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List
+from typing import Set, List, Dict
 
 from q2.job import Job
-from q2.runner import get_runner, Runner
+from q2.runner import get_runner
 from q2.utils import Lock
 from q2.config import home_folder
 
@@ -23,7 +23,7 @@ def S(n, thing):
     return '{} {}s'.format(n, thing)
 
 
-def colored(state: str) -> None:
+def colored(state: str) -> str:
     if state.isupper():
         return '\033[91m' + state + '\033[0m'
     if state.startswith('done'):
@@ -56,7 +56,7 @@ def pprint(jobs: List[Job],
         lines = []
         lengths = [0] * len(columns)
 
-    count = defaultdict(int)
+    count = defaultdict(int)  # type: Dict[str, int]
     for job in jobs:
         words = job.words()
         _, folder, _, _, _, state, _, error = words
@@ -98,7 +98,7 @@ def pprint(jobs: List[Job],
 
 
 class Queue(Lock):
-    def __init__(self, runner: Runner, verbosity: int = 1):
+    def __init__(self, runner: str, verbosity: int = 1) -> None:
         self.runner = get_runner(runner)
         self.verbosity = verbosity
 
@@ -111,7 +111,7 @@ class Queue(Lock):
 
         Lock.__init__(self, self.fname.with_name(runner + '.json.lock'))
 
-        self.jobs = None
+        self.jobs = None  # type: List[Job]
 
     def list(self, id: int, name: str, states: Set[str], folders) -> List[Job]:
         self._read()
@@ -270,13 +270,23 @@ class Queue(Lock):
                  states: Set[str],
                  folders: List[str],
                  recursive: bool,
-                 dry_run: bool) -> None:
+                 dry_run: bool,
+                 cores: int,
+                 tmax: int) -> None:
 
         self._read()
-        jobs = self.select(id, name, states, folders, recursive)
+        jobs = []
+        for job in self.select(id, name, states, folders, recursive):
+            job = job.copy()
+            job.id = None
+            if cores:
+                job.cores = cores
+                job.tmax = tmax
+            jobs.append(job)
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
+        print('***********', id, state)
         if not state.isalpha():
             if state == '0':
                 state = 'done'

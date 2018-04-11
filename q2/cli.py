@@ -54,6 +54,10 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'runner':
             a('runner', help='Set runner to RUNNER (local or slurm).')
 
+        if cmd == 'test':
+            a('tests', nargs='*',
+              help='Which tests to run.  Default behaviour is to run all.')
+
         elif cmd == 'submit':
             a('script')
             a('-d', '--dependencies')
@@ -128,7 +132,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from q2.test.tests import run_tests
-        run_tests()
+        run_tests(args.tests)
         return
 
     try:
@@ -153,7 +157,7 @@ def run(args):
 
     from pathlib import Path
 
-    from q2.job import Job, jobstates
+    from q2.job import Job, jobstates, T
     from q2.queue import Queue
 
     if args.command == 'runner':
@@ -187,6 +191,15 @@ def run(args):
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder or ['.']]
 
+    if args.command in ['submit', 'resubmit']:
+        if args.resources:
+            cores, tmax = args.resources.split('x')
+            cores = int(cores)
+            tmax = T(tmax)
+        else:
+            cores = None
+            tmax = None
+
     with Queue(runner, verbosity) as queue:
 
         if args.command == 'list':
@@ -199,20 +212,13 @@ def run(args):
 
         elif args.command == 'resubmit':
             queue.resubmit(args.id, args.name, states, folders, args.recursive,
-                           args.dry_run)
+                           args.dry_run, cores, tmax)
 
         elif args.command == 'submit':
             if args.dependencies:
                 deps = args.dependencies.split(',')
             else:
                 deps = []
-
-            if args.resources:
-                cores, tmax = args.resources.split('x')
-                cores = int(cores)
-            else:
-                cores = None
-                tmax = None
 
             if args.arguments:
                 arguments = args.arguments.split(',')

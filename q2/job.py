@@ -9,12 +9,10 @@ jobstates = ['queued', 'running', 'done',
 
 def T(t: str) -> int:
     """Convert string to seconds."""
-    if isinstance(t, str):
-        t = {'s': 1,
-             'm': 60,
-             'h': 3600,
-             'd': 24 * 3600}[t[-1]] * int(t[:-1])
-    return t
+    return {'s': 1,
+            'm': 60,
+            'h': 3600,
+            'd': 24 * 3600}[t[-1]] * int(t[:-1])
 
 
 def seconds_to_time_string(n: int) -> str:
@@ -165,6 +163,9 @@ class Job:
     @staticmethod
     def fromdict(dct):
         return Job(cmd=command(**dct.pop('cmd')), **dct)
+
+    def copy(self):
+        return Job.fromdict(self.todict())
 
     def infolder(self, folder, recursive):
         return folder == self.folder or (recursive and

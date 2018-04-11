@@ -15,6 +15,9 @@ class Runner:
     def timeout(self, job):
         return False
 
+    def cancel(self, job: Job):
+        raise NotImplementedError
+
 
 def get_runner(name: str) -> Runner:
     if 'local'.startswith(name):
