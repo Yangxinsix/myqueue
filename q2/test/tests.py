@@ -40,7 +40,7 @@ def run_tests(tests):
         tests = list(all_tests)
 
     for name in tests:
-        print('\n:::::::::::::::::::::::::', name, '\n')
+        print('\n::::::::::::::::::::::::: Running "{}" test:\n'.format(name))
         all_tests[name]()
         for f in Path(tmpdir).glob('**/*'):
             f.unlink()

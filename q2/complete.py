@@ -71,6 +71,9 @@ def complete(word, previous, line, point):
         if previous in ['-s', '--status']:
             words = ['todo', 'queued', 'running', 'done', 'FAILED', 'TIMEOUT']
 
+    elif command == 'test':
+        from q2.test.tests import all_tests as words
+
     return words
 
 
