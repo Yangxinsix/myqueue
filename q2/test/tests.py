@@ -20,6 +20,10 @@ def test(func):
     return func
 
 
+def states():
+    return ''.join(job.state[0] for job in q2('list'))
+
+
 tmpdir = tempfile.mkdtemp(prefix='q2-test-')
 
 
@@ -35,6 +39,7 @@ def run_tests(tests):
     print('Running tests in', tmpdir)
     os.chdir(tmpdir)
     os.environ['Q2_HOME'] = tmpdir
+    os.environ['Q2_DEBUG'] = 'yes!'
 
     if not tests:
         tests = list(all_tests)
@@ -60,7 +65,10 @@ def fail():
     q2('submit q2.test.fail+2')
     q2('submit echo+hello -d q2.test.fail+2')
     wait()
-    assert ''.join(job.state[0] for job in q2('list')) == 'FC'
+    assert states() == 'FC'
+    q2('resubmit -i 1')
+    wait()
+    assert states() == 'CF'
 
 
 @test
@@ -70,4 +78,4 @@ def timeout():
     wait()
     q2('resubmit -i 1 -R 1x5s')
     wait()
-    assert ''.join(job.state[0] for job in q2('list')) == 'TCd'
+    assert states() == 'Cd'

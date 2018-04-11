@@ -102,6 +102,8 @@ class Queue(Lock):
         self.runner = get_runner(runner)
         self.verbosity = verbosity
 
+        self.debug = bool(os.environ.get('Q2_DEBUG'))
+
         folder = home_folder()
 
         if not folder.is_dir():
@@ -282,6 +284,8 @@ class Queue(Lock):
         self._read()
         jobs = []
         for job in self.select(id, name, states, folders, recursive):
+            if job.state.isupper():
+                self.jobs.remove(job)
             job = job.copy()
             job.id = None
             if cores:
@@ -291,6 +295,9 @@ class Queue(Lock):
         self.submit(jobs, dry_run)
 
     def update(self, id: int, state: str) -> None:
+        if self.debug:
+            print('UPDATE', id, state)
+
         if not state.isalpha():
             if state == '0':
                 state = 'done'
