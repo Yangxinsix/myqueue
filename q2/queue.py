@@ -31,7 +31,7 @@ def colored(state):
     return state
 
 
-def pprint(jobs, verbosity=1):
+def pprint(jobs, columns='ifnraste' ,verbosity=1):
     if verbosity < 0:
         return
 
@@ -42,26 +42,33 @@ def pprint(jobs, verbosity=1):
     color = sys.stdout.isatty()
     home = str(Path.home())
 
-    lines = [('id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error')]
-    lengths = [len(name) for name in lines[0][:7]]
+    titles = ['id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error']
+    c2i = {title[0]: i for i, title in enumerate(titles)}
+    indices = [c2i[c] for c in columns]
+
+    if verbosity:
+        lines = [[titles[i] for i in indices]]
+        lengths = [len(t) for t in lines[0]]
+    else:
+        lines = []
+        lengths = [0] * len(columns)
 
     count = defaultdict(int)
     for job in jobs:
         words = job.words()
-        folder = words[1]
+        _, folder, _, _, _, state, _, error = words
+        count[state] += 1
         if folder.startswith(home):
             words[1] = '~' + folder[len(home):]
+        words = [words[i] for i in indices]
         lines.append(words)
-        lengths = [max(n, len(word))
-                   for n, word in zip(lengths, words)]
-        state = words[5]
-        count[state] += 1
+        lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
     try:
         N = os.get_terminal_size().columns
         cut = N - sum(lengths) - 7
     except OSError:
-        cut = 9999
+        cut = 99999
 
     *lengths5, Lstate, Lt = lengths
     separator = ' '.join('-' * L for L in lengths) + ' -----'
