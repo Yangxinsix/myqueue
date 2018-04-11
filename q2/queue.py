@@ -23,7 +23,7 @@ def S(n, thing):
     return '{} {}s'.format(n, thing)
 
 
-def colored(state):
+def colored(state: str) -> None:
     if state.isupper():
         return '\033[91m' + state + '\033[0m'
     if state.startswith('done'):
@@ -31,7 +31,10 @@ def colored(state):
     return state
 
 
-def pprint(jobs, columns='ifnraste' ,verbosity=1):
+def pprint(jobs: List[Job],
+           verbosity: int = 1,
+           columns: str = 'ifnraste') -> None:
+
     if verbosity < 0:
         return
 
@@ -47,7 +50,7 @@ def pprint(jobs, columns='ifnraste' ,verbosity=1):
     indices = [c2i[c] for c in columns]
 
     if verbosity:
-        lines = [[titles[i] for i in indices]]
+        lines = [[titles[i] for i in indices], None]
         lengths = [len(t) for t in lines[0]]
     else:
         lines = []
@@ -66,28 +69,33 @@ def pprint(jobs, columns='ifnraste' ,verbosity=1):
 
     try:
         N = os.get_terminal_size().columns
-        cut = N - sum(lengths) - 7
+        cut = max(0, N - sum(L + 1 for L, c in zip(lengths, columns)
+                             if c != 'e'))
+        print(N, cut, lengths, columns)
     except OSError:
         cut = 99999
 
-    *lengths5, Lstate, Lt = lengths
-    separator = ' '.join('-' * L for L in lengths) + ' -----'
-    for *words, state, t, error in lines:
-        state = state.ljust(Lstate)
-        if color:
-            state = colored(state)
+    if verbosity:
+        lines[1] = ['-' * L for L in lengths]
+        lines.append(lines[1])
 
-        print(' '.join(word.ljust(n)
-                       for n, word in zip(lengths5, words)) +
-              ' {} {:>{}} {}'
-              .format(state, t, Lt, error[:cut]))
+    for words in lines:
+        words2 = []
+        for word, c, L in zip(words, columns, lengths):
+            if c == 'e':
+                word = word[:cut]
+            elif c in 'at':
+                word = word.rjust(L)
+            else:
+                word = word.ljust(L)
+                if c == 's' and color:
+                    word = colored(word)
+            words2.append(word)
+        print(' '.join(words2))
 
-        if words[0] == 'id':
-            print(separator)
-
-    print(separator)
-
-    print(', '.join('{}: {}'.format(state, n) for state, n in count.items()))
+    if verbosity:
+        print(', '.join('{}: {}'.format(state, n)
+                        for state, n in count.items()))
 
 
 class Queue(Lock):
@@ -180,7 +188,7 @@ class Queue(Lock):
             self.runner.submit(ready)
             print(S(len(ready), 'job'), 'submitted')
 
-        pprint(ready)
+        pprint(ready, 0, 'ifnr')
 
         if not dry_run:
             self.jobs += ready
@@ -227,10 +235,10 @@ class Queue(Lock):
 
         if dry_run:
             print(S(len(jobs), 'job'), 'to be deleted')
-            pprint(jobs)
+            pprint(jobs, 0)
         else:
             print(S(len(jobs), 'job'), 'deleted')
-            pprint(jobs)
+            pprint(jobs, 0)
             for job in jobs:
                 if job.state in ['running', 'queued']:
                     self.runner.cancel(job)
