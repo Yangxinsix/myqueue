@@ -164,9 +164,6 @@ class Job:
     def fromdict(dct):
         return Job(cmd=command(**dct.pop('cmd')), **dct)
 
-    def copy(self):
-        return Job.fromdict(self.todict())
-
     def infolder(self, folder, recursive):
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)

@@ -189,12 +189,12 @@ class Queue(Lock):
             job.tqueued = t
 
         if dry_run:
-            print(S(len(ready), 'job'), 'to submit')
+            print(S(len(ready), 'job'), 'to submit:')
+            pprint(ready, 0, 'fnr')
         else:
             self.runner.submit(ready)
-            print(S(len(ready), 'job'), 'submitted')
-
-        pprint(ready, 0, 'ifnr')
+            print(S(len(ready), 'job'), 'submitted:')
+            pprint(ready, 0, 'ifnr')
 
         if not dry_run:
             self.jobs += ready
@@ -286,10 +286,12 @@ class Queue(Lock):
         for job in self.select(id, name, states, folders, recursive):
             if job.state.isupper():
                 self.jobs.remove(job)
-            job = job.copy()
-            job.id = None
+            job = Job(job.cmd, deps=job.deps, tmax=job.tmax, cores=job.cores,
+                      folder=job.folder, repeat=job.repeat,
+                      workflow=job.workflow)
             if cores:
                 job.cores = cores
+            if tmax:
                 job.tmax = tmax
             jobs.append(job)
         self.submit(jobs, dry_run)
