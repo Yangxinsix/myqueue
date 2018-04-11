@@ -4,7 +4,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict
+from typing import Set, List, Dict  # noqa
 
 from q2.job import Job
 from q2.runner import get_runner

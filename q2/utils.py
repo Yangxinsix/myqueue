@@ -5,6 +5,7 @@ import sys
 import time
 from contextlib import contextmanager
 from typing import IO, Union
+from pathlib import Path
 
 
 @contextmanager
@@ -34,7 +35,7 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 
 class Lock:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: Path) -> None:
         self.name = str(name)
 
     def acquire(self):

@@ -122,7 +122,7 @@ def main(arguments: List[str] = None) -> Any:
     if args.command == 'help':
         parser.print_help()
         print(intro)
-        for name, p in subparsers.choices.items():
+        for name, p in subparsers.choices.items():  # type: ignore
             if name in ['help', 'rm', 'ls']:
                 continue
             print('\n\n{} command\n{}\n'
