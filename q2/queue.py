@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Set, List
 
 from q2.job import Job
-from q2.runner import get_runner
+from q2.runner import get_runner, Runner
 from q2.utils import Lock
 from q2.config import home_folder
 
@@ -71,9 +71,8 @@ def pprint(jobs: List[Job],
         N = os.get_terminal_size().columns
         cut = max(0, N - sum(L + 1 for L, c in zip(lengths, columns)
                              if c != 'e'))
-        print(N, cut, lengths, columns)
     except OSError:
-        cut = 99999
+        cut = 999999
 
     if verbosity:
         lines[1] = ['-' * L for L in lengths]
@@ -99,7 +98,7 @@ def pprint(jobs: List[Job],
 
 
 class Queue(Lock):
-    def __init__(self, runner, verbosity=1):
+    def __init__(self, runner: Runner, verbosity: int = 1):
         self.runner = get_runner(runner)
         self.verbosity = verbosity
 
@@ -235,10 +234,10 @@ class Queue(Lock):
 
         if dry_run:
             print(S(len(jobs), 'job'), 'to be deleted')
-            pprint(jobs, 0)
+            pprint(jobs, 0, 'ifnr')
         else:
             print(S(len(jobs), 'job'), 'deleted')
-            pprint(jobs, 0)
+            pprint(jobs, 0, 'ifnr')
             for job in jobs:
                 if job.state in ['running', 'queued']:
                     self.runner.cancel(job)

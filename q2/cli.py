@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import sys
+from typing import List, Any
 
 
 intro = """
@@ -22,7 +23,7 @@ Examples:
 """
 
 
-def main(arguments=None):
+def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='q2',
         description='Manage jobs in queue.')
@@ -37,6 +38,7 @@ def main(arguments=None):
                       ('submit', 'Submit job(s) to queue.'),
                       ('resubmit', 'Resubmit failed or timed-out jobs.'),
                       ('delete', 'Delete or cancel job(s).'),
+                      ('workflow', 'Submit jobs from Python script.'),
                       ('runner', 'Set runner.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
@@ -54,17 +56,19 @@ def main(arguments=None):
 
         elif cmd == 'submit':
             a('script')
-
             a('-d', '--dependencies')
             a('-a', '--arguments')
-            a('-w', '--workflow', action='store_true')
-            a('--convert', action='store_true')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8x1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days.')
+            a('-w', '--workflow', action='store_true',
+              help='Write <job-name>.done file when done.')
+
+        if cmd == 'workflow':
+            a('script')
 
         if cmd in ['list', 'delete', 'resubmit']:
             a('-s', '--states', metavar='qrdFCT',
@@ -73,6 +77,10 @@ def main(arguments=None):
             a('-i', '--id', type=int)
             a('-n', '--name',
               help='Select only jobs named "NAME".')
+
+        if cmd == 'list':
+            a('-c', '--columns', metavar='ifnraste', default='ifnraste',
+              help='Select columns to show.')
 
         if cmd not in ['list', 'completion']:
             a('-z', '--dry-run',
@@ -87,13 +95,10 @@ def main(arguments=None):
         if cmd in ['delete', 'resubmit']:
             a('-r', '--recursive', action='store_true')
 
-        if cmd in ['list', 'submit', 'delete', 'resubmit']:
+        if cmd in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
             a('folder',
               nargs='*',
               help='List of folders.  Defaults to current folder.')
-
-    if isinstance(arguments, str):
-        arguments = arguments.split()
 
     args = parser.parse_args(arguments)
 
@@ -178,7 +183,7 @@ def run(args):
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
 
-    if args.command in ['list', 'submit', 'delete', 'resubmit']:
+    if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder or ['.']]
 
@@ -197,10 +202,6 @@ def run(args):
                            args.dry_run)
 
         elif args.command == 'submit':
-            if args.workflow:
-                workflow(args, queue, folders)
-                return
-
             if args.dependencies:
                 deps = args.dependencies.split(',')
             else:
@@ -222,13 +223,18 @@ def run(args):
                            tmax=tmax,
                            cores=cores,
                            folder=folder,
-                           deps=deps)
+                           deps=deps,
+                           workflow=args.workflow)
                        for folder in folders]
 
             queue.submit(newjobs, args.dry_run)
 
+        elif args.command == 'workflow':
+            workflow(args, queue, folders)
+            return
+
         elif args.command == 'completion':
-            cmd = ('complete -o default -C "{py} {filename}" q2\n'
+            cmd = ('complete -o default -C "{py} {filename}" q2'
                    .format(py=sys.executable,
                            filename=Path(__file__).with_name('complete.py')))
             if verbosity > 0:
@@ -243,10 +249,7 @@ def workflow(args, queue, folders):
     from pathlib import Path
     from q2.utils import chdir
 
-    if args.script == '-':
-        script = sys.stdin.read()
-    else:
-        script = Path(args.script).read_text()
+    script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
     namespace = {}
     exec(code, namespace)
@@ -260,26 +263,6 @@ def workflow(args, queue, folders):
             job.folder = folder
             job.workflow = True
 
-        if args.convert:
-            convert_dot_tasks_file(jobs, folder.expanduser())
-        else:
-            alljobs += jobs
+        alljobs += jobs
 
-    if not args.convert:
-        queue.submit(alljobs, args.dry_run)
-
-
-def convert_dot_tasks_file(jobs, folder):
-    from pathlib import Path
-    tasks = Path(folder / '.tasks')
-    if tasks.is_file():
-        done = {}
-        for line in tasks.read_text().splitlines():
-            date, state, name, *_ = line.split()
-            name = name.replace('c2dm', 'c2db')
-            done[name] = (state == 'done')
-        for job in jobs:
-            if done.get(job.cmd.name):
-                d = folder / (job.cmd.name + '.done')
-                d.write_text('')
-                print(d)
+    queue.submit(alljobs, args.dry_run)

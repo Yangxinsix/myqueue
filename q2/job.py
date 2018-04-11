@@ -7,7 +7,7 @@ jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
 
 
-def T(t):
+def T(t: str) -> int:
     """Convert string to seconds."""
     if isinstance(t, str):
         t = {'s': 1,
@@ -17,7 +17,7 @@ def T(t):
     return t
 
 
-def seconds_to_time_string(n):
+def seconds_to_time_string(n: int) -> str:
     n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)
@@ -37,24 +37,6 @@ def seconds_to_short_time_string(n):
                  ('s', 1)]:
         if n % t == 0:
             return '{}{}'.format(n // t, s)
-
-
-def seconds_to_short_approximate_time_string(n):
-    n = int(n)
-    result = ''
-    m = 0
-    for s, t in [('d', 24 * 3600),
-                 ('h', 3600),
-                 ('m', 60),
-                 ('s', 1)]:
-        x = n // t
-        if x > 0:
-            result += '{}{}'.format(x, s)
-            m += 1
-            if m == 2:
-                break
-            n -= x * t
-    return result or '0s'
 
 
 class Job:
