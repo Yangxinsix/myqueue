@@ -99,7 +99,6 @@ def update_completion():
     """
 
     import argparse
-    import collections
     import textwrap
     from q2.cli import main
 
