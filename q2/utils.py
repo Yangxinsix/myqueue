@@ -107,7 +107,7 @@ def update_completion():
     my_dir, _ = os.path.split(os.path.realpath(__file__))
     filename = os.path.join(my_dir, 'complete.py')
 
-    dct = collections.defaultdict(list)
+    dct = {}
 
     class MyException(Exception):
         pass
@@ -131,6 +131,7 @@ def update_completion():
     class Subparser:
         def __init__(self, command):
             self.command = command
+            dct[command] = []
 
         def add_argument(self, *args, **kwargs):
             dct[self.command].extend(arg for arg in args

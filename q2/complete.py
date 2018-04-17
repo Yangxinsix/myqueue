@@ -25,6 +25,8 @@ commands = {
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-r', '--recursive'],
+    'help':
+        [''],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
          '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
