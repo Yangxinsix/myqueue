@@ -79,3 +79,21 @@ def timeout():
     q2('resubmit -i 1 -R 1x5s')
     wait()
     assert states() == 'Cd'
+
+
+wf = """
+from q2.job import Job
+def workflow():
+    j1 = Job('sleep+3')
+    return [j1, Job('echo+hello', deps=[j1])]
+"""
+
+
+@test
+def workflow():
+    q2('submit sleep+3@1x1m -w')
+    time.sleep(2)
+    Path('wf.py').write_text(wf)
+    q2('workflow wf.py .')
+    wait()
+    assert states() == 'dd'

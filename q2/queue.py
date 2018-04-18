@@ -143,9 +143,14 @@ class Queue(Lock):
         current = {(job.folder, job.cmd.name): job
                    for job in self.jobs}
 
-        jobs = [job for job in jobs
-                if not job.workflow or
-                (job.folder, job.cmd.name) not in current]
+        jobs2 = []
+        for job in jobs:
+            if job.workflow and (job.folder, job.cmd.name) in current:
+                job.id = current[(job.folder, job.cmd.name)].id
+            else:
+                jobs2.append(job)
+        jobs = jobs2
+
         n3 = len(jobs)
 
         if n3 < n2:
@@ -163,10 +168,15 @@ class Queue(Lock):
                     folder = pjoin(job.folder, reldir)
                     j = current.get((folder, name))
                     if j is None:
-                        if not (folder / (name + '.done')).is_file():
-                            print('Missing dependency: {}/{}'
-                                  .format(folder, name))
-                            break
+                        for jj in jobs:
+                            if jj.folder == folder and jj.cmd.name == name:
+                                j = jj
+                                break
+                        else:
+                            if not (folder / (name + '.done')).is_file():
+                                print('Missing dependency: {}/{}'
+                                      .format(folder, name))
+                                break
                     elif j.state == 'done':
                         j = None
                     elif j.state not in ['queued', 'running']:
