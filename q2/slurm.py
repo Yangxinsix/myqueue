@@ -36,7 +36,8 @@ class SLURM(Runner):
                '--nodes={}'.format(nodes),
                '--workdir={}'.format(job.folder.expanduser()),
                '--output={}.%j.out'.format(name),
-               '--error={}.%j.err'.format(name)]
+               '--error={}.%j.err'.format(name),
+               '--mem=0']
 
         cfg = read_config()
         cmd += cfg.get('slurm', {}).get('extra', [])
