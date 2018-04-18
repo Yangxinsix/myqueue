@@ -39,11 +39,13 @@ class Lock:
         self.name = str(name)
 
     def acquire(self):
+        delta = 0.1
         while True:
             fd = opencew(self.name)
             if fd is not None:
                 break
-            time.sleep(1.0)
+            time.sleep(delta)
+            delta *= 2
 
     def release(self):
         os.remove(self.name)
