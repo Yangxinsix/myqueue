@@ -355,12 +355,10 @@ class Queue(Lock):
         self._write()
 
         if state != 'running':
-            job.remove_empty_output_files()
-
-        if state != 'running':
             # Process local queue:
             self.runner.update(id, state)
             self.runner.kick()
+            job.remove_empty_output_files()
 
     def _read(self) -> None:
         self.jobs = []
@@ -384,6 +382,7 @@ class Queue(Lock):
 
     def check(self) -> None:
         write = False
+        dct = {job.id: job for job in self.jobs}
         t = time.time()
         for job in self.jobs:
             if job.state == 'running':
@@ -395,6 +394,11 @@ class Queue(Lock):
                             j.state = 'CANCELED'
                             j.tstop = t
                     write = True
+            elif job.state == 'queued':
+                for id in job.deps:
+                    if dct[id].state.isupper():
+                        job.state = 'CANCELED'
+                        job.tstop = t
             elif job.state == 'FAILED':
                 if job.error is None:
                     job.read_error()
