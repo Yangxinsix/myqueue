@@ -74,6 +74,10 @@ Tab-completion
 """
 
 
+class Q2CLIError(Exception):
+    pass
+
+
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='q2',
@@ -203,6 +207,8 @@ def main(arguments: List[str] = None) -> Any:
             return results
     except KeyboardInterrupt:
         pass
+    except Q2CLIError as x:
+        parser.exit(1, str(x) + '\n')
     except Exception as x:
         if args.traceback:
             raise
@@ -241,20 +247,22 @@ def run(args):
                     states.add(state)
                     break
             else:
-                raise ValueError('Unknown state: ' + s)
+                raise Q2CLIError('Unknown state: ' + s)
 
         if args.id:
             if args.states is not None:
-                raise ValueError("You can't use both -i and -s!")
+                raise Q2CLIError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
+        elif args.command is not 'list' and args.states is None:
+            raise Q2CLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
     if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
         if args.command in ['delete', 'resubmit']:
             if not args.id and not folders:
-                raise ValueError('Missing folder!')
+                raise Q2CLIError('Missing folder!')
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
