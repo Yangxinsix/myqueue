@@ -11,7 +11,7 @@ class Command:
         self.name = name
 
 
-def is_module(mod):
+def is_module(mod: str) -> bool:
     try:
         m = find_spec(mod)
         return m is not None
@@ -91,7 +91,7 @@ class PythonModule(Command):
         self.mod = mod
 
     def __str__(self):
-        return ' '.join(['python3', '-m', self.mod] + self. args)
+        return ' '.join(['python3', '-m', self.mod] + self.args)
 
     def todict(self):
         return {'type': 'python-module',
