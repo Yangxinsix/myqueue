@@ -254,7 +254,7 @@ def run(args):
                 raise Q2CLIError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
-        elif args.command is not 'list' and args.states is None:
+        elif args.command != 'list' and args.states is None:
             raise Q2CLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
     if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
