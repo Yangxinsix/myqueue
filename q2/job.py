@@ -75,17 +75,28 @@ class Job:
             tmax = T(tmax)
 
         self.cmd = cmd
-        self.deps = deps
         self.cores = cores or 1
         self.tmax = tmax or 600
         self.repeat = repeat or 0
         self.folder = Path(folder).expanduser().absolute()
+
+        self.deps = []
+        for dep in deps:
+            if isinstance(dep, str):
+                if dep[0] == '/':
+                    dep = Path(dep)
+                else:
+                    dep = self.folder / dep
+            self.deps.append(dep)
+
         self.state = state
         self.workflow = workflow
         self.id = id
         self.tqueued = tqueued
         self.trunning = trunning
         self.tstop = tstop
+
+        self.dname = self.folder / cmd.name
 
         self._done = None
         self.error = error
@@ -111,10 +122,7 @@ class Job:
             age = t - self.tstop
 
         if self.deps:
-            deps = '({})'.format(','.join(str(dep
-                                              if isinstance(dep, (int, str))
-                                              else dep.id)
-                                          for dep in self.deps))
+            deps = '({})'.format(len(self.deps))
         else:
             deps = ''
 
@@ -142,10 +150,9 @@ class Job:
     def todict(self):
         deps = []
         for dep in self.deps:
-            if not isinstance(dep, (str, int)):
-                assert dep.folder == self.folder
-                dep = dep.cmd.name
-            deps.append(dep)
+            if isinstance(dep, Job):
+                dep = dep.dname
+            deps.append(str(dep))
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
                 'folder': str(self.folder),

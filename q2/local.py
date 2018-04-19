@@ -19,7 +19,6 @@ class LocalRunner(Runner):
         for job in jobs:
             self.number += 1
             job.id = self.number
-            job.deps = [dep.id for dep in job.deps]
             self.jobs.append(job)
         self._write()
 
@@ -68,15 +67,15 @@ class LocalRunner(Runner):
             jobs = []
             for j in self.jobs:
                 if j is not job:
-                    if id in j.deps:
-                        j.deps.remove(id)
+                    if job.dname in j.deps:
+                        j.deps.remove(job.dname)
                     jobs.append(j)
             self.jobs = jobs
         else:
             assert state in ['FAILED', 'TIMEOUT'], state
             jobs = []
             for j in self.jobs:
-                if j is not job and id not in j.deps:
+                if j is not job and job.dname not in j.deps:
                     jobs.append(j)
             self.jobs = jobs
 

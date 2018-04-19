@@ -140,13 +140,12 @@ class Queue(Lock):
         if self.jobs is None:
             self._read()
 
-        current = {(job.folder, job.cmd.name): job
-                   for job in self.jobs}
+        current = {job.dname: job for job in self.jobs}
 
         jobs2 = []
         for job in jobs:
-            if job.workflow and (job.folder, job.cmd.name) in current:
-                job.id = current[(job.folder, job.cmd.name)].id
+            if job.workflow and job.dname in current:
+                job.id = current[job.dname].id
             else:
                 jobs2.append(job)
         jobs = jobs2
@@ -160,22 +159,18 @@ class Queue(Lock):
         for job in jobs:
             deps = []
             for dep in job.deps:
-                if isinstance(dep, str):
-                    # convert str to Job:
-                    reldir, _, name = dep.rpartition('/')
-                    if not reldir:
-                        reldir = '.'
-                    folder = pjoin(job.folder, reldir)
-                    j = current.get((folder, name))
+                if not isinstance(dep, Job):
+                    # convert dep to Job:
+                    j = current.get(dep)
                     if j is None:
                         for jj in jobs:
-                            if jj.folder == folder and jj.cmd.name == name:
+                            if dep == jj.dname:
                                 j = jj
                                 break
                         else:
-                            if not (folder / (name + '.done')).is_file():
-                                print('Missing dependency: {}/{}'
-                                      .format(folder, name))
+                            donefile = dep.with_name(dep.name + '.done')
+                            if not donefile.is_file():
+                                print('Missing dependency:', dep)
                                 break
                     elif j.state == 'done':
                         j = None
@@ -203,6 +198,8 @@ class Queue(Lock):
             pprint(ready, 0, 'fnr')
         else:
             self.runner.submit(ready)
+            for job in ready:
+                job.deps = [dep.dname for dep in job.deps]
             print(S(len(ready), 'job'), 'submitted:')
             pprint(ready, 0, 'ifnr')
 
@@ -330,8 +327,8 @@ class Queue(Lock):
 
         if state == 'done':
             for j in self.jobs:
-                if id in j.deps:
-                    j.deps.remove(id)
+                if job.dname in j.deps:
+                    j.deps.remove(job.dname)
             if job.workflow:
                 job.write_done_file()
             job.tstop = t
@@ -341,7 +338,7 @@ class Queue(Lock):
 
         elif state == 'FAILED':
             for j in self.jobs:
-                if id in j.deps:
+                if job.dname in j.deps:
                     j.state = 'CANCELED'
                     j.tstop = t
             job.tstop = t
@@ -382,7 +379,7 @@ class Queue(Lock):
 
     def check(self) -> None:
         write = False
-        dct = {job.id: job for job in self.jobs}
+        bad = {job.dname for job in self.jobs if job.state.isupper()}
         t = time.time()
         for job in self.jobs:
             if job.state == 'running':
@@ -390,15 +387,16 @@ class Queue(Lock):
                     job.state = 'TIMEOUT'
                     job.remove_empty_output_files()
                     for j in self.jobs:
-                        if job.id in j.deps:
+                        if job.dname in j.deps:
                             j.state = 'CANCELED'
                             j.tstop = t
                     write = True
             elif job.state == 'queued':
-                for id in job.deps:
-                    if dct[id].state.isupper():
+                for dep in job.deps:
+                    if dep in bad:
                         job.state = 'CANCELED'
                         job.tstop = t
+                        break
             elif job.state == 'FAILED':
                 if job.error is None:
                     job.read_error()
