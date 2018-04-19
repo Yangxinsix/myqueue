@@ -66,7 +66,7 @@ def fail():
     q2('submit echo+hello -d q2.test.fail+2')
     wait()
     assert states() == 'FC'
-    q2('resubmit -i 1')
+    q2('resubmit -sF .')
     wait()
     assert states() == 'CF'
 
@@ -76,7 +76,7 @@ def timeout():
     q2('submit sleep+3@1x1s')
     q2('submit echo+hello -d sleep+3')
     wait()
-    q2('resubmit -i 1 -R 1x5s')
+    q2('resubmit -sT . -R 1x5s')
     wait()
     assert states() == 'Cd'
 
