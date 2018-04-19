@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 
-from q2.commands import command
+from myqueue.commands import command
 
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']

@@ -1,2 +1,2 @@
-from q2.cli import main
+from myqueue.cli import main
 main()

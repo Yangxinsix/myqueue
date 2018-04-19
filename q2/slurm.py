@@ -1,9 +1,9 @@
 import subprocess
 from typing import List
 
-from q2.config import read_config
-from q2.job import Job
-from q2.runner import Runner
+from myqueue.config import read_config
+from myqueue.job import Job
+from myqueue.runner import Runner
 
 
 class SLURM(Runner):
@@ -53,7 +53,7 @@ class SLURM(Runner):
 
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
-                  'msg="python3 -m q2.queue slurm $id"\n'
+                  'msg="python3 -m myqueue.queue slurm $id"\n'
                   '($msg running && {mpi} && $msg done) || $msg FAILED\n'
                   .format(mpi=mpicmd))
 

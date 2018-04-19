@@ -3,9 +3,9 @@ import subprocess
 from typing import List
 
 
-from q2.config import home_folder
-from q2.job import Job
-from q2.runner import Runner
+from myqueue.config import home_folder
+from myqueue.job import Job
+from myqueue.runner import Runner
 
 
 class LocalRunner(Runner):
@@ -113,7 +113,7 @@ class LocalRunner(Runner):
 
     def _run(self, job):
         cmd1 = job.command()
-        msg = 'python3 -m q2.queue local {}'.format(job.id)
+        msg = 'python3 -m myqueue.queue local {}'.format(job.id)
         err = job.folder / (job.name + '.err')
         cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '

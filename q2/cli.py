@@ -20,23 +20,23 @@ Examples
 
 Run job.py on 8 cores for 1 hour in folder1 and folder2:
 
-    $ q2 submit job.py@8x10h folder1/ folder2/
+    $ mq submit job.py@8x10h folder1/ folder2/
 
 Sleep for 25 seconds on 1 core using the time.sleep() function:
 
-    $ q2 submit time.sleep -a 25 -R 1x1m
+    $ mq submit time.sleep -a 25 -R 1x1m
 
 or equivalently:
 
-    $ q2 submit time.sleep+25@1x1m
+    $ mq submit time.sleep+25@1x1m
 
 Say "hello" (using the defaults of 1 core for 10 minutes):
 
-    $ q2 submit echo -a hello
+    $ mq submit echo -a hello
 
 You can see the status of your jobs with:
 
-    $ q2 list
+    $ mq list
     id folder name       res.   age state time error
     -- ------ ---------- ----- ---- ----- ---- -----
     1  ~      echo+hello 1x10m 0:06 done  0:00
@@ -45,7 +45,7 @@ You can see the status of your jobs with:
 
 Delete the job from the list with:
 
-    $ q2 delete -s d .
+    $ mq delete -s d .
 
 The output from the job will be in ~/echo+hello.1.out and
 ~/echo+hello.1.err (if there was any output).
@@ -55,32 +55,32 @@ The output from the job will be in ~/echo+hello.1.out and
 
 If a job fails or times out, then you can resubmit it with more resources:
 
-    $ q2 submit sleep+3000@1x30m
+    $ mq submit sleep+3000@1x30m
     ...
-    $ q2 list
+    $ mq list
     id folder name       res.   age state   time  error
     -- ------ ---------- ----- ---- ------- ----- -----
     2  ~      sleep+3000 1x30m 1:16 TIMEOUT 50:00
     -- ------ ---------- ----- ---- ------- ----- -----
     TIMEOUT: 1
-    $ q2 resubmit -i 2 -R 1x1h
+    $ mq resubmit -i 2 -R 1x1h
 
 
 Tab-completion
 ==============
 
-    $ q2 completions -q >> ~/.bashrc
+    $ mq completions -q >> ~/.bashrc
 
 """
 
 
-class Q2CLIError(Exception):
+class MYQUEUECLIError(Exception):
     pass
 
 
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
-        prog='q2',
+        prog='mq',
         description='Manage jobs in queue.')
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
@@ -180,7 +180,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'help' and sys.stdout.isatty():
         # Pipe output through less:
-        subprocess.run('python3 -m q2 ' +
+        subprocess.run('python3 -m myqueue ' +
                        ' '.join(sys.argv[1:]) + ' | less -FX',
                        shell=True)
         return
@@ -197,7 +197,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     if args.command == 'test':
-        from q2.test.tests import run_tests
+        from myqueue.test.tests import run_tests
         run_tests(args.test)
         return
 
@@ -207,7 +207,7 @@ def main(arguments: List[str] = None) -> Any:
             return results
     except KeyboardInterrupt:
         pass
-    except Q2CLIError as x:
+    except MYQUEUECLIError as x:
         parser.exit(1, str(x) + '\n')
     except Exception as x:
         if args.traceback:
@@ -215,7 +215,7 @@ def main(arguments: List[str] = None) -> Any:
         else:
             print('{}: {}'.format(x.__class__.__name__, x),
                   file=sys.stderr)
-            print('To get a full traceback, use: q2 {} ... -T'
+            print('To get a full traceback, use: mq {} ... -T'
                   .format(args.command), file=sys.stderr)
             return 1
 
@@ -225,14 +225,14 @@ def run(args):
 
     from pathlib import Path
 
-    from q2.job import Job, jobstates, T
-    from q2.queue import Queue
+    from myqueue.job import Job, jobstates, T
+    from myqueue.queue import Queue
 
     if args.command == 'runner':
-        (Path.home() / '.q2' / 'runner').write_text(args.runner)
+        (Path.home() / '.myqueue' / 'runner').write_text(args.runner)
         return
 
-    path = Path.home() / '.q2' / 'runner'
+    path = Path.home() / '.myqueue' / 'runner'
     if path.is_file():
         runner = path.read_text()
     else:
@@ -247,22 +247,22 @@ def run(args):
                     states.add(state)
                     break
             else:
-                raise Q2CLIError('Unknown state: ' + s)
+                raise MYQUEUECLIError('Unknown state: ' + s)
 
         if args.id:
             if args.states is not None:
-                raise Q2CLIError("You can't use both -i and -s!")
+                raise MYQUEUECLIError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
         elif args.command != 'list' and args.states is None:
-            raise Q2CLIError('You must use "-i <id>" OR "-s <state(s)>"!')
+            raise MYQUEUECLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
     if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
         if args.command in ['delete', 'resubmit']:
             if not args.id and not folders:
-                raise Q2CLIError('Missing folder!')
+                raise MYQUEUECLIError('Missing folder!')
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
@@ -314,7 +314,7 @@ def run(args):
             return
 
         elif args.command == 'completion':
-            cmd = ('complete -o default -C "{py} {filename}" q2'
+            cmd = ('complete -o default -C "{py} {filename}" mq'
                    .format(py=sys.executable,
                            filename=Path(__file__).with_name('complete.py')))
             if verbosity > 0:
@@ -327,7 +327,7 @@ def run(args):
 
 def workflow(args, queue, folders):
     from pathlib import Path
-    from q2.utils import chdir
+    from myqueue.utils import chdir
 
     script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')

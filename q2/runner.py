@@ -1,5 +1,5 @@
 from typing import List
-from q2.job import Job
+from myqueue.job import Job
 
 
 class Runner:
@@ -21,10 +21,10 @@ class Runner:
 
 def get_runner(name: str) -> Runner:
     if 'local'.startswith(name):
-        from q2.local import LocalRunner
+        from myqueue.local import LocalRunner
         return LocalRunner()
     if 'slurm'.startswith(name):
-        from q2.slurm import SLURM
+        from myqueue.slurm import SLURM
         return SLURM()
     else:
         assert 0

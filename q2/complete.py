@@ -3,7 +3,7 @@
 
 Put this in your .bashrc::
 
-    complete -o default -C "python3 -m q2.complete" q2
+    complete -o default -C "python3 -m myqueue.complete" mq
 
 """
 
@@ -74,7 +74,7 @@ def complete(word, previous, line, point):
             words = ['todo', 'queued', 'running', 'done', 'FAILED', 'TIMEOUT']
 
     elif command == 'test':
-        from q2.test.tests import all_tests as words
+        from myqueue.test.tests import all_tests as words
 
     return words
 

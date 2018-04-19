@@ -1,11 +1,11 @@
-Q2
-===
+MyQueue
+=======
 
 Simple job queue.
 
-**work in progress**
+**work in progress!!**
 
 Use
 ---
 
-Type ``q2 -h`` for help.
+Type ``mq help`` for help.

@@ -96,13 +96,13 @@ def update_completion():
 
     Run this when ever options are changed::
 
-        python3 -m q2.utils
+        python3 -m myqueue.utils
 
     """
 
     import argparse
     import textwrap
-    from q2.cli import main
+    from myqueue.cli import main
 
     # Path of the complete.py script:
     my_dir, _ = os.path.split(os.path.realpath(__file__))

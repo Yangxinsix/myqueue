@@ -6,10 +6,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, List, Dict  # noqa
 
-from q2.job import Job
-from q2.runner import get_runner
-from q2.utils import Lock
-from q2.config import home_folder
+from myqueue.job import Job
+from myqueue.runner import get_runner
+from myqueue.utils import Lock
+from myqueue.config import home_folder
 
 
 def pjoin(folder, reldir):
@@ -102,7 +102,7 @@ class Queue(Lock):
         self.runner = get_runner(runner)
         self.verbosity = verbosity
 
-        self.debug = bool(os.environ.get('Q2_DEBUG'))
+        self.debug = bool(os.environ.get('MYQUEUE_DEBUG'))
 
         folder = home_folder()
 

@@ -1,21 +1,21 @@
 import re
 from setuptools import setup, find_packages
 
-with open('q2/__init__.py') as fd:
+with open('myqueue/__init__.py') as fd:
     version = re.search("__version__ = '(.*)'", fd.read()).group(1)
 
 with open('README.rst') as fd:
     long_description = fd.read()
 
-setup(name='q2',
+setup(name='myqueue',
       version=version,
       description='Simple job queue',
       long_description=long_description,
       author='J. J. Mortensen',
       author_email='jjmo@dtu.dk',
-      url='https://gitlab.com/jensj/q2',
+      url='https://gitlab.com/jensj/myqueue',
       packages=find_packages(),
-      entry_points={'console_scripts': ['q2 = q2.cli:main']},
+      entry_points={'console_scripts': ['mq = myqueue.cli:main']},
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Console',
