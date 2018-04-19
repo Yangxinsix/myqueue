@@ -20,7 +20,7 @@ Examples
 
 Run job.py on 8 cores for 1 hour in folder1 and folder2:
 
-    $ q2 submit job.py@8x10h folder1/ foldder2/
+    $ q2 submit job.py@8x10h folder1/ folder2/
 
 Sleep for 25 seconds on 1 core using the time.sleep() function:
 
@@ -62,7 +62,7 @@ If a job fails or times out, then you can resubmit it with more resources:
     -- ------ ---------- ----- ---- ------- ----- -----
     2  ~      sleep+3000 1x30m 1:16 TIMEOUT 50:00
     -- ------ ---------- ----- ---- ------- ----- -----
-    FAILED: 1
+    TIMEOUT: 1
     $ q2 resubmit -i 2 -R 1x1h
 
 
