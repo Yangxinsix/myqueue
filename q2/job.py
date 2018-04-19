@@ -118,7 +118,11 @@ class Job:
             dt = self.tstop - self.tqueued
             age = t - self.tstop
         else:
-            dt = self.tstop - self.trunning
+            if self.trunning is None:
+                dt = 0
+                print('???')
+            else:
+                dt = self.tstop - self.trunning
             age = t - self.tstop
 
         if self.deps:
