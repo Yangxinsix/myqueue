@@ -11,7 +11,7 @@ Installation
 
 Get the code and install with ``pip``::
 
-    $ git clone https://gitlab.com/jensj/myqueue
+    $ git clone https://gitlab.com/jensj/myqueue.git
     $ cd myqueue
     $ python3 -m pip install --user --editable .
 
