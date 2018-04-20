@@ -42,6 +42,7 @@ class Job:
                  args=[],
                  deps=[],
                  cores=None,
+                 processes=None,
                  tmax=None,
                  repeat=None,
                  folder='.',
@@ -62,9 +63,14 @@ class Job:
         if isinstance(cmd, str):
             cmd, _, resources = cmd.partition('@')
             if resources:
-                assert cores is None and tmax is None
+                assert cores is None and tmax is None and processes is None
                 cores, tmax = resources.split('x', 1)
+                if ':' in cores:
+                    cores, processes = cores.split(':')
+                else:
+                    processes = cores
                 cores = int(cores)
+                processes = int(processes)
             cmd = command(cmd, args)
 
         if isinstance(tmax, str):
@@ -76,6 +82,7 @@ class Job:
 
         self.cmd = cmd
         self.cores = cores or 1
+        self.processes = processes or self.cores
         self.tmax = tmax or 600
         self.repeat = repeat or 0
         self.folder = Path(folder).expanduser().absolute()
@@ -130,10 +137,15 @@ class Job:
         else:
             deps = ''
 
+        if self.processes == self.cores:
+            cores = self.cores
+        else:
+            cores = '{}:{}'.format(self.cores, self.processes)
+
         return [str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                '{}x{}'.format(self.cores,
+                '{}x{}'.format(cores,
                                seconds_to_short_time_string(self.tmax)) +
                 deps +
                 ('*' if self.workflow else ''),
@@ -162,6 +174,7 @@ class Job:
                 'folder': str(self.folder),
                 'deps': deps,
                 'cores': self.cores,
+                'processes': self.processes,
                 'tmax': self.tmax,
                 'repeat': self.repeat,
                 'workflow': self.workflow,

@@ -32,7 +32,7 @@ class SLURM(Runner):
                '--partition=xeon{}'.format(size),
                '--job-name={}'.format(name),
                '--time={}'.format(max(job.tmax // 60, 1)),
-               '--ntasks={}'.format(job.cores),
+               '--ntasks={}'.format(job.processes),
                '--nodes={}'.format(nodes),
                '--workdir={}'.format(job.folder.expanduser()),
                '--output={}.%j.out'.format(name),
@@ -49,7 +49,10 @@ class SLURM(Runner):
         mpicmd = 'mpirun '
         if size == 24:
             mpicmd += '-mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1 '
-        mpicmd += str(job.cmd).replace('python3', 'gpaw-python')
+
+        mpicmd += str(job.cmd)
+        if job.processes > 1:
+            mpicmd = mpicmd.replace('python3', 'gpaw-python')
 
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
