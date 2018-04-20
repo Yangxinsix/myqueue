@@ -28,39 +28,38 @@ class SLURM(Runner):
                 raise ValueError('...')
 
         name = job.cmd.name
-        cmd = ['sbatch',
-               '--partition=xeon{}'.format(size),
-               '--job-name={}'.format(name),
-               '--time={}'.format(max(job.tmax // 60, 1)),
-               '--ntasks={}'.format(job.processes),
-               '--nodes={}'.format(nodes),
-               '--workdir={}'.format(job.folder.expanduser()),
-               '--output={}.%j.out'.format(name),
-               '--error={}.%j.err'.format(name),
-               '--mem=0']
+        sbatch = ['sbatch',
+                  '--partition=xeon{}'.format(size),
+                  '--job-name={}'.format(name),
+                  '--time={}'.format(max(job.tmax // 60, 1)),
+                  '--ntasks={}'.format(job.processes),
+                  '--nodes={}'.format(nodes),
+                  '--workdir={}'.format(job.folder.expanduser()),
+                  '--output={}.%j.out'.format(name),
+                  '--error={}.%j.err'.format(name),
+                  '--mem=0']
 
         cfg = read_config()
-        cmd += cfg.get('slurm', {}).get('extra', [])
+        sbatch += cfg.get('slurm', {}).get('extra', [])
 
         if job.deps:
             ids = ':'.join(str(dep.id) for dep in job.deps)
-            cmd.append('--dependency=afterok:{}'.format(ids))
+            sbatch.append('--dependency=afterok:{}'.format(ids))
 
-        mpicmd = 'mpirun '
-        if size == 24:
-            mpicmd += '-mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1 '
-
-        mpicmd += str(job.cmd)
+        cmd = str(job.cmd)
         if job.processes > 1:
-            mpicmd = mpicmd.replace('python3', 'gpaw-python')
+            mpirun = 'mpirun '
+            if size == 24:
+                mpirun += '-mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1 '
+            cmd = mpirun + cmd.replace('python3', 'gpaw-python')
 
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
                   'msg="python3 -m myqueue.queue slurm $id"\n'
-                  '($msg running && {mpi} && $msg done) || $msg FAILED\n'
-                  .format(mpi=mpicmd))
+                  '($msg running && {cmd} && $msg done) || $msg FAILED\n'
+                  .format(cmd=cmd))
 
-        p = subprocess.Popen(cmd,
+        p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
