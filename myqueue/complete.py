@@ -17,6 +17,20 @@ def match(word, *suffixes):
             if any(w.endswith(suffix) for suffix in suffixes)]
 
 
+def read():
+    from pathlib import Path
+    import json
+    try:
+        folder = Path.home() / '.myqueue'
+        path = folder / 'runner'
+        runner = path.read_text()
+        fname = folder / (runner + '.json')
+        dct = json.loads(fname.read_text())
+        return dct
+    except Exception:
+        return {}
+
+
 # Beginning of computer generated data:
 commands = {
     'completion':
@@ -69,9 +83,16 @@ def complete(word, previous, line, point):
 
     words = []
 
-    if command == 'clear':
-        if previous in ['-s', '--status']:
-            words = ['todo', 'queued', 'running', 'done', 'FAILED', 'TIMEOUT']
+    if previous in ['-n', '--name']:
+        dct = read()
+        words = set()
+        for job in dct['jobs']:
+            cmd = job['cmd']
+            words.add((cmd['cmd'] + '+' + '_'.join(cmd['args'])).rstrip('+'))
+
+    elif previous in ['-i', '--id']:
+        dct = read()
+        words = {str(job['id']) for job in dct['jobs']}
 
     elif command == 'test':
         from myqueue.test.tests import all_tests as words
