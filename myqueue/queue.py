@@ -211,7 +211,7 @@ class Queue(Lock):
     def select(self, id: int,
                name: str,
                states: Set[str],
-               folders: List[str],
+               folders: List[Path],
                recursive: bool = False) -> List[Job]:
         if id is not None:
             for job in self.jobs:
