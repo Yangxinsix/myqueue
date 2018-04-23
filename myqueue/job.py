@@ -17,6 +17,7 @@ def T(t: str) -> int:
 
 
 def seconds_to_time_string(n: int) -> str:
+    n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)
     m, s = divmod(n, 60)

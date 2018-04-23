@@ -74,7 +74,7 @@ Tab-completion
 """
 
 
-class MYQUEUECLIError(Exception):
+class MyQueueCLIError(Exception):
     pass
 
 
@@ -122,12 +122,14 @@ def main(arguments: List[str] = None) -> Any:
             a('-R', '--resources',
               help='Examples: "8x1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
-              '"h" for hours and "d" for days.')
+              '"h" for hours and "d" for days. '
+              '"16:1x30m": 16 cores, 1 process, half an hour.')
             a('-w', '--workflow', action='store_true',
               help='Write <job-name>.done file when done.')
 
         if cmd == 'workflow':
             a('script')
+            a('-p', '--pattern', action='store_true')
 
         if cmd in ['list', 'delete', 'resubmit']:
             a('-s', '--states', metavar='qrdFCT',
@@ -207,7 +209,7 @@ def main(arguments: List[str] = None) -> Any:
             return results
     except KeyboardInterrupt:
         pass
-    except MYQUEUECLIError as x:
+    except MyQueueCLIError as x:
         parser.exit(1, str(x) + '\n')
     except Exception as x:
         if args.traceback:
@@ -247,22 +249,22 @@ def run(args):
                     states.add(state)
                     break
             else:
-                raise MYQUEUECLIError('Unknown state: ' + s)
+                raise MyQueueCLIError('Unknown state: ' + s)
 
         if args.id:
             if args.states is not None:
-                raise MYQUEUECLIError("You can't use both -i and -s!")
+                raise MyQueueCLIError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
         elif args.command != 'list' and args.states is None:
-            raise MYQUEUECLIError('You must use "-i <id>" OR "-s <state(s)>"!')
+            raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
     if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
         if args.command in ['delete', 'resubmit']:
             if not args.id and not folders:
-                raise MYQUEUECLIError('Missing folder!')
+                raise MyQueueCLIError('Missing folder!')
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
@@ -330,6 +332,10 @@ def workflow(args, queue, folders):
     from pathlib import Path
     from myqueue.utils import chdir
 
+    if args.pattern:
+        workflow2(args, queue, folders)
+        return
+
     script = Path(args.script).read_text()
     code = compile(script, args.script, 'exec')
     namespace = {}
@@ -345,5 +351,28 @@ def workflow(args, queue, folders):
             job.workflow = True
 
         alljobs += jobs
+
+    queue.submit(alljobs, args.dry_run)
+
+
+def workflow2(args, queue, folders):
+    from myqueue.utils import chdir
+
+    alljobs = []
+    for folder in folders:
+        for path in folder.glob('**/*' + args.script):
+            script = path.read_text()
+            code = compile(script, path, 'exec')
+            namespace = {}
+            exec(code, namespace)
+            func = namespace['workflow']
+
+            with chdir(path.parent):
+                jobs = func()
+            for job in jobs:
+                job.folder = path.parent
+                job.workflow = True
+
+            alljobs += jobs
 
     queue.submit(alljobs, args.dry_run)
