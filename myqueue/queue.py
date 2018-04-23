@@ -286,6 +286,7 @@ class Queue(Lock):
                  recursive: bool,
                  dry_run: bool,
                  cores: int,
+                 processes: int,
                  tmax: int) -> None:
 
         self._read()
@@ -293,11 +294,14 @@ class Queue(Lock):
         for job in self.select(id, name, states, folders, recursive):
             if job.state.isupper():
                 self.jobs.remove(job)
-            job = Job(job.cmd, deps=job.deps, tmax=job.tmax, cores=job.cores,
+            job = Job(job.cmd, deps=job.deps,
+                      tmax=job.tmax, cores=job.cores, processes=job.processes,
                       folder=job.folder, repeat=job.repeat,
                       workflow=job.workflow)
             if cores:
                 job.cores = cores
+            if processes:
+                job.processes = processes
             if tmax:
                 job.tmax = tmax
             jobs.append(job)

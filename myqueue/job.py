@@ -37,6 +37,17 @@ def seconds_to_short_time_string(n):
             return '{}{}'.format(n // t, s)
 
 
+def parse_resource_string(resources: str) -> tuple:
+    cores, tmax = resources.split('x', 1)
+    if ':' in cores:
+        cores, processes = cores.split(':')
+    else:
+        processes = cores
+    cores = int(cores)
+    processes = int(processes)
+    return cores, processes, tmax
+
+
 class Job:
     def __init__(self, cmd,
                  args=[],
@@ -64,13 +75,8 @@ class Job:
             cmd, _, resources = cmd.partition('@')
             if resources:
                 assert cores is None and tmax is None and processes is None
-                cores, tmax = resources.split('x', 1)
-                if ':' in cores:
-                    cores, processes = cores.split(':')
-                else:
-                    processes = cores
-                cores = int(cores)
-                processes = int(processes)
+                cores, processes, tmax = parse_resource_string(resources)
+
             cmd = command(cmd, args)
 
         if isinstance(tmax, str):

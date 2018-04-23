@@ -225,7 +225,7 @@ def run(args):
 
     from pathlib import Path
 
-    from myqueue.job import Job, jobstates, T
+    from myqueue.job import Job, jobstates, T, parse_resource_string
     from myqueue.queue import Queue
 
     if args.command == 'runner':
@@ -266,11 +266,11 @@ def run(args):
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
-            cores, tmax = args.resources.split('x')
-            cores = int(cores)
+            cores, processes, tmax = parse_resource_string(args.resources)
             tmax = T(tmax)
         else:
             cores = None
+            processes = None
             tmax = None
 
     with Queue(runner, verbosity) as queue:
@@ -286,7 +286,7 @@ def run(args):
 
         elif args.command == 'resubmit':
             queue.resubmit(args.id, args.name, states, folders, args.recursive,
-                           args.dry_run, cores, tmax)
+                           args.dry_run, cores, processes, tmax)
 
         elif args.command == 'submit':
             if args.dependencies:
@@ -302,6 +302,7 @@ def run(args):
                            args=arguments,
                            tmax=tmax,
                            cores=cores,
+                           processes=processes,
                            folder=folder,
                            deps=deps,
                            workflow=args.workflow)
