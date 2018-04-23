@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from typing import List, Any, Dict
 
 from myqueue.commands import command
 
@@ -16,7 +17,6 @@ def T(t: str) -> int:
 
 
 def seconds_to_time_string(n: int) -> str:
-    n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)
     m, s = divmod(n, 60)
@@ -43,9 +43,8 @@ def parse_resource_string(resources: str) -> tuple:
         cores, processes = cores.split(':')
     else:
         processes = cores
-    cores = int(cores)
-    processes = int(processes)
-    return cores, processes, tmax
+
+    return int(cores), int(processes), tmax
 
 
 class Job:
@@ -116,10 +115,10 @@ class Job:
         self.out_of_memory = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         return '{}.{}'.format(self.cmd.name, self.id)
 
-    def words(self):
+    def words(self) -> List[str]:
         t = time.time()
         if self.state == 'queued':
             dt = t - self.tqueued
@@ -169,7 +168,7 @@ class Job:
             dct.pop('cmd')['cmd'],
             ', '.join('{}={!r}'.format(k, v) for k, v in dct.items()))
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         deps = []
         for dep in self.deps:
             if isinstance(dep, Job):
@@ -191,30 +190,30 @@ class Job:
                 'error': self.error}
 
     @staticmethod
-    def fromdict(dct):
+    def fromdict(dct: dict) -> 'Job':
         return Job(cmd=command(**dct.pop('cmd')), **dct)
 
-    def infolder(self, folder, recursive):
+    def infolder(self, folder: Path, recursive: bool) -> bool:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def done(self):
+    def done(self) -> bool:
         if self._done is None:
             p = self.folder / '{}.done'.format(self.cmd.name)
             self._done = p.is_file()
         return self._done
 
-    def write_done_file(self):
+    def write_done_file(self) -> None:
         p = self.folder / '{}.done'.format(self.cmd.name)
         p.write_text('')
 
-    def remove_empty_output_files(self):
+    def remove_empty_output_files(self) -> None:
         for ext in ['.out', '.err']:
             path = self.folder / (self.name + ext)
             if path.is_file() and path.stat().st_size == 0:
                 path.unlink()
 
-    def read_error(self):
+    def read_error(self) -> None:
         path = self.folder / (self.name + '.err')
         try:
             lines = path.read_text().splitlines()
