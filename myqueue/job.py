@@ -100,6 +100,8 @@ class Job:
                     dep = Path(dep)
                 else:
                     dep = self.folder / dep
+                if '..' in dep.parts:
+                    dep = dep.parent.resolve() / dep.name
             self.deps.append(dep)
 
         self.state = state
