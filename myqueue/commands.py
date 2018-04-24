@@ -77,7 +77,7 @@ class PythonScript(Command):
         self.script = str(path.absolute())
 
     def __str__(self):
-        return 'python3 ' + ' '.join([self.script] + self.args)
+        return 'MPLBACKEND=Agg python3 ' + ' '.join([self.script] + self.args)
 
     def todict(self):
         return {'type': 'python-script',
