@@ -232,7 +232,7 @@ class Queue(Lock):
                id: int,
                name: str,
                states: Set[str],
-               folders: List[str],
+               folders: List[Path],
                recursive: bool,
                dry_run: bool) -> None:
         """Delete or cancel jobs."""
@@ -282,7 +282,7 @@ class Queue(Lock):
                  id: int,
                  name: str,
                  states: Set[str],
-                 folders: List[str],
+                 folders: List[Path],
                  recursive: bool,
                  dry_run: bool,
                  cores: int,
