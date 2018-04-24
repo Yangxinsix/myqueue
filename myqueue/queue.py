@@ -376,8 +376,8 @@ class Queue(Lock):
         self.check()
 
     def _write(self):
-        text = json.dumps({'jobs': [job.todict()
-                                    for job in self.jobs]},
+        text = json.dumps({'version': 1,
+                           'jobs': [job.todict() for job in self.jobs]},
                           indent=1)
         self.fname.write_text(text)
 
