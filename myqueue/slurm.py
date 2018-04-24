@@ -21,11 +21,8 @@ class SLURM(Runner):
                 nodes = job.cores // size
                 break
         else:
-            if job.cores < 8:
-                size = 8
-                nodes = 1
-            else:
-                raise ValueError('...')
+            size = 8
+            nodes = job.cores // 8 + 1
 
         name = job.cmd.name
         sbatch = ['sbatch',
