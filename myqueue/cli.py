@@ -135,7 +135,7 @@ def main(arguments: List[str] = None) -> Any:
             a('-s', '--states', metavar='qrdFCT',
               help='Selection of states. First letters of "queued", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
-            a('-i', '--id', type=int)
+            a('-i', '--id', help="Comma-separated list of job ID's.")
             a('-n', '--name',
               help='Select only jobs named "NAME".')
 
@@ -251,11 +251,14 @@ def run(args):
             else:
                 raise MyQueueCLIError('Unknown state: ' + s)
 
+        ids = None  # type: Set[int]
         if args.id:
             if args.states is not None:
                 raise MyQueueCLIError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
+
+            ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
@@ -278,16 +281,16 @@ def run(args):
     with Queue(runner, verbosity) as queue:
 
         if args.command == 'list':
-            jobs = queue.list(args.id, args.name, states, folders,
+            jobs = queue.list(ids, args.name, states, folders,
                               args.columns)
             return jobs
 
         if args.command == 'delete':
-            queue.delete(args.id, args.name, states, folders, args.recursive,
+            queue.delete(ids, args.name, states, folders, args.recursive,
                          args.dry_run)
 
         elif args.command == 'resubmit':
-            queue.resubmit(args.id, args.name, states, folders, args.recursive,
+            queue.resubmit(ids, args.name, states, folders, args.recursive,
                            args.dry_run, cores, processes, tmax)
 
         elif args.command == 'submit':

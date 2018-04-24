@@ -93,6 +93,7 @@ def pprint(jobs: List[Job],
         print(' '.join(words2))
 
     if verbosity:
+        count['total'] = len(jobs)
         print(', '.join('{}: {}'.format(state, n)
                         for state, n in count.items()))
 
@@ -116,13 +117,13 @@ class Queue(Lock):
         self.jobs = None  # type: List[Job]
 
     def list(self,
-             id: int,
+             ids: Set[int],
              name: str,
              states: Set[str],
              folders,
              columns: str) -> List[Job]:
         self._read()
-        jobs = self.select(id, name, states, folders, recursive=True)
+        jobs = self.select(ids, name, states, folders, recursive=True)
         pprint(jobs, self.verbosity, columns)
         return jobs
 
@@ -208,16 +209,13 @@ class Queue(Lock):
             self._write()
             self.runner.kick()
 
-    def select(self, id: int,
+    def select(self, ids: Set[int],
                name: str,
                states: Set[str],
                folders: List[Path],
                recursive: bool = False) -> List[Job]:
-        if id is not None:
-            for job in self.jobs:
-                if job.id == id:
-                    return [job]
-            return []
+        if ids is not None:
+            return [job for job in self.jobs if job.id in ids]
 
         jobs = []
         for job in self.jobs:
@@ -229,7 +227,7 @@ class Queue(Lock):
         return jobs
 
     def delete(self,
-               id: int,
+               ids: Set[int],
                name: str,
                states: Set[str],
                folders: List[Path],
@@ -239,7 +237,7 @@ class Queue(Lock):
 
         self._read()
 
-        jobs = self.select(id, name, states, folders, recursive)
+        jobs = self.select(ids, name, states, folders, recursive)
 
         t = time.time()
         for job in jobs:
@@ -279,7 +277,7 @@ class Queue(Lock):
         return removed
 
     def resubmit(self,
-                 id: int,
+                 ids: Set[int],
                  name: str,
                  states: Set[str],
                  folders: List[Path],
@@ -291,7 +289,7 @@ class Queue(Lock):
 
         self._read()
         jobs = []
-        for job in self.select(id, name, states, folders, recursive):
+        for job in self.select(ids, name, states, folders, recursive):
             if job.state.isupper():
                 self.jobs.remove(job)
             job = Job(job.cmd, deps=job.deps,
