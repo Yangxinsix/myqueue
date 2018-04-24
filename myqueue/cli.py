@@ -347,7 +347,6 @@ def workflow(args, queue, folders):
         with chdir(folder):
             jobs = func()
         for job in jobs:
-            job.folder = folder
             job.workflow = True
 
         alljobs += jobs
@@ -362,7 +361,7 @@ def workflow2(args, queue, folders):
     for folder in folders:
         for path in folder.glob('**/*' + args.script):
             script = path.read_text()
-            code = compile(script, path, 'exec')
+            code = compile(script, str(path), 'exec')
             namespace = {}
             exec(code, namespace)
             func = namespace['workflow']
@@ -370,7 +369,6 @@ def workflow2(args, queue, folders):
             with chdir(path.parent):
                 jobs = func()
             for job in jobs:
-                job.folder = path.parent
                 job.workflow = True
 
             alljobs += jobs
