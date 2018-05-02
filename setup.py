@@ -23,7 +23,7 @@ setup(name='myqueue',
           'License :: OSI Approved :: '
           'GNU General Public License v3 or later (GPLv3+)',
           'Operating System :: Unix',
-          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Topic :: Text Editors :: Text Processing'])  # ???
