@@ -47,8 +47,12 @@ class SLURM(Runner):
         if job.processes > 1:
             mpirun = 'mpirun '
             if size == 24:
-                mpirun += '-mca pml cm -mca mtl psm2 -x OMP_NUM_THREADS=1 '
+                mpirun += ('-mca pml cm -mca mtl psm2 '
+                           '-x OMP_NUM_THREADS=1 '
+                           '-x MPLBACKEND=Agg ')
             cmd = mpirun + cmd.replace('python3', 'gpaw-python')
+        else:
+            cmd = 'MPLBACKEND=Agg ' + cmd
 
         script = ('#!/bin/bash -l\n'
                   'id=$SLURM_JOB_ID\n'
