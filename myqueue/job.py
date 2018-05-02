@@ -50,7 +50,7 @@ def parse_resource_string(resources: str) -> tuple:
 
 class Job:
     def __init__(self, cmd,
-                 args=[],
+                 args=None,
                  deps=[],
                  cores=None,
                  processes=None,
@@ -77,6 +77,8 @@ class Job:
                 assert cores is None and tmax is None and processes is None
                 cores, processes, tmax = parse_resource_string(resources)
 
+            if cmd.endswith('.py') or '.py+' in cmd:
+                cmd = str(folder) + '/' + cmd
             cmd = command(cmd, args)
 
         if isinstance(tmax, str):

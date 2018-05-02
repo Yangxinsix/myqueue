@@ -20,11 +20,12 @@ def is_module(mod: str) -> bool:
 
 
 def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
-    if '+' in cmd:
-        if args:
-            raise ValueError
-        cmd, _, rest = cmd.partition('+')
+    path, sep, name = cmd.rpartition('/')
+    if '+' in name:
+        assert args is None
+        name, _, rest = name.rpartition('+')
         args = rest.split('_')
+    cmd = path + sep + name
 
     if type is None:
         if cmd.endswith('.py'):
@@ -77,7 +78,7 @@ class PythonScript(Command):
         self.script = str(path.absolute())
 
     def __str__(self):
-        return 'MPLBACKEND=Agg python3 ' + ' '.join([self.script] + self.args)
+        return 'python3 ' + ' '.join([self.script] + self.args)
 
     def todict(self):
         return {'type': 'python-script',
