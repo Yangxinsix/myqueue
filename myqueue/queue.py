@@ -345,8 +345,7 @@ class Queue(Lock):
             for j in self.jobs:
                 if job.dname in j.deps:
                     j.deps.remove(job.dname)
-            if job.workflow:
-                job.write_done_file()
+            job.write_done_file()
             job.tstop = t
 
         elif state == 'running':
@@ -357,6 +356,7 @@ class Queue(Lock):
                 if job.dname in j.deps:
                     j.state = 'CANCELED'
                     j.tstop = t
+            job.write_failed_file()
             job.tstop = t
 
         elif state == 'TIMEOUT':

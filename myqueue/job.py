@@ -211,8 +211,14 @@ class Job:
         return self._done
 
     def write_done_file(self) -> None:
-        p = self.folder / '{}.done'.format(self.cmd.name)
-        p.write_text('')
+        if self.workflow:
+            p = self.folder / '{}.done'.format(self.cmd.name)
+            p.write_text('')
+
+    def write_failed_file(self) -> None:
+        if self.workflow:
+            p = self.folder / '{}.FAILED'.format(self.cmd.name)
+            p.write_text('')
 
     def remove_empty_output_files(self) -> None:
         for ext in ['.out', '.err']:
