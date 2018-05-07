@@ -6,6 +6,9 @@ from pathlib import Path
 from myqueue.cli import main
 
 
+TIMEOUT = 10.0
+
+
 def mq(cmd):
     args = cmd.split()
     args[1:1] = ['--traceback']
@@ -24,31 +27,43 @@ def states():
     return ''.join(job.state[0] for job in mq('list'))
 
 
-tmpdir = tempfile.mkdtemp(prefix='myqueue-test-')
+tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
+                               dir=str(Path.home())))
 
 
-def wait(timeout: float = 10.0)-> None:
+def wait()-> None:
     t0 = time.time()
     while mq('list -s qr -qq'):
         time.sleep(0.1)
-        if time.time() - t0 > timeout:
+        if time.time() - t0 > TIMEOUT:
             raise TimeoutError
 
 
-def run_tests(tests):
+def run_tests(tests, timeout):
+    global TIMEOUT
+    TIMEOUT = timeout
     print('Running tests in', tmpdir)
-    os.chdir(tmpdir)
-    os.environ['MYQUEUE_HOME'] = tmpdir
+    os.chdir(str(tmpdir))
+    os.environ['MYQUEUE_HOME'] = str(tmpdir)
     os.environ['MYQUEUE_DEBUG'] = 'yes!'
 
     if not tests:
-        tests = list(all_tests)
+        tests = sorted(all_tests)
 
+    N = 79
     for name in tests:
-        print('\n::::::::::::::::::::::::: Running "{}" test:\n'.format(name))
+        print()
+        print('#' * N)
+        print(' Running "{}" test '.format(name).center(N, '#'))
+        print('#' * N)
+        print()
+
         all_tests[name]()
-        for f in Path(tmpdir).glob('**/*'):
+
+        for f in tmpdir.glob('**/*'):
             f.unlink()
+
+    tmpdir.rmdir()
 
 
 @test

@@ -50,7 +50,8 @@ def pprint(jobs: List[Job],
     indices = [c2i[c] for c in columns]
 
     if verbosity:
-        lines = [[titles[i] for i in indices], None]
+        lines = [[titles[i] for i in indices],
+                 ['-', '-']]
         lengths = [len(t) for t in lines[0]]
     else:
         lines = []
@@ -105,16 +106,22 @@ class Queue(Lock):
 
         self.debug = bool(os.environ.get('MYQUEUE_DEBUG'))
 
-        folder = home_folder()
+        self.folder = home_folder()
 
-        if not folder.is_dir():
-            folder.mkdir()
+        if not self.folder.is_dir():
+            self.folder.mkdir()
 
-        self.fname = folder / (runner + '.json')
+        self.fname = self.folder / (runner + '.json')
 
         Lock.__init__(self, self.fname.with_name(runner + '.json.lock'))
 
-        self.jobs = None  # type: List[Job]
+        self.jobs = []  # type: List[Job]
+        self.changed = False  # type: bool
+
+    def __exit__(self, type, value, tb):
+        if self.changed:
+            self._write()
+        Lock.__exit__(self, type, value, tb)
 
     def list(self,
              ids: Set[int],
@@ -129,7 +136,8 @@ class Queue(Lock):
 
     def submit(self,
                jobs: List[Job],
-               dry_run: bool = False) -> None:
+               dry_run: bool = False,
+               read: bool = True) -> None:
 
         n1 = len(jobs)
         jobs = [job for job in jobs if not job.workflow or not job.done()]
@@ -138,7 +146,7 @@ class Queue(Lock):
         if n2 < n1:
             print(S(n1 - n2, 'job'), 'already done')
 
-        if self.jobs is None:
+        if read:
             self._read()
 
         current = {job.dname: job for job in self.jobs}
@@ -206,7 +214,7 @@ class Queue(Lock):
 
         if not dry_run:
             self.jobs += ready
-            self._write()
+            self.changed = True
             self.runner.kick()
 
     def select(self, ids: Set[int],
@@ -254,7 +262,7 @@ class Queue(Lock):
                 if job.state in ['running', 'queued']:
                     self.runner.cancel(job)
                 self.jobs.remove(job)
-            self._write()
+            self.changed = True
 
     def find_depending(self, jobs):
         map = {(job.folder, job.cmd.name): job for job in self.jobs}
@@ -303,9 +311,9 @@ class Queue(Lock):
             if tmax:
                 job.tmax = tmax
             jobs.append(job)
-        self.submit(jobs, dry_run)
+        self.submit(jobs, dry_run, read=False)
 
-    def update(self, id: int, state: str) -> None:
+    def update(self, id: int, state: str, t: float = 0.0) -> None:
         if self.debug:
             print('UPDATE', id, state)
 
@@ -323,7 +331,7 @@ class Queue(Lock):
             raise ValueError('No such job: {id}, {state}'
                              .format(id=id, state=state))
 
-        t = time.time()
+        t = t or time.time()
 
         job.state = state
 
@@ -351,36 +359,44 @@ class Queue(Lock):
         else:
             1 / 0
 
-        self._write()
-
         if state != 'running':
             # Process local queue:
             self.runner.update(id, state)
             self.runner.kick()
             job.remove_empty_output_files()
 
+        self.changed = True
+
     def _read(self) -> None:
-        self.jobs = []
+        if self.fname.is_file():
+            data = json.loads(self.fname.read_text())
+            for dct in data['jobs']:
+                job = Job.fromdict(dct)
+                self.jobs.append(job)
 
-        if not self.fname.is_file():
-            return
-
-        data = json.loads(self.fname.read_text())
-
-        for dct in data['jobs']:
-            job = Job.fromdict(dct)
-            self.jobs.append(job)
-
+        self.read_slurm_files()
         self.check()
 
+    def read_slurm_files(self):
+        files = []
+        for path in self.folder.glob('slurm-*-*'):
+            _, id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, int(id), state))
+        for t, id, state in sorted(files):
+            self.update(id, state, t)
+
+        if files:
+            self.changed = True
+
     def _write(self):
+        if self.debug:
+            print('WRITE', [job.state for job in self.jobs], self.fname)
         text = json.dumps({'version': 1,
                            'jobs': [job.todict() for job in self.jobs]},
                           indent=1)
         self.fname.write_text(text)
 
     def check(self) -> None:
-        write = False
         bad = {job.dname for job in self.jobs if job.state.isupper()}
         t = time.time()
         for job in self.jobs:
@@ -392,7 +408,7 @@ class Queue(Lock):
                         if job.dname in j.deps:
                             j.state = 'CANCELED'
                             j.tstop = t
-                    write = True
+                    self.changed = True
             elif job.state == 'queued':
                 for dep in job.deps:
                     if dep in bad:
@@ -402,9 +418,7 @@ class Queue(Lock):
             elif job.state == 'FAILED':
                 if job.error is None:
                     job.read_error()
-                    write = True
-        if write:
-            self._write()
+                    self.changed = True
 
 
 if __name__ == '__main__':
@@ -413,5 +427,6 @@ if __name__ == '__main__':
     try:
         with q:
             q.update(int(id), state)
+
     except Exception as x:
         raise

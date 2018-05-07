@@ -112,6 +112,7 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
+            a('-t', '--timeout', type=float, default=10.0)
 
         elif cmd == 'submit':
             a('script')
@@ -200,7 +201,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from myqueue.test.tests import run_tests
-        run_tests(args.test)
+        run_tests(args.test, args.timeout)
         return
 
     try:

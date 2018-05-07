@@ -56,11 +56,12 @@ class SLURM(Runner):
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
-        script = ('#!/bin/bash -l\n'
-                  'id=$SLURM_JOB_ID\n'
-                  'msg="python3 -m myqueue.queue slurm $id"\n'
-                  '($msg running && {cmd} && $msg done) || $msg FAILED\n'
-                  .format(cmd=cmd))
+        script = (
+            '#!/bin/bash -l\n'
+            'id=$SLURM_JOB_ID\n'
+            'mq=~/.myqueue/slurm-$id\n'
+            '(touch $mq-0 && {cmd} && touch $mq-1) || touch $mq-2\n'
+            .format(cmd=cmd))
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
