@@ -1,12 +1,13 @@
 import os
 import tempfile
 import time
+from typing import List
 from pathlib import Path
 
 from myqueue.cli import main
 
 
-TIMEOUT = 10.0
+SLOW = False
 
 
 def mq(cmd):
@@ -33,22 +34,24 @@ tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
 
 def wait()-> None:
     t0 = time.time()
+    timeout = 300.0 if SLOW else 10.0
+    sleep = 3.0 if SLOW else 0.1
     while mq('list -s qr -qq'):
-        time.sleep(0.1)
-        if time.time() - t0 > TIMEOUT:
+        time.sleep(sleep)
+        if time.time() - t0 > timeout:
             raise TimeoutError
 
 
-def run_tests(tests, timeout):
-    global TIMEOUT
-    TIMEOUT = timeout
-    print('Running tests in', tmpdir)
+def run_tests(tests: List[str], slow: bool):
+    global SLOW
+    SLOW = slow
+    print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
     # os.environ['MYQUEUE_HOME'] = str(tmpdir)
     os.environ['MYQUEUE_DEBUG'] = 'yes!'
 
     if not tests:
-        tests = sorted(all_tests)
+        tests = all_tests
 
     N = 79
     for name in tests:
@@ -90,10 +93,11 @@ def fail():
 
 @test
 def timeout():
-    mq('submit sleep+3@1x1s')
-    mq('submit echo+hello -d sleep+3')
+    T = '120' if SLOW else '3'
+    mq('submit sleep@1x1s -a ' + T)
+    mq('submit echo+hello -d sleep+' + T)
     wait()
-    mq('resubmit -sT . -R 1x5s')
+    mq('resubmit -sT . -R 1x5m')
     wait()
     assert states() == 'Cd'
 

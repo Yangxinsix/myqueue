@@ -112,7 +112,9 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('-t', '--timeout', type=float, default=10.0)
+            a('-s', '--slow', action='store_true',
+              help='Use -s for slow queues '
+              '(like a real high trafic SLURM-one).')
 
         elif cmd == 'submit':
             a('script')
@@ -201,7 +203,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from myqueue.test.tests import run_tests
-        run_tests(args.test, args.timeout)
+        run_tests(args.test, args.slow)
         return
 
     try:

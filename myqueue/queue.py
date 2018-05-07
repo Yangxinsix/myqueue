@@ -50,8 +50,7 @@ def pprint(jobs: List[Job],
     indices = [c2i[c] for c in columns]
 
     if verbosity:
-        lines = [[titles[i] for i in indices],
-                 ['-', '-']]
+        lines = [[titles[i] for i in indices]]
         lengths = [len(t) for t in lines[0]]
     else:
         lines = []
@@ -76,7 +75,7 @@ def pprint(jobs: List[Job],
         cut = 999999
 
     if verbosity:
-        lines[1] = ['-' * L for L in lengths]
+        lines[1:1] = [['-' * L for L in lengths]]
         lines.append(lines[1])
 
     for words in lines:
@@ -203,14 +202,14 @@ class Queue(Lock):
             job.tqueued = t
 
         if dry_run:
-            print(S(len(ready), 'job'), 'to submit:')
             pprint(ready, 0, 'fnr')
+            print(S(len(ready), 'job'), 'to submit')
         else:
             self.runner.submit(ready)
             for job in ready:
                 job.deps = [dep.dname for dep in job.deps]
-            print(S(len(ready), 'job'), 'submitted:')
             pprint(ready, 0, 'ifnr')
+            print(S(len(ready), 'job'), 'submitted')
 
         if not dry_run:
             self.jobs += ready
@@ -253,11 +252,11 @@ class Queue(Lock):
                 job.tstop = t
 
         if dry_run:
+            pprint(jobs, 0)
             print(S(len(jobs), 'job'), 'to be deleted')
-            pprint(jobs, 0, 'ifnr')
         else:
+            pprint(jobs, 0)
             print(S(len(jobs), 'job'), 'deleted')
-            pprint(jobs, 0, 'ifnr')
             for job in jobs:
                 if job.state in ['running', 'queued']:
                     self.runner.cancel(job)
@@ -385,19 +384,26 @@ class Queue(Lock):
         self.check()
 
     def read_slurm_files(self):
+        paths = list(self.folder.glob('slurm-*-*'))
         files = []
-        for path in self.folder.glob('slurm-*-*'):
+        for path in paths:
             _, id, state = path.name.split('-')
             files.append((path.stat().st_ctime, int(id), state))
+        states = {'0': 'running',
+                  '1': 'done',
+                  '2': 'FAILED'}
         for t, id, state in sorted(files):
-            self.update(id, state, t)
+            self.update(id, states[state], t)
 
         if files:
             self.changed = True
 
+        for path in paths:
+            path.unlink()
+
     def _write(self):
         if self.debug:
-            print('WRITE', [job.state for job in self.jobs], self.fname)
+            print('WRITE', len(self.jobs))
         text = json.dumps({'version': 1,
                            'jobs': [job.todict() for job in self.jobs]},
                           indent=1)
