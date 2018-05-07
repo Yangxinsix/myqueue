@@ -313,7 +313,12 @@ class Queue(Lock):
             jobs.append(job)
         self.submit(jobs, dry_run, read=False)
 
-    def update(self, id: int, state: str, t: float = 0.0) -> None:
+    def update(self,
+               id: int,
+               state: str,
+               t: float = 0.0,
+               read: bool = False) -> None:
+
         if self.debug:
             print('UPDATE', id, state)
 
@@ -323,7 +328,9 @@ class Queue(Lock):
             else:
                 state = 'FAILED'
 
-        self._read()
+        if read:
+            self._read()
+
         for job in self.jobs:
             if job.id == id:
                 break
@@ -426,7 +433,7 @@ if __name__ == '__main__':
     q = Queue(runner, 0)
     try:
         with q:
-            q.update(int(id), state)
+            q.update(int(id), state, read=True)
 
     except Exception as x:
         raise

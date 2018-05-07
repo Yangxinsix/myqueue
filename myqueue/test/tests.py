@@ -44,7 +44,7 @@ def run_tests(tests, timeout):
     TIMEOUT = timeout
     print('Running tests in', tmpdir)
     os.chdir(str(tmpdir))
-    os.environ['MYQUEUE_HOME'] = str(tmpdir)
+    # os.environ['MYQUEUE_HOME'] = str(tmpdir)
     os.environ['MYQUEUE_DEBUG'] = 'yes!'
 
     if not tests:
@@ -59,6 +59,8 @@ def run_tests(tests, timeout):
         print()
 
         all_tests[name]()
+
+        mq('rm -s qrdFTC . -r')
 
         for f in tmpdir.glob('**/*'):
             f.unlink()
