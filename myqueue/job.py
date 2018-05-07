@@ -71,6 +71,8 @@ class Job:
             task_A1_A2@C1,C2,C3xTxR
 
         """
+        if isinstance(deps, str):
+            deps = deps.split(',')
         if isinstance(cmd, str):
             cmd, _, resources = cmd.partition('@')
             if resources:
