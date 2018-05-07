@@ -51,7 +51,7 @@ def run_tests(tests: List[str], slow: bool):
     os.environ['MYQUEUE_DEBUG'] = 'yes!'
 
     if not tests:
-        tests = all_tests
+        tests = list(all_tests)
 
     N = 79
     for name in tests:
