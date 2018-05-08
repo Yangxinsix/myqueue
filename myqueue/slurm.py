@@ -33,10 +33,8 @@ class SLURM(Runner):
                   '--nodes={}'.format(nodes),
                   '--workdir={}'.format(job.folder.expanduser()),
                   '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name)]
-
-        if size != 16:
-            sbatch.append('--mem=0')
+                  '--error={}.%j.err'.format(name),
+                  '--mem={}G'.format({8: 24, 16: 64, 24: 256}[size] - 1)]
 
         cfg = read_config()
         sbatch += cfg.get('slurm', {}).get('extra', [])
