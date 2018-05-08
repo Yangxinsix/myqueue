@@ -45,11 +45,9 @@ class SLURM(Runner):
 
         cmd = str(job.cmd)
         if job.processes > 1:
-            mpirun = 'mpirun '
+            mpirun = 'mpirun -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if size == 24:
-                mpirun += ('-mca pml cm -mca mtl psm2 '
-                           '-x OMP_NUM_THREADS=1 '
-                           '-x MPLBACKEND=Agg ')
+                mpirun += '-mca pml cm -mca mtl psm2 '
             cmd = mpirun + cmd.replace('python3', 'gpaw-python')
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
