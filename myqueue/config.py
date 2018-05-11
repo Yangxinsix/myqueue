@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any  # noqa
 
-_config = {}  # type: Dict[str, Dict]
+_config = {}  # type: Dict[str, Dict[str, Any]]
 
 
 def read_config() -> Dict[str, Dict[str, Any]]:

@@ -1,43 +1,38 @@
 import subprocess
+from math import ceil
 from typing import List
 
-from myqueue.config import read_config
 from myqueue.job import Job
 from myqueue.runner import Runner
 
 
 class SLURM(Runner):
+    def __init__(self):
+        cfg = read_config
+        self.nodes = OrderedDict((node, spec) for node, spec in nodelist)
+
     def submit(self, jobs: List[Job]) -> None:
-        if len(jobs) != 1:
-            for job in jobs:
-                self.submit([job])
-            return
+        for job in jobs:
+            self.submit1([job])
 
-        # Submit one job:
-        job = jobs[0]
-
-        for size in [24, 16, 8]:
-            if job.cores % size == 0:
-                nodes = job.cores // size
-                break
-        else:
-            size = 8
-            nodes = job.cores // 8 + 1
+    def submit1(self, job: Job) -> None:
+        nodes, nodename, processes = job.resources.select(self.nodes)
+        nodedct = self.nodes[nodename]
 
         name = job.cmd.name
         sbatch = ['sbatch',
-                  '--partition=xeon{}'.format(size),
+                  '--patition={}'.format(nodename),
                   '--job-name={}'.format(name),
-                  '--time={}'.format(max(job.tmax // 60, 1)),
-                  '--ntasks={}'.format(job.processes),
+                  '--time={}'.format(ceil(job.tmax / 60)),
+                  '--ntasks={}'.format(processes),
                   '--nodes={}'.format(nodes),
                   '--workdir={}'.format(job.folder.expanduser()),
                   '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name),
-                  '--mem={}G'.format({8: 24, 16: 64, 24: 256}[size] - 1)]
+                  '--error={}.%j.err'.format(name)]
 
-        cfg = read_config()
-        sbatch += cfg.get('slurm', {}).get('extra', [])
+        mem = nodedct.get('memory')
+        if mem:
+            sbatch.append('--mem={}'.format(mem))
 
         if job.deps:
             ids = ':'.join(str(dep.id) for dep in job.deps)
@@ -45,10 +40,10 @@ class SLURM(Runner):
 
         cmd = str(job.cmd)
         if job.processes > 1:
-            mpirun = 'mpirun -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            if size == 24:
-                mpirun += '-mca pml cm -mca mtl psm2 '
-            cmd = mpirun + cmd.replace('python3', 'gpaw-python')
+            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
+            if 'mpiargs' in nodedct:
+                mpiexec += nodedct['mpiargs'] + ' '
+            cmd = mpiexec + cmd.replace('python3', self.parallel_python)
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 

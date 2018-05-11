@@ -1,8 +1,9 @@
 import time
 from pathlib import Path
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Union
 
 from myqueue.commands import command
+from myqueue.resources import Resources
 
 jobstates = ['queued', 'running', 'done',
              'FAILED', 'CANCELED', 'TIMEOUT']
@@ -38,57 +39,14 @@ def seconds_to_short_time_string(n):
             return '{}{}'.format(n // t, s)
 
 
-def parse_resource_string(resources: str) -> tuple:
-    cores, tmax = resources.split('x', 1)
-    if ':' in cores:
-        cores, processes = cores.split(':')
-    else:
-        processes = cores
-
-    return int(cores), int(processes), tmax
-
-
 class Job:
-    def __init__(self, cmd,
-                 args=None,
-                 deps=[],
-                 cores=None,
-                 processes=None,
-                 tmax=None,
-                 repeat=None,
-                 folder='.',
-                 state='UNKNOWN',
-                 workflow=False,
-                 tqueued=None,
-                 trunning=None,
-                 tstop=None,
-                 error=None,
-                 id=None):
-        """Description of a job.
-
-        ::
-
-            task_A1_A2@C1,C2,C3xTxR
-
-        """
-        if isinstance(deps, str):
-            deps = deps.split(',')
-        if isinstance(cmd, str):
-            cmd, _, resources = cmd.partition('@')
-            if resources:
-                assert cores is None and tmax is None and processes is None
-                cores, processes, tmax = parse_resource_string(resources)
-
-            if cmd.endswith('.py') or '.py+' in cmd:
-                cmd = str(folder) + '/' + cmd
-            cmd = command(cmd, args)
-
-        if isinstance(tmax, str):
-            if 'x' in tmax:
-                assert repeat is None
-                tmax, _, repeat = tmax.partition('x')
-                repeat = int(repeat) - 1
-            tmax = T(tmax)
+    def __init__(self,
+                 cmd: Command,
+                 resources: Resources,
+                 deps: List[Path],
+                 workflow: bool,
+                 folder):
+        """Description of a job."""
 
         self.cmd = cmd
         self.cores = cores or 1
@@ -250,3 +208,36 @@ class Job:
         cmd = 'cd {} && {} 2> {} > {}'.format(self.folder, self.cmd, err, out)
 
         return cmd
+
+
+def job(cmd: str,
+        resources: Resources = None,
+        args: List[str] = [],
+        deps: List[Union[Job, str]] = [],
+        cores: int = 1,
+        nodes: int = 1,
+        node: str = '',
+        processes: int = 1,
+        tmax: Union[int, str] = '10m',
+        workflow: bool = False) -> Job:
+        if isinstance(deps, str):
+            deps = deps.split(',')
+        if isinstance(cmd, str):
+            cmd, _, resources = cmd.partition('@')
+            if resources:
+                assert cores is None and tmax is None and processes is None
+                cores, processes, tmax = parse_resource_string(resources)
+
+            if cmd.endswith('.py') or '.py+' in cmd:
+                cmd = str(folder) + '/' + cmd
+            cmd = command(cmd, args)
+
+        if isinstance(tmax, str):
+            if 'x' in tmax:
+                assert repeat is None
+                tmax, _, repeat = tmax.partition('x')
+                repeat = int(repeat) - 1
+            tmax = T(tmax)
+
+    return Job(cmd, resources, deps, workflow)
+        
