@@ -1,26 +1,72 @@
+from typing import List, Dict, Tuple, Any
+
+
 class Resources:
     def __init__(self,
-                 cores: int = None,
-                 nodes: int = None,
-                 node: str = None,
-                 tmax:
+                 cores: int,
+                 nodename: str,
+                 processes: int,
+                 tmax: int):
+        self.cores = cores
+        self.nodename = nodename
+        self.tmax = tmax
 
-    cores, tmax = resources.split('x', 1)
-    if ':' in cores:
-        cores, processes = cores.split(':')
-    else:
-        processes = cores
-
-    return int(cores), int(processes), tmax
-
-    def create():
-        if res.node:
-            if
-        for size in [24, 16, 8]:
-            if job.cores % size == 0:
-                nodes = job.cores // size
-                break
+        if processes == 0:
+            self.processes = cores
         else:
-            size = 8
-            nodes = job.cores // 8 + 1
-                     
+            self.processes = processes
+
+    @staticmethod
+    def from_string(s):
+        cores, s = s.split(':', 1)
+        nodename = ''
+        processes = 0
+        tmax = 600
+        for x in s.split(':'):
+            if x[0].isdigit():
+                if x[-1].isdigit():
+                    processes = int(x)
+                else:
+                    tmax = T(x)
+            else:
+                nodename = x
+        return Resources(int(cores), nodename, processes, tmax)
+
+    def todict(self) -> Dict[str, Any]:
+        dct = {'cores': self.cores}
+        if self.processes != self.cores:
+            dct['processes'] = self.processes
+        if self.tmax != 600:
+            dct['tmax'] = self.tmax
+        if self.nodename:
+            dct['nodename'] = self.nodename
+        return dct
+
+    def select(self, nodelist: List[Tuple[str, Dict[str, Any]]]):
+        if self.nodename:
+            for name, dct in nodelist:
+                if name == self.nodename:
+                    break
+            else:
+                1 / 0
+        else:
+            for name, dct in nodelist:
+                if self.cores % dct['cores'] == 0:
+                    break
+            else:
+                _, name, dct = min((dct['cores'], name, dct)
+                                   for name, dct in nodelist)
+
+        nodes, rest = divmod(self.cores, dct['cores'])
+        if rest:
+            nodes += 1
+
+        return nodes, name, dct
+
+
+def T(t: str) -> int:
+    """Convert string to seconds."""
+    return {'s': 1,
+            'm': 60,
+            'h': 3600,
+            'd': 24 * 3600}[t[-1]] * int(t[:-1])

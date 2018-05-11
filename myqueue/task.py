@@ -1,83 +1,44 @@
 import time
 from pathlib import Path
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict
 
-from myqueue.commands import command
+from myqueue.commands import command, Command
 from myqueue.resources import Resources
 
-jobstates = ['queued', 'running', 'done',
-             'FAILED', 'CANCELED', 'TIMEOUT']
+taskstates = ['queued', 'running', 'done',
+              'FAILED', 'CANCELED', 'TIMEOUT']
 
 
-def T(t: str) -> int:
-    """Convert string to seconds."""
-    return {'s': 1,
-            'm': 60,
-            'h': 3600,
-            'd': 24 * 3600}[t[-1]] * int(t[:-1])
-
-
-def seconds_to_time_string(n: int) -> str:
-    n = int(n)
-    d, n = divmod(n, 24 * 3600)
-    h, n = divmod(n, 3600)
-    m, s = divmod(n, 60)
-    if d:
-        return '{}:{:02}:{:02}:{:02}'.format(d, h, m, s)
-    if h:
-        return '{}:{:02}:{:02}'.format(h, m, s)
-    return '{}:{:02}'.format(m, s)
-
-
-def seconds_to_short_time_string(n):
-    n = int(n)
-    for s, t in [('d', 24 * 3600),
-                 ('h', 3600),
-                 ('m', 60),
-                 ('s', 1)]:
-        if n % t == 0:
-            return '{}{}'.format(n // t, s)
-
-
-class Job:
+class Task:
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
-                 deps: List[Path],
+                 dpaths: List[Path],
                  workflow: bool,
-                 folder):
-        """Description of a job."""
+                 folder: Path,
+                 queue: str):
+        """Description of a task."""
 
         self.cmd = cmd
-        self.cores = cores or 1
-        self.processes = processes or self.cores
-        self.tmax = tmax or 600
-        self.repeat = repeat or 0
-        self.folder = Path(folder).expanduser().absolute()
-
-        self.deps = []
-        for dep in deps:
-            if isinstance(dep, str):
-                if dep[0] == '/':
-                    dep = Path(dep)
-                else:
-                    dep = self.folder / dep
-                if '..' in dep.parts:
-                    dep = dep.parent.resolve() / dep.name
-            self.deps.append(dep)
-
-        self.state = state
+        self.resources = resources
+        self.dpaths = dpaths
         self.workflow = workflow
-        self.id = id
-        self.tqueued = tqueued
-        self.trunning = trunning
-        self.tstop = tstop
+        self.folder = folder
+        self.queuename = queue
+
+        self.state = ''
+        self.id = 0
+        self.error = ''
+
+        # Timing:
+        self.tqueued = 0.0
+        self.trunning = 0.0
+        self.tstop = 0.0
 
         self.dname = self.folder / cmd.name
+        self.dtasks = []  # type: List[Task]
 
         self._done = None
-        self.error = error
-        self.out_of_memory = False
 
     @property
     def name(self) -> str:
@@ -129,25 +90,21 @@ class Job:
 
     def __repr__(self):
         dct = self.todict()
-        return 'Job({!r}, {})'.format(
-            dct.pop('cmd')['cmd'],
-            ', '.join('{}={!r}'.format(k, v) for k, v in dct.items()))
+        return 'Task({!r})'.format(dct)
 
     def todict(self) -> Dict[str, Any]:
         deps = []
         for dep in self.deps:
-            if isinstance(dep, Job):
+            if isinstance(dep, Task):
                 dep = dep.dname
             deps.append(str(dep))
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
                 'folder': str(self.folder),
                 'deps': deps,
-                'cores': self.cores,
-                'processes': self.processes,
-                'tmax': self.tmax,
-                'repeat': self.repeat,
+                'resources': self.resources.todict(),
                 'workflow': self.workflow,
+                'queue': self.queuename,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,
@@ -155,8 +112,10 @@ class Job:
                 'error': self.error}
 
     @staticmethod
-    def fromdict(dct: dict) -> 'Job':
-        return Job(cmd=command(**dct.pop('cmd')), **dct)
+    def fromdict(dct: dict) -> 'Task':
+        return Task(cmd=command(**dct.pop('cmd')),
+                    resources=Resources(**dct.pop('resources')),
+                    **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:
         return folder == self.folder or (recursive and
@@ -210,34 +169,57 @@ class Job:
         return cmd
 
 
-def job(cmd: str,
-        resources: Resources = None,
-        args: List[str] = [],
-        deps: List[Union[Job, str]] = [],
-        cores: int = 1,
-        nodes: int = 1,
-        node: str = '',
-        processes: int = 1,
-        tmax: Union[int, str] = '10m',
-        workflow: bool = False) -> Job:
-        if isinstance(deps, str):
-            deps = deps.split(',')
-        if isinstance(cmd, str):
-            cmd, _, resources = cmd.partition('@')
-            if resources:
-                assert cores is None and tmax is None and processes is None
-                cores, processes, tmax = parse_resource_string(resources)
+def task(cmd: str,
+         resources: str = '',
+         args: List[str] = [],
+         deps: str = '',
+         cores: int = 0,
+         nodename: str = '',
+         processes: int = 0,
+         tmax: str = '10m',
+         folder: str = '',
+         workflow: bool = False) -> Task:
 
-            if cmd.endswith('.py') or '.py+' in cmd:
-                cmd = str(folder) + '/' + cmd
-            cmd = command(cmd, args)
+    folder = Path(folder).absolute()
 
-        if isinstance(tmax, str):
-            if 'x' in tmax:
-                assert repeat is None
-                tmax, _, repeat = tmax.partition('x')
-                repeat = int(repeat) - 1
-            tmax = T(tmax)
+    dpaths = []
+    if deps:
+        for dep in deps.split(','):
+            dep = folder / dep
+            if '..' in dep.parts:
+                dep = dep.parent.resolve() / dep.name
+            dpaths.append(dep)
 
-    return Job(cmd, resources, deps, workflow)
-        
+    if '@' in cmd:
+        cmd, resources = cmd.split('@')
+
+    if resources:
+        resources = Resources.from_string(resources)
+    else:
+        resources = Resources.from_string(cores, nodename, processes, tmax)
+
+    cmd = command(cmd, args)
+
+    return Task(cmd, resources, dpaths, workflow, folder)
+
+
+def seconds_to_time_string(n: int) -> str:
+    n = int(n)
+    d, n = divmod(n, 24 * 3600)
+    h, n = divmod(n, 3600)
+    m, s = divmod(n, 60)
+    if d:
+        return '{}:{:02}:{:02}:{:02}'.format(d, h, m, s)
+    if h:
+        return '{}:{:02}:{:02}'.format(h, m, s)
+    return '{}:{:02}'.format(m, s)
+
+
+def seconds_to_short_time_string(n):
+    n = int(n)
+    for s, t in [('d', 24 * 3600),
+                 ('h', 3600),
+                 ('m', 60),
+                 ('s', 1)]:
+        if n % t == 0:
+            return '{}{}'.format(n // t, s)

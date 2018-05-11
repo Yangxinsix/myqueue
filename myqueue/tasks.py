@@ -27,15 +27,15 @@ class Tasks(Lock):
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
-        self.queues = {}
+        self.queues = {}  # type: Dict[str, Queue]
         self.tasks = []  # type: List[Task]
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        queue = self.queues.get(task.queue)
+        queue = self.queues.get(task.queuename)
         if not queue:
-            queue = get_queue(queue)
-            self.queues[queue] = queue
+            queue = get_queue(task.queuename)
+            self.queues[task.queuename] = queue
         return queue
 
     def __exit__(self, type, value, tb):
@@ -92,25 +92,24 @@ class Tasks(Lock):
             for dep in task.deps:
                 if not isinstance(dep, Task):
                     # convert dep to Task:
-                    j = current.get(dep)
-                    if j is None:
-                        for jj in tasks:
-                            if dep == jj.dname:
-                                j = jj
+                    tsk = current.get(dep)
+                    if tsk is None:
+                        for tsk in tasks:
+                            if dep == tsk.dname:
                                 break
                         else:
                             donefile = dep.with_name(dep.name + '.done')
                             if not donefile.is_file():
                                 print('Missing dependency:', dep)
                                 break
-                    elif j.state == 'done':
-                        j = None
-                    elif j.state not in ['queued', 'running']:
+                    elif tsk.state == 'done':
+                        tsk = None
+                    elif tsk.state not in ['queued', 'running']:
                         print('Dependency ({}) in bad state: {}'
-                              .format(j.name, j.state))
+                              .format(tsk.name, tsk.state))
                         break
 
-                    dep = j
+                    dep = tsk
 
                 if dep is not None:
                     deps.append(dep)

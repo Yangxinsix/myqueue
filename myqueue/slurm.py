@@ -13,16 +13,16 @@ class SLURM(Queue):
 
     def submit(self, task: Task) -> None:
         nodelist = self.cfg['nodes']
-        nodes, nodename, nodedct, processes = task.resources.select(nodelist)
+        nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
         sbatch = ['sbatch',
                   '--patition={}'.format(nodename),
                   '--task-name={}'.format(name),
                   '--time={}'.format(ceil(task.tmax / 60)),
-                  '--ntasks={}'.format(processes),
+                  '--ntasks={}'.format(task.resources.processes),
                   '--nodes={}'.format(nodes),
-                  '--workdir={}'.format(task.folder.expanduser()),
+                  '--workdir={}'.format(task.folder),
                   '--output={}.%j.out'.format(name),
                   '--error={}.%j.err'.format(name)]
 
