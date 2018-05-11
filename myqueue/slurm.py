@@ -1,32 +1,28 @@
 import subprocess
 from math import ceil
-from typing import List
 
-from myqueue.job import Job
-from myqueue.runner import Runner
+from myqueue.task import Task
+from myqueue.config import read_config
+from myqueue.queue import Queue
 
 
-class SLURM(Runner):
-    def __init__(self):
-        cfg = read_config
-        self.nodes = OrderedDict((node, spec) for node, spec in nodelist)
+class SLURM(Queue):
+    def __init__(self, name):
+        Queue.__init__(self, name)
+        self.cfg = read_config()[name]
 
-    def submit(self, jobs: List[Job]) -> None:
-        for job in jobs:
-            self.submit1([job])
+    def submit(self, task: Task) -> None:
+        nodelist = self.cfg['nodes']
+        nodes, nodename, nodedct, processes = task.resources.select(nodelist)
 
-    def submit1(self, job: Job) -> None:
-        nodes, nodename, processes = job.resources.select(self.nodes)
-        nodedct = self.nodes[nodename]
-
-        name = job.cmd.name
+        name = task.cmd.name
         sbatch = ['sbatch',
                   '--patition={}'.format(nodename),
-                  '--job-name={}'.format(name),
-                  '--time={}'.format(ceil(job.tmax / 60)),
+                  '--task-name={}'.format(name),
+                  '--time={}'.format(ceil(task.tmax / 60)),
                   '--ntasks={}'.format(processes),
                   '--nodes={}'.format(nodes),
-                  '--workdir={}'.format(job.folder.expanduser()),
+                  '--workdir={}'.format(task.folder.expanduser()),
                   '--output={}.%j.out'.format(name),
                   '--error={}.%j.err'.format(name)]
 
@@ -34,16 +30,16 @@ class SLURM(Runner):
         if mem:
             sbatch.append('--mem={}'.format(mem))
 
-        if job.deps:
-            ids = ':'.join(str(dep.id) for dep in job.deps)
+        if task.deps:
+            ids = ':'.join(str(dep.id) for dep in task.deps)
             sbatch.append('--dependency=afterok:{}'.format(ids))
 
-        cmd = str(job.cmd)
-        if job.processes > 1:
+        cmd = str(task.cmd)
+        if task.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', self.parallel_python)
+            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
@@ -60,18 +56,18 @@ class SLURM(Runner):
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
         id = int(out.split()[-1])
-        job.id = id
+        task.id = id
 
-    def timeout(self, job):
-        path = (job.folder /
-                '{}.{}.err'.format(job.cmd.name, job.id)).expanduser()
+    def timeout(self, task):
+        path = (task.folder /
+                '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
-            job.tstop = path.stat().st_mtime
+            task.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
             for line in lines:
                 if line.endswith('DUE TO TIME LIMIT ***'):
                     return True
         return False
 
-    def cancel(self, job):
-        subprocess.run(['scancel', str(job.id)])
+    def cancel(self, task):
+        subprocess.run(['scancel', str(task.id)])

@@ -6,10 +6,348 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, List, Dict  # noqa
 
-from myqueue.job import Job
-from myqueue.runner import get_runner
+from myqueue.task import Task
+from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
 from myqueue.config import home_folder
+
+
+class Tasks(Lock):
+    def __init__(self, verbosity: int = 1) -> None:
+        self.verbosity = verbosity
+
+        self.debug = bool(os.environ.get('MYQUEUE_DEBUG'))
+
+        self.folder = home_folder()
+
+        if not self.folder.is_dir():
+            self.folder.mkdir()
+
+        self.fname = self.folder / 'queue.json'
+
+        Lock.__init__(self, self.fname.with_name('queue.json.lock'))
+
+        self.queues = {}
+        self.tasks = []  # type: List[Task]
+        self.changed = False  # type: bool
+
+    def queue(self, task: Task) -> Queue:
+        queue = self.queues.get(task.queue)
+        if not queue:
+            queue = get_queue(queue)
+            self.queues[queue] = queue
+        return queue
+
+    def __exit__(self, type, value, tb):
+        if self.changed:
+            self._write()
+        Lock.__exit__(self, type, value, tb)
+
+    def list(self,
+             ids: Set[int],
+             name: str,
+             states: Set[str],
+             folders,
+             columns: str) -> List[Task]:
+        self._read()
+        tasks = self.select(ids, name, states, folders, recursive=True)
+        pprint(tasks, self.verbosity, columns)
+        return tasks
+
+    def submit(self,
+               tasks: List[Task],
+               dry_run: bool = False,
+               read: bool = True) -> None:
+
+        n1 = len(tasks)
+        tasks = [task
+                 for task in tasks
+                 if not task.workflow or not task.done()]
+        n2 = len(tasks)
+
+        if n2 < n1:
+            print(S(n1 - n2, 'task'), 'already done')
+
+        if read:
+            self._read()
+
+        current = {task.dname: task for task in self.tasks}
+
+        tasks2 = []
+        for task in tasks:
+            if task.workflow and task.dname in current:
+                task.id = current[task.dname].id
+            else:
+                tasks2.append(task)
+        tasks = tasks2
+
+        n3 = len(tasks)
+
+        if n3 < n2:
+            print(S(n2 - n3, 'task'), 'already in the queue')
+
+        ready = []
+        for task in tasks:
+            deps = []
+            for dep in task.deps:
+                if not isinstance(dep, Task):
+                    # convert dep to Task:
+                    j = current.get(dep)
+                    if j is None:
+                        for jj in tasks:
+                            if dep == jj.dname:
+                                j = jj
+                                break
+                        else:
+                            donefile = dep.with_name(dep.name + '.done')
+                            if not donefile.is_file():
+                                print('Missing dependency:', dep)
+                                break
+                    elif j.state == 'done':
+                        j = None
+                    elif j.state not in ['queued', 'running']:
+                        print('Dependency ({}) in bad state: {}'
+                              .format(j.name, j.state))
+                        break
+
+                    dep = j
+
+                if dep is not None:
+                    deps.append(dep)
+            else:
+                task.deps = deps
+                ready.append(task)
+
+        t = time.time()
+        for task in ready:
+            task.deps = [dep for dep in task.deps if not dep.done()]
+            task.state = 'queued'
+            task.tqueued = t
+
+        if dry_run:
+            pprint(ready, 0, 'fnr')
+            print(S(len(ready), 'task'), 'to submit')
+        else:
+            for task in ready:
+                self.queue(task).submit(task)
+                task.deps = [dep.dname for dep in task.deps]
+            pprint(ready, 0, 'ifnr')
+            print(S(len(ready), 'task'), 'submitted')
+
+        if not dry_run:
+            self.tasks += ready
+            self.changed = True
+            self.queue.kick()
+
+    def select(self, ids: Set[int],
+               name: str,
+               states: Set[str],
+               folders: List[Path],
+               recursive: bool = False) -> List[Task]:
+        if ids is not None:
+            return [task for task in self.tasks if task.id in ids]
+
+        tasks = []
+        for task in self.tasks:
+            if task.state in states:
+                if not name or task.cmd.name == name:
+                    if any(task.infolder(f, recursive) for f in folders):
+                        tasks.append(task)
+
+        return tasks
+
+    def delete(self,
+               ids: Set[int],
+               name: str,
+               states: Set[str],
+               folders: List[Path],
+               recursive: bool,
+               dry_run: bool) -> None:
+        """Delete or cancel tasks."""
+
+        self._read()
+
+        tasks = self.select(ids, name, states, folders, recursive)
+
+        t = time.time()
+        for task in tasks:
+            if task.tstop is None:
+                task.tstop = t
+
+        if dry_run:
+            pprint(tasks, 0)
+            print(S(len(tasks), 'task'), 'to be deleted')
+        else:
+            pprint(tasks, 0)
+            print(S(len(tasks), 'task'), 'deleted')
+            for task in tasks:
+                if task.state in ['running', 'queued']:
+                    self.queue.cancel(task)
+                self.tasks.remove(task)
+            self.changed = True
+
+    def find_depending(self, tasks):
+        map = {(task.folder, task.cmd.name): task for task in self.tasks}
+        d = defaultdict(list)
+        for task in self.tasks:
+            for dep in task.deps:
+                j = map[(task.folder, dep)]
+                d[j].append(task)
+
+        removed = []
+
+        def remove(task):
+            removed.apend(task)
+            for j in d[task]:
+                remove(j)
+
+        for task in tasks:
+            remove(task)
+
+        return removed
+
+    def resubmit(self,
+                 ids: Set[int],
+                 name: str,
+                 states: Set[str],
+                 folders: List[Path],
+                 recursive: bool,
+                 dry_run: bool,
+                 cores: int,
+                 processes: int,
+                 tmax: int) -> None:
+
+        self._read()
+        tasks = []
+        for task in self.select(ids, name, states, folders, recursive):
+            if task.state.isupper():
+                self.tasks.remove(task)
+            task = Task(task.cmd,
+                        deps=task.deps,
+                        tmax=task.tmax,
+                        cores=task.cores,
+                        processes=task.processes,
+                        folder=task.folder, repeat=task.repeat,
+                        workflow=task.workflow)
+            if cores:
+                task.cores = cores
+            if processes:
+                task.processes = processes
+            if tmax:
+                task.tmax = tmax
+            tasks.append(task)
+        self.submit(tasks, dry_run, read=False)
+
+    def update(self,
+               queue: str,
+               id: int,
+               state: str,
+               t: float = 0.0) -> None:
+
+        if self.debug:
+            print('UPDATE', queue, id, state)
+
+        for task in self.tasks:
+            if task.id == id and task.queue == queue:
+                break
+        else:
+            raise ValueError('No such task: {queue}, {id}, {state}'
+                             .format(queu=queue, id=id, state=state))
+
+        t = t or time.time()
+
+        task.state = state
+
+        if state == 'done':
+            for tsk in self.tasks:
+                if task.dname in j.deps:
+                    tsk.deps.remove(task.dname)
+            task.write_done_file()
+            task.tstop = t
+
+        elif state == 'running':
+            task.trunning = t
+
+        elif state == 'FAILED':
+            for tsk in self.tasks:
+                if task.dname in tsk.deps:
+                    tsk.state = 'CANCELED'
+                    tsk.tstop = t
+            task.write_failed_file()
+            task.tstop = t
+
+        elif state == 'TIMEOUT':
+            task.state = 'running'
+
+        else:
+            1 / 0
+
+        if state != 'running':
+            task.remove_empty_output_files()
+
+        self.changed = True
+
+    def _read(self) -> None:
+        if self.fname.is_file():
+            data = json.loads(self.fname.read_text())
+            for dct in data['tasks']:
+                task = Task.fromdict(dct)
+                self.tasks.append(task)
+
+        self.read_change_files()
+        self.check()
+
+    def read_change_files(self):
+        paths = list(self.folder.glob('*-*-*'))
+        files = []
+        for path in paths:
+            queue, id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, queue, int(id), state))
+        states = {'0': 'running',
+                  '1': 'done',
+                  '2': 'FAILED'}
+        for t, queue, id, state in sorted(files):
+            self.update(queue, id, states[state], t)
+
+        if files:
+            self.changed = True
+
+        for path in paths:
+            path.unlink()
+
+    def _write(self):
+        if self.debug:
+            print('WRITE', len(self.tasks))
+        text = json.dumps({'version': 1,
+                           'tasks': [task.todict() for task in self.tasks]},
+                          indent=1)
+        self.fname.write_text(text)
+
+    def check(self) -> None:
+        bad = {task.dname for task in self.tasks if task.state.isupper()}
+        t = time.time()
+        for task in self.tasks:
+            if task.state == 'running':
+                if t - task.trunning > task.tmax:
+                    queue = self.queue(task)
+                    if queue.timeout(task):
+                        task.state = 'TIMEOUT'
+                        task.remove_empty_output_files()
+                        for tsk in self.tasks:
+                            if task.dname in tsk.deps:
+                                tsk.state = 'CANCELED'
+                                tsk.tstop = t
+                        self.changed = True
+            elif task.state == 'queued':
+                for dep in task.deps:
+                    if dep in bad:
+                        task.state = 'CANCELED'
+                        task.tstop = t
+                        break
+            elif task.state == 'FAILED':
+                if task.error is None:
+                    task.read_error()
+                    self.changed = True
 
 
 def pjoin(folder, reldir):
@@ -31,15 +369,15 @@ def colored(state: str) -> str:
     return state
 
 
-def pprint(jobs: List[Job],
+def pprint(tasks: List[Task],
            verbosity: int = 1,
            columns: str = 'ifnraste') -> None:
 
     if verbosity < 0:
         return
 
-    if not jobs:
-        print('No jobs')
+    if not tasks:
+        print('No tasks')
         return
 
     color = sys.stdout.isatty()
@@ -57,8 +395,8 @@ def pprint(jobs: List[Job],
         lengths = [0] * len(columns)
 
     count = defaultdict(int)  # type: Dict[str, int]
-    for job in jobs:
-        words = job.words()
+    for task in tasks:
+        words = task.words()
         _, folder, _, _, _, state, _, error = words
         count[state] += 1
         if folder.startswith(home):
@@ -93,353 +431,6 @@ def pprint(jobs: List[Job],
         print(' '.join(words2))
 
     if verbosity:
-        count['total'] = len(jobs)
+        count['total'] = len(tasks)
         print(', '.join('{}: {}'.format(state, n)
                         for state, n in count.items()))
-
-
-class Queue(Lock):
-    def __init__(self, runner: str, verbosity: int = 1) -> None:
-        self.runner = get_runner(runner)
-        self.verbosity = verbosity
-
-        self.debug = bool(os.environ.get('MYQUEUE_DEBUG'))
-
-        self.folder = home_folder()
-
-        if not self.folder.is_dir():
-            self.folder.mkdir()
-
-        self.fname = self.folder / (runner + '.json')
-
-        Lock.__init__(self, self.fname.with_name(runner + '.json.lock'))
-
-        self.jobs = []  # type: List[Job]
-        self.changed = False  # type: bool
-
-    def __exit__(self, type, value, tb):
-        if self.changed:
-            self._write()
-        Lock.__exit__(self, type, value, tb)
-
-    def list(self,
-             ids: Set[int],
-             name: str,
-             states: Set[str],
-             folders,
-             columns: str) -> List[Job]:
-        self._read()
-        jobs = self.select(ids, name, states, folders, recursive=True)
-        pprint(jobs, self.verbosity, columns)
-        return jobs
-
-    def submit(self,
-               jobs: List[Job],
-               dry_run: bool = False,
-               read: bool = True) -> None:
-
-        n1 = len(jobs)
-        jobs = [job for job in jobs if not job.workflow or not job.done()]
-        n2 = len(jobs)
-
-        if n2 < n1:
-            print(S(n1 - n2, 'job'), 'already done')
-
-        if read:
-            self._read()
-
-        current = {job.dname: job for job in self.jobs}
-
-        jobs2 = []
-        for job in jobs:
-            if job.workflow and job.dname in current:
-                job.id = current[job.dname].id
-            else:
-                jobs2.append(job)
-        jobs = jobs2
-
-        n3 = len(jobs)
-
-        if n3 < n2:
-            print(S(n2 - n3, 'job'), 'already in the queue')
-
-        ready = []
-        for job in jobs:
-            deps = []
-            for dep in job.deps:
-                if not isinstance(dep, Job):
-                    # convert dep to Job:
-                    j = current.get(dep)
-                    if j is None:
-                        for jj in jobs:
-                            if dep == jj.dname:
-                                j = jj
-                                break
-                        else:
-                            donefile = dep.with_name(dep.name + '.done')
-                            if not donefile.is_file():
-                                print('Missing dependency:', dep)
-                                break
-                    elif j.state == 'done':
-                        j = None
-                    elif j.state not in ['queued', 'running']:
-                        print('Dependency ({}) in bad state: {}'
-                              .format(j.name, j.state))
-                        break
-
-                    dep = j
-
-                if dep is not None:
-                    deps.append(dep)
-            else:
-                job.deps = deps
-                ready.append(job)
-
-        t = time.time()
-        for job in ready:
-            job.deps = [dep for dep in job.deps if not dep.done()]
-            job.state = 'queued'
-            job.tqueued = t
-
-        if dry_run:
-            pprint(ready, 0, 'fnr')
-            print(S(len(ready), 'job'), 'to submit')
-        else:
-            self.runner.submit(ready)
-            for job in ready:
-                job.deps = [dep.dname for dep in job.deps]
-            pprint(ready, 0, 'ifnr')
-            print(S(len(ready), 'job'), 'submitted')
-
-        if not dry_run:
-            self.jobs += ready
-            self.changed = True
-            self.runner.kick()
-
-    def select(self, ids: Set[int],
-               name: str,
-               states: Set[str],
-               folders: List[Path],
-               recursive: bool = False) -> List[Job]:
-        if ids is not None:
-            return [job for job in self.jobs if job.id in ids]
-
-        jobs = []
-        for job in self.jobs:
-            if job.state in states:
-                if not name or job.cmd.name == name:
-                    if any(job.infolder(f, recursive) for f in folders):
-                        jobs.append(job)
-
-        return jobs
-
-    def delete(self,
-               ids: Set[int],
-               name: str,
-               states: Set[str],
-               folders: List[Path],
-               recursive: bool,
-               dry_run: bool) -> None:
-        """Delete or cancel jobs."""
-
-        self._read()
-
-        jobs = self.select(ids, name, states, folders, recursive)
-
-        t = time.time()
-        for job in jobs:
-            if job.tstop is None:
-                job.tstop = t
-
-        if dry_run:
-            pprint(jobs, 0)
-            print(S(len(jobs), 'job'), 'to be deleted')
-        else:
-            pprint(jobs, 0)
-            print(S(len(jobs), 'job'), 'deleted')
-            for job in jobs:
-                if job.state in ['running', 'queued']:
-                    self.runner.cancel(job)
-                self.jobs.remove(job)
-            self.changed = True
-
-    def find_depending(self, jobs):
-        map = {(job.folder, job.cmd.name): job for job in self.jobs}
-        d = defaultdict(list)
-        for job in self.jobs:
-            for dep in job.deps:
-                j = map[(job.folder, dep)]
-                d[j].append(job)
-
-        removed = []
-
-        def remove(job):
-            removed.apend(job)
-            for j in d[job]:
-                remove(j)
-
-        for job in jobs:
-            remove(job)
-
-        return removed
-
-    def resubmit(self,
-                 ids: Set[int],
-                 name: str,
-                 states: Set[str],
-                 folders: List[Path],
-                 recursive: bool,
-                 dry_run: bool,
-                 cores: int,
-                 processes: int,
-                 tmax: int) -> None:
-
-        self._read()
-        jobs = []
-        for job in self.select(ids, name, states, folders, recursive):
-            if job.state.isupper():
-                self.jobs.remove(job)
-            job = Job(job.cmd, deps=job.deps,
-                      tmax=job.tmax, cores=job.cores, processes=job.processes,
-                      folder=job.folder, repeat=job.repeat,
-                      workflow=job.workflow)
-            if cores:
-                job.cores = cores
-            if processes:
-                job.processes = processes
-            if tmax:
-                job.tmax = tmax
-            jobs.append(job)
-        self.submit(jobs, dry_run, read=False)
-
-    def update(self,
-               id: int,
-               state: str,
-               t: float = 0.0,
-               read: bool = False) -> None:
-
-        if self.debug:
-            print('UPDATE', id, state)
-
-        if not state.isalpha():
-            if state == '0':
-                state = 'done'
-            else:
-                state = 'FAILED'
-
-        if read:
-            self._read()
-
-        for job in self.jobs:
-            if job.id == id:
-                break
-        else:
-            raise ValueError('No such job: {id}, {state}'
-                             .format(id=id, state=state))
-
-        t = t or time.time()
-
-        job.state = state
-
-        if state == 'done':
-            for j in self.jobs:
-                if job.dname in j.deps:
-                    j.deps.remove(job.dname)
-            job.write_done_file()
-            job.tstop = t
-
-        elif state == 'running':
-            job.trunning = t
-
-        elif state == 'FAILED':
-            for j in self.jobs:
-                if job.dname in j.deps:
-                    j.state = 'CANCELED'
-                    j.tstop = t
-            job.write_failed_file()
-            job.tstop = t
-
-        elif state == 'TIMEOUT':
-            job.state = 'running'
-
-        else:
-            1 / 0
-
-        if state != 'running':
-            # Process local queue:
-            self.runner.update(id, state)
-            self.runner.kick()
-            job.remove_empty_output_files()
-
-        self.changed = True
-
-    def _read(self) -> None:
-        if self.fname.is_file():
-            data = json.loads(self.fname.read_text())
-            for dct in data['jobs']:
-                job = Job.fromdict(dct)
-                self.jobs.append(job)
-
-        self.read_slurm_files()
-        self.check()
-
-    def read_slurm_files(self):
-        paths = list(self.folder.glob('slurm-*-*'))
-        files = []
-        for path in paths:
-            _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), state))
-        states = {'0': 'running',
-                  '1': 'done',
-                  '2': 'FAILED'}
-        for t, id, state in sorted(files):
-            self.update(id, states[state], t)
-
-        if files:
-            self.changed = True
-
-        for path in paths:
-            path.unlink()
-
-    def _write(self):
-        if self.debug:
-            print('WRITE', len(self.jobs))
-        text = json.dumps({'version': 1,
-                           'jobs': [job.todict() for job in self.jobs]},
-                          indent=1)
-        self.fname.write_text(text)
-
-    def check(self) -> None:
-        bad = {job.dname for job in self.jobs if job.state.isupper()}
-        t = time.time()
-        for job in self.jobs:
-            if job.state == 'running':
-                if t - job.trunning > job.tmax and self.runner.timeout(job):
-                    job.state = 'TIMEOUT'
-                    job.remove_empty_output_files()
-                    for j in self.jobs:
-                        if job.dname in j.deps:
-                            j.state = 'CANCELED'
-                            j.tstop = t
-                    self.changed = True
-            elif job.state == 'queued':
-                for dep in job.deps:
-                    if dep in bad:
-                        job.state = 'CANCELED'
-                        job.tstop = t
-                        break
-            elif job.state == 'FAILED':
-                if job.error is None:
-                    job.read_error()
-                    self.changed = True
-
-
-if __name__ == '__main__':
-    runner, id, state = sys.argv[1:4]
-    q = Queue(runner, 0)
-    try:
-        with q:
-            q.update(int(id), state, read=True)
-
-    except Exception as x:
-        raise
