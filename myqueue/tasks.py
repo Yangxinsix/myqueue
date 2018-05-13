@@ -6,10 +6,27 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, List, Dict  # noqa
 
+from myqueue.resources import Resources
 from myqueue.task import Task
 from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
 from myqueue.config import home_folder
+
+
+class Selection:
+    def __init__(self,
+                 ids: Set[int],
+                 name: str,
+                 states: Set[str],
+                 queue: str,
+                 folders: List[Path],
+                 recursive: bool):
+        self.ids = ids
+        self.name = name
+        self.states = states
+        self.queue = queue
+        self.folders = folders
+        self.recursive = recursive
 
 
 class Tasks(Lock):
@@ -43,14 +60,9 @@ class Tasks(Lock):
             self._write()
         Lock.__exit__(self, type, value, tb)
 
-    def list(self,
-             ids: Set[int],
-             name: str,
-             states: Set[str],
-             folders,
-             columns: str) -> List[Task]:
+    def list(self, selection: Selection, columns: str) -> List[Task]:
         self._read()
-        tasks = self.select(ids, name, states, folders, recursive=True)
+        tasks = self.select(selection)
         pprint(tasks, self.verbosity, columns)
         return tasks
 
@@ -90,31 +102,30 @@ class Tasks(Lock):
         for task in tasks:
             deps = []
             for dep in task.deps:
-                if not isinstance(dep, Task):
-                    # convert dep to Task:
-                    tsk = current.get(dep)
-                    if tsk is None:
-                        for tsk in tasks:
-                            if dep == tsk.dname:
-                                break
-                        else:
-                            donefile = dep.with_name(dep.name + '.done')
-                            if not donefile.is_file():
-                                print('Missing dependency:', dep)
-                                break
-                    elif tsk.state == 'done':
-                        tsk = None
-                    elif tsk.state not in ['queued', 'running']:
-                        print('Dependency ({}) in bad state: {}'
-                              .format(tsk.name, tsk.state))
-                        break
+                # convert dep to Task:
+                tsk = current.get(dep)
+                if tsk is None:
+                    for tsk in tasks:
+                        if dep == tsk.dname:
+                            break
+                    else:
+                        donefile = dep.with_name(dep.name + '.done')
+                        if not donefile.is_file():
+                            print('Missing dependency:', dep)
+                            break
+                elif tsk.state == 'done':
+                    tsk = None
+                elif tsk.state not in ['queued', 'running']:
+                    print('Dependency ({}) in bad state: {}'
+                          .format(tsk.name, tsk.state))
+                    break
 
-                    dep = tsk
+                dep = tsk
 
                 if dep is not None:
                     deps.append(dep)
             else:
-                task.deps = deps
+                task.dtasks = deps
                 ready.append(task)
 
         t = time.time()
@@ -138,35 +149,25 @@ class Tasks(Lock):
             self.changed = True
             self.queue.kick()
 
-    def select(self, ids: Set[int],
-               name: str,
-               states: Set[str],
-               folders: List[Path],
-               recursive: bool = False) -> List[Task]:
-        if ids is not None:
-            return [task for task in self.tasks if task.id in ids]
+    def select(self, s: Selection) -> List[Task]:
+        if s.ids is not None:
+            return [task for task in self.tasks if task.id in s.ids]
 
         tasks = []
         for task in self.tasks:
-            if task.state in states:
-                if not name or task.cmd.name == name:
-                    if any(task.infolder(f, recursive) for f in folders):
+            if task.state in s.states:
+                if not s.name or task.cmd.name == s.name:
+                    if any(task.infolder(f, s.recursive) for f in s.folders):
                         tasks.append(task)
 
         return tasks
 
-    def delete(self,
-               ids: Set[int],
-               name: str,
-               states: Set[str],
-               folders: List[Path],
-               recursive: bool,
-               dry_run: bool) -> None:
+    def delete(self, selection: Selection, dry_run: bool) -> None:
         """Delete or cancel tasks."""
 
         self._read()
 
-        tasks = self.select(ids, name, states, folders, recursive)
+        tasks = self.select(selection)
 
         t = time.time()
         for task in tasks:
@@ -206,34 +207,20 @@ class Tasks(Lock):
         return removed
 
     def resubmit(self,
-                 ids: Set[int],
-                 name: str,
-                 states: Set[str],
-                 folders: List[Path],
-                 recursive: bool,
+                 selection: Selection,
                  dry_run: bool,
-                 cores: int,
-                 processes: int,
-                 tmax: int) -> None:
+                 resources: Resources) -> None:
 
         self._read()
         tasks = []
-        for task in self.select(ids, name, states, folders, recursive):
+        for task in self.select(selection):
             if task.state.isupper():
                 self.tasks.remove(task)
             task = Task(task.cmd,
                         deps=task.deps,
-                        tmax=task.tmax,
-                        cores=task.cores,
-                        processes=task.processes,
-                        folder=task.folder, repeat=task.repeat,
+                        resources=resources or task.resources,
+                        folder=task.folder,
                         workflow=task.workflow)
-            if cores:
-                task.cores = cores
-            if processes:
-                task.processes = processes
-            if tmax:
-                task.tmax = tmax
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
 
@@ -259,7 +246,7 @@ class Tasks(Lock):
 
         if state == 'done':
             for tsk in self.tasks:
-                if task.dname in j.deps:
+                if task.dname in tsk.deps:
                     tsk.deps.remove(task.dname)
             task.write_done_file()
             task.tstop = t

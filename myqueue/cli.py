@@ -5,10 +5,10 @@ from typing import List, Any
 
 
 intro = """
-Jobs
-====
+Tasks
+=====
 
-A job can be one of these:
+A task can be one of these:
 
 * a Python script (job.py)
 * a Python module (module)
@@ -94,7 +94,7 @@ def main(arguments: List[str] = None) -> Any:
                       ('resubmit', 'Resubmit failed or timed-out jobs.'),
                       ('delete', 'Delete or cancel job(s).'),
                       ('workflow', 'Submit jobs from Python script.'),
-                      ('runner', 'Set runner.'),
+                      ('queue', 'Set default queue.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
 
@@ -106,8 +106,8 @@ def main(arguments: List[str] = None) -> Any:
 
         a = p.add_argument
 
-        if cmd == 'runner':
-            a('runner', help='Set runner to RUNNER (local or slurm).')
+        if cmd == 'queue':
+            a('queue', help='Set queue to QUEUE (local or slurm).')
 
         if cmd == 'test':
             a('test', nargs='*',
@@ -160,7 +160,7 @@ def main(arguments: List[str] = None) -> Any:
             a('-r', '--recursive', action='store_true')
             a('folder',
               nargs='*',
-              help='Job-folder.  Use --recursive (or -r) to include '
+              help='Task-folder.  Use --recursive (or -r) to include '
               'subfolders.')
 
         if cmd == 'list':
@@ -230,24 +230,25 @@ def run(args):
 
     from pathlib import Path
 
-    from myqueue.job import Job, jobstates, T, parse_resource_string
-    from myqueue.queue import Queue
+    from myqueue.resources import Resources
+    from myqueue.task import Task, taskstates
+    from myqueue.tasks import Tasks, Selection
 
-    if args.command == 'runner':
-        (Path.home() / '.myqueue' / 'runner').write_text(args.runner)
+    if args.command == 'queue':
+        (Path.home() / '.myqueue' / 'queue').write_text(args.queue)
         return
 
     path = Path.home() / '.myqueue' / 'runner'
     if path.is_file():
-        runner = path.read_text()
+        queue = path.read_text()
     else:
-        runner = 'local'
+        queue = 'local'
 
     if args.command in ['list', 'delete', 'resubmit']:
         default = 'qrdFCT' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
-            for state in jobstates:
+            for state in taskstates:
                 if s == state[0]:
                     states.add(state)
                     break
@@ -274,27 +275,23 @@ def run(args):
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
-            cores, processes, tmax = parse_resource_string(args.resources)
-            tmax = T(tmax)
+            resources = Resources(args.resources)
         else:
-            cores = None
-            processes = None
-            tmax = None
+            resources = None
 
-    with Queue(runner, verbosity) as queue:
+    with Tasks(verbosity) as tasks:
+
+        selection = Selection(ids, args.name, states, queue,
+                              folders, args.recursive)
 
         if args.command == 'list':
-            jobs = queue.list(ids, args.name, states, folders,
-                              args.columns)
-            return jobs
+            return tasks.list(selection, args.columns)
 
         if args.command == 'delete':
-            queue.delete(ids, args.name, states, folders, args.recursive,
-                         args.dry_run)
+            tasks.delete(selection, args.dry_run)
 
         elif args.command == 'resubmit':
-            queue.resubmit(ids, args.name, states, folders, args.recursive,
-                           args.dry_run, cores, processes, tmax)
+            tasks.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
             if args.dependencies:
@@ -306,20 +303,18 @@ def run(args):
                 arguments = args.arguments.split(',')
             else:
                 arguments = None
-            newjobs = [Job(args.script,
-                           args=arguments,
-                           tmax=tmax,
-                           cores=cores,
-                           processes=processes,
-                           folder=folder,
-                           deps=deps,
-                           workflow=args.workflow)
-                       for folder in folders]
+            newtasks = [Task(args.script,
+                             args=arguments,
+                             resources=resources,
+                             folder=folder,
+                             deps=deps,
+                             workflow=args.workflow)
+                        for folder in folders]
 
-            queue.submit(newjobs, args.dry_run)
+            tasks.submit(newtasks, args.dry_run)
 
         elif args.command == 'workflow':
-            workflow(args, queue, folders)
+            workflow(args, tasks, folders)
             return
 
         elif args.command == 'completion':
@@ -334,12 +329,12 @@ def run(args):
                 print(cmd)
 
 
-def workflow(args, queue, folders):
+def workflow(args, tasks, folders):
     from pathlib import Path
     from myqueue.utils import chdir
 
     if args.pattern:
-        workflow2(args, queue, folders)
+        workflow2(args, tasks, folders)
         return
 
     script = Path(args.script).read_text()
@@ -348,22 +343,22 @@ def workflow(args, queue, folders):
     exec(code, namespace)
     func = namespace['workflow']
 
-    alljobs = []
+    alltasks = []
     for folder in folders:
         with chdir(folder):
-            jobs = func()
-        for job in jobs:
-            job.workflow = True
+            tasks = func()
+        for task in tasks:
+            task.workflow = True
 
-        alljobs += jobs
+        alltasks += tasks
 
-    queue.submit(alljobs, args.dry_run)
+    tasks.submit(alltasks, args.dry_run)
 
 
-def workflow2(args, queue, folders):
+def workflow2(args, tasks, folders):
     from myqueue.utils import chdir
 
-    alljobs = []
+    alltasks = []
     for folder in folders:
         for path in folder.glob('**/*' + args.script):
             script = path.read_text()
@@ -373,10 +368,10 @@ def workflow2(args, queue, folders):
             func = namespace['workflow']
 
             with chdir(path.parent):
-                jobs = func()
-            for job in jobs:
-                job.workflow = True
+                tasks = func()
+            for task in tasks:
+                task.workflow = True
 
-            alljobs += jobs
+            alltasks += tasks
 
-    queue.submit(alljobs, args.dry_run)
+    tasks.submit(alltasks, args.dry_run)

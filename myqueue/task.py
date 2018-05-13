@@ -13,7 +13,7 @@ class Task:
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
-                 dpaths: List[Path],
+                 deps: List[Path],
                  workflow: bool,
                  folder: Path,
                  queue: str):
@@ -21,7 +21,7 @@ class Task:
 
         self.cmd = cmd
         self.resources = resources
-        self.dpaths = dpaths
+        self.deps = deps
         self.workflow = workflow
         self.folder = folder
         self.queuename = queue
@@ -93,15 +93,10 @@ class Task:
         return 'Task({!r})'.format(dct)
 
     def todict(self) -> Dict[str, Any]:
-        deps = []
-        for dep in self.deps:
-            if isinstance(dep, Task):
-                dep = dep.dname
-            deps.append(str(dep))
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
                 'folder': str(self.folder),
-                'deps': deps,
+                'deps': [str(dep) for dep in self.deps],
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
                 'queue': self.queuename,
