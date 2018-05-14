@@ -7,9 +7,8 @@ from myqueue.queue import Queue
 
 
 class SLURM(Queue):
-    def __init__(self, name):
-        Queue.__init__(self, name)
-        self.cfg = read_config()[name]
+    def __init__(self):
+        self.cfg = read_config()
 
     def submit(self, task: Task) -> None:
         nodelist = self.cfg['nodes']
@@ -19,7 +18,7 @@ class SLURM(Queue):
         sbatch = ['sbatch',
                   '--patition={}'.format(nodename),
                   '--task-name={}'.format(name),
-                  '--time={}'.format(ceil(task.tmax / 60)),
+                  '--time={}'.format(ceil(task.resources.tmax / 60)),
                   '--ntasks={}'.format(task.resources.processes),
                   '--nodes={}'.format(nodes),
                   '--workdir={}'.format(task.folder),
@@ -30,12 +29,12 @@ class SLURM(Queue):
         if mem:
             sbatch.append('--mem={}'.format(mem))
 
-        if task.deps:
-            ids = ':'.join(str(dep.id) for dep in task.deps)
+        if task.dtasks:
+            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append('--dependency=afterok:{}'.format(ids))
 
         cmd = str(task.cmd)
-        if task.processes > 1:
+        if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '

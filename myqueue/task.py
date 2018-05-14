@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import List, Any, Dict
 
 from myqueue.commands import command, Command
-from myqueue.resources import Resources
+from myqueue.resources import Resources, T
+
 
 taskstates = ['queued', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT']
@@ -15,8 +16,7 @@ class Task:
                  resources: Resources,
                  deps: List[Path],
                  workflow: bool,
-                 folder: Path,
-                 queue: str):
+                 folder: Path) -> None:
         """Description of a task."""
 
         self.cmd = cmd
@@ -24,7 +24,6 @@ class Task:
         self.deps = deps
         self.workflow = workflow
         self.folder = folder
-        self.queuename = queue
 
         self.state = ''
         self.id = 0
@@ -38,7 +37,7 @@ class Task:
         self.dname = self.folder / cmd.name
         self.dtasks = []  # type: List[Task]
 
-        self._done = None
+        self._done = False
 
     @property
     def name(self) -> str:
@@ -68,22 +67,15 @@ class Task:
         else:
             deps = ''
 
-        if self.processes == self.cores:
-            cores = self.cores
-        else:
-            cores = '{}:{}'.format(self.cores, self.processes)
-
         return [str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                '{}x{}'.format(cores,
-                               seconds_to_short_time_string(self.tmax)) +
-                deps +
-                ('*' if self.workflow else ''),
+                str(self.resources),
+                deps + ('*' if self.workflow else ''),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
-                self.error or '']
+                self.error]
 
     def __str__(self):
         return ' '.join(self.words())
@@ -99,7 +91,6 @@ class Task:
                 'deps': [str(dep) for dep in self.deps],
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
-                'queue': self.queuename,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,
@@ -175,30 +166,28 @@ def task(cmd: str,
          folder: str = '',
          workflow: bool = False) -> Task:
 
-    folder = Path(folder).absolute()
+    path = Path(folder).absolute()
 
     dpaths = []
     if deps:
         for dep in deps.split(','):
-            dep = folder / dep
-            if '..' in dep.parts:
-                dep = dep.parent.resolve() / dep.name
-            dpaths.append(dep)
+            p = path / dep
+            if '..' in p.parts:
+                p = p.parent.resolve() / p.name
+            dpaths.append(p)
 
     if '@' in cmd:
         cmd, resources = cmd.split('@')
 
     if resources:
-        resources = Resources.from_string(resources)
+        res = Resources.from_string(resources)
     else:
-        resources = Resources.from_string(cores, nodename, processes, tmax)
+        res = Resources(cores, nodename, processes, T(tmax))
 
-    cmd = command(cmd, args)
-
-    return Task(cmd, resources, dpaths, workflow, folder)
+    return Task(command(cmd, args), res, dpaths, workflow, path)
 
 
-def seconds_to_time_string(n: int) -> str:
+def seconds_to_time_string(n: float) -> str:
     n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)
@@ -208,13 +197,3 @@ def seconds_to_time_string(n: int) -> str:
     if h:
         return '{}:{:02}:{:02}'.format(h, m, s)
     return '{}:{:02}'.format(m, s)
-
-
-def seconds_to_short_time_string(n):
-    n = int(n)
-    for s, t in [('d', 24 * 3600),
-                 ('h', 3600),
-                 ('m', 60),
-                 ('s', 1)]:
-        if n % t == 0:
-            return '{}{}'.format(n // t, s)

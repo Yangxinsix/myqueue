@@ -3,14 +3,14 @@ import subprocess
 
 
 from myqueue.config import home_folder
-from myqueue.task import Task
 from myqueue.queue import Queue
+from myqueue.task import Task
+from myqueue.utils import Lock
 
 
 class LocalQueue(Queue, Lock):
-    def __init__(self, name):
-        Queue.__init__(self, name)
-        self.fname = home_folder() / '{}-queue.json'.format(name)
+    def __init__(self):
+        self.fname = home_folder() / 'local.json'
         self.tasks = []
         self.number = None
 

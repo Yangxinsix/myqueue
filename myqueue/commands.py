@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 from pathlib import Path
 from importlib.util import find_spec
 
@@ -9,6 +9,9 @@ class Command:
         if args:
             name += '+' + '_'.join(self.args)
         self.name = name
+
+    def todict(self)-> Dict[str, Any]:
+        raise NotImplementedError
 
 
 def is_module(mod: str) -> bool:

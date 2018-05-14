@@ -2,9 +2,6 @@ from myqueue.task import Task
 
 
 class Queue:
-    def __init__(self, name):
-        self.name = name
-
     def submit(self, task: Task) -> None:
         pass
 
@@ -24,9 +21,9 @@ class Queue:
 def get_queue(name: str) -> Queue:
     if 'local'.startswith(name):
         from myqueue.local import LocalQueue
-        return LocalQueue(name)
+        return LocalQueue()
     if 'slurm'.startswith(name):
         from myqueue.slurm import SLURM
-        return SLURM(name)
+        return SLURM()
     else:
         assert 0

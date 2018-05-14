@@ -18,13 +18,11 @@ class Selection:
                  ids: Set[int],
                  name: str,
                  states: Set[str],
-                 queue: str,
                  folders: List[Path],
-                 recursive: bool):
+                 recursive: bool) -> None:
         self.ids = ids
         self.name = name
         self.states = states
-        self.queue = queue
         self.folders = folders
         self.recursive = recursive
 
@@ -49,10 +47,14 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        queue = self.queues.get(task.queuename)
+        if task.resources.nodename == 'local':
+            queuename = 'local'
+        else:
+            queuename = 'slurm'
+        queue = self.queues.get(queuename)
         if not queue:
-            queue = get_queue(task.queuename)
-            self.queues[task.queuename] = queue
+            queue = get_queue(queuename)
+            self.queues[queuename] = queue
         return queue
 
     def __exit__(self, type, value, tb):
@@ -100,7 +102,7 @@ class Tasks(Lock):
 
         ready = []
         for task in tasks:
-            deps = []
+            task.dtasks = []
             for dep in task.deps:
                 # convert dep to Task:
                 tsk = current.get(dep)
@@ -120,17 +122,14 @@ class Tasks(Lock):
                           .format(tsk.name, tsk.state))
                     break
 
-                dep = tsk
-
-                if dep is not None:
-                    deps.append(dep)
+                if tsk is not None:
+                    task.dtasks.append(tsk)
             else:
-                task.dtasks = deps
                 ready.append(task)
 
         t = time.time()
         for task in ready:
-            task.deps = [dep for dep in task.deps if not dep.done()]
+            task.dtasks = [tsk for tsk in task.dtasks if not tsk.done()]
             task.state = 'queued'
             task.tqueued = t
 
@@ -140,14 +139,14 @@ class Tasks(Lock):
         else:
             for task in ready:
                 self.queue(task).submit(task)
-                task.deps = [dep.dname for dep in task.deps]
             pprint(ready, 0, 'ifnr')
             print(S(len(ready), 'task'), 'submitted')
 
         if not dry_run:
             self.tasks += ready
             self.changed = True
-            self.queue.kick()
+            for queue in self.queues.values():
+                queue.kick()
 
     def select(self, s: Selection) -> List[Task]:
         if s.ids is not None:
@@ -182,7 +181,7 @@ class Tasks(Lock):
             print(S(len(tasks), 'task'), 'deleted')
             for task in tasks:
                 if task.state in ['running', 'queued']:
-                    self.queue.cancel(task)
+                    self.queue(task).cancel(task)
                 self.tasks.remove(task)
             self.changed = True
 
@@ -225,20 +224,19 @@ class Tasks(Lock):
         self.submit(tasks, dry_run, read=False)
 
     def update(self,
-               queue: str,
                id: int,
                state: str,
                t: float = 0.0) -> None:
 
         if self.debug:
-            print('UPDATE', queue, id, state)
+            print('UPDATE', id, state)
 
         for task in self.tasks:
-            if task.id == id and task.queue == queue:
+            if task.id == id:
                 break
         else:
-            raise ValueError('No such task: {queue}, {id}, {state}'
-                             .format(queu=queue, id=id, state=state))
+            raise ValueError('No such task: {id}, {state}'
+                             .format(id=id, state=state))
 
         t = t or time.time()
 
@@ -314,7 +312,7 @@ class Tasks(Lock):
         t = time.time()
         for task in self.tasks:
             if task.state == 'running':
-                if t - task.trunning > task.tmax:
+                if t - task.trunning > task.resources.tmax:
                     queue = self.queue(task)
                     if queue.timeout(task):
                         task.state = 'TIMEOUT'
