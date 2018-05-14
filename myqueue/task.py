@@ -16,7 +16,13 @@ class Task:
                  resources: Resources,
                  deps: List[Path],
                  workflow: bool,
-                 folder: Path) -> None:
+                 folder: Path,
+                 state: str = '',
+                 id: int = 0,
+                 error: str = '',
+                 tqueued: float = 0.0,
+                 trunning: float = 0.0,
+                 tstop: float = 0.0) -> None:
         """Description of a task."""
 
         self.cmd = cmd
@@ -25,16 +31,16 @@ class Task:
         self.workflow = workflow
         self.folder = folder
 
-        self.state = ''
-        self.id = 0
-        self.error = ''
+        self.state = state
+        self.id = id
+        self.error = error
 
         # Timing:
-        self.tqueued = 0.0
-        self.trunning = 0.0
-        self.tstop = 0.0
+        self.tqueued = tqueued
+        self.trunning = trunning
+        self.tstop = tstop
 
-        self.dname = self.folder / cmd.name
+        self.dname = folder / cmd.name
         self.dtasks = []  # type: List[Task]
 
         self._done = False
@@ -70,8 +76,7 @@ class Task:
         return [str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                str(self.resources),
-                deps + ('*' if self.workflow else ''),
+                str(self.resources) + deps + ('*' if self.workflow else ''),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -101,6 +106,7 @@ class Task:
     def fromdict(dct: dict) -> 'Task':
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
+                    folder=Path(dct.pop('folder')),
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:

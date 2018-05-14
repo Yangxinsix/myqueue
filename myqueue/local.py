@@ -5,10 +5,9 @@ import subprocess
 from myqueue.config import home_folder
 from myqueue.queue import Queue
 from myqueue.task import Task
-from myqueue.utils import Lock
 
 
-class LocalQueue(Queue, Lock):
+class LocalQueue(Queue):
     def __init__(self):
         self.fname = home_folder() / 'local.json'
         self.tasks = []
@@ -39,16 +38,17 @@ class LocalQueue(Queue, Lock):
 
         data = json.loads(self.fname.read_text())
 
-        for dct in data['tasks']:
-            task = Task.fromdict(dct)
-            self.tasks.append(task)
+        self.tasks = [Task.fromdict(dct)
+                      for dct in data['tasks']]
 
         self.number = data['number']
 
     def _write(self):
+        print('WRITE')
         text = json.dumps({'tasks': [task.todict()
                                      for task in self.tasks],
-                           'number': self.number})
+                           'number': self.number},
+                          indent=2)
         self.fname.write_text(text)
 
     def update(self, id: int, state: str) -> None:
@@ -58,7 +58,12 @@ class LocalQueue(Queue, Lock):
             else:
                 state = 'FAILED'
 
-        self.fname.with_name('local-{}-{}'.format(id, state)).write_text('')
+        n = {'running': 0,
+             'done': 1,
+             'FAILED': 2,
+             'TIMEOUT': 3}[state]
+
+        self.fname.with_name('local-{}-{}'.format(id, n)).write_text('')
 
         self._read()
         for task in self.tasks:
@@ -125,7 +130,7 @@ class LocalQueue(Queue, Lock):
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
-               .format(cmd=cmd1, msg=msg, tmax=task.tmax, err=err))
+               .format(cmd=cmd1, msg=msg, tmax=task.resources.tmax, err=err))
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         task.state = 'running'
@@ -134,5 +139,5 @@ class LocalQueue(Queue, Lock):
 if __name__ == '__main__':
     import sys
     id, state = sys.argv[1:3]
-    with LocalQueue() as q:
-        q.update(int(id), state)
+    q = LocalQueue()
+    q.update(int(id), state)

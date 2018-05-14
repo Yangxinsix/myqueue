@@ -23,10 +23,10 @@ def T(t: str) -> int:
 
 class Resources:
     def __init__(self,
-                 cores: int,
-                 nodename: str,
-                 processes: int,
-                 tmax: int) -> None:
+                 cores: int = 1,
+                 nodename: str = '',
+                 processes: int = 0,
+                 tmax: int = 600) -> None:
         self.cores = cores
         self.nodename = nodename
         self.tmax = tmax

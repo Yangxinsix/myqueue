@@ -94,7 +94,6 @@ def main(arguments: List[str] = None) -> Any:
                       ('resubmit', 'Resubmit failed or timed-out jobs.'),
                       ('delete', 'Delete or cancel job(s).'),
                       ('workflow', 'Submit jobs from Python script.'),
-                      ('queue', 'Set default queue.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
 
@@ -106,15 +105,11 @@ def main(arguments: List[str] = None) -> Any:
 
         a = p.add_argument
 
-        if cmd == 'queue':
-            a('queue', help='Set queue to QUEUE (local or slurm).')
-
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('-s', '--slow', action='store_true',
-              help='Use -s for slow queues '
-              '(like a real high trafic SLURM-one).')
+            a('--slurm', action='store_true',
+              help='Run tests using SLURM.')
 
         elif cmd == 'submit':
             a('script')
@@ -231,18 +226,15 @@ def run(args):
     from pathlib import Path
 
     from myqueue.resources import Resources
-    from myqueue.task import Task, taskstates
+    from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
-    if args.command == 'queue':
-        (Path.home() / '.myqueue' / 'queue').write_text(args.queue)
-        return
-
-    path = Path.home() / '.myqueue' / 'runner'
-    if path.is_file():
-        queue = path.read_text()
-    else:
-        queue = 'local'
+    if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
+        folders = [Path(folder).expanduser().absolute().resolve()
+                   for folder in args.folder]
+        if args.command in ['delete', 'resubmit']:
+            if not args.id and not folders:
+                raise MyQueueCLIError('Missing folder!')
 
     if args.command in ['list', 'delete', 'resubmit']:
         default = 'qrdFCT' if args.command == 'list' else ''
@@ -266,12 +258,8 @@ def run(args):
         elif args.command != 'list' and args.states is None:
             raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
-    if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
-        folders = [Path(folder).expanduser().absolute().resolve()
-                   for folder in args.folder]
-        if args.command in ['delete', 'resubmit']:
-            if not args.id and not folders:
-                raise MyQueueCLIError('Missing folder!')
+        selection = Selection(ids, args.name, states,
+                              folders, getattr(args, 'recursive', True))
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
@@ -280,10 +268,6 @@ def run(args):
             resources = None
 
     with Tasks(verbosity) as tasks:
-
-        selection = Selection(ids, args.name, states, queue,
-                              folders, args.recursive)
-
         if args.command == 'list':
             return tasks.list(selection, args.columns)
 
@@ -302,8 +286,8 @@ def run(args):
             if args.arguments:
                 arguments = args.arguments.split(',')
             else:
-                arguments = None
-            newtasks = [Task(args.script,
+                arguments = []
+            newtasks = [task(args.script,
                              args=arguments,
                              resources=resources,
                              folder=folder,

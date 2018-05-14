@@ -51,6 +51,7 @@ class Tasks(Lock):
             queuename = 'local'
         else:
             queuename = 'slurm'
+        print(queuename)
         queue = self.queues.get(queuename)
         if not queue:
             queue = get_queue(queuename)
@@ -252,16 +253,14 @@ class Tasks(Lock):
         elif state == 'running':
             task.trunning = t
 
-        elif state == 'FAILED':
+        elif state in ['FAILED', 'TIMEOUT']:
             for tsk in self.tasks:
                 if task.dname in tsk.deps:
                     tsk.state = 'CANCELED'
                     tsk.tstop = t
-            task.write_failed_file()
+            if state == 'FAILED':
+                task.write_failed_file()
             task.tstop = t
-
-        elif state == 'TIMEOUT':
-            task.state = 'running'
 
         else:
             1 / 0
@@ -285,13 +284,14 @@ class Tasks(Lock):
         paths = list(self.folder.glob('*-*-*'))
         files = []
         for path in paths:
-            queue, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, queue, int(id), state))
+            _, id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, int(id), state))
         states = {'0': 'running',
                   '1': 'done',
-                  '2': 'FAILED'}
-        for t, queue, id, state in sorted(files):
-            self.update(queue, id, states[state], t)
+                  '2': 'FAILED',
+                  '3': 'TIMEOUT'}
+        for t, id, state in sorted(files):
+            self.update(id, states[state], t)
 
         if files:
             self.changed = True
@@ -302,9 +302,9 @@ class Tasks(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 1,
+        text = json.dumps({'version': 2,
                            'tasks': [task.todict() for task in self.tasks]},
-                          indent=1)
+                          indent=2)
         self.fname.write_text(text)
 
     def check(self) -> None:
