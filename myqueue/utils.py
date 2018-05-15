@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 @contextmanager
-def chdir(folder):
+def chdir(folder: Path) -> None:
     dir = os.getcwd()
     os.chdir(str(folder))
     yield

@@ -1,5 +1,4 @@
 import argparse
-import subprocess
 import sys
 from typing import List, Any
 
@@ -11,7 +10,8 @@ class MyQueueCLIError(Exception):
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
-        description='Manage jobs in queue.')
+        description='Simple frontend for SLURM.\n'
+        'https://gitlab.com/jensj/myqueue')
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
@@ -19,11 +19,11 @@ def main(arguments: List[str] = None) -> Any:
                'ls': 'list'}
 
     for cmd, help in [('help', 'Show how to use this tool.'),
-                      ('list', 'List jobs in queue.'),
-                      ('submit', 'Submit job(s) to queue.'),
-                      ('resubmit', 'Resubmit failed or timed-out jobs.'),
-                      ('delete', 'Delete or cancel job(s).'),
-                      ('workflow', 'Submit jobs from Python script.'),
+                      ('list', 'List tasks in queue.'),
+                      ('submit', 'Submit task(s) to queue.'),
+                      ('resubmit', 'Resubmit failed or timed-out tasks.'),
+                      ('delete', 'Delete or cancel task(s).'),
+                      ('workflow', 'Submit tasks from Python script.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
 
@@ -55,7 +55,8 @@ def main(arguments: List[str] = None) -> Any:
               '"h" for hours and "d" for days. '
               '"16:1x30m": 16 cores, 1 process, half an hour.')
             a('-w', '--workflow', action='store_true',
-              help='Write <job-name>.done file when done.')
+              help='Write <task-name>.done or <task-name>.FAILED file '
+              'when done.')
 
         if cmd == 'workflow':
             a('script')
@@ -65,9 +66,9 @@ def main(arguments: List[str] = None) -> Any:
             a('-s', '--states', metavar='qrdFCT',
               help='Selection of states. First letters of "queued", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
-            a('-i', '--id', help="Comma-separated list of job ID's.")
+            a('-i', '--id', help="Comma-separated list of task ID's.")
             a('-n', '--name',
-              help='Select only jobs named "NAME".')
+              help='Select only tasks named "NAME".')
 
         if cmd == 'list':
             a('-c', '--columns', metavar='ifnraste', default='ifnraste',
@@ -93,13 +94,13 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'list':
             a('folder',
               nargs='*', default=['.'],
-              help='List jobs in this folder and its subfolders.  '
+              help='List tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
         if cmd in ['submit', 'workflow']:
             a('folder',
               nargs='*', default=['.'],
-              help='Submit jobs in this folder.  '
+              help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
     args = parser.parse_args(arguments)
