@@ -47,7 +47,6 @@ class LocalQueue(Queue, Lock):
         self.number = data['number']
 
     def _write(self):
-        print('WRITE')
         text = json.dumps({'tasks': [task.todict()
                                      for task in self.tasks],
                            'number': self.number},
@@ -67,7 +66,6 @@ class LocalQueue(Queue, Lock):
              'FAILED': 2,
              'TIMEOUT': 3}[state]
 
-        print('LOCAL', n, state)
         self.fname.with_name('local-{}-{}'.format(id, n)).write_text('')
 
         self._read()
@@ -82,8 +80,6 @@ class LocalQueue(Queue, Lock):
             tasks = []
             for j in self.tasks:
                 if j is not task:
-                    print('RM', task.dname, j.deps)
-                    print('RM', type(task.dname), [type(d) for d in j.deps])
                     if task.dname in j.deps:
                         j.deps.remove(task.dname)
                     tasks.append(j)
@@ -108,7 +104,6 @@ class LocalQueue(Queue, Lock):
         self._write()
 
     def _kick(self) -> None:
-        print('KICK', [(t.state, t.deps) for t in self.tasks])
         for task in self.tasks:
             if task.state == 'running':
                 return
