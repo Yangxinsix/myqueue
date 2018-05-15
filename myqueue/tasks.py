@@ -31,7 +31,7 @@ class Tasks(Lock):
     def __init__(self, verbosity: int = 1) -> None:
         self.verbosity = verbosity
 
-        self.debug = bool(os.environ.get('MYQUEUE_DEBUG'))
+        self.debug = os.environ.get('MYQUEUE_DEBUG', '')
 
         self.folder = home_folder()
 
@@ -47,7 +47,7 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        if task.resources.nodename == 'local':
+        if self.debug == 'local' or task.resources.nodename == 'local':
             queuename = 'local'
         else:
             queuename = 'slurm'

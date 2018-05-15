@@ -113,8 +113,9 @@ def main(arguments: List[str] = None) -> Any:
 
         elif cmd == 'submit':
             a('script')
-            a('-d', '--dependencies')
-            a('-a', '--arguments')
+            a('-d', '--dependencies', default='',
+              help='Comma-separated task names.')
+            a('-a', '--arguments', help='Comma-separated arguments for task.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
@@ -198,7 +199,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from myqueue.test.tests import run_tests
-        run_tests(args.test, args.slow)
+        run_tests(args.test, args.slurm)
         return
 
     try:
@@ -278,11 +279,6 @@ def run(args):
             tasks.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
-            if args.dependencies:
-                deps = args.dependencies.split(',')
-            else:
-                deps = []
-
             if args.arguments:
                 arguments = args.arguments.split(',')
             else:
@@ -291,7 +287,7 @@ def run(args):
                              args=arguments,
                              resources=resources,
                              folder=folder,
-                             deps=deps,
+                             deps=args.dependencies,
                              workflow=args.workflow)
                         for folder in folders]
 
@@ -325,16 +321,16 @@ def workflow(args, tasks, folders):
     code = compile(script, args.script, 'exec')
     namespace = {}
     exec(code, namespace)
-    func = namespace['workflow']
+    func = namespace['submit']
 
     alltasks = []
     for folder in folders:
         with chdir(folder):
-            tasks = func()
-        for task in tasks:
+            newtasks = func()
+        for task in newtasks:
             task.workflow = True
 
-        alltasks += tasks
+        alltasks += newtasks
 
     tasks.submit(alltasks, args.dry_run)
 

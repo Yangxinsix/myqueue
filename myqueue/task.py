@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Union
 
 from myqueue.commands import command, Command
 from myqueue.resources import Resources, T
@@ -107,6 +107,7 @@ class Task:
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=Path(dct.pop('folder')),
+                    deps=[Path(dep) for dep in dct.pop('deps')],
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:
@@ -164,8 +165,8 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
-         deps: str = '',
-         cores: int = 0,
+         deps: Union[str, List[Task]] = '',
+         cores: int = 1,
          nodename: str = '',
          processes: int = 0,
          tmax: str = '10m',
@@ -176,11 +177,14 @@ def task(cmd: str,
 
     dpaths = []
     if deps:
-        for dep in deps.split(','):
-            p = path / dep
-            if '..' in p.parts:
-                p = p.parent.resolve() / p.name
-            dpaths.append(p)
+        if isinstance(deps, str):
+            for dep in deps.split(','):
+                p = path / dep
+                if '..' in p.parts:
+                    p = p.parent.resolve() / p.name
+                dpaths.append(p)
+        else:
+            dpaths = [task.dname for task in deps]
 
     if '@' in cmd:
         cmd, resources = cmd.split('@')

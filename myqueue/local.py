@@ -5,14 +5,17 @@ import subprocess
 from myqueue.config import home_folder
 from myqueue.queue import Queue
 from myqueue.task import Task
+from myqueue.utils import Lock, lock
 
 
-class LocalQueue(Queue):
+class LocalQueue(Queue, Lock):
     def __init__(self):
         self.fname = home_folder() / 'local.json'
+        Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None
 
+    @lock
     def submit(self, task: Task) -> None:
         self._read()
         self.number += 1
@@ -20,6 +23,7 @@ class LocalQueue(Queue):
         self.tasks.append(task)
         self._write()
 
+    @lock
     def cancel(self, task):
         assert task.state == 'queued', task
         self._read()
@@ -38,8 +42,7 @@ class LocalQueue(Queue):
 
         data = json.loads(self.fname.read_text())
 
-        self.tasks = [Task.fromdict(dct)
-                      for dct in data['tasks']]
+        self.tasks = [Task.fromdict(dct) for dct in data['tasks']]
 
         self.number = data['number']
 
@@ -51,6 +54,7 @@ class LocalQueue(Queue):
                           indent=2)
         self.fname.write_text(text)
 
+    @lock
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
             if state == '0':
@@ -63,6 +67,7 @@ class LocalQueue(Queue):
              'FAILED': 2,
              'TIMEOUT': 3}[state]
 
+        print('LOCAL', n, state)
         self.fname.with_name('local-{}-{}'.format(id, n)).write_text('')
 
         self._read()
@@ -77,10 +82,14 @@ class LocalQueue(Queue):
             tasks = []
             for j in self.tasks:
                 if j is not task:
+                    print('RM', task.dname, j.deps)
+                    print('RM', type(task.dname), [type(d) for d in j.deps])
                     if task.dname in j.deps:
                         j.deps.remove(task.dname)
                     tasks.append(j)
             self.tasks = tasks
+        elif state == 'running':
+            task.state = 'running'
         else:
             assert state in ['FAILED', 'TIMEOUT'], state
             tasks = []
@@ -89,16 +98,17 @@ class LocalQueue(Queue):
                     tasks.append(j)
             self.tasks = tasks
 
-            if state == 'TIMEOUT':
-                path = task.folder / (task.name + '.err')
-                with open(str(path), 'a') as fd:
-                    fd.write('\nTIMEOUT\n')
-
+        self._kick()
         self._write()
-        self.kick()
 
+    @lock
     def kick(self) -> None:
         self._read()
+        self._kick()
+        self._write()
+
+    def _kick(self) -> None:
+        print('KICK', [(t.state, t.deps) for t in self.tasks])
         for task in self.tasks:
             if task.state == 'running':
                 return
@@ -110,17 +120,6 @@ class LocalQueue(Queue):
             return
 
         self._run(task)
-        self._write()
-
-    def timeout(self, task):
-        path = task.folder / (task.name + '.err')
-        if path.is_file():
-            task.tstop = path.stat().st_mtime
-            lines = path.read_text().splitlines()
-            for line in lines[::-1]:
-                if line.endswith('TIMEOUT'):
-                    return True
-        return False
 
     def _run(self, task):
         cmd1 = task.command()

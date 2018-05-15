@@ -36,19 +36,19 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 class Lock:
     def __init__(self, name: Path) -> None:
-        self.name = str(name)
+        self.lock = name
 
     def acquire(self):
         delta = 0.1
         while True:
-            fd = opencew(self.name)
+            fd = opencew(str(self.lock))
             if fd is not None:
                 break
             time.sleep(delta)
             delta *= 2
 
     def release(self):
-        os.remove(self.name)
+        self.lock.unlink()
 
     def __enter__(self):
         self.acquire()
@@ -60,7 +60,7 @@ class Lock:
 
 def lock(method):
     def m(self, *args, **kwargs):
-        with self.lock:
+        with self:
             return method(self, *args, **kwargs)
     return m
 
