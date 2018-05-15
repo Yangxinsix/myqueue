@@ -5,12 +5,12 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-from typing import IO, Union
+from typing import IO, Union, Generator
 from pathlib import Path
 
 
 @contextmanager
-def chdir(folder: Path) -> None:
+def chdir(folder: Path) -> Generator:
     dir = os.getcwd()
     os.chdir(str(folder))
     yield

@@ -115,7 +115,7 @@ def main(arguments: List[str] = None) -> Any:
         if args.cmd is None:
             parser.print_help()
         else:
-            subparsers.choices[args.cmd].print_help()
+            subparsers.choices[args.cmd].print_help()  # type: ignore
         return
 
     if args.command == 'test':
