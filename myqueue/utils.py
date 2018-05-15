@@ -4,6 +4,7 @@ import re
 import sys
 import time
 from contextlib import contextmanager
+from io import StringIO
 from typing import IO, Union
 from pathlib import Path
 
@@ -92,7 +93,7 @@ f = F()
 
 
 def update_completion():
-    """Update commands dict.
+    """Update README.rst and commands dict.
 
     Run this when ever options are changed::
 
@@ -105,8 +106,26 @@ def update_completion():
     from myqueue.cli import main
 
     # Path of the complete.py script:
-    my_dir, _ = os.path.split(os.path.realpath(__file__))
-    filename = os.path.join(my_dir, 'complete.py')
+    dir = Path(__file__).parent
+    readme = dir / '../README.rst'
+
+    lines = readme.read_text().splitlines()
+    a = lines.index('.. computer generated text:')
+    txt = '\n'.join(lines[:a + 4])
+
+    sys.stdout = StringIO()
+    for cmd in ['list', 'submit', 'resubmit', 'delete', 'workflow',
+                'completion', 'test']:
+        print('\n\n{} command\n{}\n'
+              .format(cmd.title(), '-' * (len(cmd) + 8)))
+        main(['help', cmd])
+
+    txt += sys.stdout.getvalue()
+    sys.stdout = sys.__stdout__
+
+    readme.write_text(txt)
+
+    filename = dir / 'complete.py'
 
     dct = {}
 
@@ -151,15 +170,15 @@ def update_completion():
                          width=65,
                          break_on_hyphens=False,
                          subsequent_indent='         '))
-    txt = txt[:-1] + '}\n'
-    with open(filename) as fd:
-        lines = fd.readlines()
-        a = lines.index('# Beginning of computer generated data:\n')
-        b = lines.index('# End of computer generated data\n')
+    txt = txt[:-1] + '}'
+
+    lines = filename.read_text().splitlines()
+
+    a = lines.index('# Beginning of computer generated data:')
+    b = lines.index('# End of computer generated data')
     lines[a + 1:b] = [txt]
-    with open(filename + '.new', 'w') as fd:
-        print(''.join(lines), end='', file=fd)
-    os.rename(filename + '.new', filename)
+
+    filename.write_text('\n'.join(lines) + '\n')
 
 
 if __name__ == '__main__':
