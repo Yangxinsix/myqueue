@@ -10,25 +10,26 @@ Tasks
 
 A task can be one of these:
 
-* a Python script (job.py)
+* a Python script (script.py)
 * a Python module (module)
 * a function in a Python module (module.function)
 * an executable or shell-script
 
+
 Examples
 ========
 
-Run job.py on 8 cores for 1 hour in folder1 and folder2:
+Run script.py on 8 cores for 1 hour in folder1 and folder2:
 
-    $ mq submit job.py@8x10h folder1/ folder2/
+    $ mq submit script.py@8:10h folder1/ folder2/
 
 Sleep for 25 seconds on 1 core using the time.sleep() function:
 
-    $ mq submit time.sleep -a 25 -R 1x1m
+    $ mq submit time.sleep -a 25 -R 1:1m
 
 or equivalently:
 
-    $ mq submit time.sleep+25@1x1m
+    $ mq submit time.sleep+25@1:1m
 
 Say "hello" (using the defaults of 1 core for 10 minutes):
 
@@ -39,7 +40,7 @@ You can see the status of your jobs with:
     $ mq list
     id folder name       res.   age state time error
     -- ------ ---------- ----- ---- ----- ---- -----
-    1  ~      echo+hello 1x10m 0:06 done  0:00
+    1  ~      echo+hello 1:10m 0:06 done  0:00
     -- ------ ---------- ----- ---- ----- ---- -----
     done: 1
 
@@ -55,21 +56,46 @@ The output from the job will be in ~/echo+hello.1.out and
 
 If a job fails or times out, then you can resubmit it with more resources:
 
-    $ mq submit sleep+3000@1x30m
+    $ mq submit sleep+3000@1:30m
     ...
     $ mq list
     id folder name       res.   age state   time  error
     -- ------ ---------- ----- ---- ------- ----- -----
-    2  ~      sleep+3000 1x30m 1:16 TIMEOUT 50:00
+    2  ~      sleep+3000 1:30m 1:16 TIMEOUT 50:00
     -- ------ ---------- ----- ---- ------- ----- -----
     TIMEOUT: 1
-    $ mq resubmit -i 2 -R 1x1h
+    $ mq resubmit -i 2 -R 1:1h
 
 
 Tab-completion
 ==============
 
     $ mq completions -q >> ~/.bashrc
+
+
+Resources
+=========
+
+A resource specification has the form::
+
+    cores[:nodename][:processes]:tmax
+
+Examples:
+
+* ``1:1h`` 1 core and 1 process for 1 hour
+* ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
+* ``24:1:30m`` 24 cores and 1 process for 30 minutes
+
+
+Configuration
+=============
+
+You need to configure your SLURM system with a ~/.myqueue/config.py file.
+The simplest way is to copy the file from a friend::
+
+    $ ls ~/../*/.myqueue/config.py
+    /home/you/../alice/.myqueue/config.py
+    /home/you/../bob/.myqueue/config.py
 
 """
 
