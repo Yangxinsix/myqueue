@@ -33,6 +33,8 @@ The simplest way is to copy the file from a friend::
     $ ls ~/../*/.myqueue/config.py
     /home/you/../alice/.myqueue/config.py
     /home/you/../bob/.myqueue/config.py
+    ...
+    $ cp ~alice/.myqueue/config.py ~/.myqueue/config.py
 
 
 Tasks
@@ -49,11 +51,11 @@ A task can be one of these:
 Examples
 ========
 
-Run script.py on 8 cores for 1 hour in folder1 and folder2::
+Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
 
     $ mq submit script.py@8:10h folder1/ folder2/
 
-Sleep for 25 seconds on 1 core using the time.sleep() function::
+Sleep for 25 seconds on 1 core using the ``time.sleep()`` function::
 
     $ mq submit time.sleep -a 25 -R 1:1m
 
@@ -78,8 +80,8 @@ Delete the job from the list with::
 
     $ mq delete -s d .
 
-The output from the job will be in ~/echo+hello.1.out and
-~/echo+hello.1.err (if there was any output).
+The output from the job will be in ``~/echo+hello.1.out`` and
+``~/echo+hello.1.err`` (if there was any output).
 
 ::
 
