@@ -16,8 +16,8 @@ class SLURM(Queue):
 
         name = task.cmd.name
         sbatch = ['sbatch',
-                  '--patition={}'.format(nodename),
-                  '--task-name={}'.format(name),
+                  '--partition={}'.format(nodename),
+                  '--job-name={}'.format(name),
                   '--time={}'.format(ceil(task.resources.tmax / 60)),
                   '--ntasks={}'.format(task.resources.processes),
                   '--nodes={}'.format(nodes),
