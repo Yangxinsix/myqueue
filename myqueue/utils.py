@@ -122,7 +122,7 @@ def update_completion():
     while n < len(newlines):
         line = newlines[n]
         if line == 'positional arguments:':
-            L = ['']
+            L = []
             n += 1
             while True:
                 line = newlines.pop(n)
@@ -130,10 +130,10 @@ def update_completion():
                     break
                 if not line.startswith('                '):
                     cmd, help = line.strip().split(' ', 1)
-                    L.append('  * *{}*: {}'.format(cmd, help.strip()))
+                    L.append('{}:\n    {}'.format(cmd, help.strip()))
                 else:
                     L[-1] += ' ' + line.strip()
-            newlines[n:n] = L + ['']
+            newlines[n - 1:n] = L + ['']
             n += len(L)
         n += 1
 

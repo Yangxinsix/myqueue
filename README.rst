@@ -127,9 +127,8 @@ usage: mq list [-h] [-s qrdFCT] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q] [-T]
 
 List tasks in queue.
 
-positional arguments:
-
-  * *folder*: List tasks in this folder and its subfolders. Defaults to current folder.
+folder:
+    List tasks in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -154,10 +153,10 @@ usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [-R RESOURCES] [-w]
 
 Submit task(s) to queue.
 
-positional arguments:
-
-  * *task*: Task to submit.
-  * *folder*: Submit tasks in this folder. Defaults to current folder.
+task:
+    Task to submit.
+folder:
+    Submit tasks in this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -186,9 +185,8 @@ usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qrdFCT] [-i ID] [-n NAME] [-z]
 
 Resubmit failed or timed-out tasks.
 
-positional arguments:
-
-  * *folder*: Task-folder. Use --recursive (or -r) to include subfolders.
+folder:
+    Task-folder. Use --recursive (or -r) to include subfolders.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -218,9 +216,8 @@ usage: mq delete [-h] [-s qrdFCT] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
 
 Delete or cancel task(s).
 
-positional arguments:
-
-  * *folder*: Task-folder. Use --recursive (or -r) to include subfolders.
+folder:
+    Task-folder. Use --recursive (or -r) to include subfolders.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -243,10 +240,10 @@ usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
 Submit tasks from Python script.
 
-positional arguments:
-
-  * *script*: Submit script.
-  * *folder*: Submit tasks in this folder. Defaults to current folder.
+script:
+    Submit script.
+folder:
+    Submit tasks in this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -278,9 +275,8 @@ usage: mq test [-h] [--slurm] [-z] [-v] [-q] [-T] [test [test ...]]
 
 Run tests.
 
-positional arguments:
-
-  * *test*: Test to run. Default behaviour is to run all.
+test:
+    Test to run. Default behaviour is to run all.
 
 optional arguments:
   -h, --help       show this help message and exit

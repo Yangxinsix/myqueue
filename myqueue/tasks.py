@@ -65,6 +65,7 @@ class Tasks(Lock):
     def list(self, selection: Selection, columns: str) -> List[Task]:
         self._read()
         tasks = self.select(selection)
+        pprint(tasks, self.verbosity, columns)
         return tasks
 
     def submit(self,
