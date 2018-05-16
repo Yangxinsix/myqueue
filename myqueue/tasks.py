@@ -279,7 +279,7 @@ class Tasks(Lock):
             fname = self.fname.with_name('slurm.json')
             if fname.is_file():
                 data = json.loads(fname.read_text())
-                for dct in data['tasks']:
+                for dct in data['jobs']:
                     task = Task.fromolddict(dct)
                     self.tasks.append(task)
 
