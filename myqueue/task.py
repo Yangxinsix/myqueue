@@ -182,7 +182,7 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
-         deps: Union[str, List[Task]] = '',
+         deps: Union[str, List[Union[Task, str]]] = '',
          cores: int = 1,
          nodename: str = '',
          processes: int = 0,
@@ -195,13 +195,15 @@ def task(cmd: str,
     dpaths = []
     if deps:
         if isinstance(deps, str):
-            for dep in deps.split(','):
+            deps = deps.split(',')
+        for dep in deps:
+            if isinstance(dep, str):
                 p = path / dep
                 if '..' in p.parts:
                     p = p.parent.resolve() / p.name
                 dpaths.append(p)
-        else:
-            dpaths = [task.dname for task in deps]
+            else:
+                dpaths.append(dep.dname)
 
     if '@' in cmd:
         cmd, resources = cmd.split('@')

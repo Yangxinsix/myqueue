@@ -273,10 +273,10 @@ def workflow2(args, tasks, folders):
             func = namespace['create_tasks']
 
             with chdir(path.parent):
-                tasks = func()
-            for task in tasks:
+                newtasks = func()
+            for task in newtasks:
                 task.workflow = True
 
-            alltasks += tasks
+            alltasks += newtasks
 
     tasks.submit(alltasks, args.dry_run)
