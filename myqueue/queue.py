@@ -202,13 +202,13 @@ class Queue(Lock):
             job.tqueued = t
 
         if dry_run:
-            pprint(ready, 0, 'fnr')
+            pprint(ready, 0)
             print(S(len(ready), 'job'), 'to submit')
         else:
             self.runner.submit(ready)
             for job in ready:
                 job.deps = [dep.dname for dep in job.deps]
-            pprint(ready, 0, 'ifnr')
+            pprint(ready, 0)
             print(S(len(ready), 'job'), 'submitted')
 
         if not dry_run:
