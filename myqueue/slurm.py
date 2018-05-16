@@ -2,7 +2,7 @@ import subprocess
 from math import ceil
 
 from myqueue.task import Task
-from myqueue.config import read_config
+from myqueue.config import read_config, home_folder
 from myqueue.queue import Queue
 
 
@@ -42,12 +42,14 @@ class SLURM(Queue):
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
+        home = home_folder()
+
         script = (
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
-            'mq=~/.myqueue/slurm-$id\n'
+            'mq={home}/slurm-$id\n'
             '(touch $mq-0 && {cmd} && touch $mq-1) || touch $mq-2\n'
-            .format(cmd=cmd))
+            .format(home=home, cmd=cmd))
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
