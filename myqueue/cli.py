@@ -43,24 +43,26 @@ def main(arguments: List[str] = None) -> Any:
               help='Run tests using SLURM.')
 
         elif cmd == 'submit':
-            a('script')
+            a('task', help='Task to submit.')
             a('-d', '--dependencies', default='',
               help='Comma-separated task names.')
             a('-a', '--arguments', help='Comma-separated arguments for task.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
-              help='Examples: "8x1h", 8 cores for 1 hour. '
+              help='Examples: "8:1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days. '
-              '"16:1x30m": 16 cores, 1 process, half an hour.')
+              '"16:1:30m": 16 cores, 1 process, half an hour.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.done or <task-name>.FAILED file '
               'when done.')
 
         if cmd == 'workflow':
-            a('script')
-            a('-p', '--pattern', action='store_true')
+            a('script', help='Submit script.')
+            a('-p', '--pattern', action='store_true',
+              help='Use submit scripts matching "script" in all '
+              'subfolders.')
 
         if cmd in ['list', 'delete', 'resubmit']:
             a('-s', '--states', metavar='qrdFCT',
@@ -85,7 +87,8 @@ def main(arguments: List[str] = None) -> Any:
           help='Show full traceback.')
 
         if cmd in ['delete', 'resubmit']:
-            a('-r', '--recursive', action='store_true')
+            a('-r', '--recursive', action='store_true',
+              help='Use also subfolders.')
             a('folder',
               nargs='*',
               help='Task-folder.  Use --recursive (or -r) to include '
@@ -204,7 +207,7 @@ def run(args):
                 arguments = args.arguments.split(',')
             else:
                 arguments = []
-            newtasks = [task(args.script,
+            newtasks = [task(args.task,
                              args=arguments,
                              resources=resources,
                              folder=folder,

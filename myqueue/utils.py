@@ -107,11 +107,6 @@ def update_completion():
 
     # Path of the complete.py script:
     dir = Path(__file__).parent
-    readme = dir / '../README.rst'
-
-    lines = readme.read_text().splitlines()
-    a = lines.index('.. computer generated text:')
-    txt = '\n'.join(lines[:a + 4])
 
     sys.stdout = StringIO()
     for cmd in ['list', 'submit', 'resubmit', 'delete', 'workflow',
@@ -120,10 +115,34 @@ def update_completion():
               .format(cmd.title(), '-' * (len(cmd) + 8)))
         main(['help', cmd])
 
-    txt += sys.stdout.getvalue()
+    newlines = sys.stdout.getvalue().splitlines()
     sys.stdout = sys.__stdout__
 
-    readme.write_text(txt)
+    n = 0
+    while n < len(newlines):
+        line = newlines[n]
+        if line == 'positional arguments:':
+            L = ['']
+            n += 1
+            while True:
+                line = newlines.pop(n)
+                if not line:
+                    break
+                if not line.startswith('                '):
+                    cmd, help = line.strip().split(' ', 1)
+                    L.append('  * *{}*: {}'.format(cmd, help.strip()))
+                else:
+                    L[-1] += ' ' + line.strip()
+            newlines[n:n] = L + ['']
+            n += len(L)
+        n += 1
+
+    readme = dir / '../README.rst'
+
+    lines = readme.read_text().splitlines()
+    a = lines.index('.. computer generated text:')
+    lines[a:] = newlines
+    readme.write_text('\n'.join(lines))
 
     filename = dir / 'complete.py'
 

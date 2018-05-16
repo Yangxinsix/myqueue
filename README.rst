@@ -4,7 +4,7 @@ MyQueue
 
 Simple frontend for SLURM_.
 
-_SLURM: https://slurm.schedmd.com/
+.. _SLURM: https://slurm.schedmd.com/
 
 .. contents::
 
@@ -113,10 +113,7 @@ Examples:
 * ``24:1:30m`` 24 cores and 1 process for 30 minutes
 
 
-.. computer generated text:
 
-Commands
-========
 
 List command
 ------------
@@ -124,19 +121,19 @@ List command
 usage: mq list [-h] [-s qrdFCT] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q] [-T]
                [folder [folder ...]]
 
-List jobs in queue.
+List tasks in queue.
 
 positional arguments:
-  folder                List jobs in this folder and its subfolders. Defaults
-                        to current folder.
+
+  * *folder*: List tasks in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
   -h, --help            show this help message and exit
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of job ID's.
-  -n NAME, --name NAME  Select only jobs named "NAME".
+  -i ID, --id ID        Comma-separated list of task ID's.
+  -n NAME, --name NAME  Select only tasks named "NAME".
   -c ifnraste, --columns ifnraste
                         Select columns to show.
   -v, --verbose         More output.
@@ -149,14 +146,14 @@ Submit command
 
 usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [-R RESOURCES] [-w]
                  [-z] [-v] [-q] [-T]
-                 script [folder [folder ...]]
+                 task [folder [folder ...]]
 
-Submit job(s) to queue.
+Submit task(s) to queue.
 
 positional arguments:
-  script
-  folder                Submit jobs in this folder. Defaults to current
-                        folder.
+
+  * *task*: Task to submit.
+  * *folder*: Submit tasks in this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -165,10 +162,11 @@ optional arguments:
   -a ARGUMENTS, --arguments ARGUMENTS
                         Comma-separated arguments for task.
   -R RESOURCES, --resources RESOURCES
-                        Examples: "8x1h", 8 cores for 1 hour. Use "m" for
-                        minutes, "h" for hours and "d" for days. "16:1x30m":
+                        Examples: "8:1h", 8 cores for 1 hour. Use "m" for
+                        minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <job-name>.done file when done.
+  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
+                        done.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -182,29 +180,30 @@ usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qrdFCT] [-i ID] [-n NAME] [-z]
                    [-v] [-q] [-T] [-r]
                    [folder [folder ...]]
 
-Resubmit failed or timed-out jobs.
+Resubmit failed or timed-out tasks.
 
 positional arguments:
-  folder                Task-folder. Use --recursive (or -r) to include
-                        subfolders.
+
+  * *folder*: Task-folder. Use --recursive (or -r) to include subfolders.
 
 optional arguments:
   -h, --help            show this help message and exit
   -R RESOURCES, --resources RESOURCES
-                        Examples: "8x1h", 8 cores for 1 hour. Use "m" for
-                        minutes, "h" for hours and "d" for days. "16:1x30m":
+                        Examples: "8:1h", 8 cores for 1 hour. Use "m" for
+                        minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <job-name>.done file when done.
+  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
+                        done.
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of job ID's.
-  -n NAME, --name NAME  Select only jobs named "NAME".
+  -i ID, --id ID        Comma-separated list of task ID's.
+  -n NAME, --name NAME  Select only tasks named "NAME".
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
-  -r, --recursive
+  -r, --recursive       Use also subfolders.
 
 
 Delete command
@@ -213,24 +212,24 @@ Delete command
 usage: mq delete [-h] [-s qrdFCT] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
 
-Delete or cancel job(s).
+Delete or cancel task(s).
 
 positional arguments:
-  folder                Task-folder. Use --recursive (or -r) to include
-                        subfolders.
+
+  * *folder*: Task-folder. Use --recursive (or -r) to include subfolders.
 
 optional arguments:
   -h, --help            show this help message and exit
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of job ID's.
-  -n NAME, --name NAME  Select only jobs named "NAME".
+  -i ID, --id ID        Comma-separated list of task ID's.
+  -n NAME, --name NAME  Select only tasks named "NAME".
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
-  -r, --recursive
+  -r, --recursive       Use also subfolders.
 
 
 Workflow command
@@ -238,15 +237,16 @@ Workflow command
 
 usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
-Submit jobs from Python script.
+Submit tasks from Python script.
 
 positional arguments:
-  script
-  folder           Submit jobs in this folder. Defaults to current folder.
+
+  * *script*: Submit script.
+  * *folder*: Submit tasks in this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit
-  -p, --pattern
+  -p, --pattern    Use submit scripts matching "script" in all subfolders.
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
   -q, --quiet      Less output.
@@ -275,7 +275,8 @@ usage: mq test [-h] [--slurm] [-z] [-v] [-q] [-T] [test [test ...]]
 Run tests.
 
 positional arguments:
-  test             Test to run. Default behaviour is to run all.
+
+  * *test*: Test to run. Default behaviour is to run all.
 
 optional arguments:
   -h, --help       show this help message and exit
