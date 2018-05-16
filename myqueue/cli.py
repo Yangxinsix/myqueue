@@ -10,8 +10,9 @@ class MyQueueCLIError(Exception):
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
-        description='Simple frontend for SLURM.\n'
-        'https://gitlab.com/jensj/myqueue')
+        description='Simple frontend for SLURM.  '
+        'Type "mq help <command>" for help.  '
+        'See https://gitlab.com/jensj/myqueue for more information.')
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
