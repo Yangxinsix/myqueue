@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 from pathlib import Path
 from importlib.util import find_spec
 
@@ -10,6 +10,9 @@ class Command:
             name += '+' + '_'.join(self.args)
         self.name = name
 
+    def todict(self)-> Dict[str, Any]:
+        raise NotImplementedError
+
 
 def is_module(mod: str) -> bool:
     try:
@@ -19,12 +22,13 @@ def is_module(mod: str) -> bool:
         return False
 
 
-def command(cmd: str, args: List[str] = None, type: str = None) -> Command:
+def command(cmd: str,
+            args: List[str] = [],
+            type: str = None) -> Command:
     path, sep, name = cmd.rpartition('/')
     if '+' in name:
-        assert args is None
         name, _, rest = name.rpartition('+')
-        args = rest.split('_')
+        args = rest.split('_') + args
     cmd = path + sep + name
 
     if type is None:
@@ -75,7 +79,10 @@ class PythonScript(Command):
     def __init__(self, script, args):
         path = Path(script)
         Command.__init__(self, path.name, args)
-        self.script = str(path.absolute())
+        if '/' in script:
+            self.script = str(path.absolute())
+        else:
+            self.script = script
 
     def __str__(self):
         return 'python3 ' + ' '.join([self.script] + self.args)

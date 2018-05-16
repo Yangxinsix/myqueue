@@ -4,12 +4,13 @@ import re
 import sys
 import time
 from contextlib import contextmanager
-from typing import IO, Union
+from io import StringIO
+from typing import IO, Union, Generator
 from pathlib import Path
 
 
 @contextmanager
-def chdir(folder):
+def chdir(folder: Path) -> Generator:
     dir = os.getcwd()
     os.chdir(str(folder))
     yield
@@ -36,19 +37,19 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 class Lock:
     def __init__(self, name: Path) -> None:
-        self.name = str(name)
+        self.lock = name
 
     def acquire(self):
         delta = 0.1
         while True:
-            fd = opencew(self.name)
+            fd = opencew(str(self.lock))
             if fd is not None:
                 break
             time.sleep(delta)
             delta *= 2
 
     def release(self):
-        os.remove(self.name)
+        self.lock.unlink()
 
     def __enter__(self):
         self.acquire()
@@ -60,7 +61,7 @@ class Lock:
 
 def lock(method):
     def m(self, *args, **kwargs):
-        with self.lock:
+        with self:
             return method(self, *args, **kwargs)
     return m
 
@@ -92,7 +93,7 @@ f = F()
 
 
 def update_completion():
-    """Update commands dict.
+    """Update README.rst and commands dict.
 
     Run this when ever options are changed::
 
@@ -105,8 +106,45 @@ def update_completion():
     from myqueue.cli import main
 
     # Path of the complete.py script:
-    my_dir, _ = os.path.split(os.path.realpath(__file__))
-    filename = os.path.join(my_dir, 'complete.py')
+    dir = Path(__file__).parent
+
+    sys.stdout = StringIO()
+    for cmd in ['list', 'submit', 'resubmit', 'delete', 'workflow',
+                'completion', 'test']:
+        print('\n\n{} command\n{}\n'
+              .format(cmd.title(), '-' * (len(cmd) + 8)))
+        main(['help', cmd])
+
+    newlines = sys.stdout.getvalue().splitlines()
+    sys.stdout = sys.__stdout__
+
+    n = 0
+    while n < len(newlines):
+        line = newlines[n]
+        if line == 'positional arguments:':
+            L = []
+            n += 1
+            while True:
+                line = newlines.pop(n)
+                if not line:
+                    break
+                if not line.startswith('                '):
+                    cmd, help = line.strip().split(' ', 1)
+                    L.append('{}:\n    {}'.format(cmd, help.strip()))
+                else:
+                    L[-1] += ' ' + line.strip()
+            newlines[n - 1:n] = L + ['']
+            n += len(L)
+        n += 1
+
+    readme = dir / '../README.rst'
+
+    lines = readme.read_text().splitlines()
+    a = lines.index('.. computer generated text:')
+    lines[a + 4:] = newlines
+    readme.write_text('\n'.join(lines))
+
+    filename = dir / 'complete.py'
 
     dct = {}
 
@@ -151,15 +189,15 @@ def update_completion():
                          width=65,
                          break_on_hyphens=False,
                          subsequent_indent='         '))
-    txt = txt[:-1] + '}\n'
-    with open(filename) as fd:
-        lines = fd.readlines()
-        a = lines.index('# Beginning of computer generated data:\n')
-        b = lines.index('# End of computer generated data\n')
+    txt = txt[:-1] + '}'
+
+    lines = filename.read_text().splitlines()
+
+    a = lines.index('# Beginning of computer generated data:')
+    b = lines.index('# End of computer generated data')
     lines[a + 1:b] = [txt]
-    with open(filename + '.new', 'w') as fd:
-        print(''.join(lines), end='', file=fd)
-    os.rename(filename + '.new', filename)
+
+    filename.write_text('\n'.join(lines) + '\n')
 
 
 if __name__ == '__main__':

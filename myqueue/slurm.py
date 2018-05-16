@@ -1,63 +1,55 @@
 import subprocess
-from typing import List
+from math import ceil
 
-from myqueue.config import read_config
-from myqueue.job import Job
-from myqueue.runner import Runner
+from myqueue.task import Task
+from myqueue.config import read_config, home_folder
+from myqueue.queue import Queue
 
 
-class SLURM(Runner):
-    def submit(self, jobs: List[Job]) -> None:
-        if len(jobs) != 1:
-            for job in jobs:
-                self.submit([job])
-            return
+class SLURM(Queue):
+    def __init__(self):
+        self.cfg = read_config()
 
-        # Submit one job:
-        job = jobs[0]
+    def submit(self, task: Task) -> None:
+        nodelist = self.cfg['nodes']
+        nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        for size in [24, 16, 8]:
-            if job.cores % size == 0:
-                nodes = job.cores // size
-                break
-        else:
-            size = 8
-            nodes = job.cores // 8 + 1
-
-        name = job.cmd.name
+        name = task.cmd.name
         sbatch = ['sbatch',
-                  '--partition=xeon{}'.format(size),
+                  '--partition={}'.format(nodename),
                   '--job-name={}'.format(name),
-                  '--time={}'.format(max(job.tmax // 60, 1)),
-                  '--ntasks={}'.format(job.processes),
+                  '--time={}'.format(ceil(task.resources.tmax / 60)),
+                  '--ntasks={}'.format(task.resources.processes),
                   '--nodes={}'.format(nodes),
-                  '--workdir={}'.format(job.folder.expanduser()),
+                  '--workdir={}'.format(task.folder),
                   '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name),
-                  '--mem={}G'.format({8: 24, 16: 64, 24: 256}[size] - 1)]
+                  '--error={}.%j.err'.format(name)]
 
-        cfg = read_config()
-        sbatch += cfg.get('slurm', {}).get('extra', [])
+        mem = nodedct.get('memory')
+        if mem:
+            sbatch.append('--mem={}'.format(mem))
 
-        if job.deps:
-            ids = ':'.join(str(dep.id) for dep in job.deps)
+        if task.dtasks:
+            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append('--dependency=afterok:{}'.format(ids))
 
-        cmd = str(job.cmd)
-        if job.processes > 1:
-            mpirun = 'mpirun -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            if size == 24:
-                mpirun += '-mca pml cm -mca mtl psm2 '
-            cmd = mpirun + cmd.replace('python3', 'gpaw-python')
+        cmd = str(task.cmd)
+        if task.resources.processes > 1:
+            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
+            if 'mpiargs' in nodedct:
+                mpiexec += nodedct['mpiargs'] + ' '
+            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
+
+        home = home_folder()
 
         script = (
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
-            'mq=~/.myqueue/slurm-$id\n'
+            'mq={home}/slurm-$id\n'
             '(touch $mq-0 && {cmd} && touch $mq-1) || touch $mq-2\n'
-            .format(cmd=cmd))
+            .format(home=home, cmd=cmd))
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
@@ -65,18 +57,18 @@ class SLURM(Runner):
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
         id = int(out.split()[-1])
-        job.id = id
+        task.id = id
 
-    def timeout(self, job):
-        path = (job.folder /
-                '{}.{}.err'.format(job.cmd.name, job.id)).expanduser()
+    def timeout(self, task):
+        path = (task.folder /
+                '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
-            job.tstop = path.stat().st_mtime
+            task.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
             for line in lines:
                 if line.endswith('DUE TO TIME LIMIT ***'):
                     return True
         return False
 
-    def cancel(self, job):
-        subprocess.run(['scancel', str(job.id)])
+    def cancel(self, task):
+        subprocess.run(['scancel', str(task.id)])

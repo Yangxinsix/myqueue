@@ -7,7 +7,7 @@ from pathlib import Path
 from myqueue.cli import main
 
 
-SLOW = False
+SLURM = False
 
 
 def mq(cmd):
@@ -34,21 +34,21 @@ tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
 
 def wait()-> None:
     t0 = time.time()
-    timeout = 300.0 if SLOW else 10.0
-    sleep = 3.0 if SLOW else 0.1
+    timeout = 300.0 if SLURM else 10.0
+    sleep = 3.0 if SLURM else 0.1
     while mq('list -s qr -qq'):
         time.sleep(sleep)
         if time.time() - t0 > timeout:
             raise TimeoutError
 
 
-def run_tests(tests: List[str], slow: bool):
-    global SLOW
-    SLOW = slow
+def run_tests(tests: List[str], slurm: bool):
+    global SLURM
+    SLURM = slurm
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
-    # os.environ['MYQUEUE_HOME'] = str(tmpdir)
-    os.environ['MYQUEUE_DEBUG'] = 'yes!'
+    os.environ['MYQUEUE_HOME'] = str(tmpdir)
+    os.environ['MYQUEUE_DEBUG'] = 'slurm' if slurm else 'local'
 
     if not tests:
         tests = list(all_tests)
@@ -93,26 +93,26 @@ def fail():
 
 @test
 def timeout():
-    T = '120' if SLOW else '3'
-    mq('submit sleep@1x1s -a ' + T)
+    T = '120' if SLURM else '3'
+    mq('submit sleep@1:1s -a ' + T)
     mq('submit echo+hello -d sleep+' + T)
     wait()
-    mq('resubmit -sT . -R 1x5m')
+    mq('resubmit -sT . -R 1:5m')
     wait()
     assert states() == 'Cd'
 
 
 wf = """
-from myqueue.job import Job
-def workflow():
-    j1 = Job('sleep+3')
-    return [j1, Job('echo+hello', deps=[j1])]
+from myqueue.task import task
+def submit():
+    t1 = task('sleep+3')
+    return [t1, task('echo+hello', deps=[t1])]
 """
 
 
 @test
 def workflow():
-    mq('submit sleep+3@1x1m -w')
+    mq('submit sleep+3@1:1m -w')
     time.sleep(2)
     Path('wf.py').write_text(wf)
     mq('workflow wf.py .')

@@ -50,19 +50,16 @@ commands = {
          '--id', '-n', '--name', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
-    'runner':
-        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
     'submit':
         ['-d', '--dependencies', '-a', '--arguments', '-R', '--resources',
          '-w', '--workflow', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'test':
-        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
+        ['--slurm', '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
+         '-T', '--traceback'],
     'workflow':
-        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback']}
+        ['-p', '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback']}
 # End of computer generated data
 
 

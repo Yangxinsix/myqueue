@@ -1,12 +1,10 @@
-from myqueue.job import Job
-
-
-def workflow():
-    j1 = Job('sleep+5')
-    j2 = Job('echo+j2', deps=[j1])
-    jobs = [
-        j1,
-        j2,
-        Job('echo+j3', deps=[j1]),
-        Job('echo+j4', deps=[j2])]
-    return jobs
+def submit():
+    from myqueueue.task import task
+    t1 = task('sleep+5')
+    t2 = task('echo+j2', deps=[t1])
+    tasks = [
+        t1,
+        t2,
+        task('echo+j3', deps=[t1]),
+        task('echo+j4', deps=[t2])]
+    return tasks
