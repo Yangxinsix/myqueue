@@ -1,4 +1,4 @@
-def submit():
+def create_tasks():
     from myqueueue.task import task
     t1 = task('sleep+5')
     t2 = task('echo+j2', deps=[t1])

@@ -246,7 +246,7 @@ def workflow(args, tasks, folders):
     code = compile(script, args.script, 'exec')
     namespace = {}
     exec(code, namespace)
-    func = namespace['submit']
+    func = namespace['create_tasks']
 
     alltasks = []
     for folder in folders:
@@ -270,7 +270,7 @@ def workflow2(args, tasks, folders):
             code = compile(script, str(path), 'exec')
             namespace = {}
             exec(code, namespace)
-            func = namespace['workflow']
+            func = namespace['create_tasks']
 
             with chdir(path.parent):
                 tasks = func()

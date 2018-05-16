@@ -104,7 +104,7 @@ def timeout():
 
 wf = """
 from myqueue.task import task
-def submit():
+def create_tasks():
     t1 = task('sleep+3')
     return [t1, task('echo+hello', deps=[t1])]
 """
