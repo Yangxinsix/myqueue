@@ -141,7 +141,7 @@ def update_completion():
 
     lines = readme.read_text().splitlines()
     a = lines.index('.. computer generated text:')
-    lines[a:] = newlines
+    lines[a + 4:] = newlines
     readme.write_text('\n'.join(lines))
 
     filename = dir / 'complete.py'

@@ -113,6 +113,10 @@ Examples:
 * ``24:1:30m`` 24 cores and 1 process for 30 minutes
 
 
+.. computer generated text:
+
+Commands
+========
 
 
 List command
