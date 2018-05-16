@@ -4,7 +4,7 @@ MyQueue
 
 Simple frontend for SLURM_.
 
-**work in progress!!**
+_SLURM: https://slurm.schedmd.com/
 
 .. contents::
 
@@ -49,23 +49,23 @@ A task can be one of these:
 Examples
 ========
 
-Run script.py on 8 cores for 1 hour in folder1 and folder2:
+Run script.py on 8 cores for 1 hour in folder1 and folder2::
 
     $ mq submit script.py@8:10h folder1/ folder2/
 
-Sleep for 25 seconds on 1 core using the time.sleep() function:
+Sleep for 25 seconds on 1 core using the time.sleep() function::
 
     $ mq submit time.sleep -a 25 -R 1:1m
 
-or equivalently:
+or equivalently::
 
     $ mq submit time.sleep+25@1:1m
 
-Say "hello" (using the defaults of 1 core for 10 minutes):
+Say "hello" (using the defaults of 1 core for 10 minutes)::
 
     $ mq submit echo -a hello
 
-You can see the status of your jobs with:
+You can see the status of your jobs with::
 
     $ mq list
     id folder name       res.   age state time error
@@ -74,17 +74,19 @@ You can see the status of your jobs with:
     -- ------ ---------- ----- ---- ----- ---- -----
     done: 1
 
-Delete the job from the list with:
+Delete the job from the list with::
 
     $ mq delete -s d .
 
 The output from the job will be in ~/echo+hello.1.out and
 ~/echo+hello.1.err (if there was any output).
 
+::
+
     $ cat echo+hello.1.out
     hello
 
-If a job fails or times out, then you can resubmit it with more resources:
+If a job fails or times out, then you can resubmit it with more resources::
 
     $ mq submit sleep+3000@1:30m
     ...
