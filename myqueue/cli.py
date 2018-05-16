@@ -188,7 +188,7 @@ def run(args):
 
     if args.command in ['submit', 'resubmit']:
         if args.resources:
-            resources = Resources(args.resources)
+            resources = Resources.from_string(args.resources)
         else:
             resources = None
 
