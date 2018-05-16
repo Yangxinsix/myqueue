@@ -112,16 +112,19 @@ class Task:
 
     @staticmethod
     def fromolddict(dct: dict) -> 'Task':
+        del dct['repeat']
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(dct.pop('cores'),
+                                        '',
                                         dct.pop('processes'),
                                         dct.pop('tmax')),
                     folder=Path(dct.pop('folder')),
                     deps=[Path(dep) for dep in dct.pop('deps')],
-                    tqueued=float(dct.pop('tqueued')),
-                    trunning=float(dct.pop('trunning')),
-                    tstop=float(dct.pop('tstop')),
-                    id=int(dct.pop('')),
+                    tqueued=float(dct.pop('tqueued') or 0),
+                    trunning=float(dct.pop('trunning') or 0),
+                    tstop=float(dct.pop('tstop') or 0),
+                    id=int(dct.pop('id')),
+                    error=dct.pop('error') or '',
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:
