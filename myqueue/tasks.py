@@ -333,9 +333,10 @@ class Tasks(Lock):
                     if dep in bad:
                         task.state = 'CANCELED'
                         task.tstop = t
+                        self.changed = True
                         break
             elif task.state == 'FAILED':
-                if task.error is None:
+                if not task.error:
                     task.read_error()
                     self.changed = True
 

@@ -157,6 +157,7 @@ class Task:
                 path.unlink()
 
     def read_error(self) -> None:
+        self.error = '-'  # mark as already read
         path = self.folder / (self.name + '.err')
         try:
             lines = path.read_text().splitlines()
