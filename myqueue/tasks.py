@@ -115,6 +115,7 @@ class Tasks(Lock):
                         if not donefile.is_file():
                             print('Missing dependency:', dep)
                             break
+                        tsk = None
                 elif tsk.state == 'done':
                     tsk = None
                 elif tsk.state not in ['queued', 'running']:
