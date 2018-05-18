@@ -187,12 +187,6 @@ def run(args):
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
 
-    if args.command in ['submit', 'resubmit']:
-        if args.resources:
-            resources = Resources.from_string(args.resources)
-        else:
-            resources = None
-
     with Tasks(verbosity) as tasks:
         if args.command == 'list':
             return tasks.list(selection, args.columns)
@@ -201,6 +195,10 @@ def run(args):
             tasks.delete(selection, args.dry_run)
 
         elif args.command == 'resubmit':
+            if args.resources:
+                resources = Resources.from_string(args.resources)
+            else:
+                resources = None
             tasks.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
@@ -210,7 +208,7 @@ def run(args):
                 arguments = []
             newtasks = [task(args.task,
                              args=arguments,
-                             resources=resources,
+                             resources=args.resources,
                              folder=folder,
                              deps=args.dependencies,
                              workflow=args.workflow)
