@@ -18,7 +18,7 @@ def is_module(mod: str) -> bool:
     try:
         m = find_spec(mod)
         return m is not None
-    except (AttributeError):  # , ModuleNotFoundError):
+    except (AttributeError, ImportError):  # , ModuleNotFoundError):
         return False
 
 
@@ -67,7 +67,7 @@ class ShellScript(Command):
         self.cmd = cmd
 
     def __str__(self):
-        return ' '.join([self.cmd] + self.args)
+        return ' '.join(['.'] + ['./' + self.cmd] + self.args)
 
     def todict(self):
         return {'type': 'shell-script',
