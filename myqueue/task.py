@@ -43,7 +43,7 @@ class Task:
         self.dname = folder / cmd.name
         self.dtasks = []  # type: List[Task]
 
-        self._done = False
+        self._done = None
 
     @property
     def name(self) -> str:
