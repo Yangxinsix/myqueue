@@ -100,7 +100,7 @@ class Tasks(Lock):
         if n3 < n2:
             print(S(n2 - n3, 'task'), 'already in the queue')
 
-        ready = []
+        todo = []
         for task in tasks:
             task.dtasks = []
             for dep in task.deps:
@@ -126,7 +126,13 @@ class Tasks(Lock):
                 if tsk is not None:
                     task.dtasks.append(tsk)
             else:
-                ready.append(task)
+                todo.append(task)
+
+        # All dependensies must have an id or be in the list of tasks
+        # about to be submitted
+        ready = [task for task in todo
+                 if all(tsk.id or tsk in todo
+                        for tsk in task.dtasks)]
 
         t = time.time()
         for task in ready:
