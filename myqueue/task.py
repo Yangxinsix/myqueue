@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict, Union, Optional  # noqa
 
 from myqueue.commands import command, Command
 from myqueue.resources import Resources, T
@@ -43,7 +43,7 @@ class Task:
         self.dname = folder / cmd.name
         self.dtasks = []  # type: List[Task]
 
-        self._done = None
+        self._done = None  # type: Optional[bool]
 
     @property
     def name(self) -> str:
@@ -183,7 +183,7 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
-         deps: Union[str, List[Union[Task, str]]] = '',
+         deps: Union[str, List[str], List[Task]] = '',
          cores: int = 1,
          nodename: str = '',
          processes: int = 0,
