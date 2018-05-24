@@ -20,12 +20,9 @@ def match(word, *suffixes):
 def read():
     from pathlib import Path
     import json
+    path = Path.home() / '.myqueue/queue.json'
     try:
-        folder = Path.home() / '.myqueue'
-        path = folder / 'runner'
-        runner = path.read_text()
-        fname = folder / (runner + '.json')
-        dct = json.loads(fname.read_text())
+        dct = json.loads(path.read_text())
         return dct
     except Exception:
         return {}
@@ -83,13 +80,13 @@ def complete(word, previous, line, point):
     if previous in ['-n', '--name']:
         dct = read()
         words = set()
-        for job in dct['jobs']:
-            cmd = job['cmd']
+        for task in dct['tasks']:
+            cmd = task['cmd']
             words.add((cmd['cmd'] + '+' + '_'.join(cmd['args'])).rstrip('+'))
 
     elif previous in ['-i', '--id']:
         dct = read()
-        words = {str(job['id']) for job in dct['jobs']}
+        words = {str(task['id']) for task in dct['tasks']}
 
     elif command == 'test':
         from myqueue.test.tests import all_tests as words
