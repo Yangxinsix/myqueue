@@ -151,6 +151,7 @@ class Task:
             p.write_text('')
 
     def remove_empty_output_files(self) -> None:
+        return
         for ext in ['.out', '.err']:
             path = self.folder / (self.name + ext)
             if path.is_file() and path.stat().st_size == 0:
