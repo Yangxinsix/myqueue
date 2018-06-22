@@ -67,7 +67,9 @@ class ShellScript(Command):
         self.cmd = cmd
 
     def __str__(self):
-        return ' '.join(['.'] + ['./' + self.cmd] + self.args)
+        if '/' in self.cmd:
+            return ' '.join(['.', self.cmd] + self.args)
+        return ' '.join([self.cmd] + self.args)
 
     def todict(self):
         return {'type': 'shell-script',
