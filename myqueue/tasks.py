@@ -220,7 +220,7 @@ class Tasks(Lock):
         self._read()
         tasks = []
         for task in self.select(selection):
-            if task.state.isupper():
+            if task.state not in {'queued', 'running'}:
                 self.tasks.remove(task)
             task = Task(task.cmd,
                         deps=task.deps,
