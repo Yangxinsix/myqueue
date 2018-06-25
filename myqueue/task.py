@@ -170,7 +170,8 @@ class Task:
                 if line.endswith('memory limit at some point.'):
                     self.out_of_memory = True
                 return
-        self.error = lines[-1]
+        if lines:
+            self.error = lines[-1]
 
     def command(self) -> str:
         out = '{name}.out'.format(name=self.name)
