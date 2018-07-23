@@ -69,7 +69,9 @@ def main(arguments: List[str] = None) -> Any:
             a('-s', '--states', metavar='qrdFCT',
               help='Selection of states. First letters of "queued", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
-            a('-i', '--id', help="Comma-separated list of task ID's.")
+            a('-i', '--id', help="Comma-separated list of task ID's. "
+              'Use "-i -" for reading ID\'s from stdin '
+              '(one ID per line; extra stuff after the ID will be ignored).')
             a('-n', '--name',
               help='Select only tasks named "NAME".')
 
@@ -181,7 +183,7 @@ def run(args):
                 raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
-                ids = {int(id) for id in sys.stdin}
+                ids = {int(line.split()[0]) for line in sys.stdin}
             else:
                 ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
