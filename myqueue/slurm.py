@@ -48,8 +48,8 @@ class SLURM(Queue):
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
             'mq={home}/slurm-$id\n'
-            '(touch $mq-0 && {cmd} && touch $mq-1) || touch $mq-2\n'
-            .format(home=home, cmd=cmd))
+            '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || touch $mq-2\n'
+            .format(home=home, dir=task.folder, cmd=cmd))
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
