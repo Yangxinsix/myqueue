@@ -252,12 +252,12 @@ def workflow(args, tasks, folders):
     code = compile(script, args.script, 'exec')
     namespace = {}
     exec(code, namespace)
-    func = namespace['create_tasks']
+    create_tasks = namespace['create_tasks']
 
     alltasks = []
     for folder in folders:
         with chdir(folder):
-            newtasks = func()
+            newtasks = create_tasks()
         for task in newtasks:
             task.workflow = True
 
@@ -276,10 +276,10 @@ def workflow2(args, tasks, folders):
             code = compile(script, str(path), 'exec')
             namespace = {}
             exec(code, namespace)
-            func = namespace['create_tasks']
+            create_tasks = namespace['create_tasks']
 
             with chdir(path.parent):
-                newtasks = func()
+                newtasks = create_tasks()
             for task in newtasks:
                 task.workflow = True
 
