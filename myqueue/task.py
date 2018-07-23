@@ -138,7 +138,7 @@ class Task:
         return self._done
 
     def write_done_file(self) -> None:
-        if self.workflow:
+        if self.workflow and self.folder.is_dir():
             p = self.folder / '{}.done'.format(self.cmd.name)
             p.write_text('')
         p = self.folder / '{}.FAILED'.format(self.cmd.name)
@@ -146,7 +146,7 @@ class Task:
             p.unlink()
 
     def write_failed_file(self) -> None:
-        if self.workflow:
+        if self.workflow and self.folder.is_dir():
             p = self.folder / '{}.FAILED'.format(self.cmd.name)
             p.write_text('')
 
