@@ -80,7 +80,7 @@ class Tasks(Lock):
         n2 = len(tasks)
 
         if n2 < n1:
-            print(S(n1 - n2, 'task'), 'already done')
+            print(plural(n1 - n2, 'task'), 'already done')
 
         if read:
             self._read()
@@ -98,7 +98,7 @@ class Tasks(Lock):
         n3 = len(tasks)
 
         if n3 < n2:
-            print(S(n2 - n3, 'task'), 'already in the queue')
+            print(plural(n2 - n3, 'task'), 'already in the queue')
 
         todo = []
         for task in tasks:
@@ -142,18 +142,31 @@ class Tasks(Lock):
 
         if dry_run:
             pprint(ready, 0, 'fnr')
-            print(S(len(ready), 'task'), 'to submit')
+            print(plural(len(ready), 'task'), 'to submit')
         else:
+            submitted = []
+            ex = None
             for task in ready:
-                self.queue(task).submit(task)
-            pprint(ready, 0, 'ifnr')
-            print(S(len(ready), 'task'), 'submitted')
+                try:
+                    self.queue(task).submit(task)
+                except Exception as x:
+                    ex = x
+                    break
+                else:
+                    submitted.append(task)
 
-        if not dry_run:
-            self.tasks += ready
+            pprint(submitted, 0, 'ifnr')
+            if submitted:
+                print(plural(len(submitted), 'task'), 'submitted')
+
+            self.tasks += submitted
             self.changed = True
             for queue in self.queues.values():
                 queue.kick()
+
+            if ex:
+                print('ERROR:', task)
+                raise ex
 
     def select(self, s: Selection) -> List[Task]:
         if s.ids is not None:
@@ -182,10 +195,10 @@ class Tasks(Lock):
 
         if dry_run:
             pprint(tasks, 0)
-            print(S(len(tasks), 'task'), 'to be deleted')
+            print(plural(len(tasks), 'task'), 'to be deleted')
         else:
             pprint(tasks, 0)
-            print(S(len(tasks), 'task'), 'deleted')
+            print(plural(len(tasks), 'task'), 'deleted')
             for task in tasks:
                 if task.state in ['running', 'queued']:
                     self.queue(task).cancel(task)
@@ -353,7 +366,7 @@ def pjoin(folder, reldir):
     return folder
 
 
-def S(n, thing):
+def plural(n, thing):
     if n == 1:
         return '1 ' + thing
     return '{} {}s'.format(n, thing)
@@ -375,7 +388,6 @@ def pprint(tasks: List[Task],
         return
 
     if not tasks:
-        print('No tasks')
         return
 
     color = sys.stdout.isatty()
