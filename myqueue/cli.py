@@ -97,7 +97,7 @@ def main(arguments: List[str] = None) -> Any:
 
         if cmd == 'list':
             a('folder',
-              nargs='*', default=['.'],
+              nargs='*',
               help='List tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
@@ -180,9 +180,15 @@ def run(args):
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
 
-            ids = {int(id) for id in args.id.split(',')}
+            if args.id == '-':
+                ids = {int(id) for id in sys.stdin}
+            else:
+                ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
+
+        if args.command == 'list' and not folders:
+            folders = [Path.cwd()]
 
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
