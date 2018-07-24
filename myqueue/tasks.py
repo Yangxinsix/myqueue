@@ -359,9 +359,10 @@ class Tasks(Lock):
         t = time.time()
         for task in self.tasks:
             if task.state == 'running':
-                if t - task.trunning > task.resources.tmax:
+                delta = t - task.trunning - task.resources.tmax
+                if delta > 0:
                     queue = self.queue(task)
-                    if queue.timeout(task):
+                    if queue.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.remove_empty_output_files()
                         for tsk in self.tasks:
