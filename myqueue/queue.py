@@ -1,4 +1,5 @@
 from myqueue.task import Task
+from typing import Set
 
 
 class Queue:
