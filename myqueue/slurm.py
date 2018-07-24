@@ -1,3 +1,4 @@
+import os
 import subprocess
 from math import ceil
 
@@ -73,3 +74,13 @@ class SLURM(Queue):
 
     def cancel(self, task):
         subprocess.run(['scancel', str(task.id)])
+
+    def get_ids(self):
+        user = os.environ['USER']
+        cmd = ['squeue', '--user', user]
+        host = self.cfg.get('host')
+        if host:
+            cmd[:0] = ['ssh', host]
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
+        return queued

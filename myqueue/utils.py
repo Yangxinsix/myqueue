@@ -110,7 +110,7 @@ def update_completion():
 
     sys.stdout = StringIO()
     for cmd in ['list', 'submit', 'resubmit', 'delete', 'workflow',
-                'completion', 'test']:
+                'sync', 'completion', 'test']:
         print('\n\n{} command\n{}\n'
               .format(cmd.title(), '-' * (len(cmd) + 8)))
         main(['help', cmd])

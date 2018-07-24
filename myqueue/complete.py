@@ -51,6 +51,9 @@ commands = {
         ['-d', '--dependencies', '-a', '--arguments', '-R', '--resources',
          '-w', '--workflow', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback'],
+    'sync':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'test':
         ['--slurm', '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
          '-T', '--traceback'],

@@ -11,10 +11,13 @@ class Queue:
     def kick(self) -> None:
         pass
 
-    def timeout(self, Task):
+    def timeout(self, Task) -> bool:
         return False
 
-    def cancel(self, tas: Task):
+    def cancel(self, task: Task) -> None:
+        raise NotImplementedError
+
+    def get_ids(self) -> Set[int]:
         raise NotImplementedError
 
 

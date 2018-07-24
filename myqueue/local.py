@@ -35,6 +35,11 @@ class LocalQueue(Queue, Lock):
         del self.tasks[i]
         self._write()
 
+    @lock
+    def get_ids(self):
+        self._read()
+        return {task.id for task in self.tasks}
+
     def _read(self) -> None:
         if not self.fname.is_file():
             self.number = 0

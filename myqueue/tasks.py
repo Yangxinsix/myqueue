@@ -205,6 +205,26 @@ class Tasks(Lock):
                 self.tasks.remove(task)
             self.changed = True
 
+    def sync(self, dry_run: bool) -> None:
+        alltasks = defaultdict(list)
+        for task in self.tasks:
+            queue = self.queue(task)
+            alltasks[queue].append(task)
+        n = 0
+        for queue, tasks in alltasks.items():
+            ids = queue.get_ids()
+            for task in tasks:
+                if task.state in ['running', 'queued'] and task.id not in ids:
+                    if not dry_run:
+                        self.tasks.remove(task)
+                        self.changed = True
+                    n += 1
+        if n:
+            if dry_run:
+                print(plural(n, 'job'), 'to be removed')
+            else:
+                print(plural(n, 'job'), 'removed')
+
     def find_depending(self, tasks):
         map = {(task.folder, task.cmd.name): task for task in self.tasks}
         d = defaultdict(list)

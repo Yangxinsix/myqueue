@@ -24,6 +24,7 @@ def main(arguments: List[str] = None) -> Any:
                       ('submit', 'Submit task(s) to queue.'),
                       ('resubmit', 'Resubmit failed or timed-out tasks.'),
                       ('delete', 'Delete or cancel task(s).'),
+                      ('sync', 'Make sure SLURM and MyQueue are in sync.'),
                       ('workflow', 'Submit tasks from Python script.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
@@ -226,7 +227,9 @@ def run(args):
 
         elif args.command == 'workflow':
             workflow(args, tasks, folders)
-            return
+
+        elif args.command == 'sync':
+            tasks.sync(args.dry_run)
 
         elif args.command == 'completion':
             cmd = ('complete -o default -C "{py} {filename}" mq'

@@ -48,6 +48,21 @@ A task can be one of these:
 * an executable or shell-script
 
 
+States
+======
+
+These are the possible states a task can be in:
+
+* queued
+* running
+* done
+* FAILED
+* CANCELED
+* TIMEOUT
+
+Abbreviations: q, r, d, F, C and T.
+
+
 Examples
 ========
 
@@ -137,7 +152,9 @@ optional arguments:
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of task ID's.
+  -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
+                        reading ID's from stdin (one ID per line; extra stuff
+                        after the ID will be ignored).
   -n NAME, --name NAME  Select only tasks named "NAME".
   -c ifnraste, --columns ifnraste
                         Select columns to show.
@@ -201,7 +218,9 @@ optional arguments:
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of task ID's.
+  -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
+                        reading ID's from stdin (one ID per line; extra stuff
+                        after the ID will be ignored).
   -n NAME, --name NAME  Select only tasks named "NAME".
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
@@ -226,7 +245,9 @@ optional arguments:
   -s qrdFCT, --states qrdFCT
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
-  -i ID, --id ID        Comma-separated list of task ID's.
+  -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
+                        reading ID's from stdin (one ID per line; extra stuff
+                        after the ID will be ignored).
   -n NAME, --name NAME  Select only tasks named "NAME".
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
@@ -250,6 +271,21 @@ folder:
 optional arguments:
   -h, --help       show this help message and exit
   -p, --pattern    Use submit scripts matching "script" in all subfolders.
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
+Sync command
+------------
+
+usage: mq sync [-h] [-z] [-v] [-q] [-T]
+
+Make sure SLURM and MyQueue are in sync.
+
+optional arguments:
+  -h, --help       show this help message and exit
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
   -q, --quiet      Less output.
