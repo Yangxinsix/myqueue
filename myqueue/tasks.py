@@ -206,6 +206,7 @@ class Tasks(Lock):
             self.changed = True
 
     def sync(self, dry_run: bool) -> None:
+        self._read()
         alltasks = defaultdict(list)  # type: Dict[Queue, List[Task]]
         for task in self.tasks:
             queue = self.queue(task)
