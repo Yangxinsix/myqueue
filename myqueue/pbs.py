@@ -15,7 +15,7 @@ class PBS(Queue):
         nodelist = self.cfg['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        name = task.cmd.dname
+        name = task.cmd.name
         processes = task.resources.processes
 
         if processes < nodedct['cores']:
