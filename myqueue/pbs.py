@@ -31,7 +31,7 @@ class PBS(Queue):
                   'walltime={}:00:00'.format(ceil(task.resources.tmax / 60)),
                   '-l',
                   'nodes={nodes}:ppn={ppn}'
-                  .format(node=nodes, ppn=ppn)]
+                  .format(nodes=nodes, ppn=ppn)]
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
