@@ -6,6 +6,8 @@ _config = {}  # type: Dict[str, Dict[str, Any]]
 
 
 def read_config() -> Dict[str, Dict[str, Any]]:
+    if _config:
+        return _config
     cfg = Path.home() / '.myqueue' / 'config.py'
     if cfg.is_file():
         namespace = {}  # type: Dict[str, Any]

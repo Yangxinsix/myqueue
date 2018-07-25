@@ -29,5 +29,8 @@ def get_queue(name: str) -> Queue:
     if 'slurm'.startswith(name):
         from myqueue.slurm import SLURM
         return SLURM()
+    if 'pbs'.startswith(name):
+        from myqueue.pbs import PBS
+        return PBS()
     else:
         assert 0
