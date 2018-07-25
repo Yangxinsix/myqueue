@@ -264,6 +264,42 @@ class Tasks(Lock):
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
 
+    def _read(self) -> None:
+        if self.fname.is_file():
+            data = json.loads(self.fname.read_text())
+            for dct in data['tasks']:
+                task = Task.fromdict(dct)
+                self.tasks.append(task)
+        else:
+            fname = self.fname.with_name('slurm.json')
+            if fname.is_file():
+                data = json.loads(fname.read_text())
+                for dct in data['jobs']:
+                    task = Task.fromolddict(dct)
+                    self.tasks.append(task)
+
+        self.read_change_files()
+        self.check()
+
+    def read_change_files(self):
+        paths = list(self.folder.glob('*-*-*'))
+        files = []
+        for path in paths:
+            _, id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, int(id), state))
+        states = {'0': 'running',
+                  '1': 'done',
+                  '2': 'FAILED',
+                  '3': 'TIMEOUT'}
+        for t, id, state in sorted(files):
+            self.update(id, states[state], t)
+
+        if files:
+            self.changed = True
+
+        for path in paths:
+            path.unlink()
+
     def update(self,
                id: int,
                state: str,
@@ -310,50 +346,6 @@ class Tasks(Lock):
 
         self.changed = True
 
-    def _read(self) -> None:
-        if self.fname.is_file():
-            data = json.loads(self.fname.read_text())
-            for dct in data['tasks']:
-                task = Task.fromdict(dct)
-                self.tasks.append(task)
-        else:
-            fname = self.fname.with_name('slurm.json')
-            if fname.is_file():
-                data = json.loads(fname.read_text())
-                for dct in data['jobs']:
-                    task = Task.fromolddict(dct)
-                    self.tasks.append(task)
-
-        self.read_change_files()
-        self.check()
-
-    def read_change_files(self):
-        paths = list(self.folder.glob('*-*-*'))
-        files = []
-        for path in paths:
-            _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), state))
-        states = {'0': 'running',
-                  '1': 'done',
-                  '2': 'FAILED',
-                  '3': 'TIMEOUT'}
-        for t, id, state in sorted(files):
-            self.update(id, states[state], t)
-
-        if files:
-            self.changed = True
-
-        for path in paths:
-            path.unlink()
-
-    def _write(self):
-        if self.debug:
-            print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 2,
-                           'tasks': [task.todict() for task in self.tasks]},
-                          indent=2)
-        self.fname.write_text(text)
-
     def check(self) -> None:
         bad = {task.dname for task in self.tasks if task.state.isupper()}
         t = time.time()
@@ -381,6 +373,14 @@ class Tasks(Lock):
                 if not task.error:
                     task.read_error()
                     self.changed = True
+
+    def _write(self):
+        if self.debug:
+            print('WRITE', len(self.tasks))
+        text = json.dumps({'version': 2,
+                           'tasks': [task.todict() for task in self.tasks]},
+                          indent=2)
+        self.fname.write_text(text)
 
 
 def pjoin(folder, reldir):

@@ -70,7 +70,9 @@ class Resources:
             dct['nodename'] = self.nodename
         return dct
 
-    def select(self, nodelist: List[Tuple[str, Dict[str, Any]]]):
+    def select(self,
+               nodelist: List[Tuple[str, Dict[str, Any]]]
+               ) -> Tuple[int, str, Dict[str, Any]]:
         if self.nodename:
             for name, dct in nodelist:
                 if name == self.nodename:

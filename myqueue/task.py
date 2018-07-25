@@ -7,7 +7,7 @@ from myqueue.resources import Resources, T
 
 
 taskstates = ['queued', 'running', 'done',
-              'FAILED', 'CANCELED', 'TIMEOUT']
+              'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
 
 
 class Task:
@@ -16,6 +16,7 @@ class Task:
                  resources: Resources,
                  deps: List[Path],
                  workflow: bool,
+                 restart: bool,
                  folder: Path,
                  state: str = '',
                  id: int = 0,
@@ -29,6 +30,7 @@ class Task:
         self.resources = resources
         self.deps = deps
         self.workflow = workflow
+        self.restart = restart
         self.folder = folder
 
         self.state = state
@@ -76,7 +78,9 @@ class Task:
         return [str(self.id),
                 str(self.folder),
                 self.cmd.name,
-                str(self.resources) + deps + ('*' if self.workflow else ''),
+                str(self.resources) + deps +
+                ('*' if self.workflow else '') +
+                ('R' if self.restart else ''),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -96,6 +100,7 @@ class Task:
                 'deps': [str(dep) for dep in self.deps],
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
+                'restart': self.restart,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,
@@ -104,6 +109,9 @@ class Task:
 
     @staticmethod
     def fromdict(dct: dict) -> 'Task':
+        dct = dct.copy()
+        if 'restart' not in dct:
+            dct['restart'] = False
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=Path(dct.pop('folder')),
@@ -216,7 +224,7 @@ def task(cmd: str,
     else:
         res = Resources(cores, nodename, processes, T(tmax))
 
-    return Task(command(cmd, args), res, dpaths, workflow, path)
+    return Task(command(cmd, args), res, dpaths, workflow, False, path)
 
 
 def seconds_to_time_string(n: float) -> str:
