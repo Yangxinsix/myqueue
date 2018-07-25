@@ -50,8 +50,8 @@ class PBS(Queue):
 
         script = (
             '#!/bin/bash -l\n'
-            'id=$SLURM_JOB_ID\n'
-            'mq={home}/slurm-$id\n'
+            'id=$PBS_JOBID\n'
+            'mq={home}/pbs-$id\n'
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             'touch $mq-2\n'
             .format(home=home, dir=task.folder, cmd=cmd))
@@ -61,7 +61,7 @@ class PBS(Queue):
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
-        id = int(out.split()[-1])
+        id = int(out.split('.')[0])
         task.id = id
 
     def timeout(self, task):
