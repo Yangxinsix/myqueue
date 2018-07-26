@@ -92,6 +92,7 @@ class Task:
         return ' '.join(self.words())
 
     def __repr__(self):
+        return str(self.dname)
         dct = self.todict()
         return 'Task({!r})'.format(dct)
 
@@ -141,7 +142,7 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def get_queue_name(self) -> str:
+    def queue_name(self) -> str:
         if os.environ.get('MYQUEUE_DEBUG', '') == 'local':
             return 'local'
         if self.resources.nodename == 'local':
@@ -175,33 +176,33 @@ class Task:
             if path.is_file() and path.stat().st_size == 0:
                 path.unlink()
 
-    def read_error(self) -> None:
+    def read_error(self) -> bool:
+        """Check error message.
+
+        Return True if out of memory.
+        """
         self.error = '-'  # mark as already read
-        if self.get_queue_name() == 'pbs':
+
+        if self.queue_name() == 'pbs':
             path = self.folder / '{}.e{}'.format(self.name, self.id)
         else:
             path = self.folder / (self.name + '.err')
+
         try:
             lines = path.read_text().splitlines()
         except FileNotFoundError:
-            return
+            return False
+
         for line in lines[::-1]:
             if 'error: ' in line.lower():
                 self.error = line
                 if line.endswith('memory limit at some point.'):
-                    self.out_of_memory = True
-                return
+                    return True
+                return False
+
         if lines:
             self.error = lines[-1]
-
-    def command(self) -> str:
-        # Move this to local.py XXX
-        out = '{name}.out'.format(name=self.name)
-        err = '{name}.err'.format(name=self.name)
-
-        cmd = 'cd {} && {} 2> {} > {}'.format(self.folder, self.cmd, err, out)
-
-        return cmd
+        return False
 
 
 def task(cmd: str,

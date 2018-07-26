@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 from pathlib import Path
 from importlib.util import find_spec
 
@@ -115,17 +115,7 @@ class PythonFunction(Command):
         Command.__init__(self, cmd, args)
 
     def __str__(self):
-        args = []
-        for arg in self.args:
-            for t in [int, float]:
-                try:
-                    arg = t(arg)
-                    break
-                except ValueError:
-                    pass
-            args.append(repr(arg))
-        args = ', '.join(args)
-
+        args = ', '.join(repr(convert(arg)) for arg in self.args)
         return ('python3 -c "import {mod}; {mod}.{func}({args})"'
                 .format(mod=self.mod, func=self.func, args=args))
 
@@ -133,3 +123,15 @@ class PythonFunction(Command):
         return {'type': 'python-function',
                 'cmd': self.name.split('+')[0],
                 'args': self.args}
+
+
+def convert(x: str) -> Union[bool, int, float, str]:
+    if x in ['True', 'False']:
+        return bool(x)
+    try:
+        f = float(x)
+    except ValueError:
+        return x
+    if int(f) == f:
+        return int(f)
+    return f

@@ -47,7 +47,7 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        queuename = task.get_queue_name()
+        queuename = task.queue_name()
         queue = self.queues.get(queuename)
         if not queue:
             queue = get_queue(queuename)
@@ -223,18 +223,18 @@ class Tasks(Lock):
             else:
                 print(plural(n, 'job'), 'removed')
 
-    def find_depending(self, tasks):
-        map = {(task.folder, task.cmd.name): task for task in self.tasks}
-        d = defaultdict(list)
+    def find_depending(self, tasks: List[Task]):
+        map = {task.dname: task for task in self.tasks}
+        d = defaultdict(list)  # type: Dict[Task, List[Task]]
         for task in self.tasks:
-            for dep in task.deps:
-                j = map[(task.folder, dep)]
-                d[j].append(task)
+            for dname in task.deps:
+                tsk = map[dname]
+                d[tsk].append(task)
 
         removed = []
 
         def remove(task):
-            removed.apend(task)
+            removed.append(task)
             for j in d[task]:
                 remove(j)
 
@@ -345,8 +345,8 @@ class Tasks(Lock):
         self.changed = True
 
     def check(self) -> None:
-        bad = {task.dname for task in self.tasks if task.state.isupper()}
         t = time.time()
+
         for task in self.tasks:
             if task.state == 'running':
                 delta = t - task.trunning - task.resources.tmax
@@ -360,17 +360,42 @@ class Tasks(Lock):
                                 tsk.state = 'CANCELED'
                                 tsk.tstop = t
                         self.changed = True
-            elif task.state == 'queued':
+
+        bad = {task.dname for task in self.tasks if task.state.isupper()}
+        for task in self.tasks:
+            if task.state == 'queued':
                 for dep in task.deps:
                     if dep in bad:
                         task.state = 'CANCELED'
                         task.tstop = t
                         self.changed = True
                         break
-            elif task.state == 'FAILED':
+
+        for task in self.tasks:
+            if task.state == 'FAILED':
                 if not task.error:
-                    task.read_error()
+                    oom = task.read_error()
+                    if oom:
+                        task.state = 'MEMORY'
                     self.changed = True
+
+    def kick(self, dry_run: bool) -> None:
+        self._read()
+        tasks = []
+        for task in self.tasks:
+            if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
+                task.resources.double(task.state)
+                tasks.append(task)
+        if tasks:
+            tasks = self.find_depending(tasks)
+            if dry_run:
+                pprint(tasks)
+            else:
+                print('Restarting', plural(len(tasks), 'task'))
+                for task in tasks:
+                    self.tasks.remove(task)
+                    task.error = ''
+                self.submit(tasks, read=False)
 
     def _write(self):
         if self.debug:

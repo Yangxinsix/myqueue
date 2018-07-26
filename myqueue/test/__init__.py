@@ -1,22 +1,17 @@
-import time
-from pathlib import Path
+import sys
 
 
-def create(file, n):
-    Path(file).write_text(str(n))
-
-
-def memory():
-    import numpy as np
-    from ase.parallel import world
-    if world.size > 1:
-        return
-    x = []
+def oom(local=True):
+    try:
+        from ase.parallel import world
+        if world.size > 1:
+            return
+    except ImportError:
+        pass
+    if local:
+        print('error: exceeded memory limit at some point.', file=sys.stderr)
+        raise MemoryError
+    x = 'x'
     while True:
-        print(len(x) * 8e-2)
-        x.append(np.ones((10000, 1000)))
-
-
-def fail(t):
-    time.sleep(t)
-    print(1 / 0)
+        print(len(x))
+        x = x + x

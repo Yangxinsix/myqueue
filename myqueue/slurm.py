@@ -3,14 +3,11 @@ import subprocess
 from math import ceil
 
 from myqueue.task import Task
-from myqueue.config import read_config, home_folder
+from myqueue.config import home_folder
 from myqueue.queue import Queue
 
 
 class SLURM(Queue):
-    def __init__(self):
-        self.cfg = read_config()
-
     def submit(self, task: Task) -> None:
         nodelist = self.cfg['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)

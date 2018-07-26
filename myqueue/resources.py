@@ -70,6 +70,16 @@ class Resources:
             dct['nodename'] = self.nodename
         return dct
 
+    def double(self, state: str, maxtmax: int = 4 * 24 * 3600) -> None:
+        if state == 'TIMEOUT':
+            self.tmax = int(min(self.tmax * 2, maxtmax))
+        elif state == 'MEMORY':
+            if self.processes == self.cores:
+                self.processes *= 2
+            self.cores *= 2
+        else:
+            raise ValueError
+
     def select(self,
                nodelist: List[Tuple[str, Dict[str, Any]]]
                ) -> Tuple[int, str, Dict[str, Any]]:

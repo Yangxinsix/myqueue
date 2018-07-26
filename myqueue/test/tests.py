@@ -63,7 +63,7 @@ def run_tests(tests: List[str], slurm: bool):
 
         all_tests[name]()
 
-        mq('rm -s qrdFTC . -r')
+        mq('rm -s qrdFTCM . -r')
 
         for f in tmpdir.glob('**/*'):
             f.unlink()
@@ -93,13 +93,34 @@ def fail():
 
 @test
 def timeout():
-    T = '120' if SLURM else '3'
-    mq('submit sleep@1:1s -a ' + T)
-    mq('submit echo+hello -d sleep+' + T)
+    t = 120 if SLURM else 3
+    mq('submit sleep@1:1s -a {}'.format(t))
+    mq('submit echo+hello -d sleep+{}'.format(t))
     wait()
     mq('resubmit -sT . -R 1:5m')
     wait()
     assert states() == 'Cd'
+
+
+@test
+def timeout2():
+    t = 120 if SLURM else 3
+    mq('submit sleep@1:{}s --restart -a {}'.format(t // 3 * 2, t))
+    mq('submit echo+hello -d sleep+{}'.format(t))
+    wait()
+    mq('kick')
+    wait()
+    assert states() == 'dd'
+
+
+@test
+def oom():
+    mq('submit myqueue.test.oom --restart -a {}'.format(not SLURM))
+    wait()
+    assert states() == 'M'
+    mq('kick')
+    wait()
+    assert states() == 'd'
 
 
 wf = """

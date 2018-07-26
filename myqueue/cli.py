@@ -26,6 +26,7 @@ def main(arguments: List[str] = None) -> Any:
                       ('remove', 'Remove or cancel task(s).'),
                       ('sync', 'Make sure SLURM/PBS and MyQueue are in sync.'),
                       ('workflow', 'Submit tasks from Python script.'),
+                      ('kick', 'Restart timed out or out of memory tasks.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
 
@@ -72,7 +73,7 @@ def main(arguments: List[str] = None) -> Any:
               'subfolders.')
 
         if cmd in ['list', 'remove', 'resubmit']:
-            a('-s', '--states', metavar='qrdFCT',
+            a('-s', '--states', metavar='qrdFCTM',
               help='Selection of states. First letters of "queued", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
@@ -171,7 +172,7 @@ def run(args):
                 raise MyQueueCLIError('Missing folder!')
 
     if args.command in ['list', 'remove', 'resubmit']:
-        default = 'qrdFCT' if args.command == 'list' else ''
+        default = 'qrdFCTM' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
             for state in taskstates:
@@ -236,6 +237,9 @@ def run(args):
 
         elif args.command == 'sync':
             tasks.sync(args.dry_run)
+
+        elif args.command == 'kick':
+            tasks.kick(args.dry_run)
 
         elif args.command == 'completion':
             cmd = ('complete -o default -C "{py} {filename}" mq'
