@@ -47,10 +47,7 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        if self.debug == 'local' or task.resources.nodename == 'local':
-            queuename = 'local'
-        else:
-            queuename = 'slurm'
+        queuename = task.get_queue_name()
         queue = self.queues.get(queuename)
         if not queue:
             queue = get_queue(queuename)
