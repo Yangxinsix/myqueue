@@ -10,7 +10,7 @@ from myqueue.resources import Resources
 from myqueue.task import Task
 from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
-from myqueue.config import home_folder, read_config
+from myqueue.config import home_folder
 
 
 class Selection:
@@ -47,11 +47,7 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        cfg = read_config()
-        if self.debug == 'local' or task.resources.nodename == 'local':
-            queuename = 'local'
-        else:
-            queuename = cfg.get('queue', 'slurm')
+        queuename = task.get_queue_name()
         queue = self.queues.get(queuename)
         if not queue:
             queue = get_queue(queuename)

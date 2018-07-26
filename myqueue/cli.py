@@ -10,7 +10,7 @@ class MyQueueCLIError(Exception):
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
-        description='Simple frontend for SLURM.  '
+        description='Simple frontend for SLURM/PBS.  '
         'Type "mq help <command>" for help.  '
         'See https://gitlab.com/jensj/myqueue for more information.')
 
@@ -24,7 +24,7 @@ def main(arguments: List[str] = None) -> Any:
                       ('submit', 'Submit task(s) to queue.'),
                       ('resubmit', 'Resubmit failed or timed-out tasks.'),
                       ('delete', 'Delete or cancel task(s).'),
-                      ('sync', 'Make sure SLURM and MyQueue are in sync.'),
+                      ('sync', 'Make sure SLURM/PBS and MyQueue are in sync.'),
                       ('workflow', 'Submit tasks from Python script.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
@@ -41,8 +41,8 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('--slurm', action='store_true',
-              help='Run tests using SLURM.')
+            a('--non-local', action='store_true',
+              help='Run tests using SLURM/PBS.')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -127,7 +127,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from myqueue.test.tests import run_tests
-        run_tests(args.test, args.slurm)
+        run_tests(args.test, args.non_local)
         return
 
     try:

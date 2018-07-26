@@ -2,9 +2,10 @@
 MyQueue
 =======
 
-Simple frontend for SLURM_.
+Simple frontend for SLURM_ and PBS_.
 
 .. _SLURM: https://slurm.schedmd.com/
+.. _PBS: http://www.pbspro.org/
 
 .. contents::
 
@@ -27,7 +28,7 @@ like this::
 Configuration
 =============
 
-You need to configure your SLURM system with a ~/.myqueue/config.py file.
+You need to configure your SLURM/PBS system with a ~/.myqueue/config.py file.
 The simplest way is to copy the file from a friend::
 
     $ ls ~/../*/.myqueue/config.py
@@ -282,7 +283,7 @@ Sync command
 
 usage: mq sync [-h] [-z] [-v] [-q] [-T]
 
-Make sure SLURM and MyQueue are in sync.
+Make sure SLURM/PBS and MyQueue are in sync.
 
 optional arguments:
   -h, --help       show this help message and exit

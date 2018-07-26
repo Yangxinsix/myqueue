@@ -1,8 +1,10 @@
+import os
 import time
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional  # noqa
 
 from myqueue.commands import command, Command
+from myqueue.config import read_config
 from myqueue.resources import Resources, T
 
 
@@ -131,6 +133,14 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
+    def get_queue_name(self) -> str:
+        if os.environ.get('MYQUEUE_DEBUG', '') == 'local':
+            return 'local'
+        if self.resources.nodename == 'local':
+            return 'local'
+        cfg = read_config()
+        return cfg.get('queue', 'slurm')
+
     def done(self) -> bool:
         if self._done is None:
             p = self.folder / '{}.done'.format(self.cmd.name)
@@ -159,7 +169,10 @@ class Task:
 
     def read_error(self) -> None:
         self.error = '-'  # mark as already read
-        path = self.folder / (self.name + '.err')
+        if self.get_queue_name() == 'pbs':
+            path = self.folder / '{}.e{}'.format(self.name, self.id)
+        else:
+            path = self.folder / (self.name + '.err')
         try:
             lines = path.read_text().splitlines()
         except FileNotFoundError:
@@ -174,6 +187,7 @@ class Task:
             self.error = lines[-1]
 
     def command(self) -> str:
+        # Move this to local.py XXX
         out = '{name}.out'.format(name=self.name)
         err = '{name}.err'.format(name=self.name)
 
