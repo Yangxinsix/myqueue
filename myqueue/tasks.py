@@ -178,8 +178,8 @@ class Tasks(Lock):
 
         return tasks
 
-    def delete(self, selection: Selection, dry_run: bool) -> None:
-        """Delete or cancel tasks."""
+    def remove(self, selection: Selection, dry_run: bool) -> None:
+        """Remove or cancel tasks."""
 
         self._read()
 
@@ -192,10 +192,10 @@ class Tasks(Lock):
 
         if dry_run:
             pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'to be deleted')
+            print(plural(len(tasks), 'task'), 'to be removed')
         else:
             pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'deleted')
+            print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'queued']:
                     self.queue(task).cancel(task)
@@ -257,7 +257,8 @@ class Tasks(Lock):
                         deps=task.deps,
                         resources=resources or task.resources,
                         folder=task.folder,
-                        workflow=task.workflow)
+                        workflow=task.workflow,
+                        restart=task.restart)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
 

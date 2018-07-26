@@ -109,7 +109,7 @@ def update_completion():
     dir = Path(__file__).parent
 
     sys.stdout = StringIO()
-    for cmd in ['list', 'submit', 'resubmit', 'delete', 'workflow',
+    for cmd in ['list', 'submit', 'resubmit', 'remove', 'workflow',
                 'sync', 'completion', 'test']:
         print('\n\n{} command\n{}\n'
               .format(cmd.title(), '-' * (len(cmd) + 8)))

@@ -213,7 +213,8 @@ def task(cmd: str,
          processes: int = 0,
          tmax: str = '10m',
          folder: str = '',
-         workflow: bool = False) -> Task:
+         workflow: bool = False,
+         restart: bool = False) -> Task:
 
     path = Path(folder).absolute()
 
@@ -238,7 +239,7 @@ def task(cmd: str,
     else:
         res = Resources(cores, nodename, processes, T(tmax))
 
-    return Task(command(cmd, args), res, dpaths, workflow, False, path)
+    return Task(command(cmd, args), res, dpaths, workflow, restart, path)
 
 
 def seconds_to_time_string(n: float) -> str:

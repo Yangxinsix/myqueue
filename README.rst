@@ -92,9 +92,9 @@ You can see the status of your jobs with::
     -- ------ ---------- ----- ---- ----- ---- -----
     done: 1
 
-Delete the job from the list with::
+Remove the job from the list with::
 
-    $ mq delete -s d .
+    $ mq remove -s d .
 
 The output from the job will be in ``~/echo+hello.1.out`` and
 ``~/echo+hello.1.err`` (if there was any output).
@@ -167,8 +167,8 @@ optional arguments:
 Submit command
 --------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [-R RESOURCES] [-w]
-                 [-z] [-v] [-q] [-T]
+usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart]
+                 [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
 
 Submit task(s) to queue.
@@ -184,6 +184,10 @@ optional arguments:
                         Comma-separated task names.
   -a ARGUMENTS, --arguments ARGUMENTS
                         Comma-separated arguments for task.
+  --restart             Restart if task times out or runs out of memory. Time-
+                        limit will be doubled for a timed out task and number
+                        of cores will be double for a task that runs out of
+                        memory.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -230,13 +234,13 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
-Delete command
+Remove command
 --------------
 
-usage: mq delete [-h] [-s qrdFCT] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+usage: mq remove [-h] [-s qrdFCT] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
 
-Delete or cancel task(s).
+Remove or cancel task(s).
 
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
@@ -310,7 +314,7 @@ optional arguments:
 Test command
 ------------
 
-usage: mq test [-h] [--slurm] [-z] [-v] [-q] [-T] [test [test ...]]
+usage: mq test [-h] [--non-local] [-z] [-v] [-q] [-T] [test [test ...]]
 
 Run tests.
 
@@ -319,7 +323,7 @@ test:
 
 optional arguments:
   -h, --help       show this help message and exit
-  --slurm          Run tests using SLURM.
+  --non-local      Run tests using SLURM/PBS.
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
   -q, --quiet      Less output.
