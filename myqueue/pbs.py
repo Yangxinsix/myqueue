@@ -23,18 +23,17 @@ class PBS(Queue):
         hours, rest = divmod(task.resources.tmax, 3600)
         minutes, seconds = divmod(rest, 60)
 
-        sbatch = ['qsub',
-                  '-N',
-                  name,
-                  '-l',
-                  'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
-                  '-l',
-                  'nodes={nodes}:ppn={ppn}'
-                  .format(nodes=nodes, ppn=ppn)]
+        qsub = ['qsub',
+                '-N',
+                name,
+                '-l',
+                'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
+                '-l',
+                'nodes={nodes}:ppn={ppn}' .format(nodes=nodes, ppn=ppn)]
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
-            sbatch.extend(['-W', 'afterok:{}'.format(ids)])
+            qsub.extend(['-W', 'afterok:{}'.format(ids)])
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
@@ -55,7 +54,7 @@ class PBS(Queue):
             'touch $mq-2\n'
             .format(home=home, dir=task.folder, cmd=cmd))
 
-        p = subprocess.Popen(sbatch,
+        p = subprocess.Popen(qsub,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
