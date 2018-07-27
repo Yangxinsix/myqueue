@@ -194,9 +194,11 @@ class Task:
             return False
 
         for line in lines[::-1]:
-            if 'error: ' in line.lower():
+            if 'error' in line.lower():
                 self.error = line
                 if line.endswith('memory limit at some point.'):
+                    return True
+                if line.startswith('MemoryError'):
                     return True
                 return False
 
