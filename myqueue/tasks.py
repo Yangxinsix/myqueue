@@ -47,7 +47,7 @@ class Tasks(Lock):
         self.changed = False  # type: bool
 
     def queue(self, task: Task) -> Queue:
-        queuename = task.get_queue_name()
+        queuename = task.queue_name()
         queue = self.queues.get(queuename)
         if not queue:
             queue = get_queue(queuename)
@@ -178,8 +178,8 @@ class Tasks(Lock):
 
         return tasks
 
-    def delete(self, selection: Selection, dry_run: bool) -> None:
-        """Delete or cancel tasks."""
+    def remove(self, selection: Selection, dry_run: bool) -> None:
+        """Remove or cancel tasks."""
 
         self._read()
 
@@ -192,10 +192,10 @@ class Tasks(Lock):
 
         if dry_run:
             pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'to be deleted')
+            print(plural(len(tasks), 'task'), 'to be removed')
         else:
             pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'deleted')
+            print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'queued']:
                     self.queue(task).cancel(task)
@@ -223,18 +223,19 @@ class Tasks(Lock):
             else:
                 print(plural(n, 'job'), 'removed')
 
-    def find_depending(self, tasks):
-        map = {(task.folder, task.cmd.name): task for task in self.tasks}
-        d = defaultdict(list)
+    def find_depending(self, tasks: List[Task]):
+        map = {task.dname: task for task in self.tasks}
+        d = defaultdict(list)  # type: Dict[Task, List[Task]]
         for task in self.tasks:
-            for dep in task.deps:
-                j = map[(task.folder, dep)]
-                d[j].append(task)
+            for dname in task.deps:
+                tsk = map.get(dname)
+                if tsk:
+                    d[tsk].append(task)
 
         removed = []
 
         def remove(task):
-            removed.apend(task)
+            removed.append(task)
             for j in d[task]:
                 remove(j)
 
@@ -257,9 +258,46 @@ class Tasks(Lock):
                         deps=task.deps,
                         resources=resources or task.resources,
                         folder=task.folder,
-                        workflow=task.workflow)
+                        workflow=task.workflow,
+                        restart=task.restart)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
+
+    def _read(self) -> None:
+        if self.fname.is_file():
+            data = json.loads(self.fname.read_text())
+            for dct in data['tasks']:
+                task = Task.fromdict(dct)
+                self.tasks.append(task)
+        else:
+            fname = self.fname.with_name('slurm.json')
+            if fname.is_file():
+                data = json.loads(fname.read_text())
+                for dct in data['jobs']:
+                    task = Task.fromolddict(dct)
+                    self.tasks.append(task)
+
+        self.read_change_files()
+        self.check()
+
+    def read_change_files(self):
+        paths = list(self.folder.glob('*-*-*'))
+        files = []
+        for path in paths:
+            _, id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, int(id), state))
+        states = {'0': 'running',
+                  '1': 'done',
+                  '2': 'FAILED',
+                  '3': 'TIMEOUT'}
+        for t, id, state in sorted(files):
+            self.update(id, states[state], t)
+
+        if files:
+            self.changed = True
+
+        for path in paths:
+            path.unlink()
 
     def update(self,
                id: int,
@@ -307,53 +345,9 @@ class Tasks(Lock):
 
         self.changed = True
 
-    def _read(self) -> None:
-        if self.fname.is_file():
-            data = json.loads(self.fname.read_text())
-            for dct in data['tasks']:
-                task = Task.fromdict(dct)
-                self.tasks.append(task)
-        else:
-            fname = self.fname.with_name('slurm.json')
-            if fname.is_file():
-                data = json.loads(fname.read_text())
-                for dct in data['jobs']:
-                    task = Task.fromolddict(dct)
-                    self.tasks.append(task)
-
-        self.read_change_files()
-        self.check()
-
-    def read_change_files(self):
-        paths = list(self.folder.glob('*-*-*'))
-        files = []
-        for path in paths:
-            _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), state))
-        states = {'0': 'running',
-                  '1': 'done',
-                  '2': 'FAILED',
-                  '3': 'TIMEOUT'}
-        for t, id, state in sorted(files):
-            self.update(id, states[state], t)
-
-        if files:
-            self.changed = True
-
-        for path in paths:
-            path.unlink()
-
-    def _write(self):
-        if self.debug:
-            print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 2,
-                           'tasks': [task.todict() for task in self.tasks]},
-                          indent=2)
-        self.fname.write_text(text)
-
     def check(self) -> None:
-        bad = {task.dname for task in self.tasks if task.state.isupper()}
         t = time.time()
+
         for task in self.tasks:
             if task.state == 'running':
                 delta = t - task.trunning - task.resources.tmax
@@ -367,17 +361,50 @@ class Tasks(Lock):
                                 tsk.state = 'CANCELED'
                                 tsk.tstop = t
                         self.changed = True
-            elif task.state == 'queued':
+
+        bad = {task.dname for task in self.tasks if task.state.isupper()}
+        for task in self.tasks:
+            if task.state == 'queued':
                 for dep in task.deps:
                     if dep in bad:
                         task.state = 'CANCELED'
                         task.tstop = t
                         self.changed = True
                         break
-            elif task.state == 'FAILED':
+
+        for task in self.tasks:
+            if task.state == 'FAILED':
                 if not task.error:
-                    task.read_error()
+                    oom = task.read_error()
+                    if oom:
+                        task.state = 'MEMORY'
                     self.changed = True
+
+    def kick(self, dry_run: bool) -> None:
+        self._read()
+        tasks = []
+        for task in self.tasks:
+            if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
+                task.resources.double(task.state)
+                tasks.append(task)
+        if tasks:
+            tasks = self.find_depending(tasks)
+            if dry_run:
+                pprint(tasks)
+            else:
+                print('Restarting', plural(len(tasks), 'task'))
+                for task in tasks:
+                    self.tasks.remove(task)
+                    task.error = ''
+                self.submit(tasks, read=False)
+
+    def _write(self):
+        if self.debug:
+            print('WRITE', len(self.tasks))
+        text = json.dumps({'version': 2,
+                           'tasks': [task.todict() for task in self.tasks]},
+                          indent=2)
+        self.fname.write_text(text)
 
 
 def pjoin(folder, reldir):

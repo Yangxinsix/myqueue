@@ -32,31 +32,35 @@ def read():
 commands = {
     'completion':
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
-    'delete':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
-         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-r', '--recursive'],
     'help':
         [''],
+    'kick':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
          '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
+    'remove':
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
+         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback', '-r', '--recursive'],
     'resubmit':
         ['-R', '--resources', '-w', '--workflow', '-s', '--states', '-i',
          '--id', '-n', '--name', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
     'submit':
-        ['-d', '--dependencies', '-a', '--arguments', '-R', '--resources',
-         '-w', '--workflow', '-z', '--dry-run', '-v',
-         '--verbose', '-q', '--quiet', '-T', '--traceback'],
+        ['-d', '--dependencies', '-a', '--arguments', '--restart', '-R',
+         '--resources', '-w', '--workflow', '-z', '--dry-run',
+         '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'test':
-        ['--slurm', '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback'],
+        ['--non-local', '-x', '--exclude', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'workflow':
         ['-p', '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
          '--quiet', '-T', '--traceback']}

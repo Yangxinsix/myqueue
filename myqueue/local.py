@@ -14,6 +14,7 @@ class LocalQueue(Queue, Lock):
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None
+        Queue.__init__(self)
 
     @lock
     def submit(self, task: Task) -> None:
@@ -122,14 +123,23 @@ class LocalQueue(Queue, Lock):
         self._run(task)
 
     def _run(self, task):
-        cmd1 = task.command()
+        out = '{name}.out'.format(name=task.name)
+        err = '{name}.err'.format(name=task.name)
+
+        cmd = str(task.cmd)
+        if task.resources.processes > 1:
+            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
+            mpiexec += '-np {} '.format(task.resources.processes)
+            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+        else:
+            cmd = 'MPLBACKEND=Agg ' + cmd
+        cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
         msg = 'python3 -m myqueue.local {}'.format(task.id)
-        err = task.folder / (task.name + '.err')
         cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
-               .format(cmd=cmd1, msg=msg, tmax=task.resources.tmax, err=err))
+               .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         task.state = 'running'

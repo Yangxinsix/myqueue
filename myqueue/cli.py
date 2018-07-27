@@ -16,16 +16,17 @@ def main(arguments: List[str] = None) -> Any:
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    aliases = {'rm': 'delete',
+    aliases = {'rm': 'remove',
                'ls': 'list'}
 
     for cmd, help in [('help', 'Show how to use this tool.'),
                       ('list', 'List tasks in queue.'),
                       ('submit', 'Submit task(s) to queue.'),
                       ('resubmit', 'Resubmit failed or timed-out tasks.'),
-                      ('delete', 'Delete or cancel task(s).'),
+                      ('remove', 'Remove or cancel task(s).'),
                       ('sync', 'Make sure SLURM/PBS and MyQueue are in sync.'),
                       ('workflow', 'Submit tasks from Python script.'),
+                      ('kick', 'Restart timed out or out of memory tasks.'),
                       ('completion', 'Set up tab-completion.'),
                       ('test', 'Run tests.')]:
 
@@ -43,12 +44,19 @@ def main(arguments: List[str] = None) -> Any:
               help='Test to run.  Default behaviour is to run all.')
             a('--non-local', action='store_true',
               help='Run tests using SLURM/PBS.')
+            a('-x', '--exclude',
+              help='Exclude test(s).')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
             a('-d', '--dependencies', default='',
               help='Comma-separated task names.')
             a('-a', '--arguments', help='Comma-separated arguments for task.')
+            a('--restart', action='store_true',
+              help='Restart if task times out or runs out of memory. '
+              'Time-limit will be doubled for a timed out task and '
+              'number of cores will be doubled for a task that runs out '
+              'of memory.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
@@ -66,8 +74,8 @@ def main(arguments: List[str] = None) -> Any:
               help='Use submit scripts matching "script" in all '
               'subfolders.')
 
-        if cmd in ['list', 'delete', 'resubmit']:
-            a('-s', '--states', metavar='qrdFCT',
+        if cmd in ['list', 'remove', 'resubmit']:
+            a('-s', '--states', metavar='qrdFCTM',
               help='Selection of states. First letters of "queued", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
@@ -90,7 +98,7 @@ def main(arguments: List[str] = None) -> Any:
         a('-T', '--traceback', action='store_true',
           help='Show full traceback.')
 
-        if cmd in ['delete', 'resubmit']:
+        if cmd in ['remove', 'resubmit']:
             a('-r', '--recursive', action='store_true',
               help='Use also subfolders.')
             a('folder',
@@ -127,7 +135,8 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command == 'test':
         from myqueue.test.tests import run_tests
-        run_tests(args.test, args.non_local)
+        exclude = args.exclude.split(',') if args.exclude else []
+        run_tests(args.test, not args.non_local, exclude)
         return
 
     try:
@@ -158,15 +167,15 @@ def run(args):
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
-    if args.command in ['list', 'submit', 'delete', 'resubmit', 'workflow']:
+    if args.command in ['list', 'submit', 'remove', 'resubmit', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
-        if args.command in ['delete', 'resubmit']:
+        if args.command in ['remove', 'resubmit']:
             if not args.id and not folders:
                 raise MyQueueCLIError('Missing folder!')
 
-    if args.command in ['list', 'delete', 'resubmit']:
-        default = 'qrdFCT' if args.command == 'list' else ''
+    if args.command in ['list', 'remove', 'resubmit']:
+        default = 'qrdFCTM' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
             for state in taskstates:
@@ -200,8 +209,8 @@ def run(args):
         if args.command == 'list':
             return tasks.list(selection, args.columns)
 
-        if args.command == 'delete':
-            tasks.delete(selection, args.dry_run)
+        if args.command == 'remove':
+            tasks.remove(selection, args.dry_run)
 
         elif args.command == 'resubmit':
             if args.resources:
@@ -220,7 +229,8 @@ def run(args):
                              resources=args.resources,
                              folder=folder,
                              deps=args.dependencies,
-                             workflow=args.workflow)
+                             workflow=args.workflow,
+                             restart=args.restart)
                         for folder in folders]
 
             tasks.submit(newtasks, args.dry_run)
@@ -230,6 +240,9 @@ def run(args):
 
         elif args.command == 'sync':
             tasks.sync(args.dry_run)
+
+        elif args.command == 'kick':
+            tasks.kick(args.dry_run)
 
         elif args.command == 'completion':
             cmd = ('complete -o default -C "{py} {filename}" mq'
