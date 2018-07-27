@@ -126,8 +126,10 @@ class PythonFunction(Command):
 
 
 def convert(x: str) -> Union[bool, int, float, str]:
-    if x in ['True', 'False']:
-        return bool(x)
+    if x == 'True':
+        return True
+    if x == 'False':
+        return False
     try:
         f = float(x)
     except ValueError:
