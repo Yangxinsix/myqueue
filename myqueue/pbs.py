@@ -1,6 +1,5 @@
 import os
 import subprocess
-from math import ceil
 
 from myqueue.task import Task
 from myqueue.config import home_folder
@@ -21,11 +20,14 @@ class PBS(Queue):
             assert processes % nodes == 0
             ppn = processes // nodes
 
+        hours, rest = divmod(task.resources.tmax, 3600)
+        minutes, seconds = divmod(rest, 60)
+
         sbatch = ['qsub',
                   '-N',
                   name,
                   '-l',
-                  'walltime={}:00:00'.format(ceil(task.resources.tmax / 3600)),
+                  'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
                   '-l',
                   'nodes={nodes}:ppn={ppn}'
                   .format(nodes=nodes, ppn=ppn)]
