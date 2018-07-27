@@ -7,4 +7,4 @@ tests:
     - export PATH=~/.local/bin/:$PATH
     - flake8 myqueue
     - mypy -p myqueue --ignore-missing-imports
-    - mq test
+    - mq test -x oom

@@ -5,9 +5,10 @@ from typing import List
 from pathlib import Path
 
 from myqueue.cli import main
+from myqueue.config import read_config
 
 
-SLURM = False
+LOCAL = True
 
 
 def mq(cmd):
@@ -34,24 +35,28 @@ tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
 
 def wait()-> None:
     t0 = time.time()
-    timeout = 300.0 if SLURM else 10.0
-    sleep = 3.0 if SLURM else 0.1
+    timeout = 10.0 if LOCAL else 300.0
+    sleep = 0.1 if LOCAL else 3.0
     while mq('list -s qr -qq'):
         time.sleep(sleep)
         if time.time() - t0 > timeout:
             raise TimeoutError
 
 
-def run_tests(tests: List[str], slurm: bool):
-    global SLURM
-    SLURM = slurm
+def run_tests(tests: List[str], local: bool, exclude: List[str]):
+    global LOCAL
+    LOCAL = local
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
     os.environ['MYQUEUE_HOME'] = str(tmpdir)
-    os.environ['MYQUEUE_DEBUG'] = 'slurm' if slurm else 'local'
+    cfg = read_config()
+    os.environ['MYQUEUE_DEBUG'] = 'local' if local else cfg['queue']
 
     if not tests:
         tests = list(all_tests)
+
+    for test in exclude:
+        tests.remove(test)
 
     N = 79
     for name in tests:
@@ -93,7 +98,7 @@ def fail():
 
 @test
 def timeout():
-    t = 120 if SLURM else 3
+    t = 3 if LOCAL else 120
     mq('submit sleep@1:1s -a {}'.format(t))
     mq('submit echo+hello -d sleep+{}'.format(t))
     wait()
@@ -104,7 +109,7 @@ def timeout():
 
 @test
 def timeout2():
-    t = 120 if SLURM else 3
+    t = 3 if LOCAL else 120
     mq('submit sleep@1:{}s --restart -a {}'.format(t // 3 * 2, t))
     mq('submit echo+hello -d sleep+{}'.format(t))
     wait()
@@ -115,7 +120,7 @@ def timeout2():
 
 @test
 def oom():
-    mq('submit myqueue.test.oom --restart -a {}'.format(not SLURM))
+    mq('submit myqueue.test.oom --restart -a {}'.format(LOCAL))
     wait()
     assert states() == 'M'
     mq('kick')
