@@ -29,11 +29,12 @@ class PBS(Queue):
                 '-l',
                 'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
                 '-l',
-                'nodes={nodes}:ppn={ppn}' .format(nodes=nodes, ppn=ppn)]
+                'nodes={nodes}:ppn={ppn}' .format(nodes=nodes, ppn=ppn),
+                '-d', str(task.folder)]
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
-            qsub.extend(['-W', 'afterok:{}'.format(ids)])
+            qsub.extend(['-W', 'depend=afterok:{}'.format(ids)])
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
