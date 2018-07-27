@@ -184,7 +184,7 @@ class Task:
         self.error = '-'  # mark as already read
 
         if self.queue_name() == 'pbs':
-            path = self.folder / '{}.e{}'.format(self.name, self.id)
+            path = self.folder / '{}.e{}'.format(self.cmd.name, self.id)
         else:
             path = self.folder / (self.name + '.err')
 
