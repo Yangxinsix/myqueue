@@ -140,7 +140,8 @@ Commands
 List command
 ------------
 
-usage: mq list [-h] [-s qrdFCT] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q] [-T]
+usage: mq list [-h] [-s qrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
+               [-T]
                [folder [folder ...]]
 
 List tasks in queue.
@@ -150,7 +151,7 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qrdFCT, --states qrdFCT
+  -s qrdFCTM, --states qrdFCTM
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
@@ -186,7 +187,7 @@ optional arguments:
                         Comma-separated arguments for task.
   --restart             Restart if task times out or runs out of memory. Time-
                         limit will be doubled for a timed out task and number
-                        of cores will be double for a task that runs out of
+                        of cores will be doubled for a task that runs out of
                         memory.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
@@ -203,8 +204,8 @@ optional arguments:
 Resubmit command
 ----------------
 
-usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qrdFCT] [-i ID] [-n NAME] [-z]
-                   [-v] [-q] [-T] [-r]
+usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qrdFCTM] [-i ID] [-n NAME]
+                   [-z] [-v] [-q] [-T] [-r]
                    [folder [folder ...]]
 
 Resubmit failed or timed-out tasks.
@@ -220,7 +221,7 @@ optional arguments:
                         16 cores, 1 process, half an hour.
   -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
                         done.
-  -s qrdFCT, --states qrdFCT
+  -s qrdFCTM, --states qrdFCTM
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
@@ -237,7 +238,7 @@ optional arguments:
 Remove command
 --------------
 
-usage: mq remove [-h] [-s qrdFCT] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+usage: mq remove [-h] [-s qrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
 
 Remove or cancel task(s).
@@ -247,7 +248,7 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qrdFCT, --states qrdFCT
+  -s qrdFCTM, --states qrdFCTM
                         Selection of states. First letters of "queued",
                         "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
@@ -314,7 +315,8 @@ optional arguments:
 Test command
 ------------
 
-usage: mq test [-h] [--non-local] [-z] [-v] [-q] [-T] [test [test ...]]
+usage: mq test [-h] [--non-local] [-x EXCLUDE] [-z] [-v] [-q] [-T]
+               [test [test ...]]
 
 Run tests.
 
@@ -322,9 +324,11 @@ test:
     Test to run. Default behaviour is to run all.
 
 optional arguments:
-  -h, --help       show this help message and exit
-  --non-local      Run tests using SLURM/PBS.
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
+  -h, --help            show this help message and exit
+  --non-local           Run tests using SLURM/PBS.
+  -x EXCLUDE, --exclude EXCLUDE
+                        Exclude test(s).
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.

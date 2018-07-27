@@ -34,6 +34,9 @@ commands = {
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'help':
         [''],
+    'kick':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
          '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
@@ -56,8 +59,8 @@ commands = {
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'test':
-        ['--non-local', '-z', '--dry-run', '-v', '--verbose', '-q',
-         '--quiet', '-T', '--traceback'],
+        ['--non-local', '-x', '--exclude', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'workflow':
         ['-p', '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
          '--quiet', '-T', '--traceback']}
