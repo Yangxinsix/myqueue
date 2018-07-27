@@ -228,8 +228,9 @@ class Tasks(Lock):
         d = defaultdict(list)  # type: Dict[Task, List[Task]]
         for task in self.tasks:
             for dname in task.deps:
-                tsk = map[dname]
-                d[tsk].append(task)
+                tsk = map.get(dname)
+                if tsk:
+                    d[tsk].append(task)
 
         removed = []
 
