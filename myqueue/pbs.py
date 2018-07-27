@@ -28,7 +28,7 @@ class PBS(Queue):
                   '-N',
                   name,
                   '-l',
-                  'walltime={}:00:00'.format(ceil(task.resources.tmax / 60)),
+                  'walltime={}:00:00'.format(ceil(task.resources.tmax / 3600)),
                   '-l',
                   'nodes={nodes}:ppn={ppn}'
                   .format(nodes=nodes, ppn=ppn)]
@@ -50,7 +50,7 @@ class PBS(Queue):
 
         script = (
             '#!/bin/bash -l\n'
-            'id=$PBS_JOBID\n'
+            'id=${{PBS_JOBID%.*}}\n'
             'mq={home}/pbs-$id\n'
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             'touch $mq-2\n'
@@ -61,12 +61,12 @@ class PBS(Queue):
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
-        id = int(out.split('.')[0])
+        id = int(out.split(b'.')[0])
         task.id = id
 
     def timeout(self, task):
         path = (task.folder /
-                '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
+                '{}.e{}'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
             task.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
@@ -80,10 +80,12 @@ class PBS(Queue):
 
     def get_ids(self):
         user = os.environ['USER']
-        cmd = ['squeue', '--user', user]
+        cmd = ['qstat', '-u', user]
         host = self.cfg.get('host')
         if host:
             cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
+        queued = {int(line.split()[0].split(b'.')[0])
+                  for line in p.stdout.splitlines()
+                  if line[:1].isdigit()}
         return queued
