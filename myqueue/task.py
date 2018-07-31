@@ -194,7 +194,8 @@ class Task:
             return False
 
         for line in lines[::-1]:
-            if 'error' in line.lower():
+            ll = line.lower()
+            if 'error:' in ll or 'memoryerror' in ll:
                 self.error = line
                 if line.endswith('memory limit at some point.'):
                     return True
