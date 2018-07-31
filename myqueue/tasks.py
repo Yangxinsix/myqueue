@@ -86,7 +86,7 @@ class Tasks(Lock):
         current = {task.dname: task for task in self.tasks}
 
         tasks2 = []
-        inqueue = defaultdict(int)
+        inqueue = defaultdict(int)  # type: Dict[str, int]
         for task in tasks:
             if task.workflow and task.dname in current:
                 inqueue[task.state] += 1
