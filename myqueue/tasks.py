@@ -355,6 +355,7 @@ class Tasks(Lock):
                     queue = self.queue(task)
                     if queue.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
+                        task.tstop = t
                         task.remove_empty_output_files()
                         for tsk in self.tasks:
                             if task.dname in tsk.deps:
