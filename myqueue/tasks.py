@@ -77,7 +77,8 @@ class Tasks(Lock):
         n2 = len(tasks)
 
         if n2 < n1:
-            print(plural(n1 - n2, 'task'), 'already done')
+            print(plural(n1 - n2, 'task'),
+                  'already marked as done ("<task-name>.done" file exists)')
 
         if read:
             self._read()
@@ -85,17 +86,20 @@ class Tasks(Lock):
         current = {task.dname: task for task in self.tasks}
 
         tasks2 = []
+        inqueue = defaultdict(int)
         for task in tasks:
             if task.workflow and task.dname in current:
+                inqueue[task.state] += 1
                 task.id = current[task.dname].id
             else:
                 tasks2.append(task)
         tasks = tasks2
 
-        n3 = len(tasks)
-
-        if n3 < n2:
-            print(plural(n2 - n3, 'task'), 'already in the queue')
+        if inqueue:
+            print(plural(n2 - len(inqueue), 'task'),
+                  'already in the queue:',
+                  ', '.join('{}: {}'.format(state, n)
+                            for state, n in inqueue.items()))
 
         todo = []
         for task in tasks:
@@ -333,15 +337,10 @@ class Tasks(Lock):
                 if task.dname in tsk.deps:
                     tsk.state = 'CANCELED'
                     tsk.tstop = t
-            if state == 'FAILED':
-                task.write_failed_file()
             task.tstop = t
 
         else:
             1 / 0
-
-        if state != 'running':
-            task.remove_empty_output_files()
 
         self.changed = True
 
@@ -356,7 +355,6 @@ class Tasks(Lock):
                     if queue.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.tstop = t
-                        task.remove_empty_output_files()
                         for tsk in self.tasks:
                             if task.dname in tsk.deps:
                                 tsk.state = 'CANCELED'

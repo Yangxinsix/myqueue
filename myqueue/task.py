@@ -160,21 +160,6 @@ class Task:
         if self.workflow and self.folder.is_dir():
             p = self.folder / '{}.done'.format(self.cmd.name)
             p.write_text('')
-        p = self.folder / '{}.FAILED'.format(self.cmd.name)
-        if p.is_file():
-            p.unlink()
-
-    def write_failed_file(self) -> None:
-        if self.workflow and self.folder.is_dir():
-            p = self.folder / '{}.FAILED'.format(self.cmd.name)
-            p.write_text('')
-
-    def remove_empty_output_files(self) -> None:
-        return
-        for ext in ['.out', '.err']:
-            path = self.folder / (self.name + ext)
-            if path.is_file() and path.stat().st_size == 0:
-                path.unlink()
 
     def read_error(self) -> bool:
         """Check error message.
