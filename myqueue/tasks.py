@@ -89,16 +89,15 @@ class Tasks(Lock):
         inqueue = defaultdict(int)  # type: Dict[str, int]
         for task in tasks:
             if task.workflow and task.dname in current:
-                inqueue[task.state] += 1
+                inqueue[current[task.dname].state] += 1
                 task.id = current[task.dname].id
             else:
                 tasks2.append(task)
         tasks = tasks2
 
         if inqueue:
-            print(plural(n2 - len(inqueue), 'task'),
-                  'already in the queue:',
-                  ', '.join('{}: {}'.format(state, n)
+            print(plural(len(inqueue), 'task'), 'already in the queue:\n',
+                  '\n'.join('    {:8}: {}'.format(state, n)
                             for state, n in inqueue.items()))
 
         todo = []
