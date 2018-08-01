@@ -32,6 +32,8 @@ class PBS(Queue):
                 'nodes={nodes}:ppn={ppn}' .format(nodes=nodes, ppn=ppn),
                 '-d', str(task.folder)]
 
+        qsub += nodedct.get('extra_args', [])
+
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             qsub.extend(['-W', 'depend=afterok:{}'.format(ids)])
