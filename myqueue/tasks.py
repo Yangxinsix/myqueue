@@ -436,6 +436,7 @@ def pprint(tasks: List[Task],
 
     color = sys.stdout.isatty()
     home = str(Path.home())
+    cwd = str(Path.cwd())
 
     titles = ['id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error']
     c2i = {title[0]: i for i, title in enumerate(titles)}
@@ -451,9 +452,11 @@ def pprint(tasks: List[Task],
     count = defaultdict(int)  # type: Dict[str, int]
     for task in tasks:
         words = task.words()
-        _, folder, _, _, _, state, _, error = words
+        _, folder, _, _, _, state, _, _ = words
         count[state] += 1
-        if folder.startswith(home):
+        if folder.startswith(cwd):
+            words[1] = '.' + folder[len(cwd):]
+        elif folder.startswith(home):
             words[1] = '~' + folder[len(home):]
         words = [words[i] for i in indices]
         lines.append(words)
