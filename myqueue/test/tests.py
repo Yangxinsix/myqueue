@@ -87,8 +87,8 @@ def submit():
 
 @test
 def fail():
-    mq('submit myqueue.test.fail+2')
-    mq('submit echo+hello -d myqueue.test.fail+2')
+    mq('submit time.sleep+a')
+    mq('submit echo+hello -d time.sleep+a')
     wait()
     assert states() == 'FC'
     mq('resubmit -sF .')
