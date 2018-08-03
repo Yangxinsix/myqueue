@@ -186,6 +186,8 @@ class Task:
                     return True
                 if line.startswith('MemoryError'):
                     return True
+                if 'oom-kill' in line:
+                    return True
                 return False
 
         if lines:
