@@ -70,7 +70,7 @@ class Resources:
             dct['nodename'] = self.nodename
         return dct
 
-    def double(self, state: str, maxtmax: int = 4 * 24 * 3600) -> None:
+    def double(self, state: str, maxtmax: int = 2 * 24 * 3600) -> None:
         if state == 'TIMEOUT':
             self.tmax = int(min(self.tmax * 2, maxtmax))
         elif state == 'MEMORY':
