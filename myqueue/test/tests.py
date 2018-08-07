@@ -97,6 +97,17 @@ def fail():
 
 
 @test
+def fail2():
+    mq('submit time.sleep+a --workflow')
+    wait()
+    assert states() == 'F'
+    mq('remove --state F .')
+    mq('submit time.sleep+a --workflow')
+    wait()
+    assert states() == ''
+
+
+@test
 def timeout():
     t = 3 if LOCAL else 120
     mq('submit sleep@1:1s -a {}'.format(t))

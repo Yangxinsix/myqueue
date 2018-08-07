@@ -71,14 +71,25 @@ class Tasks(Lock):
                read: bool = True) -> None:
 
         n1 = len(tasks)
+
         tasks = [task
                  for task in tasks
-                 if not task.workflow or not task.done()]
+                 if not task.workflow or not task.is_done()]
         n2 = len(tasks)
 
         if n2 < n1:
             print(plural(n1 - n2, 'task'),
                   'already marked as done ("<task-name>.done" file exists)')
+
+        tasks = [task
+                 for task in tasks
+                 if not task.workflow or not task.has_failed()]
+        n3 = len(tasks)
+
+        if n3 < n2:
+            print(plural(n2 - n3, 'task'),
+                  'already marked as FAILED '
+                  '("<task-name>.FAILED" file exists)')
 
         if read:
             self._read()
@@ -136,7 +147,7 @@ class Tasks(Lock):
 
         t = time.time()
         for task in ready:
-            task.dtasks = [tsk for tsk in task.dtasks if not tsk.done()]
+            task.dtasks = [tsk for tsk in task.dtasks if not tsk.is_done()]
             task.state = 'queued'
             task.tqueued = t
 
@@ -331,15 +342,17 @@ class Tasks(Lock):
         elif state == 'running':
             task.trunning = t
 
-        elif state in ['FAILED', 'TIMEOUT']:
+        elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
             for tsk in self.tasks:
                 if task.dname in tsk.deps:
                     tsk.state = 'CANCELED'
                     tsk.tstop = t
             task.tstop = t
+            if state == 'FAILED':
+                task.write_failed_file()
 
         else:
-            1 / 0
+            raise ValueError('Bad state: ' + state)
 
         self.changed = True
 

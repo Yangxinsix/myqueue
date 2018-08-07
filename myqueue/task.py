@@ -150,15 +150,24 @@ class Task:
         cfg = read_config()
         return cfg.get('queue', 'slurm')
 
-    def done(self) -> bool:
+    def is_done(self) -> bool:
         if self._done is None:
             p = self.folder / '{}.done'.format(self.cmd.name)
             self._done = p.is_file()
         return self._done
 
+    def has_failed(self) -> bool:
+        p = self.folder / '{}.FAILED'.format(self.cmd.name)
+        return p.is_file()
+
     def write_done_file(self) -> None:
         if self.workflow and self.folder.is_dir():
             p = self.folder / '{}.done'.format(self.cmd.name)
+            p.write_text('')
+
+    def write_failed_file(self) -> None:
+        if self.workflow and self.folder.is_dir():
+            p = self.folder / '{}.FAILED'.format(self.cmd.name)
             p.write_text('')
 
     def read_error(self) -> bool:
