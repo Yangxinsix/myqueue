@@ -107,7 +107,8 @@ class Tasks(Lock):
         tasks = tasks2
 
         if inqueue:
-            print(plural(len(inqueue), 'task'), 'already in the queue:')
+            print(plural(sum(inqueue.values()), 'task'),
+                  'already in the queue:')
             print('\n'.join('    {:8}: {}'.format(state, n)
                             for state, n in inqueue.items()))
 
