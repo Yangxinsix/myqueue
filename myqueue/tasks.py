@@ -326,8 +326,9 @@ class Tasks(Lock):
             if task.id == id:
                 break
         else:
-            raise ValueError('No such task: {id}, {state}'
-                             .format(id=id, state=state))
+            print('No such task: {id}, {state}'
+                  .format(id=id, state=state))
+            return
 
         t = t or time.time()
 
