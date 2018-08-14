@@ -275,7 +275,8 @@ class Tasks(Lock):
                         resources=resources or task.resources,
                         folder=task.folder,
                         workflow=task.workflow,
-                        restart=task.restart)
+                        restart=task.restart,
+                        diskspace=0)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
 
@@ -396,7 +397,8 @@ class Tasks(Lock):
 
     def kick(self, dry_run: bool, crontab: bool = False) -> None:
         if crontab:
-            self.install_crontab_job()
+            from myqueue.crontab import install_crontab_job
+            install_crontab_job()
             return
 
         self._read()
@@ -437,7 +439,7 @@ class Tasks(Lock):
         elif mem < maxmem:
             for task in self.tasks:
                 if task.state == 'hold':
-                    self.queue(task).release(task)
+                    self.queue(task).release_hold(task)
                     self.changed = True
                     mem += task.diskspace
                     if mem > maxmem:

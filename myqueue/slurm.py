@@ -72,6 +72,12 @@ class SLURM(Queue):
     def cancel(self, task):
         subprocess.run(['scancel', str(task.id)])
 
+    def hold(self, task):
+        subprocess.run(['scontrol', 'hold', str(task.id)])
+
+    def release_hold(self, task):
+        subprocess.run(['scontrol', 'release', str(task.id)])
+
     def get_ids(self):
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]

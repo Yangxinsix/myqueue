@@ -49,7 +49,7 @@ class LocalQueue(Queue, Lock):
         self._write()
 
     @lock
-    def release(self, task):
+    def release_hold(self, task):
         assert task.state == 'hold', task
         self._read()
         for i, j in enumerate(self.tasks):

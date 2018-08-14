@@ -118,6 +118,9 @@ def main(arguments: List[str] = None) -> Any:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
+        if cmd == 'kick':
+            a('--install-crontab-job', action='store_true')
+
     args = parser.parse_args(arguments)
 
     args.command = aliases.get(args.command, args.command)
@@ -242,7 +245,7 @@ def run(args):
             tasks.sync(args.dry_run)
 
         elif args.command == 'kick':
-            tasks.kick(args.dry_run)
+            tasks.kick(args.dry_run, args.install_crontab_job)
 
         elif args.command == 'completion':
             cmd = ('complete -o default -C "{py} {filename}" mq'

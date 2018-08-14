@@ -140,7 +140,7 @@ Commands
 List command
 ------------
 
-usage: mq list [-h] [-s qrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
+usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
                [-T]
                [folder [folder ...]]
 
@@ -151,9 +151,10 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qrdFCTM, --states qrdFCTM
+  -s qhrdFCTM, --states qhrdFCTM
                         Selection of states. First letters of "queued",
-                        "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED" and
+                        "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -204,7 +205,7 @@ optional arguments:
 Resubmit command
 ----------------
 
-usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qrdFCTM] [-i ID] [-n NAME]
+usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
                    [-z] [-v] [-q] [-T] [-r]
                    [folder [folder ...]]
 
@@ -221,9 +222,10 @@ optional arguments:
                         16 cores, 1 process, half an hour.
   -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
                         done.
-  -s qrdFCTM, --states qrdFCTM
+  -s qhrdFCTM, --states qhrdFCTM
                         Selection of states. First letters of "queued",
-                        "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED" and
+                        "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -238,7 +240,7 @@ optional arguments:
 Remove command
 --------------
 
-usage: mq remove [-h] [-s qrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
 
 Remove or cancel task(s).
@@ -248,9 +250,10 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qrdFCTM, --states qrdFCTM
+  -s qhrdFCTM, --states qhrdFCTM
                         Selection of states. First letters of "queued",
-                        "running", "done", "FAILED", "CANCELED" and "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED" and
+                        "TIMEOUT".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
