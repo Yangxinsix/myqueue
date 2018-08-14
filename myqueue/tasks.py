@@ -224,11 +224,11 @@ class Tasks(Lock):
             queue = self.queue(task)
             alltasks[queue].append(task)
         n = 0
+        in_the_queue = ['running', 'hold', 'queued']
         for queue, tasks in alltasks.items():
             ids = queue.get_ids()
             for task in tasks:
-                if (task.state in ['running', 'hold', 'queued'] and
-                    task.id not in ids):
+                if task.state in in_the_queue and task.id not in ids:
                     if not dry_run:
                         self.tasks.remove(task)
                         self.changed = True
