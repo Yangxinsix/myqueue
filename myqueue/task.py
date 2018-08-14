@@ -8,7 +8,7 @@ from myqueue.config import read_config
 from myqueue.resources import Resources, T
 
 
-taskstates = ['queued', 'running', 'done',
+taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
 
 
@@ -19,6 +19,7 @@ class Task:
                  deps: List[Path],
                  workflow: bool,
                  restart: bool,
+                 diskspace: int,
                  folder: Path,
                  state: str = '',
                  id: int = 0,
@@ -33,6 +34,7 @@ class Task:
         self.deps = deps
         self.workflow = workflow
         self.restart = restart
+        self.diskspace = diskspace
         self.folder = folder
 
         self.state = state
@@ -82,7 +84,8 @@ class Task:
                 self.cmd.name,
                 str(self.resources) + deps +
                 ('*' if self.workflow else '') +
-                ('R' if self.restart else ''),
+                ('R' if self.restart else '') +
+                ('D' if self.diskspace else ''),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -104,6 +107,7 @@ class Task:
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
                 'restart': self.restart,
+                'diskspace': self.diskspace,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,
@@ -115,6 +119,8 @@ class Task:
         dct = dct.copy()
         if 'restart' not in dct:
             dct['restart'] = False
+        if 'diskspace' not in dct:
+            dct['diskspace'] = 0
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=Path(dct.pop('folder')),
@@ -214,7 +220,8 @@ def task(cmd: str,
          tmax: str = '10m',
          folder: str = '',
          workflow: bool = False,
-         restart: bool = False) -> Task:
+         restart: bool = False,
+         diskspace: float = 0.0) -> Task:
 
     path = Path(folder).absolute()
 
@@ -239,7 +246,8 @@ def task(cmd: str,
     else:
         res = Resources(cores, nodename, processes, T(tmax))
 
-    return Task(command(cmd, args), res, dpaths, workflow, restart, path)
+    return Task(command(cmd, args), res, dpaths, workflow, restart,
+                int(diskspace), path)
 
 
 def seconds_to_time_string(n: float) -> str:

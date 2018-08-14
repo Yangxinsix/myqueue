@@ -75,8 +75,8 @@ def main(arguments: List[str] = None) -> Any:
               'subfolders.')
 
         if cmd in ['list', 'remove', 'resubmit']:
-            a('-s', '--states', metavar='qrdFCTM',
-              help='Selection of states. First letters of "queued", '
+            a('-s', '--states', metavar='qhrdFCTM',
+              help='Selection of states. First letters of "queued", "hold", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
@@ -175,7 +175,7 @@ def run(args):
                 raise MyQueueCLIError('Missing folder!')
 
     if args.command in ['list', 'remove', 'resubmit']:
-        default = 'qrdFCTM' if args.command == 'list' else ''
+        default = 'qhrdFCTM' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
             for state in taskstates:
