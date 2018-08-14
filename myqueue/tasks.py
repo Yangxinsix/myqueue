@@ -426,12 +426,13 @@ class Tasks(Lock):
         for task in self.tasks:
             if task.state in {'queued', 'running'}:
                 mem += task.diskspace
-        print(mem)
+
         if mem > maxmem:
             for task in self.tasks:
                 if task.state == 'queued':
                     if task.diskspace > 0:
                         self.queue(task).hold(task)
+                        task.state = 'hold'
                         self.changed = True
                         mem -= task.diskspace
                         if mem < maxmem:
@@ -440,6 +441,7 @@ class Tasks(Lock):
             for task in self.tasks:
                 if task.state == 'hold':
                     self.queue(task).release_hold(task)
+                    task.state = 'queued'
                     self.changed = True
                     mem += task.diskspace
                     if mem > maxmem:
