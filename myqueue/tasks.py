@@ -393,6 +393,7 @@ class Tasks(Lock):
                     oom = task.read_error()
                     if oom:
                         task.state = 'MEMORY'
+                        task.remove_failed_file()
                     self.changed = True
 
     def kick(self, dry_run: bool, crontab: bool = False) -> None:

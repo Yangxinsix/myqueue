@@ -176,6 +176,11 @@ class Task:
             p = self.folder / '{}.FAILED'.format(self.cmd.name)
             p.write_text('')
 
+    def remove_failed_file(self) -> None:
+        p = self.folder / '{}.FAILED'.format(self.cmd.name)
+        if p.is_file():
+            p.unlink()
+
     def read_error(self) -> bool:
         """Check error message.
 
