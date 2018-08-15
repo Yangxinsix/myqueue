@@ -36,7 +36,7 @@ commands = {
         [''],
     'kick':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
+         '--traceback', '--install-crontab-job'],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
          '--columns', '-v', '--verbose', '-q', '--quiet', '-T',

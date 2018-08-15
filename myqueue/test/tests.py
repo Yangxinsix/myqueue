@@ -155,3 +155,19 @@ def workflow():
     mq('workflow wf.py .')
     wait()
     assert states() == 'dd'
+
+
+wf2 = """
+from myqueue.task import task
+def create_tasks():
+    return [task('echo+hi', diskspace=1) for _ in range(4)]
+"""
+
+
+@test
+def workflow2():
+    Path('wf2.py').write_text(wf2)
+    mq('workflow wf2.py .')
+    mq('kick')
+    wait()
+    assert states() == 'dddd'

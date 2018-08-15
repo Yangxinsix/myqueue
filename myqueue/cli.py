@@ -75,8 +75,8 @@ def main(arguments: List[str] = None) -> Any:
               'subfolders.')
 
         if cmd in ['list', 'remove', 'resubmit']:
-            a('-s', '--states', metavar='qrdFCTM',
-              help='Selection of states. First letters of "queued", '
+            a('-s', '--states', metavar='qhrdFCTM',
+              help='Selection of states. First letters of "queued", "hold", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
@@ -117,6 +117,9 @@ def main(arguments: List[str] = None) -> Any:
               nargs='*', default=['.'],
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
+
+        if cmd == 'kick':
+            a('--install-crontab-job', action='store_true')
 
     args = parser.parse_args(arguments)
 
@@ -175,7 +178,7 @@ def run(args):
                 raise MyQueueCLIError('Missing folder!')
 
     if args.command in ['list', 'remove', 'resubmit']:
-        default = 'qrdFCTM' if args.command == 'list' else ''
+        default = 'qhrdFCTM' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
             for state in taskstates:
@@ -242,7 +245,7 @@ def run(args):
             tasks.sync(args.dry_run)
 
         elif args.command == 'kick':
-            tasks.kick(args.dry_run)
+            tasks.kick(args.dry_run, args.install_crontab_job)
 
         elif args.command == 'completion':
             cmd = ('complete -o default -C "{py} {filename}" mq'

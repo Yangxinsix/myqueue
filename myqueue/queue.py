@@ -26,6 +26,12 @@ class Queue:
     def get_ids(self) -> Set[int]:
         raise NotImplementedError
 
+    def hold(self, task: Task) -> None:
+        raise NotImplementedError
+
+    def release_hold(self, task: Task) -> None:
+        raise NotImplementedError
+
 
 def get_queue(name: str) -> Queue:
     if 'local'.startswith(name):

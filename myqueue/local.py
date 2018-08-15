@@ -37,6 +37,30 @@ class LocalQueue(Queue, Lock):
         self._write()
 
     @lock
+    def hold(self, task):
+        assert task.state == 'queued', task
+        self._read()
+        for i, j in enumerate(self.tasks):
+            if task.id == j.id:
+                break
+        else:
+            raise ValueError('No such task!')
+        j.state = 'hold'
+        self._write()
+
+    @lock
+    def release_hold(self, task):
+        assert task.state == 'hold', task
+        self._read()
+        for i, j in enumerate(self.tasks):
+            if task.id == j.id:
+                break
+        else:
+            raise ValueError('No such task!')
+        j.state = 'queued'
+        self._write()
+
+    @lock
     def get_ids(self):
         self._read()
         return {task.id for task in self.tasks}

@@ -10,7 +10,7 @@ from myqueue.resources import Resources
 from myqueue.task import Task
 from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
-from myqueue.config import home_folder
+from myqueue.config import home_folder, read_config
 
 
 class Selection:
@@ -130,7 +130,7 @@ class Tasks(Lock):
                         tsk = None
                 elif tsk.state == 'done':
                     tsk = None
-                elif tsk.state not in ['queued', 'running']:
+                elif tsk.state not in ['queued', 'hold', 'running']:
                     print('Dependency ({}) in bad state: {}'
                           .format(tsk.name, tsk.state))
                     break
@@ -212,7 +212,7 @@ class Tasks(Lock):
             pprint(tasks, 0)
             print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
-                if task.state in ['running', 'queued']:
+                if task.state in ['running', 'hold', 'queued']:
                     self.queue(task).cancel(task)
                 self.tasks.remove(task)
             self.changed = True
@@ -224,10 +224,11 @@ class Tasks(Lock):
             queue = self.queue(task)
             alltasks[queue].append(task)
         n = 0
+        in_the_queue = ['running', 'hold', 'queued']
         for queue, tasks in alltasks.items():
             ids = queue.get_ids()
             for task in tasks:
-                if task.state in ['running', 'queued'] and task.id not in ids:
+                if task.state in in_the_queue and task.id not in ids:
                     if not dry_run:
                         self.tasks.remove(task)
                         self.changed = True
@@ -267,14 +268,15 @@ class Tasks(Lock):
         self._read()
         tasks = []
         for task in self.select(selection):
-            if task.state not in {'queued', 'running'}:
+            if task.state not in {'queued', 'hold', 'running'}:
                 self.tasks.remove(task)
             task = Task(task.cmd,
                         deps=task.deps,
                         resources=resources or task.resources,
                         folder=task.folder,
                         workflow=task.workflow,
-                        restart=task.restart)
+                        restart=task.restart,
+                        diskspace=0)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
 
@@ -391,9 +393,15 @@ class Tasks(Lock):
                     oom = task.read_error()
                     if oom:
                         task.state = 'MEMORY'
+                        task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run: bool) -> None:
+    def kick(self, dry_run: bool, crontab: bool = False) -> None:
+        if crontab:
+            from myqueue.crontab import install_crontab_job
+            install_crontab_job()
+            return
+
         self._read()
         tasks = []
         for task in self.tasks:
@@ -410,6 +418,35 @@ class Tasks(Lock):
                     self.tasks.remove(task)
                     task.error = ''
                 self.submit(tasks, read=False)
+
+        self.hold_or_release(dry_run)
+
+    def hold_or_release(self, dry_run: bool) -> None:
+        maxmem = read_config().get('maximum_diskspace', float('inf'))
+        mem = 0
+        for task in self.tasks:
+            if task.state in {'queued', 'running'}:
+                mem += task.diskspace
+
+        if mem > maxmem:
+            for task in self.tasks:
+                if task.state == 'queued':
+                    if task.diskspace > 0:
+                        self.queue(task).hold(task)
+                        task.state = 'hold'
+                        self.changed = True
+                        mem -= task.diskspace
+                        if mem < maxmem:
+                            break
+        elif mem < maxmem:
+            for task in self.tasks:
+                if task.state == 'hold':
+                    self.queue(task).release_hold(task)
+                    task.state = 'queued'
+                    self.changed = True
+                    mem += task.diskspace
+                    if mem > maxmem:
+                        break
 
     def _write(self):
         if self.debug:
