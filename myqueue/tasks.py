@@ -399,7 +399,7 @@ class Tasks(Lock):
     def kick(self, dry_run: bool, crontab: bool = False) -> None:
         if crontab:
             from myqueue.crontab import install_crontab_job
-            install_crontab_job()
+            install_crontab_job(dry_run)
             return
 
         self._read()
