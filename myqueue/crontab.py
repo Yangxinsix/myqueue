@@ -8,13 +8,13 @@ def install_crontab_job(dry_run: bool) -> None:
         print('0,30 * * * *', cmd.decode())
         return
 
-    p = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE)
-    crontab = p.stdout
+    p1 = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE)
+    crontab = p1.stdout
 
     if b'myqueue kick' in crontab:
         from myqueue.cli import MyQueueCLIError
         raise MyQueueCLIError('Already installed!')
 
     crontab += b'\n0,30 * * * * ' + cmd + b'\n'
-    p = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
-    p.communicate(crontab)
+    p2 = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)
+    p2.communicate(crontab)
