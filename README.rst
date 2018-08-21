@@ -55,13 +55,15 @@ States
 These are the possible states a task can be in:
 
 * queued
+* hold
 * running
 * done
 * FAILED
 * CANCELED
+* MEMORY
 * TIMEOUT
 
-Abbreviations: q, r, d, F, C and T.
+Abbreviations: q, h, r, d, F, C, M and T.
 
 
 Examples
