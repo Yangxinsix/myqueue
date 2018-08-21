@@ -439,7 +439,7 @@ class Tasks(Lock):
                         if mem < maxmem:
                             break
         elif mem < maxmem:
-            for task in self.tasks:
+            for task in self.tasks[::-1]:
                 if task.state == 'hold':
                     self.queue(task).release_hold(task)
                     task.state = 'queued'
