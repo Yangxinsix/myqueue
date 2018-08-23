@@ -278,9 +278,9 @@ def workflow(args, tasks, folders):
         with chdir(folder):
             newtasks = create_tasks()
         for task in newtasks:
-            task.workflow = True
-
-        alltasks += newtasks
+            if not task.skip():
+                task.workflow = True
+                alltasks.append(task)
 
     tasks.submit(alltasks, args.dry_run)
 

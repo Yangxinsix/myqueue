@@ -166,6 +166,10 @@ class Task:
         p = self.folder / '{}.FAILED'.format(self.cmd.name)
         return p.is_file()
 
+    def skip(self) -> bool:
+        p = self.folder / '{}.SKIP'.format(self.cmd.name)
+        return p.is_file()
+
     def write_done_file(self) -> None:
         if self.workflow and self.folder.is_dir():
             p = self.folder / '{}.done'.format(self.cmd.name)
