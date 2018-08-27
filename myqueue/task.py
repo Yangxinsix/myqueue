@@ -204,9 +204,11 @@ class Task:
 
         for line in lines[::-1]:
             ll = line.lower()
-            if 'error:' in ll or 'memoryerror' in ll:
+            if any(ll in x for x in ['error:', 'memoryerror', 'malloc']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):
+                    return True
+                if 'malloc' in line:
                     return True
                 if line.startswith('MemoryError'):
                     return True
