@@ -142,23 +142,29 @@ class Tasks(Lock):
 
         # All dependensies must have an id or be in the list of tasks
         # about to be submitted
-        ready = [task for task in todo
-                 if all(tsk.id or tsk in todo
-                        for tsk in task.dtasks)]
+        n1 = len(todo)
+        while True:
+            todo = [task for task in todo
+                     if all(tsk.id or tsk in todo
+                            for tsk in task.dtasks)]
+            n2 = len(todo)
+            if n2 == n1:
+                break
+            n1 = n2
 
         t = time.time()
-        for task in ready:
+        for task in todo:
             task.dtasks = [tsk for tsk in task.dtasks if not tsk.is_done()]
             task.state = 'queued'
             task.tqueued = t
 
         if dry_run:
-            pprint(ready, 0, 'fnr')
-            print(plural(len(ready), 'task'), 'to submit')
+            pprint(todo, 0, 'fnr')
+            print(plural(len(todo), 'task'), 'to submit')
         else:
             submitted = []
             ex = None
-            for task in ready:
+            for task in todo:
                 try:
                     self.queue(task).submit(task)
                 except Exception as x:
