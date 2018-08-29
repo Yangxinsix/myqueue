@@ -145,8 +145,8 @@ class Tasks(Lock):
         n1 = len(todo)
         while True:
             todo = [task for task in todo
-                     if all(tsk.id or tsk in todo
-                            for tsk in task.dtasks)]
+                    if all(tsk.id or tsk in todo
+                           for tsk in task.dtasks)]
             n2 = len(todo)
             if n2 == n1:
                 break
