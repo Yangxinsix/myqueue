@@ -204,7 +204,7 @@ class Task:
 
         for line in lines[::-1]:
             ll = line.lower()
-            if any(ll in x for x in ['error:', 'memoryerror', 'malloc']):
+            if any(x in ll for x in ['error:', 'memoryerror', 'malloc']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):
                     return True
