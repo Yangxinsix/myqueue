@@ -276,6 +276,8 @@ class Tasks(Lock):
         for task in self.select(selection):
             if task.state not in {'queued', 'hold', 'running'}:
                 self.tasks.remove(task)
+            if task.state == 'FAILED':
+                task.remove_failed_file()
             task = Task(task.cmd,
                         deps=task.deps,
                         resources=resources or task.resources,
