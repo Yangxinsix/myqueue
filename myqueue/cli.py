@@ -24,6 +24,7 @@ def main(arguments: List[str] = None) -> Any:
                       ('submit', 'Submit task(s) to queue.'),
                       ('resubmit', 'Resubmit failed or timed-out tasks.'),
                       ('remove', 'Remove or cancel task(s).'),
+                      ('modify', 'Modify task(s).'),
                       ('sync', 'Make sure SLURM/PBS and MyQueue are in sync.'),
                       ('workflow', 'Submit tasks from Python script.'),
                       ('kick', 'Restart timed out or out of memory tasks.'),
@@ -68,13 +69,16 @@ def main(arguments: List[str] = None) -> Any:
               help='Write <task-name>.done or <task-name>.FAILED file '
               'when done.')
 
+        if cmd == 'modify':
+            a('newstate', help='New state (one of the letters: qhrdFCTM).')
+
         if cmd == 'workflow':
             a('script', help='Submit script.')
             a('-p', '--pattern', action='store_true',
               help='Use submit scripts matching "script" in all '
               'subfolders.')
 
-        if cmd in ['list', 'remove', 'resubmit']:
+        if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTM',
               help='Selection of states. First letters of "queued", "hold", '
               '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
@@ -98,7 +102,7 @@ def main(arguments: List[str] = None) -> Any:
         a('-T', '--traceback', action='store_true',
           help='Show full traceback.')
 
-        if cmd in ['remove', 'resubmit']:
+        if cmd in ['remove', 'resubmit', 'modify']:
             a('-r', '--recursive', action='store_true',
               help='Use also subfolders.')
             a('folder',
@@ -170,14 +174,15 @@ def run(args):
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
-    if args.command in ['list', 'submit', 'remove', 'resubmit', 'workflow']:
+    if args.command in ['list', 'submit', 'remove', 'resubmit',
+                        'modify', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
         if args.command in ['remove', 'resubmit']:
             if not args.id and not folders:
                 raise MyQueueCLIError('Missing folder!')
 
-    if args.command in ['list', 'remove', 'resubmit']:
+    if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
         states = set()
         for s in args.states if args.states is not None else default:
@@ -237,6 +242,9 @@ def run(args):
                         for folder in folders]
 
             tasks.submit(newtasks, args.dry_run)
+
+        elif args.command == 'modify':
+            tasks.modify(selection, args.newstate, args.dry_run)
 
         elif args.command == 'workflow':
             workflow(args, tasks, folders)

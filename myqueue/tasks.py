@@ -266,6 +266,36 @@ class Tasks(Lock):
 
         return removed
 
+    def modify(self,
+               selection: Selection,
+               newstate: str,
+               dry_run: bool) -> None:
+        self._read()
+        tasks = self.select(selection)
+
+        for task in tasks:
+            if task.state == 'hold' and newstate == 'queued':
+                if dry_run:
+                    print('Release:', task)
+                else:
+                    self.queue(task).release_hold(task)
+            elif task.state == 'queued' and newstate == 'hold':
+                if dry_run:
+                    print('Hold:', task)
+                else:
+                    self.queue(task).hold(task)
+            elif task.state == 'FAILED' and newstate in ['MEMORY', 'TIMEOUT']:
+                if dry_run:
+                    print('FAILED ->', newstate, task)
+                else:
+                    task.remove_failed_file()
+            else:
+                raise ValueError('Can\'t do {} -> {}!'
+                                 .format(task.state, newstate))
+            print('{} -> {}: {}'.format(task.state, newstate, task))
+            task.state = newstate
+            self.changed = True
+
     def resubmit(self,
                  selection: Selection,
                  dry_run: bool,

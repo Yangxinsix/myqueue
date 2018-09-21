@@ -41,6 +41,10 @@ commands = {
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
          '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
+    'modify':
+        ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
+         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback', '-r', '--recursive'],
     'remove':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
