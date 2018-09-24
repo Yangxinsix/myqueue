@@ -471,7 +471,7 @@ class Tasks(Lock):
                             break
         elif mem < maxmem:
             for task in self.tasks[::-1]:
-                if task.state == 'hold':
+                if task.state == 'hold' and task.diskspace > 0:
                     self.queue(task).release_hold(task)
                     task.state = 'queued'
                     self.changed = True
