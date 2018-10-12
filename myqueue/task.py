@@ -187,7 +187,8 @@ class Task:
 
         for line in lines[::-1]:
             ll = line.lower()
-            if any(x in ll for x in ['error:', 'memoryerror', 'malloc']):
+            if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
+                                     'out of memory']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):
                     return True
@@ -196,6 +197,8 @@ class Task:
                 if line.startswith('MemoryError'):
                     return True
                 if 'oom-kill' in line:
+                    return True
+                if line.endswith('out of memory'):
                     return True
                 return False
 
