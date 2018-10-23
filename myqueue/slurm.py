@@ -34,6 +34,8 @@ class SLURM(Queue):
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
+            if self.cfg.get('mpi') == 'intel':
+                mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
             cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
