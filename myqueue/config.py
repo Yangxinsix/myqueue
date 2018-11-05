@@ -20,4 +20,13 @@ def home_folder() -> Path:
     dir = os.environ.get('MYQUEUE_HOME')
     if dir:
         return Path(dir)
-    return Path.home() / '.myqueue'
+    f = Path.cwd()
+    while True:
+        dir = f / '.myqueue'
+        if dir.is_dir():
+            return dir
+        newf = f.parent
+        if newf == f:
+            break
+        f = newf
+    raise ValueError('Could not find your .myqueue/ folder!')
