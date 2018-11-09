@@ -21,9 +21,7 @@ class SLURM(Queue):
                   '--nodes={}'.format(nodes),
                   '--workdir={}'.format(task.folder),
                   '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name),
-                  # '-A', 'camdcmr',
-                  '--export=NONE']
+                  '--error={}.%j.err'.format(name)]
 
         mem = nodedct.get('memory')
         if mem:
@@ -38,7 +36,6 @@ class SLURM(Queue):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if self.cfg.get('mpi') == 'intel':
                 mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
-                # mpiexec = 'mpiexec '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
             cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
