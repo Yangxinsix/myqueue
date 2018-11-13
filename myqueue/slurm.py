@@ -27,6 +27,10 @@ class SLURM(Queue):
         if mem:
             sbatch.append('--mem={}'.format(mem))
 
+        features = nodedct.get('features')
+        if features:
+            sbatch.append('--constraint={}'.format(features))
+
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append('--dependency=afterok:{}'.format(ids))
