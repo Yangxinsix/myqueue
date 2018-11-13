@@ -23,11 +23,15 @@ class SLURM(Queue):
                   '--output={}.%j.out'.format(name),
                   '--error={}.%j.err'.format(name),
                   # '-A', 'camdcmr',
-                  '--export=NONE']
+                  ]
 
         mem = nodedct.get('memory')
         if mem:
             sbatch.append('--mem={}'.format(mem))
+
+        features = nodedct.get('features')
+        if features:
+            sbatch.append('--constraint={}'.format(features))
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
