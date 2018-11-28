@@ -5,7 +5,7 @@ from typing import List
 from pathlib import Path
 
 from myqueue.cli import main
-from myqueue.config import initialize_config, config
+from myqueue.config import initialize_config
 
 
 LOCAL = True
@@ -48,10 +48,12 @@ def run_tests(tests: List[str], queue: str, exclude: List[str]):
     LOCAL = queue == 'local'
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
+
     (tmpdir / '.myqueue').mkdir()
     (tmpdir / '.myqueue' / 'config.py').write_text(
         'config = {{"queue": "{}"}}\n'.format(queue))
-    os.environ['MYQUEUE_DEBUG'] = True
+    initialize_config()
+    os.environ['MYQUEUE_DEBUG'] = 'yes'
 
     if not tests:
         tests = list(all_tests)
@@ -72,7 +74,8 @@ def run_tests(tests: List[str], queue: str, exclude: List[str]):
         mq('rm -s qrdFTCM . -r')
 
         for f in tmpdir.glob('**/*'):
-            f.unlink()
+            if '.myqueue' not in f.parts:
+                f.unlink()
 
     tmpdir.rmdir()
 

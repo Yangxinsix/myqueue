@@ -4,7 +4,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict  # noqa
+from typing import Set, List, Dict, Optional  # noqa
 
 from myqueue.resources import Resources
 from myqueue.task import Task
@@ -39,7 +39,7 @@ class Tasks(Lock):
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
-        self._queues = None  # type: Queue
+        self._queue = None  # type: Optional[Queue]
         self.tasks = []  # type: List[Task]
         self.changed = False
 

@@ -175,6 +175,11 @@ def run(args):
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
+    # Create ~/.myqueue/ if it's not there:
+    f = Path.home() / '.myqueue'
+    if not f.is_dir():
+        f.mkdir()
+
     if args.command in ['list', 'submit', 'remove', 'resubmit',
                         'modify', 'workflow']:
         folders = [Path(folder).expanduser().absolute().resolve()

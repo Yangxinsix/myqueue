@@ -2,7 +2,7 @@ import json
 import subprocess
 
 
-from myqueue.config import config
+from myqueue.config import config, initialize_config
 from myqueue.queue import Queue
 from myqueue.task import Task
 from myqueue.utils import Lock, lock
@@ -154,7 +154,9 @@ class LocalQueue(Queue, Lock):
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             mpiexec += '-np {} '.format(task.resources.processes)
-            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3',
+                                        config.get('parallel_python',
+                                                   'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
@@ -172,5 +174,6 @@ class LocalQueue(Queue, Lock):
 if __name__ == '__main__':
     import sys
     id, state = sys.argv[1:3]
+    initialize_config()
     q = LocalQueue()
     q.update(int(id), state)
