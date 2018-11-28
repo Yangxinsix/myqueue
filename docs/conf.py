@@ -19,14 +19,16 @@
 
 # -- Project information -----------------------------------------------------
 
+import re
+
 project = 'MyQueue'
 copyright = '2018, J. J. Mortensen'
 author = 'J. J. Mortensen'
+with open('../myqueue/__init__.py') as fd:
+    version = re.search("__version__ = '(.*)'", fd.read()).group(1)
 
-# The short X.Y version
-version = '0.0.1'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
