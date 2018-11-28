@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'MyQueue'
-copyright = '2018, Jens Jørgen Mortensen'
-author = 'Jens Jørgen Mortensen'
+copyright = '2018, J. J. Mortensen'
+author = 'J. J. Mortensen'
 
 # The short X.Y version
 version = '0.0.1'
