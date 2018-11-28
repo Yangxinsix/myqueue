@@ -4,7 +4,7 @@ MyQueue
 
 Simple frontend for SLURM_ and PBS_.
 
-* Documentation: https://readthedocs.org/projects/myqueue/
+* Documentation: https://myqueue.readthedocs.io/
 * Code: https://gitlab.com/jensj/myqueue/
 
 .. _SLURM: https://slurm.schedmd.com/
