@@ -73,10 +73,14 @@ def run_tests(tests: List[str], queue: str, exclude: List[str]):
 
         mq('rm -s qrdFTCM . -r')
 
-        for f in tmpdir.glob('**/*'):
-            if '.myqueue' not in f.parts:
+        for f in tmpdir.glob('*'):
+            if f.is_file():
                 f.unlink()
 
+    for f in tmpdir.glob('.myqueue/*'):
+            f.unlink()
+
+    (tmpdir / '.myqueue').rmdir()
     tmpdir.rmdir()
 
 
