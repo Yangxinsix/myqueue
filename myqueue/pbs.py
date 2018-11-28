@@ -8,7 +8,7 @@ from myqueue.queue import Queue
 
 class PBS(Queue):
     def submit(self, task: Task) -> None:
-        nodelist = self.cfg['nodes']
+        nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
@@ -43,7 +43,7 @@ class PBS(Queue):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
@@ -82,7 +82,7 @@ class PBS(Queue):
     def get_ids(self):
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
-        host = self.cfg.get('host')
+        host = config.get('host')
         if host:
             cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

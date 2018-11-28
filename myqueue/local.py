@@ -154,7 +154,7 @@ class LocalQueue(Queue, Lock):
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             mpiexec += '-np {} '.format(task.resources.processes)
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)

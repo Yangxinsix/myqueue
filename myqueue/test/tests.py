@@ -5,7 +5,7 @@ from typing import List
 from pathlib import Path
 
 from myqueue.cli import main
-from myqueue.config import read_config
+from myqueue.config import initialize_config, config
 
 
 LOCAL = True
@@ -43,14 +43,15 @@ def wait()-> None:
             raise TimeoutError
 
 
-def run_tests(tests: List[str], local: bool, exclude: List[str]):
+def run_tests(tests: List[str], queue: str, exclude: List[str]):
     global LOCAL
-    LOCAL = local
+    LOCAL = queue == 'local'
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
     (tmpdir / '.myqueue').mkdir()
-    cfg = read_config()
-    os.environ['MYQUEUE_DEBUG'] = 'local' if local else cfg['queue']
+    (tmpdir / '.myqueue' / 'config.py').write_text(
+        'config = {{"queue": "{}"}}\n'.format(queue))
+    os.environ['MYQUEUE_DEBUG'] = True
 
     if not tests:
         tests = list(all_tests)

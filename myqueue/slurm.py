@@ -10,7 +10,7 @@ from myqueue.queue import Queue
 
 class SLURM(Queue):
     def submit(self, task: Task) -> None:
-        nodelist = self.cfg['nodes']
+        nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
@@ -44,11 +44,11 @@ class SLURM(Queue):
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            if self.cfg.get('mpi') == 'intel':
+            if config.get('mpi') == 'intel':
                 mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
@@ -96,7 +96,7 @@ class SLURM(Queue):
     def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
-        host = self.cfg.get('host')
+        host = config.get('host')
         if host:
             cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

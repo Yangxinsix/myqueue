@@ -1,13 +1,8 @@
 from myqueue.task import Task
 from typing import Set
 
-from myqueue.config import read_config
-
 
 class Queue:
-    def __init__(self):
-        self.cfg = read_config()
-
     def submit(self, task: Task) -> None:
         pass
 

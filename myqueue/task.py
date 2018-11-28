@@ -1,10 +1,9 @@
-import os
 import time
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional  # noqa
 
 from myqueue.commands import command, Command
-from myqueue.config import read_config
+from myqueue.config import config
 from myqueue.resources import Resources, T
 
 
@@ -131,14 +130,6 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def queue_name(self) -> str:
-        if os.environ.get('MYQUEUE_DEBUG', '') == 'local':
-            return 'local'
-        if self.resources.nodename == 'local':
-            return 'local'
-        cfg = read_config()
-        return cfg.get('queue', 'slurm')
-
     def is_done(self) -> bool:
         if self._done is None:
             p = self.folder / '{}.done'.format(self.cmd.name)
@@ -175,7 +166,7 @@ class Task:
         """
         self.error = '-'  # mark as already read
 
-        if self.queue_name() == 'pbs':
+        if config.get('queue') == 'pbs':
             path = self.folder / '{}.e{}'.format(self.cmd.name, self.id)
         else:
             path = self.folder / (self.name + '.err')

@@ -43,8 +43,9 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('--non-local', action='store_true',
-              help='Run tests using SLURM/PBS.')
+            a('--queue', default='local',
+              help='Which queue to run tests on: local (the default), '
+              'slurm or pbs.')
             a('-x', '--exclude',
               help='Exclude test(s).')
 
@@ -143,7 +144,7 @@ def main(arguments: List[str] = None) -> Any:
     if args.command == 'test':
         from myqueue.test.tests import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
-        run_tests(args.test, not args.non_local, exclude)
+        run_tests(args.test, args.queue, exclude)
         return
 
     try:
