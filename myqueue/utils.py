@@ -137,7 +137,7 @@ def update_completion():
             n += len(L)
         n += 1
 
-    readme = dir / '../README.rst'
+    readme = dir / '..' / 'docs' / 'cli.rst'
 
     lines = readme.read_text().splitlines()
     a = lines.index('.. computer generated text:')
