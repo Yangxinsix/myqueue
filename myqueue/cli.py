@@ -1,10 +1,84 @@
 import argparse
 import sys
+import textwrap
 from typing import List, Any
 
 
 class MyQueueCLIError(Exception):
     pass
+
+
+commands = """\
+help
+Show how to use this tool.
+More help can be found here: https://myqueue.readthedocs.io/.
+.
+list
+List tasks in queue.
+Only tasks in the chosen folder and its subfolders are shown.
+.
+submit
+Submit task(s) to queue.
+Example:
+
+    $ mq submit script.py -R 24:1d  # 24 cores for 1 day
+.
+resubmit
+Resubmit failed or timed-out tasks.
+
+.
+remove
+Remove or cancel task(s).
+
+.
+modify
+Modify task(s).
+
+.
+sync
+Make sure SLURM/PBS and MyQueue are in sync.
+
+.
+workflow
+Submit tasks from Python script.
+
+.
+kick
+Restart timed out or out of memory tasks.
+
+.
+completion
+Set up tab-completion.
+
+.
+test
+Run tests.
+
+"""
+
+
+class Formatter(argparse.HelpFormatter):
+    """Improved help formatter."""
+    def _fill_text(self, text, width, indent):
+        assert indent == ''
+        out = ''
+        blocks = text.split('\n\n')
+        for block in blocks:
+            if block[0] == '*':
+                # List items:
+                for item in block[2:].split('\n* '):
+                    out += textwrap.fill(item,
+                                         width=width - 2,
+                                         initial_indent='* ',
+                                         subsequent_indent='  ') + '\n'
+            elif block[0] == ' ':
+                # Indented literal block:
+                out += block + '\n'
+            else:
+                # Block of text:
+                out += textwrap.fill(block, width=width) + '\n'
+            out += '\n'
+        return out[:-1]
 
 
 def main(arguments: List[str] = None) -> Any:
@@ -19,19 +93,17 @@ def main(arguments: List[str] = None) -> Any:
     aliases = {'rm': 'remove',
                'ls': 'list'}
 
-    for cmd, help in [('help', 'Show how to use this tool.'),
-                      ('list', 'List tasks in queue.'),
-                      ('submit', 'Submit task(s) to queue.'),
-                      ('resubmit', 'Resubmit failed or timed-out tasks.'),
-                      ('remove', 'Remove or cancel task(s).'),
-                      ('modify', 'Modify task(s).'),
-                      ('sync', 'Make sure SLURM/PBS and MyQueue are in sync.'),
-                      ('workflow', 'Submit tasks from Python script.'),
-                      ('kick', 'Restart timed out or out of memory tasks.'),
-                      ('completion', 'Set up tab-completion.'),
-                      ('test', 'Run tests.')]:
+    for lines in commands.split('\n.\n'):
+        cmd, help, description = lines.split('\n', 2)
+        if description:
+            description = help + '\n\n' + description
+        else:
+            description = help
 
-        p = subparsers.add_parser(cmd, description=help, help=help,
+        p = subparsers.add_parser(cmd,
+                                  description=description,
+                                  help=help,
+                                  formatter_class=Formatter,
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
         a = p.add_argument
