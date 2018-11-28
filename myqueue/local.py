@@ -2,7 +2,7 @@ import json
 import subprocess
 
 
-from myqueue.config import home_folder
+from myqueue.config import config
 from myqueue.queue import Queue
 from myqueue.task import Task
 from myqueue.utils import Lock, lock
@@ -10,7 +10,7 @@ from myqueue.utils import Lock, lock
 
 class LocalQueue(Queue, Lock):
     def __init__(self):
-        self.fname = home_folder() / 'local.json'
+        self.fname = config['home'] / 'local.json'
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None

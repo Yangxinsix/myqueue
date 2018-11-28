@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from myqueue.task import Task
-from myqueue.config import home_folder
+from myqueue.config import config
 from myqueue.queue import Queue
 
 
@@ -47,7 +47,7 @@ class PBS(Queue):
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
-        home = home_folder()
+        home = config['home']
 
         script = (
             '#!/bin/bash -l\n'

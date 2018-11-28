@@ -1,25 +1,26 @@
-import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any  # noqa
 
-_config = {}  # type: Dict[str, Any]
+config = {}  # type: Dict[str, Any]
 
 
-def read_config() -> Dict[str, Any]:
-    if _config:
-        return _config
-    cfg = Path.home() / '.myqueue' / 'config.py'
+def initialize_config() -> None:
+    home = find_home_folder()
+    config['home'] = home
+    cfg = home / '.myqueue' / 'config.py'
     if cfg.is_file():
         namespace = {}  # type: Dict[str, Dict[str, Any]]
         exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
-        _config.update(namespace['config'])
-    return _config
+        config.update(namespace['config'])
 
 
-def home_folder() -> Path:
-    dir = os.environ.get('MYQUEUE_HOME')
-    if dir:
-        return Path(dir)
+def find_home_folder() -> Path:
+    """Find closest .myqueue/ folder."""
+    # Create ~/.myqueue/ if it's not there:
+    f = Path.home() / '.myqueue'
+    if not f.is_dir():
+        f.mkdir()
+
     f = Path.cwd()
     while True:
         dir = f / '.myqueue'

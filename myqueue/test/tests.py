@@ -48,7 +48,7 @@ def run_tests(tests: List[str], local: bool, exclude: List[str]):
     LOCAL = local
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
-    os.environ['MYQUEUE_HOME'] = str(tmpdir)
+    (tmpdir / '.myqueue').mkdir()
     cfg = read_config()
     os.environ['MYQUEUE_DEBUG'] = 'local' if local else cfg['queue']
 
