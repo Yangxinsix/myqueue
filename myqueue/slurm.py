@@ -1,6 +1,7 @@
 import os
 import subprocess
 from math import ceil
+from typing import Set
 
 from myqueue.task import Task
 from myqueue.config import config
@@ -21,13 +22,20 @@ class SLURM(Queue):
                   '--nodes={}'.format(nodes),
                   '--workdir={}'.format(task.folder),
                   '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name),
-                  # '-A', 'camdcmr',
-                  '--export=NONE']
+                  '--error={}.%j.err'.format(name)]
 
         mem = nodedct.get('memory')
         if mem:
-            sbatch.append('--mem={}'.format(mem))
+            assert mem[-1] == 'G'
+            mbytes = 1000 * int(mem[:-1])
+            cores = task.resources.cores
+            if nodes == 1 and cores < nodedct['cores']:
+                mbytes = int(mbytes * cores / nodedct['cores'])
+            sbatch.append('--mem={mbytes}M'.format(mbytes=mbytes))
+
+        features = nodedct.get('features')
+        if features:
+            sbatch.append('--constraint={}'.format(features))
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
@@ -38,7 +46,6 @@ class SLURM(Queue):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if self.cfg.get('mpi') == 'intel':
                 mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
-                # mpiexec = 'mpiexec '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
             cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
@@ -66,7 +73,7 @@ class SLURM(Queue):
         id = int(out.split()[-1])
         task.id = id
 
-    def timeout(self, task):
+    def timeout(self, task: Task) -> bool:
         path = (task.folder /
                 '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
@@ -77,16 +84,16 @@ class SLURM(Queue):
                     return True
         return False
 
-    def cancel(self, task):
+    def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])
 
-    def hold(self, task):
+    def hold(self, task: Task) -> None:
         subprocess.run(['scontrol', 'hold', str(task.id)])
 
-    def release_hold(self, task):
+    def release_hold(self, task: Task) -> None:
         subprocess.run(['scontrol', 'release', str(task.id)])
 
-    def get_ids(self):
+    def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
         host = self.cfg.get('host')
