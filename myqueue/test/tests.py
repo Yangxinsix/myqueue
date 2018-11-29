@@ -56,7 +56,7 @@ def run_tests(tests: List[str],
     if config:
         txt = config.read_text()
     else:
-        txt = 'config = {{"queue": "local"}}\n'
+        txt = 'config = {}\n'.format({'queue': 'local'})
     (tmpdir / '.myqueue' / 'config.py').write_text(txt)
     initialize_config()
 
