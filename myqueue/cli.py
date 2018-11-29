@@ -115,9 +115,8 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('--queue', default='local',
-              help='Which queue to run tests on: local (the default), '
-              'slurm or pbs.')
+            a('--config-file',
+              help='Use specific config.py file.')
             a('-x', '--exclude',
               help='Exclude test(s).')
 
@@ -214,9 +213,11 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     if args.command == 'test':
+        from pathlib import Path
         from myqueue.test.tests import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
-        run_tests(args.test, args.queue, exclude)
+        config = Path(args.config_file) if args.config_file else None
+        run_tests(args.test, config, exclude)
         return
 
     try:

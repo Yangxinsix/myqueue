@@ -1,7 +1,7 @@
 import os
 import tempfile
 import time
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 
 from myqueue.cli import main
@@ -43,16 +43,23 @@ def wait()-> None:
             raise TimeoutError
 
 
-def run_tests(tests: List[str], queue: str, exclude: List[str]):
+def run_tests(tests: List[str],
+              config: Optional[Path],
+              exclude: List[str]) -> None:
     global LOCAL
-    LOCAL = queue == 'local'
+    LOCAL = config is None
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
 
     (tmpdir / '.myqueue').mkdir()
-    (tmpdir / '.myqueue' / 'config.py').write_text(
-        'config = {{"queue": "{}"}}\n'.format(queue))
+
+    if config:
+        txt = config.read_text()
+    else:
+        txt = 'config = {{"queue": "local"}}\n'
+    (tmpdir / '.myqueue' / 'config.py').write_text(txt)
     initialize_config()
+
     os.environ['MYQUEUE_DEBUG'] = 'yes'
 
     if not tests:
