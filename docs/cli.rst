@@ -7,6 +7,7 @@ Commands
 
 .. computer generated text:
 
+
 List command
 ------------
 
@@ -15,6 +16,8 @@ usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
                [folder [folder ...]]
 
 List tasks in queue.
+
+Only tasks in the chosen folder and its subfolders are shown.
 
 folder:
     List tasks in this folder and its subfolders. Defaults to current folder.
@@ -44,6 +47,10 @@ usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart]
                  task [folder [folder ...]]
 
 Submit task(s) to queue.
+
+Example:
+
+    $ mq submit script.py -R 24:1d  # 24 cores for 1 day
 
 task:
     Task to submit.
