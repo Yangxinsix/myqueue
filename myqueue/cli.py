@@ -8,6 +8,13 @@ class MyQueueCLIError(Exception):
     pass
 
 
+main_description = """\
+Simple frontend for SLURM/PBS.
+
+Type "mq help <command>" for help.
+See https://myqueue.readthedocs.io/ for more information.
+"""
+
 commands = """\
 help
 Show how to use this tool.
@@ -42,18 +49,28 @@ Make sure SLURM/PBS and MyQueue are in sync.
 workflow
 Submit tasks from Python script.
 
+Example:
+
+    $ cat flow.py
+    from myqueue.tas import task
+    def create_tasks():
+        return [task('task1'), task('task2', deps='task1')]
+    $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 .
 kick
-Restart timed out or out of memory tasks.
-
+Restart T and M tasks (timed-out and out-of-memory).
+You can kick the queue manually with "mq kick" or automatically by adding that
+command to a crontab job (can be done with "mq kick --install-crontab-job").
 .
 completion
-Set up tab-completion.
+Set up tab-completion for Bash.
+Do this:
 
+    $ mq completion >> ~/.bashrc
 .
 test
 Run tests.
-
+Please report errors to https://gitlab.com/jensj/myqueue/issues.
 """
 
 
@@ -84,9 +101,8 @@ class Formatter(argparse.HelpFormatter):
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
-        description='Simple frontend for SLURM/PBS.  '
-        'Type "mq help <command>" for help.  '
-        'See https://gitlab.com/jensj/myqueue for more information.')
+        formatter_class=Formatter,
+        description=main_description)
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
