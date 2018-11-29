@@ -16,6 +16,11 @@ More help can be found here: https://myqueue.readthedocs.io/.
 list
 List tasks in queue.
 Only tasks in the chosen folder and its subfolders are shown.
+
+Examples:
+
+    $ mq list -s rq  # show running and queued jobs
+    $ mq ls -s F abc/  # show failed jobs in abc/ folder
 .
 submit
 Submit task(s) to queue.
@@ -25,15 +30,22 @@ Example:
 .
 resubmit
 Resubmit failed or timed-out tasks.
+Example:
 
+    $ mq resubmit -i 4321  # resubmit job with id=4321
 .
 remove
 Remove or cancel task(s).
+Examples:
 
+    $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
+    $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 .
 modify
 Modify task(s).
+Example:
 
+    $ mq modify
 .
 sync
 Make sure SLURM/PBS and MyQueue are in sync.
