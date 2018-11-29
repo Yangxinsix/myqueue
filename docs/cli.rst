@@ -149,6 +149,14 @@ usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
 Submit tasks from Python script.
 
+ Example:
+
+    $ cat flow.py
+    from myqueue.tas import task
+    def create_tasks():
+        return [task('task1'), task('task2', deps='task1')]
+    $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
+
 script:
     Submit script.
 folder:
@@ -183,7 +191,11 @@ Completion command
 
 usage: mq completion [-h] [-v] [-q] [-T]
 
-Set up tab-completion.
+Set up tab-completion for Bash.
+
+Do this:
+
+    $ mq completion >> ~/.bashrc
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -199,6 +211,8 @@ usage: mq test [-h] [--non-local] [-x EXCLUDE] [-z] [-v] [-q] [-T]
                [test [test ...]]
 
 Run tests.
+
+Please report errors to https://gitlab.com/jensj/myqueue/issues.
 
 test:
     Test to run. Default behaviour is to run all.
