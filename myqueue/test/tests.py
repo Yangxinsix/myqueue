@@ -58,7 +58,7 @@ def run_tests(tests: List[str],
     else:
         txt = 'config = {}\n'.format({'queue': 'local'})
     (tmpdir / '.myqueue' / 'config.py').write_text(txt)
-    initialize_config()
+    initialize_config(tmpdir)
 
     os.environ['MYQUEUE_DEBUG'] = 'yes'
 

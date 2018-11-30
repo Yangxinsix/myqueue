@@ -191,6 +191,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command is None:
         parser.print_help()
+        print(__file__)
         return
 
     if args.command == 'help':
@@ -235,8 +236,16 @@ def main(arguments: List[str] = None) -> Any:
                 raise MyQueueCLIError(
                     'You can not have a myqueue folder inside a '
                     'myqueue folder:', folder)
+
+        mq = home / '.myqueue'
+        mq.mkdir()
+        cfg = path.with_name('config.py')
+        if cfg.is_file():
+            (mq / 'config.py').write_text(cfg.read_text())
+
         folders.append(home)
         path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
+        return
 
     try:
         results = run(args)

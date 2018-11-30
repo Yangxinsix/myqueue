@@ -57,7 +57,7 @@ class SLURM(Queue):
         script = (
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
-            'mq={home}/slurm-$id\n'
+            'mq={home}/.myqueue/slurm-$id\n'
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             '(touch $mq-2; exit 1)\n'
             .format(home=home, dir=task.folder, cmd=cmd))

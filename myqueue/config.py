@@ -5,9 +5,11 @@ config = {}  # type: Dict[str, Any]
 
 
 def initialize_config(start: Path) -> None:
+    if 'home' in config:
+        return
     home = find_home_folder(start)
     config['home'] = home
-    cfg = home / 'config.py'
+    cfg = home / '.myqueue' / 'config.py'
     if cfg.is_file():
         namespace = {}  # type: Dict[str, Dict[str, Any]]
         exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
@@ -22,7 +24,7 @@ def find_home_folder(start: Path) -> Path:
         if dir.is_dir():
             if f == Path.home():
                 break
-            return dir
+            return f
         newf = f.parent
         if newf == f:
             break

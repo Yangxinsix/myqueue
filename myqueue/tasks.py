@@ -10,7 +10,7 @@ from myqueue.resources import Resources
 from myqueue.task import Task
 from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
-from myqueue.config import initialize_config, config
+from myqueue.config import config
 
 
 class Selection:
@@ -33,8 +33,7 @@ class Tasks(Lock):
 
         self.debug = os.environ.get('MYQUEUE_DEBUG', '')
 
-        initialize_config()
-        self.folder = config['home']
+        self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
@@ -49,7 +48,8 @@ class Tasks(Lock):
             queuename = config.get('queue')
             if queuename is None:
                 raise ValueError(
-                    ('Please specify type of queue in your {}/config.py '
+                    ('Please specify type of queue in your '
+                     '{}/.myqueue/config.py '
                      'file (must be slurm, pbs or local).'
                      .format(config['home'])))
             self._queue = get_queue(queuename)

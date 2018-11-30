@@ -10,7 +10,7 @@ from myqueue.utils import Lock, lock
 
 class LocalQueue(Queue, Lock):
     def __init__(self):
-        self.fname = config['home'] / 'local.json'
+        self.fname = config['home'] / '.myqueue' / 'local.json'
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None
@@ -160,12 +160,14 @@ class LocalQueue(Queue, Lock):
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
-        msg = 'python3 -m myqueue.local {}'.format(task.id)
+        msg = ('python3 -m myqueue.local {} {}'
+               .format(config['home'], task.id))
         cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
                .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
+        print(cmd)
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         task.state = 'running'
@@ -173,7 +175,8 @@ class LocalQueue(Queue, Lock):
 
 if __name__ == '__main__':
     import sys
-    id, state = sys.argv[1:3]
-    initialize_config()
+    from pathlib import Path
+    home, id, state = sys.argv[1:4]
+    initialize_config(Path(home))
     q = LocalQueue()
     q.update(int(id), state)
