@@ -1,6 +1,7 @@
 import argparse
 import sys
 import textwrap
+from pathlib import Path
 from typing import List, Any
 
 
@@ -12,6 +13,11 @@ commands = """\
 help
 Show how to use this tool.
 More help can be found here: https://myqueue.readthedocs.io/.
+.
+init
+Initialize new queue.
+This will create a .myqueue/ folder in your current working directory
+and copy ~/.myqueue/config.py into it.
 .
 list
 List tasks in queue.
@@ -55,30 +61,6 @@ test
 Run tests.
 
 """
-
-
-class Formatter(argparse.HelpFormatter):
-    """Improved help formatter."""
-    def _fill_text(self, text, width, indent):
-        assert indent == ''
-        out = ''
-        blocks = text.split('\n\n')
-        for block in blocks:
-            if block[0] == '*':
-                # List items:
-                for item in block[2:].split('\n* '):
-                    out += textwrap.fill(item,
-                                         width=width - 2,
-                                         initial_indent='* ',
-                                         subsequent_indent='  ') + '\n'
-            elif block[0] == ' ':
-                # Indented literal block:
-                out += block + '\n'
-            else:
-                # Block of text:
-                out += textwrap.fill(block, width=width) + '\n'
-            out += '\n'
-        return out[:-1]
 
 
 def main(arguments: List[str] = None) -> Any:
@@ -184,7 +166,8 @@ def main(arguments: List[str] = None) -> Any:
 
         if cmd == 'list':
             a('folder',
-              nargs='*',
+              nargs='?',
+              default='.',
               help='List tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
@@ -201,6 +184,11 @@ def main(arguments: List[str] = None) -> Any:
 
     args.command = aliases.get(args.command, args.command)
 
+    # Create ~/.myqueue/ if it's not there:
+    f = Path.home() / '.myqueue'
+    if not f.is_dir():
+        f.mkdir()
+
     if args.command is None:
         parser.print_help()
         return
@@ -213,12 +201,42 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     if args.command == 'test':
-        from pathlib import Path
         from myqueue.test.tests import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
         run_tests(args.test, config, exclude)
         return
+
+    if args.command == 'completion':
+        cmd = ('complete -o default -C "{py} {filename}" mq'
+               .format(py=sys.executable,
+                       filename=Path(__file__).with_name('complete.py')))
+        if args.verbose:
+            print('Add tab-completion for Bash by copying the following '
+                  'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
+                  .format(cmd=cmd))
+        else:
+            print(cmd)
+        return
+
+    if args.command == 'init':
+        path = Path.home() / '.myqueue' / 'folders.txt'
+        if path.is_file():
+            folders = [Path(folder)
+                       for folder in path.read_text().splitlines()]
+        else:
+            folders = []
+        home = Path.cwd()
+        for folder in folders:
+            if is_inside(home, folder):
+                raise MyQueueCLIError(
+                    'You are already inside a myqueue folder:', folder)
+            if is_inside(folder, home):
+                raise MyQueueCLIError(
+                    'You can not have a myqueue folder inside a '
+                    'myqueue folder:', folder)
+        folders.append(home)
+        path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
 
     try:
         results = run(args)
@@ -240,26 +258,37 @@ def main(arguments: List[str] = None) -> Any:
 
 
 def run(args):
-    verbosity = 1 - args.quiet + args.verbose
-
-    from pathlib import Path
-
+    from myqueue.config import config, initialize_config
     from myqueue.resources import Resources
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
-    # Create ~/.myqueue/ if it's not there:
-    f = Path.home() / '.myqueue'
-    if not f.is_dir():
-        f.mkdir()
+    verbosity = 1 - args.quiet + args.verbose
 
     if args.command in ['list', 'submit', 'remove', 'resubmit',
                         'modify', 'workflow']:
+        if args.command == 'list':
+            args.folder = [args.folder]
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
-        if args.command in ['remove', 'resubmit']:
+        if args.command in ['remove', 'resubmit', 'modify']:
             if not args.id and not folders:
                 raise MyQueueCLIError('Missing folder!')
+
+        if folders:
+            start = folders[0]
+        else:
+            start = Path.cwd()
+        initialize_config(start)
+        home = config['home']
+        if args.verbose:
+            print('Home:', home)
+        for folder in folders[1:]:
+            try:
+                folder.relative_to(home)
+            except ValueError:
+                raise MyQueueCLIError('{folder} not inside {home}'
+                                      .format(folder=folder, home=home))
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -334,20 +363,8 @@ def run(args):
         elif args.command == 'kick':
             tasks.kick(args.dry_run, args.install_crontab_job)
 
-        elif args.command == 'completion':
-            cmd = ('complete -o default -C "{py} {filename}" mq'
-                   .format(py=sys.executable,
-                           filename=Path(__file__).with_name('complete.py')))
-            if verbosity > 0:
-                print('Add tab-completion for Bash by copying the following '
-                      'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
-                      .format(cmd=cmd))
-            else:
-                print(cmd)
-
 
 def workflow(args, tasks, folders):
-    from pathlib import Path
     from myqueue.utils import chdir
 
     if args.pattern:
@@ -392,3 +409,35 @@ def workflow2(args, tasks, folders):
             alltasks += newtasks
 
     tasks.submit(alltasks, args.dry_run)
+
+
+class Formatter(argparse.HelpFormatter):
+    """Improved help formatter."""
+    def _fill_text(self, text, width, indent):
+        assert indent == ''
+        out = ''
+        blocks = text.split('\n\n')
+        for block in blocks:
+            if block[0] == '*':
+                # List items:
+                for item in block[2:].split('\n* '):
+                    out += textwrap.fill(item,
+                                         width=width - 2,
+                                         initial_indent='* ',
+                                         subsequent_indent='  ') + '\n'
+            elif block[0] == ' ':
+                # Indented literal block:
+                out += block + '\n'
+            else:
+                # Block of text:
+                out += textwrap.fill(block, width=width) + '\n'
+            out += '\n'
+        return out[:-1]
+
+
+def is_inside(path1: Path, path2: Path) -> bool:
+    try:
+        path1.relative_to(path2)
+    except ValueError:
+        return False
+    return True

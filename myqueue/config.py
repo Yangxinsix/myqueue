@@ -4,8 +4,8 @@ from typing import Dict, Any  # noqa
 config = {}  # type: Dict[str, Any]
 
 
-def initialize_config() -> None:
-    home = find_home_folder()
+def initialize_config(start: Path) -> None:
+    home = find_home_folder(start)
     config['home'] = home
     cfg = home / 'config.py'
     if cfg.is_file():
@@ -14,15 +14,18 @@ def initialize_config() -> None:
         config.update(namespace['config'])
 
 
-def find_home_folder() -> Path:
+def find_home_folder(start: Path) -> Path:
     """Find closest .myqueue/ folder."""
-    f = Path.cwd()
+    f = start
     while True:
         dir = f / '.myqueue'
         if dir.is_dir():
+            if f == Path.home():
+                break
             return dir
         newf = f.parent
         if newf == f:
             break
         f = newf
-    raise ValueError('Could not find your .myqueue/ folder!')
+    raise ValueError('Could not find .myqueue/ folder! '
+                     'Please run "mq init"')
