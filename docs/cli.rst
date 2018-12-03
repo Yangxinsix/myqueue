@@ -8,12 +8,12 @@ Commands
 .. computer generated text:
 
 
-List command
-------------
+List (ls): List tasks in queue
+------------------------------
 
 usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
                [-T]
-               [folder [folder ...]]
+               [folder]
 
 List tasks in queue.
 
@@ -39,10 +39,10 @@ optional arguments:
   -T, --traceback       Show full traceback.
 
 
-Submit command
---------------
+Submit: Submit task(s) to queue
+-------------------------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart]
+usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart N]
                  [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
 
@@ -63,10 +63,10 @@ optional arguments:
                         Comma-separated task names.
   -a ARGUMENTS, --arguments ARGUMENTS
                         Comma-separated arguments for task.
-  --restart             Restart if task times out or runs out of memory. Time-
-                        limit will be doubled for a timed out task and number
-                        of cores will be doubled for a task that runs out of
-                        memory.
+  --restart N           Restart N times if task times out or runs out of
+                        memory. Time-limit will be doubled for a timed out
+                        task and number of cores will be doubled for a task
+                        that runs out of memory.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -79,8 +79,8 @@ optional arguments:
   -T, --traceback       Show full traceback.
 
 
-Resubmit command
-----------------
+Resubmit: Resubmit failed or timed-out tasks
+--------------------------------------------
 
 usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
                    [-z] [-v] [-q] [-T] [-r]
@@ -114,8 +114,8 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
-Remove command
---------------
+Remove (rm): Remove or cancel task(s)
+-------------------------------------
 
 usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
@@ -142,8 +142,8 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
-Workflow command
-----------------
+Workflow: Submit tasks from Python script
+-----------------------------------------
 
 usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
@@ -163,8 +163,8 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Sync command
-------------
+Sync: Make sure SLURM/PBS and MyQueue are in sync
+-------------------------------------------------
 
 usage: mq sync [-h] [-z] [-v] [-q] [-T]
 
@@ -178,8 +178,8 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Completion command
-------------------
+Completion: Set up tab-completion
+---------------------------------
 
 usage: mq completion [-h] [-v] [-q] [-T]
 
@@ -192,10 +192,11 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Test command
-------------
+Test: Run tests
+---------------
 
-usage: mq test [-h] [--non-local] [-x EXCLUDE] [-z] [-v] [-q] [-T]
+usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-z] [-v] [-q]
+               [-T]
                [test [test ...]]
 
 Run tests.
@@ -205,7 +206,8 @@ test:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --non-local           Run tests using SLURM/PBS.
+  --config-file CONFIG_FILE
+                        Use specific config.py file.
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude test(s).
   -z, --dry-run         Show what will happen without doing anything.

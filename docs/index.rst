@@ -9,8 +9,11 @@ Simple frontend for SLURM_ and PBS_.
     :caption: Contents:
 
     installation
+    configuration
     tutorial
+    workflows
     cli
+    releasenotes
 
 
 .. _SLURM: https://slurm.schedmd.com/

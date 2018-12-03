@@ -1,6 +1,5 @@
 import errno
 import os
-import re
 import sys
 import time
 from contextlib import contextmanager
@@ -66,32 +65,6 @@ def lock(method):
     return m
 
 
-regex = re.compile(r'\{.*?\}')
-
-
-class F:
-    def __pow__(self, arg):
-        context = sys._getframe(1).f_locals
-        parts = []
-        for match in regex.finditer(arg):
-            a, b = match.span()
-            x = arg[a + 1:b - 1]
-            if x[0] == '{':
-                continue
-            if ':' in x:
-                x, fmt = x.split(':')
-            else:
-                fmt = ''
-            s = format(eval(x, context), fmt)
-            parts.append((a, b, s))
-        for a, b, s in reversed(parts):
-            arg = arg[:a] + s + arg[b:]
-        return arg
-
-
-f = F()
-
-
 def update_completion():
     """Update README.rst and commands dict.
 
@@ -103,16 +76,21 @@ def update_completion():
 
     import argparse
     import textwrap
-    from myqueue.cli import main
+    from myqueue.cli import main, commands, aliases
 
     # Path of the complete.py script:
     dir = Path(__file__).parent
 
     sys.stdout = StringIO()
-    for cmd in ['list', 'submit', 'resubmit', 'remove', 'workflow',
-                'sync', 'completion', 'test']:
-        print('\n\n{} command\n{}\n'
-              .format(cmd.title(), '-' * (len(cmd) + 8)))
+    for cmd, (help, description) in commands.items():
+        if cmd == 'help':
+            continue
+        help = commands[cmd][0].rstrip('.')
+        title = f'{cmd.title()}: {help}'
+        a = [alias for alias, command in aliases.items() if command == cmd]
+        if a:
+            title = title.replace(':', f' ({a[0]}):')
+        print('\n\n{}\n{}\n'.format(title, '-' * len(title)))
         main(['help', cmd])
 
     newlines = sys.stdout.getvalue().splitlines()

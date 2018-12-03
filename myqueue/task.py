@@ -210,9 +210,10 @@ def task(cmd: str,
          workflow: bool = False,
          restart: int = 0,
          diskspace: float = 0.0) -> Task:
-    """Create Task object.
+    """Create a Task object.
 
-
+    cmd: str
+        Command to be run.
     """
 
     path = Path(folder).absolute()

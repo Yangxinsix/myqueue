@@ -2,14 +2,14 @@ import argparse
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any
+from typing import List, Any, Tuple, Dict
 
 
 class MyQueueCLIError(Exception):
     pass
 
 
-commands = """\
+_help = """\
 help
 Show how to use this tool.
 More help can be found here: https://myqueue.readthedocs.io/.
@@ -62,6 +62,19 @@ Run tests.
 
 """
 
+aliases = {'rm': 'remove',
+           'ls': 'list'}
+
+
+commands: Dict[str, Tuple[str, str]] = {}
+for lines in _help.split('\n.\n'):
+    cmd, help, description = lines.split('\n', 2)
+    if description:
+        description = help + '\n\n' + description
+    else:
+        description = help
+    commands[cmd] = (help, description)
+
 
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
@@ -72,16 +85,7 @@ def main(arguments: List[str] = None) -> Any:
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    aliases = {'rm': 'remove',
-               'ls': 'list'}
-
-    for lines in commands.split('\n.\n'):
-        cmd, help, description = lines.split('\n', 2)
-        if description:
-            description = help + '\n\n' + description
-        else:
-            description = help
-
+    for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
                                   description=description,
                                   help=help,
