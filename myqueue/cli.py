@@ -37,14 +37,6 @@ remove
 Remove or cancel task(s).
 
 .
-modify
-Modify task(s).
-
-.
-sync
-Make sure SLURM/PBS and MyQueue are in sync.
-
-.
 workflow
 Submit tasks from Python script.
 
@@ -54,11 +46,19 @@ Restart timed out or out of memory tasks.
 
 .
 completion
-Set up tab-completion.
+Set up tab-completion for Bash.
 
 .
 test
 Run tests.
+
+.
+modify
+Modify task(s).
+
+.
+sync
+Make sure SLURM/PBS and MyQueue are in sync.
 
 """
 
@@ -182,7 +182,8 @@ def main(arguments: List[str] = None) -> Any:
               'Defaults to current folder.')
 
         if cmd == 'kick':
-            a('--install-crontab-job', action='store_true')
+            a('--install-crontab-job', action='store_true',
+              help='Install crontab job to kick your queues every half hour.')
 
     args = parser.parse_args(arguments)
 

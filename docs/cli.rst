@@ -8,6 +8,24 @@ Commands
 .. computer generated text:
 
 
+Init: Initialize new queue
+--------------------------
+
+usage: mq init [-h] [-z] [-v] [-q] [-T]
+
+Initialize new queue.
+
+This will create a .myqueue/ folder in your current working directory and copy
+~/.myqueue/config.py into it.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
 List (ls): List tasks in queue
 ------------------------------
 
@@ -163,27 +181,30 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Sync: Make sure SLURM/PBS and MyQueue are in sync
--------------------------------------------------
+Kick: Restart timed out or out of memory tasks
+----------------------------------------------
 
-usage: mq sync [-h] [-z] [-v] [-q] [-T]
+usage: mq kick [-h] [-z] [-v] [-q] [-T] [--install-crontab-job]
 
-Make sure SLURM/PBS and MyQueue are in sync.
+Restart timed out or out of memory tasks.
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
+  -h, --help            show this help message and exit
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
+  --install-crontab-job
+                        Install crontab job to kick your queues every half
+                        hour.
 
 
-Completion: Set up tab-completion
----------------------------------
+Completion: Set up tab-completion for Bash
+------------------------------------------
 
 usage: mq completion [-h] [-v] [-q] [-T]
 
-Set up tab-completion.
+Set up tab-completion for Bash.
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -214,3 +235,48 @@ optional arguments:
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
+
+
+Modify: Modify task(s)
+----------------------
+
+usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+                 newstate [folder [folder ...]]
+
+Modify task(s).
+
+newstate:
+    New state (one of the letters: qhrdFCTM).
+folder:
+    Task-folder. Use --recursive (or -r) to include subfolders.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s qhrdFCTM, --states qhrdFCTM
+                        Selection of states. First letters of "queued",
+                        "hold", "running", "done", "FAILED", "CANCELED" and
+                        "TIMEOUT".
+  -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
+                        reading ID's from stdin (one ID per line; extra stuff
+                        after the ID will be ignored).
+  -n NAME, --name NAME  Select only tasks named "NAME".
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
+  -r, --recursive       Use also subfolders.
+
+
+Sync: Make sure SLURM/PBS and MyQueue are in sync
+-------------------------------------------------
+
+usage: mq sync [-h] [-z] [-v] [-q] [-T]
+
+Make sure SLURM/PBS and MyQueue are in sync.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
