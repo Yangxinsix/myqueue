@@ -8,16 +8,39 @@ Commands
 .. computer generated text:
 
 
-List command
-------------
+Init: Initialize new queue
+--------------------------
+
+usage: mq init [-h] [-z] [-v] [-q] [-T]
+
+Initialize new queue.
+
+This will create a .myqueue/ folder in your current working directory and copy
+~/.myqueue/config.py into it.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
+List (ls): List tasks in queue
+------------------------------
 
 usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
                [-T]
-               [folder [folder ...]]
+               [folder]
 
 List tasks in queue.
 
 Only tasks in the chosen folder and its subfolders are shown.
+
+Examples:
+
+    $ mq list -s rq  # show running and queued jobs
+    $ mq ls -s F abc/  # show failed jobs in abc/ folder
 
 folder:
     List tasks in this folder and its subfolders. Defaults to current folder.
@@ -39,10 +62,10 @@ optional arguments:
   -T, --traceback       Show full traceback.
 
 
-Submit command
---------------
+Submit: Submit task(s) to queue
+-------------------------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart]
+usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart N]
                  [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
 
@@ -63,10 +86,10 @@ optional arguments:
                         Comma-separated task names.
   -a ARGUMENTS, --arguments ARGUMENTS
                         Comma-separated arguments for task.
-  --restart             Restart if task times out or runs out of memory. Time-
-                        limit will be doubled for a timed out task and number
-                        of cores will be doubled for a task that runs out of
-                        memory.
+  --restart N           Restart N times if task times out or runs out of
+                        memory. Time-limit will be doubled for a timed out
+                        task and number of cores will be doubled for a task
+                        that runs out of memory.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -79,8 +102,8 @@ optional arguments:
   -T, --traceback       Show full traceback.
 
 
-Resubmit command
-----------------
+Resubmit: Resubmit failed or timed-out tasks
+--------------------------------------------
 
 usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
                    [-z] [-v] [-q] [-T] [-r]
@@ -88,6 +111,10 @@ usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
 
 Resubmit failed or timed-out tasks.
 
+Example:
+
+    $ mq resubmit -i 4321  # resubmit job with id=4321
+
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
@@ -114,13 +141,18 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
-Remove command
---------------
+Remove (rm): Remove or cancel task(s)
+-------------------------------------
 
 usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
                  [folder [folder ...]]
 
 Remove or cancel task(s).
+
+Examples:
+
+    $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
+    $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
@@ -142,14 +174,14 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
-Workflow command
-----------------
+Workflow: Submit tasks from Python script
+-----------------------------------------
 
 usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
 Submit tasks from Python script.
 
- Example:
+Example:
 
     $ cat flow.py
     from myqueue.tas import task
@@ -171,23 +203,29 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Sync command
-------------
+Kick: Restart T and M tasks (timed-out and out-of-memory)
+---------------------------------------------------------
 
-usage: mq sync [-h] [-z] [-v] [-q] [-T]
+usage: mq kick [-h] [-z] [-v] [-q] [-T] [--install-crontab-job]
 
-Make sure SLURM/PBS and MyQueue are in sync.
+Restart T and M tasks (timed-out and out-of-memory).
+
+You can kick the queue manually with "mq kick" or automatically by adding that
+command to a crontab job (can be done with "mq kick --install-crontab-job").
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
+  -h, --help            show this help message and exit
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
+  --install-crontab-job
+                        Install crontab job to kick your queues every half
+                        hour.
 
 
-Completion command
-------------------
+Completion: Set up tab-completion for Bash
+------------------------------------------
 
 usage: mq completion [-h] [-v] [-q] [-T]
 
@@ -204,10 +242,11 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Test command
-------------
+Test: Run tests
+---------------
 
-usage: mq test [-h] [--non-local] [-x EXCLUDE] [-z] [-v] [-q] [-T]
+usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-z] [-v] [-q]
+               [-T]
                [test [test ...]]
 
 Run tests.
@@ -219,10 +258,56 @@ test:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --non-local           Run tests using SLURM/PBS.
+  --config-file CONFIG_FILE
+                        Use specific config.py file.
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude test(s).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
+
+
+Modify: Modify task(s)
+----------------------
+
+usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+                 newstate [folder [folder ...]]
+
+Modify task(s).
+
+newstate:
+    New state (one of the letters: qhrdFCTM).
+folder:
+    Task-folder. Use --recursive (or -r) to include subfolders.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s qhrdFCTM, --states qhrdFCTM
+                        Selection of states. First letters of "queued",
+                        "hold", "running", "done", "FAILED", "CANCELED" and
+                        "TIMEOUT".
+  -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
+                        reading ID's from stdin (one ID per line; extra stuff
+                        after the ID will be ignored).
+  -n NAME, --name NAME  Select only tasks named "NAME".
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
+  -r, --recursive       Use also subfolders.
+
+
+Sync: Make sure SLURM/PBS and MyQueue are in sync
+-------------------------------------------------
+
+usage: mq sync [-h] [-z] [-v] [-q] [-T]
+
+Make sure SLURM/PBS and MyQueue are in sync.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.

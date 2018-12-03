@@ -34,6 +34,9 @@ commands = {
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'help':
         [''],
+    'init':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'kick':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '--install-crontab-job'],
@@ -63,7 +66,7 @@ commands = {
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'test':
-        ['--non-local', '-x', '--exclude', '-z', '--dry-run', '-v',
+        ['--config-file', '-x', '--exclude', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'workflow':
         ['-p', '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
@@ -101,6 +104,9 @@ def complete(word, previous, line, point):
 
     elif command == 'test':
         from myqueue.test.tests import all_tests as words
+
+    elif command == 'help':
+        words = [cmd for cmd in commands if cmd != 'help']
 
     return words
 

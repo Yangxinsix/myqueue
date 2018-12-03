@@ -1,11 +1,11 @@
 import os
 import tempfile
 import time
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 
 from myqueue.cli import main
-from myqueue.config import read_config
+from myqueue.config import initialize_config
 
 
 LOCAL = True
@@ -43,17 +43,29 @@ def wait()-> None:
             raise TimeoutError
 
 
-def run_tests(tests: List[str], local: bool, exclude: List[str]):
+def run_tests(tests: List[str],
+              config_file: Optional[Path],
+              exclude: List[str]) -> None:
     global LOCAL
-    LOCAL = local
+    LOCAL = config_file is None
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
-    os.environ['MYQUEUE_HOME'] = str(tmpdir)
-    cfg = read_config()
-    os.environ['MYQUEUE_DEBUG'] = 'local' if local else cfg['queue']
 
     if not tests:
         tests = list(all_tests)
+
+    (tmpdir / '.myqueue').mkdir()
+
+    if config_file:
+        txt = config_file.read_text()
+    else:
+        txt = 'config = {}\n'.format({'queue': 'local'})
+        if 'oom' in tests:
+            tests.remove('oom')
+    (tmpdir / '.myqueue' / 'config.py').write_text(txt)
+    initialize_config(tmpdir)
+
+    os.environ['MYQUEUE_DEBUG'] = 'yes'
 
     for test in exclude:
         tests.remove(test)
@@ -70,9 +82,14 @@ def run_tests(tests: List[str], local: bool, exclude: List[str]):
 
         mq('rm -s qrdFTCM . -r')
 
-        for f in tmpdir.glob('**/*'):
+        for f in tmpdir.glob('*'):
+            if f.is_file():
+                f.unlink()
+
+    for f in tmpdir.glob('.myqueue/*'):
             f.unlink()
 
+    (tmpdir / '.myqueue').rmdir()
     tmpdir.rmdir()
 
 
@@ -121,17 +138,20 @@ def timeout():
 @test
 def timeout2():
     t = 3 if LOCAL else 120
-    mq('submit sleep@1:{}s --restart -a {}'.format(t // 3 * 2, t))
+    mq('submit sleep@1:{}s --restart 2 -a {}'.format(t // 3, t))
     mq('submit echo+hello -d sleep+{}'.format(t))
     wait()
     mq('kick')
     wait()
-    assert states() == 'dd'
+    if states() != 'dd':
+        mq('kick')
+        wait()
+        assert states() == 'dd'
 
 
 @test
 def oom():
-    mq('submit myqueue.test.oom --restart -a {}'.format(LOCAL))
+    mq('submit myqueue.test.oom --restart 2 -a {}'.format(LOCAL))
     wait()
     assert states() == 'M'
     mq('kick')

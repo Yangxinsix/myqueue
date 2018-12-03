@@ -1,10 +1,8 @@
 tests:
+  image: python:3.6
   script:
-    - apt-get update -qy
-    - apt-get install -qy python3-pip > install.out
-    - pip3 install --user flake8 mypy
-    - pip3 install -e . --user
-    - export PATH=~/.local/bin/:$PATH
+    - pip install flake8 mypy
+    - pip install -e .
     - flake8 myqueue
-    - mypy -p myqueue --ignore-missing-imports
-    - mq test -x oom
+    - mypy -p myqueue
+    - mq test

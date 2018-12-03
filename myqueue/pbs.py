@@ -2,13 +2,13 @@ import os
 import subprocess
 
 from myqueue.task import Task
-from myqueue.config import home_folder
+from myqueue.config import config
 from myqueue.queue import Queue
 
 
 class PBS(Queue):
     def submit(self, task: Task) -> None:
-        nodelist = self.cfg['nodes']
+        nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
@@ -43,16 +43,16 @@ class PBS(Queue):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
-        home = home_folder()
+        home = config['home']
 
         script = (
             '#!/bin/bash -l\n'
             'id=${{PBS_JOBID%.*}}\n'
-            'mq={home}/pbs-$id\n'
+            'mq={home}/.myqueue/pbs-$id\n'
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             'touch $mq-2\n'
             .format(home=home, dir=task.folder, cmd=cmd))
@@ -82,7 +82,7 @@ class PBS(Queue):
     def get_ids(self):
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
-        host = self.cfg.get('host')
+        host = config.get('host')
         if host:
             cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

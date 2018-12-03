@@ -1,23 +1,33 @@
-import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any  # noqa
 
-_config = {}  # type: Dict[str, Any]
+config = {}  # type: Dict[str, Any]
 
 
-def read_config() -> Dict[str, Any]:
-    if _config:
-        return _config
-    cfg = Path.home() / '.myqueue' / 'config.py'
+def initialize_config(start: Path) -> None:
+    if 'home' in config:
+        return
+    home = find_home_folder(start)
+    config['home'] = home
+    cfg = home / '.myqueue' / 'config.py'
     if cfg.is_file():
         namespace = {}  # type: Dict[str, Dict[str, Any]]
         exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
-        _config.update(namespace['config'])
-    return _config
+        config.update(namespace['config'])
 
 
-def home_folder() -> Path:
-    dir = os.environ.get('MYQUEUE_HOME')
-    if dir:
-        return Path(dir)
-    return Path.home() / '.myqueue'
+def find_home_folder(start: Path) -> Path:
+    """Find closest .myqueue/ folder."""
+    f = start
+    while True:
+        dir = f / '.myqueue'
+        if dir.is_dir():
+            if f == Path.home():
+                break
+            return f
+        newf = f.parent
+        if newf == f:
+            break
+        f = newf
+    raise ValueError('Could not find .myqueue/ folder! '
+                     'Please run "mq init"')

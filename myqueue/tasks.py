@@ -4,13 +4,13 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict  # noqa
+from typing import Set, List, Dict, Optional  # noqa
 
 from myqueue.resources import Resources
 from myqueue.task import Task
 from myqueue.queue import get_queue, Queue
 from myqueue.utils import Lock
-from myqueue.config import home_folder, read_config
+from myqueue.config import config
 
 
 class Selection:
@@ -33,26 +33,27 @@ class Tasks(Lock):
 
         self.debug = os.environ.get('MYQUEUE_DEBUG', '')
 
-        self.folder = home_folder()
-
-        if not self.folder.is_dir():
-            self.folder.mkdir()
-
+        self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
-        self.queues = {}  # type: Dict[str, Queue]
+        self._queue = None  # type: Optional[Queue]
         self.tasks = []  # type: List[Task]
-        self.changed = False  # type: bool
+        self.changed = False
 
-    def queue(self, task: Task) -> Queue:
-        queuename = task.queue_name()
-        queue = self.queues.get(queuename)
-        if not queue:
-            queue = get_queue(queuename)
-            self.queues[queuename] = queue
-        return queue
+    @property
+    def queue(self) -> Queue:
+        if self._queue is None:
+            queuename = config.get('queue')
+            if queuename is None:
+                raise ValueError(
+                    ('Please specify type of queue in your '
+                     '{}/.myqueue/config.py '
+                     'file (must be slurm, pbs or local).'
+                     .format(config['home'])))
+            self._queue = get_queue(queuename)
+        return self._queue
 
     def __exit__(self, type, value, tb):
         if self.changed:
@@ -166,7 +167,7 @@ class Tasks(Lock):
             ex = None
             for task in todo:
                 try:
-                    self.queue(task).submit(task)
+                    self.queue.submit(task)
                 except Exception as x:
                     ex = x
                     break
@@ -179,8 +180,7 @@ class Tasks(Lock):
 
             self.tasks += submitted
             self.changed = True
-            for queue in self.queues.values():
-                queue.kick()
+            self.queue.kick()
 
             if ex:
                 print('ERROR:', task)
@@ -219,26 +219,21 @@ class Tasks(Lock):
             print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'hold', 'queued']:
-                    self.queue(task).cancel(task)
+                    self.queue.cancel(task)
                 self.tasks.remove(task)
             self.changed = True
 
     def sync(self, dry_run: bool) -> None:
         self._read()
-        alltasks = defaultdict(list)  # type: Dict[Queue, List[Task]]
-        for task in self.tasks:
-            queue = self.queue(task)
-            alltasks[queue].append(task)
         n = 0
         in_the_queue = ['running', 'hold', 'queued']
-        for queue, tasks in alltasks.items():
-            ids = queue.get_ids()
-            for task in tasks:
-                if task.state in in_the_queue and task.id not in ids:
-                    if not dry_run:
-                        self.tasks.remove(task)
-                        self.changed = True
-                    n += 1
+        ids = self.queue.get_ids()
+        for task in self.tasks:
+            if task.state in in_the_queue and task.id not in ids:
+                if not dry_run:
+                    self.tasks.remove(task)
+                    self.changed = True
+                n += 1
         if n:
             if dry_run:
                 print(plural(n, 'job'), 'to be removed')
@@ -278,12 +273,12 @@ class Tasks(Lock):
                 if dry_run:
                     print('Release:', task)
                 else:
-                    self.queue(task).release_hold(task)
+                    self.queue.release_hold(task)
             elif task.state == 'queued' and newstate == 'hold':
                 if dry_run:
                     print('Hold:', task)
                 else:
-                    self.queue(task).hold(task)
+                    self.queue.hold(task)
             elif task.state == 'FAILED' and newstate in ['MEMORY', 'TIMEOUT']:
                 if dry_run:
                     print('FAILED ->', newstate, task)
@@ -398,8 +393,7 @@ class Tasks(Lock):
             if task.state == 'running':
                 delta = t - task.trunning - task.resources.tmax
                 if delta > 0:
-                    queue = self.queue(task)
-                    if queue.timeout(task) or delta > 1800:
+                    if self.queue.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.tstop = t
                         for tsk in self.tasks:
@@ -427,17 +421,13 @@ class Tasks(Lock):
                         task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run: bool, crontab: bool = False) -> None:
-        if crontab:
-            from myqueue.crontab import install_crontab_job
-            install_crontab_job(dry_run)
-            return
-
+    def kick(self, dry_run: bool) -> None:
         self._read()
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 task.resources.double(task.state)
+                task.restart -= 1
                 tasks.append(task)
         if tasks:
             tasks = self.find_depending(tasks)
@@ -453,7 +443,7 @@ class Tasks(Lock):
         self.hold_or_release(dry_run)
 
     def hold_or_release(self, dry_run: bool) -> None:
-        maxmem = read_config().get('maximum_diskspace', float('inf'))
+        maxmem = config.get('maximum_diskspace', float('inf'))
         mem = 0
         for task in self.tasks:
             if task.state in {'queued', 'running'}:
@@ -463,7 +453,7 @@ class Tasks(Lock):
             for task in self.tasks:
                 if task.state == 'queued':
                     if task.diskspace > 0:
-                        self.queue(task).hold(task)
+                        self.queue.hold(task)
                         task.state = 'hold'
                         self.changed = True
                         mem -= task.diskspace
@@ -472,7 +462,7 @@ class Tasks(Lock):
         elif mem < maxmem:
             for task in self.tasks[::-1]:
                 if task.state == 'hold' and task.diskspace > 0:
-                    self.queue(task).release_hold(task)
+                    self.queue.release_hold(task)
                     task.state = 'queued'
                     self.changed = True
                     mem += task.diskspace

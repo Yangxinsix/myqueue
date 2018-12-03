@@ -1,9 +1,9 @@
 import sys
 
 
-def oom(local=True):
+def oom(local: bool = True) -> None:
     try:
-        from ase.parallel import world
+        from ase.parallel import world  # type: ignore
         if world.size > 1:
             return
     except ImportError:

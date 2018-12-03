@@ -1,7 +1,8 @@
 import argparse
 import sys
 import textwrap
-from typing import List, Any
+from pathlib import Path
+from typing import List, Any, Tuple, Dict
 
 
 class MyQueueCLIError(Exception):
@@ -15,10 +16,15 @@ Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
 """
 
-commands = """\
+_help = """\
 help
 Show how to use this tool.
 More help can be found here: https://myqueue.readthedocs.io/.
+.
+init
+Initialize new queue.
+This will create a .myqueue/ folder in your current working directory
+and copy ~/.myqueue/config.py into it.
 .
 list
 List tasks in queue.
@@ -48,19 +54,8 @@ Examples:
     $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 .
-modify
-Modify task(s).
-Example:
-
-    $ mq modify
-.
-sync
-Make sure SLURM/PBS and MyQueue are in sync.
-
-.
 workflow
 Submit tasks from Python script.
-
 Example:
 
     $ cat flow.py
@@ -83,31 +78,29 @@ Do this:
 test
 Run tests.
 Please report errors to https://gitlab.com/jensj/myqueue/issues.
+
+.
+modify
+Modify task(s).
+
+.
+sync
+Make sure SLURM/PBS and MyQueue are in sync.
+
 """
 
+aliases = {'rm': 'remove',
+           'ls': 'list'}
 
-class Formatter(argparse.HelpFormatter):
-    """Improved help formatter."""
-    def _fill_text(self, text, width, indent):
-        assert indent == ''
-        out = ''
-        blocks = text.split('\n\n')
-        for block in blocks:
-            if block[0] == '*':
-                # List items:
-                for item in block[2:].split('\n* '):
-                    out += textwrap.fill(item,
-                                         width=width - 2,
-                                         initial_indent='* ',
-                                         subsequent_indent='  ') + '\n'
-            elif block[0] == ' ':
-                # Indented literal block:
-                out += block + '\n'
-            else:
-                # Block of text:
-                out += textwrap.fill(block, width=width) + '\n'
-            out += '\n'
-        return out[:-1]
+
+commands: Dict[str, Tuple[str, str]] = {}
+for lines in _help.split('\n.\n'):
+    cmd, help, description = lines.split('\n', 2)
+    if description:
+        description = help + '\n\n' + description
+    else:
+        description = help
+    commands[cmd] = (help, description)
 
 
 def main(arguments: List[str] = None) -> Any:
@@ -118,16 +111,7 @@ def main(arguments: List[str] = None) -> Any:
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    aliases = {'rm': 'remove',
-               'ls': 'list'}
-
-    for lines in commands.split('\n.\n'):
-        cmd, help, description = lines.split('\n', 2)
-        if description:
-            description = help + '\n\n' + description
-        else:
-            description = help
-
+    for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
                                   description=description,
                                   help=help,
@@ -143,8 +127,8 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'test':
             a('test', nargs='*',
               help='Test to run.  Default behaviour is to run all.')
-            a('--non-local', action='store_true',
-              help='Run tests using SLURM/PBS.')
+            a('--config-file',
+              help='Use specific config.py file.')
             a('-x', '--exclude',
               help='Exclude test(s).')
 
@@ -153,8 +137,8 @@ def main(arguments: List[str] = None) -> Any:
             a('-d', '--dependencies', default='',
               help='Comma-separated task names.')
             a('-a', '--arguments', help='Comma-separated arguments for task.')
-            a('--restart', action='store_true',
-              help='Restart if task times out or runs out of memory. '
+            a('--restart', type=int, default=0, metavar='N',
+              help='Restart N times if task times out or runs out of memory. '
               'Time-limit will be doubled for a timed out task and '
               'number of cores will be doubled for a task that runs out '
               'of memory.')
@@ -212,7 +196,8 @@ def main(arguments: List[str] = None) -> Any:
 
         if cmd == 'list':
             a('folder',
-              nargs='*',
+              nargs='?',
+              default='.',
               help='List tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
@@ -223,14 +208,21 @@ def main(arguments: List[str] = None) -> Any:
               'Defaults to current folder.')
 
         if cmd == 'kick':
-            a('--install-crontab-job', action='store_true')
+            a('--install-crontab-job', action='store_true',
+              help='Install crontab job to kick your queues every half hour.')
 
     args = parser.parse_args(arguments)
 
     args.command = aliases.get(args.command, args.command)
 
+    # Create ~/.myqueue/ if it's not there:
+    f = Path.home() / '.myqueue'
+    if not f.is_dir():
+        f.mkdir()
+
     if args.command is None:
         parser.print_help()
+        print(__file__)
         return
 
     if args.command == 'help':
@@ -243,7 +235,52 @@ def main(arguments: List[str] = None) -> Any:
     if args.command == 'test':
         from myqueue.test.tests import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
-        run_tests(args.test, not args.non_local, exclude)
+        config = Path(args.config_file) if args.config_file else None
+        run_tests(args.test, config, exclude)
+        return
+
+    if args.command == 'completion':
+        cmd = ('complete -o default -C "{py} {filename}" mq'
+               .format(py=sys.executable,
+                       filename=Path(__file__).with_name('complete.py')))
+        if args.verbose:
+            print('Add tab-completion for Bash by copying the following '
+                  'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
+                  .format(cmd=cmd))
+        else:
+            print(cmd)
+        return
+
+    if args.command == 'init':
+        path = Path.home() / '.myqueue' / 'folders.txt'
+        if path.is_file():
+            folders = [Path(folder)
+                       for folder in path.read_text().splitlines()]
+        else:
+            folders = []
+        home = Path.cwd()
+        for folder in folders:
+            if is_inside(home, folder):
+                raise MyQueueCLIError(
+                    'You are already inside a myqueue folder:', folder)
+            if is_inside(folder, home):
+                raise MyQueueCLIError(
+                    'You can not have a myqueue folder inside a '
+                    'myqueue folder:', folder)
+
+        mq = home / '.myqueue'
+        mq.mkdir()
+        cfg = path.with_name('config.py')
+        if cfg.is_file():
+            (mq / 'config.py').write_text(cfg.read_text())
+
+        folders.append(home)
+        path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
+        return
+
+    if args.command == 'kick' and args.install_crontab_job:
+        from myqueue.crontab import install_crontab_job
+        install_crontab_job(args.dry_run)
         return
 
     try:
@@ -266,21 +303,37 @@ def main(arguments: List[str] = None) -> Any:
 
 
 def run(args):
-    verbosity = 1 - args.quiet + args.verbose
-
-    from pathlib import Path
-
+    from myqueue.config import config, initialize_config
     from myqueue.resources import Resources
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
 
+    verbosity = 1 - args.quiet + args.verbose
+
     if args.command in ['list', 'submit', 'remove', 'resubmit',
                         'modify', 'workflow']:
+        if args.command == 'list':
+            args.folder = [args.folder]
         folders = [Path(folder).expanduser().absolute().resolve()
                    for folder in args.folder]
-        if args.command in ['remove', 'resubmit']:
+        if args.command in ['remove', 'resubmit', 'modify']:
             if not args.id and not folders:
                 raise MyQueueCLIError('Missing folder!')
+
+        if folders:
+            start = folders[0]
+        else:
+            start = Path.cwd()
+        initialize_config(start)
+        home = config['home']
+        if args.verbose:
+            print('Home:', home)
+        for folder in folders[1:]:
+            try:
+                folder.relative_to(home)
+            except ValueError:
+                raise MyQueueCLIError('{folder} not inside {home}'
+                                      .format(folder=folder, home=home))
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -353,22 +406,10 @@ def run(args):
             tasks.sync(args.dry_run)
 
         elif args.command == 'kick':
-            tasks.kick(args.dry_run, args.install_crontab_job)
-
-        elif args.command == 'completion':
-            cmd = ('complete -o default -C "{py} {filename}" mq'
-                   .format(py=sys.executable,
-                           filename=Path(__file__).with_name('complete.py')))
-            if verbosity > 0:
-                print('Add tab-completion for Bash by copying the following '
-                      'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
-                      .format(cmd=cmd))
-            else:
-                print(cmd)
+            tasks.kick(args.dry_run)
 
 
 def workflow(args, tasks, folders):
-    from pathlib import Path
     from myqueue.utils import chdir
 
     if args.pattern:
@@ -413,3 +454,35 @@ def workflow2(args, tasks, folders):
             alltasks += newtasks
 
     tasks.submit(alltasks, args.dry_run)
+
+
+class Formatter(argparse.HelpFormatter):
+    """Improved help formatter."""
+    def _fill_text(self, text, width, indent):
+        assert indent == ''
+        out = ''
+        blocks = text.split('\n\n')
+        for block in blocks:
+            if block[0] == '*':
+                # List items:
+                for item in block[2:].split('\n* '):
+                    out += textwrap.fill(item,
+                                         width=width - 2,
+                                         initial_indent='* ',
+                                         subsequent_indent='  ') + '\n'
+            elif block[0] == ' ':
+                # Indented literal block:
+                out += block + '\n'
+            else:
+                # Block of text:
+                out += textwrap.fill(block, width=width) + '\n'
+            out += '\n'
+        return out[:-1]
+
+
+def is_inside(path1: Path, path2: Path) -> bool:
+    try:
+        path1.relative_to(path2)
+    except ValueError:
+        return False
+    return True

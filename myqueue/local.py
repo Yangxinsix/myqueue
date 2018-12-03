@@ -2,7 +2,7 @@ import json
 import subprocess
 
 
-from myqueue.config import home_folder
+from myqueue.config import config, initialize_config
 from myqueue.queue import Queue
 from myqueue.task import Task
 from myqueue.utils import Lock, lock
@@ -10,7 +10,7 @@ from myqueue.utils import Lock, lock
 
 class LocalQueue(Queue, Lock):
     def __init__(self):
-        self.fname = home_folder() / 'local.json'
+        self.fname = config['home'] / '.myqueue' / 'local.json'
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None
@@ -154,11 +154,14 @@ class LocalQueue(Queue, Lock):
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             mpiexec += '-np {} '.format(task.resources.processes)
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3',
+                                        config.get('parallel_python',
+                                                   'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
-        msg = 'python3 -m myqueue.local {}'.format(task.id)
+        msg = ('python3 -m myqueue.local {} {}'
+               .format(config['home'], task.id))
         cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
@@ -171,6 +174,8 @@ class LocalQueue(Queue, Lock):
 
 if __name__ == '__main__':
     import sys
-    id, state = sys.argv[1:3]
+    from pathlib import Path
+    home, id, state = sys.argv[1:4]
+    initialize_config(Path(home))
     q = LocalQueue()
     q.update(int(id), state)

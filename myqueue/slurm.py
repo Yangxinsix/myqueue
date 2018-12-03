@@ -4,13 +4,13 @@ from math import ceil
 from typing import Set
 
 from myqueue.task import Task
-from myqueue.config import home_folder
+from myqueue.config import config
 from myqueue.queue import Queue
 
 
 class SLURM(Queue):
     def submit(self, task: Task) -> None:
-        nodelist = self.cfg['nodes']
+        nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
@@ -44,20 +44,20 @@ class SLURM(Queue):
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            if self.cfg.get('mpi') == 'intel':
+            if config.get('mpi') == 'intel':
                 mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', self.cfg['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
-        home = home_folder()
+        home = config['home']
 
         script = (
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
-            'mq={home}/slurm-$id\n'
+            'mq={home}/.myqueue/slurm-$id\n'
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             '(touch $mq-2; exit 1)\n'
             .format(home=home, dir=task.folder, cmd=cmd))
@@ -96,7 +96,7 @@ class SLURM(Queue):
     def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
-        host = self.cfg.get('host')
+        host = config.get('host')
         if host:
             cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

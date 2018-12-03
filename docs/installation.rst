@@ -2,28 +2,25 @@
 Installation
 ============
 
-Get the code and install with ``pip``::
+Install with ``pip``::
 
-    $ git clone https://gitlab.com/jensj/myqueue.git
-    $ cd myqueue
-    $ python3 -m pip install --user --editable .
+    $ python3 -m pip install myqueue
 
-Make sure ``~/.local/bin/`` is in your ``$PATH`` and enable bash tab-completion
-like this::
+.. note::
+
+    Python 3.6 or later is required.
+
+Enable bash tab-completion like this::
 
     $ mq completion -q >> ~/.bashrc
 
+Run the tests::
 
-Configuration
-=============
+    $ mq test
 
-You need to configure your SLURM/PBS system with a ~/.myqueue/config.py file.
-The simplest way is to copy the file from a friend::
+and report any errors you get: https://gitlab.com/jensj/myqueue/issues.
 
-    $ ls ~/../*/.myqueue/config.py
-    /home/you/../alice/.myqueue/config.py
-    /home/you/../bob/.myqueue/config.py
-    ...
-    $ cp ~alice/.myqueue/config.py ~/.myqueue/config.py
+Subscribe here_ if you want to be notified of updates on PyPI_.
 
-
+.. _here: https://libraries.io/pypi/myqueue
+.. _PyPI: https://pypi.org/project/myqueue/
