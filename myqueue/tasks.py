@@ -28,8 +28,9 @@ class Selection:
 
 
 class Tasks(Lock):
-    def __init__(self, verbosity: int = 1) -> None:
+    def __init__(self, verbosity: int = 1, need_lock: bool = True) -> None:
         self.verbosity = verbosity
+        self.need_lock = need_lock
 
         self.debug = os.environ.get('MYQUEUE_DEBUG', '')
 
@@ -55,10 +56,20 @@ class Tasks(Lock):
             self._queue = get_queue(queuename)
         return self._queue
 
+    def __enter__(self):
+        if self.need_lock:
+            self.acquire()
+            return
+        try:
+            self.acquire()
+        except PermissionError:
+            pass
+
     def __exit__(self, type, value, tb):
         if self.changed:
             self._write()
-        Lock.__exit__(self, type, value, tb)
+        if self.locked:
+            self.release()
 
     def list(self, selection: Selection, columns: str) -> List[Task]:
         self._read()

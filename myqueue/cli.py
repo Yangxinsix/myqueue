@@ -194,11 +194,13 @@ def main(arguments: List[str] = None) -> Any:
               help='Task-folder.  Use --recursive (or -r) to include '
               'subfolders.')
 
-        if cmd == 'list':
+        if cmd in ['list', 'sync', 'kick']:
+            a('-A', '--all', action='store_true',
+              help=f'{cmd.title()} all myqueue folders '
+              '(from ~/.myqueue/folders.txt)')
             a('folder',
               nargs='?',
-              default='.',
-              help='List tasks in this folder and its subfolders.  '
+              help=f'{cmd.title()} tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
         if cmd in ['submit', 'workflow']:
@@ -313,30 +315,31 @@ def run(args):
         install_crontab_job(args.dry_run)
         return
 
-    if args.command in ['list', 'submit', 'remove', 'resubmit',
-                        'modify', 'workflow']:
-        if args.command == 'list':
-            args.folder = [args.folder]
-        folders = [Path(folder).expanduser().absolute().resolve()
-                   for folder in args.folder]
-        if args.command in ['remove', 'resubmit', 'modify']:
-            if not args.id and not folders:
-                raise MyQueueCLIError('Missing folder!')
+    if args.command in ['list', 'sync', 'kick']:
+        if args.all and args.folder is not None:
+            raise MyQueueCLIError('Specifying a folder together with --all '
+                                  'does not make sense')
+        args.folder = [args.folder or '.']
+    folders = [Path(folder).expanduser().absolute().resolve()
+               for folder in args.folder]
+    if args.command in ['remove', 'resubmit', 'modify']:
+        if not args.id and not folders:
+            raise MyQueueCLIError('Missing folder!')
 
-        if folders:
-            start = folders[0]
-        else:
-            start = Path.cwd()
-        initialize_config(start)
-        home = config['home']
-        if args.verbose:
-            print('Home:', home)
-        for folder in folders[1:]:
-            try:
-                folder.relative_to(home)
-            except ValueError:
-                raise MyQueueCLIError('{folder} not inside {home}'
-                                      .format(folder=folder, home=home))
+    if folders:
+        start = folders[0]
+    else:
+        start = Path.cwd()
+    initialize_config(start)
+    home = config['home']
+    if args.verbose:
+        print('Home:', home)
+    for folder in folders[1:]:
+        try:
+            folder.relative_to(home)
+        except ValueError:
+            raise MyQueueCLIError('{folder} not inside {home}'
+                                  .format(folder=folder, home=home))
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -363,25 +366,16 @@ def run(args):
         elif args.command != 'list' and args.states is None:
             raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
 
-        if args.command == 'list' and not folders:
-            folders = [Path.cwd()]
-
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
 
-    if args.command == 'list':
-        tasks = Tasks(verbosity)
-        try:
-            tasks.acquire()
-        except PermissionError:
-            pass
-        try:
-            return tasks.list(selection, args.columns)
-        finally:
-            if tasks.locked:
-                tasks.release()
+    if args.command in ['list', 'sync', 'kick'] and args.all:
 
-    with Tasks(verbosity) as tasks:
+        tasks = Tasks(verbosity)
+        return
+    with Tasks(verbosity, need_lock=args.command != 'list') as tasks:
+        if args.command == 'list':
+            return tasks.list(selection, args.columns)
 
         if args.command == 'remove':
             tasks.remove(selection, args.dry_run)
