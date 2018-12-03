@@ -68,6 +68,21 @@ def lock(method):
     return m
 
 
+def is_inside(path1: Path, path2: Path) -> bool:
+    try:
+        path1.relative_to(path2)
+    except ValueError:
+        return False
+    return True
+
+
+def get_home_folders():
+    path = Path.home() / '.myqueue' / 'folders.txt'
+    if path.is_file():
+        return [Path(folder) for folder in path.read_text().splitlines()]
+    return []
+
+
 def update_completion():
     """Update README.rst and commands dict.
 

@@ -277,16 +277,12 @@ def run(args):
     from myqueue.resources import Resources
     from myqueue.task import task, taskstates
     from myqueue.tasks import Tasks, Selection
+    from myqueue.utils import get_home_folders, is_inside
 
     verbosity = 1 - args.quiet + args.verbose
 
     if args.command == 'init':
-        path = Path.home() / '.myqueue' / 'folders.txt'
-        if path.is_file():
-            folders = [Path(folder)
-                       for folder in path.read_text().splitlines()]
-        else:
-            folders = []
+        folders = get_home_folders()
         home = Path.cwd()
         if home == Path.home():
             raise MyQueueCLIError(
@@ -302,12 +298,15 @@ def run(args):
 
         mq = home / '.myqueue'
         mq.mkdir()
-        cfg = path.with_name('config.py')
+        path = Path.home() / '.myqueue'
+        cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
 
         folders.append(home)
-        path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
+        (path / 'config.py').write_text('\n'.join(str(folder)
+                                                  for folder in folders) +
+                                        '\n')
         return
 
     if args.command == 'kick' and args.install_crontab_job:
@@ -370,8 +369,10 @@ def run(args):
                               folders, getattr(args, 'recursive', True))
 
     if args.command in ['list', 'sync', 'kick'] and args.all:
+        for folder in get_home_folders():
+            config['home'] = folder
+            with Tasks(verbosity) as tasks:
 
-        tasks = Tasks(verbosity)
         return
     with Tasks(verbosity, need_lock=args.command != 'list') as tasks:
         if args.command == 'list':
@@ -485,11 +486,3 @@ class Formatter(argparse.HelpFormatter):
                 out += textwrap.fill(block, width=width) + '\n'
             out += '\n'
         return out[:-1]
-
-
-def is_inside(path1: Path, path2: Path) -> bool:
-    try:
-        path1.relative_to(path2)
-    except ValueError:
-        return False
-    return True
