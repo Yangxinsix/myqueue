@@ -9,6 +9,13 @@ class MyQueueCLIError(Exception):
     pass
 
 
+main_description = """\
+Simple frontend for SLURM/PBS.
+
+Type "mq help <command>" for help.
+See https://myqueue.readthedocs.io/ for more information.
+"""
+
 _help = """\
 help
 Show how to use this tool.
@@ -22,6 +29,11 @@ and copy ~/.myqueue/config.py into it.
 list
 List tasks in queue.
 Only tasks in the chosen folder and its subfolders are shown.
+
+Examples:
+
+    $ mq list -s rq  # show running and queued jobs
+    $ mq ls -s F abc/  # show failed jobs in abc/ folder
 .
 submit
 Submit task(s) to queue.
@@ -31,26 +43,41 @@ Example:
 .
 resubmit
 Resubmit failed or timed-out tasks.
+Example:
 
+    $ mq resubmit -i 4321  # resubmit job with id=4321
 .
 remove
 Remove or cancel task(s).
+Examples:
 
+    $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
+    $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 .
 workflow
 Submit tasks from Python script.
+Example:
 
+    $ cat flow.py
+    from myqueue.tas import task
+    def create_tasks():
+        return [task('task1'), task('task2', deps='task1')]
+    $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 .
 kick
-Restart timed out or out of memory tasks.
-
+Restart T and M tasks (timed-out and out-of-memory).
+You can kick the queue manually with "mq kick" or automatically by adding that
+command to a crontab job (can be done with "mq kick --install-crontab-job").
 .
 completion
 Set up tab-completion for Bash.
+Do this:
 
+    $ mq completion >> ~/.bashrc
 .
 test
 Run tests.
+Please report errors to https://gitlab.com/jensj/myqueue/issues.
 
 .
 modify
@@ -79,9 +106,8 @@ for lines in _help.split('\n.\n'):
 def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
-        description='Simple frontend for SLURM/PBS.  '
-        'Type "mq help <command>" for help.  '
-        'See https://gitlab.com/jensj/myqueue for more information.')
+        formatter_class=Formatter,
+        description=main_description)
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
