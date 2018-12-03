@@ -432,6 +432,7 @@ class Tasks(Lock):
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 task.resources.double(task.state)
+                task.restart -= 1
                 tasks.append(task)
         if tasks:
             tasks = self.find_depending(tasks)

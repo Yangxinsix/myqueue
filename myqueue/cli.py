@@ -107,8 +107,8 @@ def main(arguments: List[str] = None) -> Any:
             a('-d', '--dependencies', default='',
               help='Comma-separated task names.')
             a('-a', '--arguments', help='Comma-separated arguments for task.')
-            a('--restart', action='store_true',
-              help='Restart if task times out or runs out of memory. '
+            a('--restart', type=int, default=0, metavar='N',
+              help='Restart N times if task times out or runs out of memory. '
               'Time-limit will be doubled for a timed out task and '
               'number of cores will be doubled for a task that runs out '
               'of memory.')

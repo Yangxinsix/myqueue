@@ -17,7 +17,7 @@ class Task:
                  resources: Resources,
                  deps: List[Path],
                  workflow: bool,
-                 restart: bool,
+                 restart: int,
                  diskspace: int,
                  folder: Path,
                  state: str = '',
@@ -83,7 +83,7 @@ class Task:
                 self.cmd.name,
                 str(self.resources) + deps +
                 ('*' if self.workflow else '') +
-                ('R' if self.restart else '') +
+                (f'R{self.restart}' if self.restart else '') +
                 ('D' if self.diskspace else ''),
                 seconds_to_time_string(age),
                 self.state,
@@ -117,7 +117,7 @@ class Task:
     def fromdict(dct: dict) -> 'Task':
         dct = dct.copy()
         if 'restart' not in dct:
-            dct['restart'] = False
+            dct['restart'] = 0
         if 'diskspace' not in dct:
             dct['diskspace'] = 0
         return Task(cmd=command(**dct.pop('cmd')),
@@ -208,7 +208,7 @@ def task(cmd: str,
          tmax: str = '10m',
          folder: str = '',
          workflow: bool = False,
-         restart: bool = False,
+         restart: int = 0,
          diskspace: float = 0.0) -> Task:
 
     path = Path(folder).absolute()
@@ -244,7 +244,7 @@ def seconds_to_time_string(n: float) -> str:
     h, n = divmod(n, 3600)
     m, s = divmod(n, 60)
     if d:
-        return '{}:{:02}:{:02}:{:02}'.format(d, h, m, s)
+        return f'{d}:{h:02}:{m:02}:{s:02}'
     if h:
-        return '{}:{:02}:{:02}'.format(h, m, s)
-    return '{}:{:02}'.format(m, s)
+        return f'{h}:{m:02}:{s:02}'
+    return f'{m}:{s:02}'

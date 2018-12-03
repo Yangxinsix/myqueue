@@ -167,7 +167,6 @@ class LocalQueue(Queue, Lock):
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
                .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
-        print(cmd)
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
         task.state = 'running'
