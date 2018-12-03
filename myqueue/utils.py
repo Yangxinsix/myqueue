@@ -93,7 +93,9 @@ def update_completion():
         print('\n\n{}\n{}\n'.format(title, '-' * len(title)))
         main(['help', cmd])
 
-    newlines = sys.stdout.getvalue().splitlines()
+    txt = sys.stdout.getvalue()
+    txt = txt.replace(':\n\n    ', '::\n\n    ')
+    newlines = txt.splitlines()
     sys.stdout = sys.__stdout__
 
     n = 0

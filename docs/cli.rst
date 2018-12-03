@@ -37,7 +37,7 @@ List tasks in queue.
 
 Only tasks in the chosen folder and its subfolders are shown.
 
-Examples:
+Examples::
 
     $ mq list -s rq  # show running and queued jobs
     $ mq ls -s F abc/  # show failed jobs in abc/ folder
@@ -71,7 +71,7 @@ usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart N]
 
 Submit task(s) to queue.
 
-Example:
+Example::
 
     $ mq submit script.py -R 24:1d  # 24 cores for 1 day
 
@@ -111,7 +111,7 @@ usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
 
 Resubmit failed or timed-out tasks.
 
-Example:
+Example::
 
     $ mq resubmit -i 4321  # resubmit job with id=4321
 
@@ -149,7 +149,7 @@ usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
 
 Remove or cancel task(s).
 
-Examples:
+Examples::
 
     $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
@@ -181,7 +181,7 @@ usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
 Submit tasks from Python script.
 
-Example:
+Example::
 
     $ cat flow.py
     from myqueue.tas import task
@@ -231,7 +231,7 @@ usage: mq completion [-h] [-v] [-q] [-T]
 
 Set up tab-completion for Bash.
 
-Do this:
+Do this::
 
     $ mq completion >> ~/.bashrc
 
