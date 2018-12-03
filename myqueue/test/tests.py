@@ -143,7 +143,10 @@ def timeout2():
     wait()
     mq('kick')
     wait()
-    assert states() == 'dd'
+    if states() != 'dd':
+        mq('kick')
+        wait()
+        assert states() == 'dd'
 
 
 @test

@@ -37,6 +37,11 @@ List tasks in queue.
 
 Only tasks in the chosen folder and its subfolders are shown.
 
+Examples:
+
+    $ mq list -s rq  # show running and queued jobs
+    $ mq ls -s F abc/  # show failed jobs in abc/ folder
+
 folder:
     List tasks in this folder and its subfolders. Defaults to current folder.
 
@@ -106,6 +111,10 @@ usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
 
 Resubmit failed or timed-out tasks.
 
+Example:
+
+    $ mq resubmit -i 4321  # resubmit job with id=4321
+
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
@@ -140,6 +149,11 @@ usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
 
 Remove or cancel task(s).
 
+Examples:
+
+    $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
+    $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
+
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
@@ -167,7 +181,7 @@ usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
 
 Submit tasks from Python script.
 
- Example:
+Example:
 
     $ cat flow.py
     from myqueue.tas import task
@@ -189,12 +203,15 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-Kick: Restart timed out or out of memory tasks
-----------------------------------------------
+Kick: Restart T and M tasks (timed-out and out-of-memory)
+---------------------------------------------------------
 
 usage: mq kick [-h] [-z] [-v] [-q] [-T] [--install-crontab-job]
 
-Restart timed out or out of memory tasks.
+Restart T and M tasks (timed-out and out-of-memory).
+
+You can kick the queue manually with "mq kick" or automatically by adding that
+command to a crontab job (can be done with "mq kick --install-crontab-job").
 
 optional arguments:
   -h, --help            show this help message and exit

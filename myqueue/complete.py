@@ -105,6 +105,9 @@ def complete(word, previous, line, point):
     elif command == 'test':
         from myqueue.test.tests import all_tests as words
 
+    elif command == 'help':
+        words = [cmd for cmd in commands if cmd != 'help']
+
     return words
 
 
