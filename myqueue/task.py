@@ -116,10 +116,15 @@ class Task:
     @staticmethod
     def fromdict(dct: dict) -> 'Task':
         dct = dct.copy()
+
+        # Backwards compatibility with version 2:
         if 'restart' not in dct:
             dct['restart'] = 0
+        else:
+            dct['restart'] = int(dct['restart'])
         if 'diskspace' not in dct:
             dct['diskspace'] = 0
+
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=Path(dct.pop('folder')),

@@ -473,7 +473,7 @@ class Tasks(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 2,
+        text = json.dumps({'version': 3,
                            'tasks': [task.todict() for task in self.tasks]},
                           indent=2)
         self.fname.write_text(text)
