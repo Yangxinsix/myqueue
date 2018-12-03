@@ -251,38 +251,6 @@ def main(arguments: List[str] = None) -> Any:
             print(cmd)
         return
 
-    if args.command == 'init':
-        path = Path.home() / '.myqueue' / 'folders.txt'
-        if path.is_file():
-            folders = [Path(folder)
-                       for folder in path.read_text().splitlines()]
-        else:
-            folders = []
-        home = Path.cwd()
-        for folder in folders:
-            if is_inside(home, folder):
-                raise MyQueueCLIError(
-                    'You are already inside a myqueue folder:', folder)
-            if is_inside(folder, home):
-                raise MyQueueCLIError(
-                    'You can not have a myqueue folder inside a '
-                    'myqueue folder:', folder)
-
-        mq = home / '.myqueue'
-        mq.mkdir()
-        cfg = path.with_name('config.py')
-        if cfg.is_file():
-            (mq / 'config.py').write_text(cfg.read_text())
-
-        folders.append(home)
-        path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
-        return
-
-    if args.command == 'kick' and args.install_crontab_job:
-        from myqueue.crontab import install_crontab_job
-        install_crontab_job(args.dry_run)
-        return
-
     try:
         results = run(args)
         if arguments:
@@ -309,6 +277,41 @@ def run(args):
     from myqueue.tasks import Tasks, Selection
 
     verbosity = 1 - args.quiet + args.verbose
+
+    if args.command == 'init':
+        path = Path.home() / '.myqueue' / 'folders.txt'
+        if path.is_file():
+            folders = [Path(folder)
+                       for folder in path.read_text().splitlines()]
+        else:
+            folders = []
+        home = Path.cwd()
+        if home == Path.home():
+            raise MyQueueCLIError(
+                'Using ~/ as a myqueue folder is not allowed!')
+        for folder in folders:
+            if is_inside(home, folder):
+                raise MyQueueCLIError(
+                    'You are already inside a myqueue folder:', folder)
+            if is_inside(folder, home):
+                raise MyQueueCLIError(
+                    'You can not have a myqueue folder inside a '
+                    'myqueue folder:', folder)
+
+        mq = home / '.myqueue'
+        mq.mkdir()
+        cfg = path.with_name('config.py')
+        if cfg.is_file():
+            (mq / 'config.py').write_text(cfg.read_text())
+
+        folders.append(home)
+        path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
+        return
+
+    if args.command == 'kick' and args.install_crontab_job:
+        from myqueue.crontab import install_crontab_job
+        install_crontab_job(args.dry_run)
+        return
 
     if args.command in ['list', 'submit', 'remove', 'resubmit',
                         'modify', 'workflow']:
