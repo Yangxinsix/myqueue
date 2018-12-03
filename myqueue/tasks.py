@@ -421,12 +421,7 @@ class Tasks(Lock):
                         task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run: bool, crontab: bool = False) -> None:
-        if crontab:
-            from myqueue.crontab import install_crontab_job
-            install_crontab_job(dry_run)
-            return
-
+    def kick(self, dry_run: bool) -> None:
         self._read()
         tasks = []
         for task in self.tasks:

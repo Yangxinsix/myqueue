@@ -278,6 +278,11 @@ def main(arguments: List[str] = None) -> Any:
         path.write_text('\n'.join(str(folder) for folder in folders) + '\n')
         return
 
+    if args.command == 'kick' and args.install_crontab_job:
+        from myqueue.crontab import install_crontab_job
+        install_crontab_job(args.dry_run)
+        return
+
     try:
         results = run(args)
         if arguments:
@@ -401,7 +406,7 @@ def run(args):
             tasks.sync(args.dry_run)
 
         elif args.command == 'kick':
-            tasks.kick(args.dry_run, args.install_crontab_job)
+            tasks.kick(args.dry_run)
 
 
 def workflow(args, tasks, folders):
