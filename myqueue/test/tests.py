@@ -44,26 +44,28 @@ def wait()-> None:
 
 
 def run_tests(tests: List[str],
-              config: Optional[Path],
+              config_file: Optional[Path],
               exclude: List[str]) -> None:
     global LOCAL
-    LOCAL = config is None
+    LOCAL = config_file is None
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
 
+    if not tests:
+        tests = list(all_tests)
+
     (tmpdir / '.myqueue').mkdir()
 
-    if config:
-        txt = config.read_text()
+    if config_file:
+        txt = config_file.read_text()
     else:
         txt = 'config = {}\n'.format({'queue': 'local'})
+        if 'oom' in tests:
+            tests.remove('oom')
     (tmpdir / '.myqueue' / 'config.py').write_text(txt)
     initialize_config(tmpdir)
 
     os.environ['MYQUEUE_DEBUG'] = 'yes'
-
-    if not tests:
-        tests = list(all_tests)
 
     for test in exclude:
         tests.remove(test)

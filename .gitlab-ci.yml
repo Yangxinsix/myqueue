@@ -6,5 +6,5 @@ tests:
     - pip3 install -e . --user
     - export PATH=~/.local/bin/:$PATH
     - flake8 myqueue
-    - mypy -p myqueue --ignore-missing-imports
-    - mq test -x oom
+    - mypy -p myqueue
+    - mq test
