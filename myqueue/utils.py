@@ -37,6 +37,7 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 class Lock:
     def __init__(self, name: Path) -> None:
         self.lock = name
+        self.locked = False
 
     def acquire(self):
         delta = 0.1
@@ -46,9 +47,11 @@ class Lock:
                 break
             time.sleep(delta)
             delta *= 2
+        self.locked = True
 
     def release(self):
         self.lock.unlink()
+        self.locked = False
 
     def __enter__(self):
         self.acquire()

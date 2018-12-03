@@ -369,9 +369,19 @@ def run(args):
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
 
-    with Tasks(verbosity) as tasks:
-        if args.command == 'list':
+    if args.command == 'list':
+        tasks = Tasks(verbosity)
+        try:
+            tasks.acquire()
+        except PermissionError:
+            pass
+        try:
             return tasks.list(selection, args.columns)
+        finally:
+            if tasks.locked:
+                tasks.release()
+
+    with Tasks(verbosity) as tasks:
 
         if args.command == 'remove':
             tasks.remove(selection, args.dry_run)

@@ -320,8 +320,9 @@ class Tasks(Lock):
                 task = Task.fromdict(dct)
                 self.tasks.append(task)
 
-        self.read_change_files()
-        self.check()
+        if self.locked:
+            self.read_change_files()
+            self.check()
 
     def read_change_files(self):
         paths = list(self.folder.glob('*-*-*'))
