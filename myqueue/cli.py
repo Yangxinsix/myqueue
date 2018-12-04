@@ -224,7 +224,7 @@ def main(arguments: List[str] = None) -> Any:
 
     if args.command is None:
         parser.print_help()
-        print(__file__)
+        print('\nCode:', Path(__file__).parent)
         return
 
     if args.command == 'help':
@@ -431,6 +431,9 @@ def run(args):
 
         elif args.command == 'kick':
             tasks.kick(args.dry_run)
+
+        else:
+            assert False
 
 
 def workflow(args, tasks, folders):
