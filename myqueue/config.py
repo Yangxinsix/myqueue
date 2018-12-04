@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Any
 
-config = {}  # type: Dict[str, Any]
+config: Dict[str, Any] = {}
 
 
 def initialize_config(start: Path) -> None:
@@ -11,7 +11,7 @@ def initialize_config(start: Path) -> None:
     config['home'] = home
     cfg = home / '.myqueue' / 'config.py'
     if cfg.is_file():
-        namespace = {}  # type: Dict[str, Dict[str, Any]]
+        namespace: Dict[str, Dict[str, Any]] = {}
         exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
         config.update(namespace['config'])
 
