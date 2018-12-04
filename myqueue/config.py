@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any  # noqa
+from typing import Dict, Any
 
 config = {}  # type: Dict[str, Any]
 
@@ -29,5 +29,4 @@ def find_home_folder(start: Path) -> Path:
         if newf == f:
             break
         f = newf
-    raise ValueError('Could not find .myqueue/ folder! '
-                     'Please run "mq init"')
+    raise ValueError('Could not find .myqueue/ folder!')

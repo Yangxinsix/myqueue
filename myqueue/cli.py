@@ -304,9 +304,9 @@ def run(args):
             (mq / 'config.py').write_text(cfg.read_text())
 
         folders.append(home)
-        (path / 'config.py').write_text('\n'.join(str(folder)
-                                                  for folder in folders) +
-                                        '\n')
+        (path / 'folders.txt').write_text('\n'.join(str(folder)
+                                                    for folder in folders) +
+                                          '\n')
         return
 
     if args.command == 'kick' and args.install_crontab_job:
@@ -315,10 +315,14 @@ def run(args):
         return
 
     if args.command in ['list', 'sync', 'kick']:
-        if args.all and args.folder is not None:
-            raise MQError('Specifying a folder together with --all '
-                          'does not make sense')
-        args.folder = [args.folder or '.']
+        if args.all:
+            if args.folder is not None:
+                raise MQError('Specifying a folder together with --all '
+                              'does not make sense')
+            args.folder = []
+        else:
+            args.folder = [args.folder or '.']
+
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in args.folder]
     if args.command in ['remove', 'resubmit', 'modify']:
@@ -327,18 +331,22 @@ def run(args):
 
     if folders:
         start = folders[0]
-    else:
-        start = Path.cwd()
-    initialize_config(start)
-    home = config['home']
-    if args.verbose:
-        print('Home:', home)
-    for folder in folders[1:]:
         try:
-            folder.relative_to(home)
+            initialize_config(start)
         except ValueError:
-            raise MQError('{folder} not inside {home}'
-                          .format(folder=folder, home=home))
+            raise MQError(
+                f'The folder {start} is not inside a MyQueue tree.\n'
+                'You can create a tree with "cd <root-of-tree>; mq init".')
+
+        home = config['home']
+        if verbosity > 0:
+            print('Home:', home)
+        for folder in folders[1:]:
+            try:
+                folder.relative_to(home)
+            except ValueError:
+                raise MQError('{folder} not inside {home}'
+                              .format(folder=folder, home=home))
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -369,8 +377,10 @@ def run(args):
                               folders, getattr(args, 'recursive', True))
 
     if args.command == 'list' and args.all:
+        folders = get_home_folders()
+        selection.folders = folders
         alltasks: List[Task] = []
-        for folder in get_home_folders():
+        for folder in folders:
             config['home'] = folder
             with Tasks(verbosity) as tasks:
                 tasks.tasks = alltasks

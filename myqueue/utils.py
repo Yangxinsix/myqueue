@@ -4,7 +4,7 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-from typing import IO, Union, Generator
+from typing import IO, Union, Generator, List
 from pathlib import Path
 
 
@@ -76,14 +76,18 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
-def get_home_folders():
+def get_home_folders() -> List[Path]:
     path = Path.home() / '.myqueue' / 'folders.txt'
+    folders = []
     if path.is_file():
-        return [Path(folder) for folder in path.read_text().splitlines()]
-    return []
+        for f in path.read_text().splitlines():
+            folder = Path(f)
+            if (folder / '.myqueue').is_dir():
+                folders.append(folder)
+    return folders
 
 
-def update_completion():
+def update_completion() -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
