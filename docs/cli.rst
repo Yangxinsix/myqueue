@@ -30,7 +30,7 @@ List (ls): List tasks in queue
 ------------------------------
 
 usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
-               [-T]
+               [-T] [-A]
                [folder]
 
 List tasks in queue.
@@ -60,6 +60,7 @@ optional arguments:
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
+  -A, --all             List all myqueue folders (from ~/.myqueue/folders.txt)
 
 
 Submit: Submit task(s) to queue
@@ -206,12 +207,15 @@ optional arguments:
 Kick: Restart T and M tasks (timed-out and out-of-memory)
 ---------------------------------------------------------
 
-usage: mq kick [-h] [-z] [-v] [-q] [-T] [--install-crontab-job]
+usage: mq kick [-h] [-z] [-v] [-q] [-T] [-A] [--install-crontab-job] [folder]
 
 Restart T and M tasks (timed-out and out-of-memory).
 
 You can kick the queue manually with "mq kick" or automatically by adding that
 command to a crontab job (can be done with "mq kick --install-crontab-job").
+
+folder:
+    Kick tasks in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -219,6 +223,7 @@ optional arguments:
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
+  -A, --all             Kick all myqueue folders (from ~/.myqueue/folders.txt)
   --install-crontab-job
                         Install crontab job to kick your queues every half
                         hour.
@@ -301,9 +306,12 @@ optional arguments:
 Sync: Make sure SLURM/PBS and MyQueue are in sync
 -------------------------------------------------
 
-usage: mq sync [-h] [-z] [-v] [-q] [-T]
+usage: mq sync [-h] [-z] [-v] [-q] [-T] [-A] [folder]
 
 Make sure SLURM/PBS and MyQueue are in sync.
+
+folder:
+    Sync tasks in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -311,3 +319,4 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
+  -A, --all        Sync all myqueue folders (from ~/.myqueue/folders.txt)

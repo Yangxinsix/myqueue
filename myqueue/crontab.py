@@ -1,25 +1,23 @@
 import subprocess
 
-kick = """\
-for d in `cat ~/.myqueue/folders.txt`
-do cd $d; python3 -m myqueue kick
-done >> ~/.myqueue/kick.log"""
+from myqueue.cli import MQError
 
 
 def install_crontab_job(dry_run: bool) -> None:
-    cmd = 'bash -lc "{}"'.format(kick.replace('\n', '; '))
+    kick = 'python3 -m myqueue kick --all >> ~/.myqueue/kick.log'
+    cmd = f'bash -lc "{kick}"'
 
     if dry_run:
         print('0,30 * * * *', cmd)
         return
 
     p1 = subprocess.run(['crontab', '-l'],
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
     crontab = p1.stdout.decode()
 
     if 'myqueue kick' in crontab:
-        from myqueue.cli import MyQueueCLIError
-        raise MyQueueCLIError('Already installed!')
+        raise MQError('Already installed!')
 
     crontab += '\n0,30 * * * * ' + cmd + '\n'
     p2 = subprocess.Popen(['crontab', '-'], stdin=subprocess.PIPE)

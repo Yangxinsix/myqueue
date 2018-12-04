@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List, Any, Tuple, Dict
 
 
-class MyQueueCLIError(Exception):
-    pass
+class MQError(Exception):
+    """For nice (expected) CLI errors."""
 
 
 main_description = """\
@@ -259,7 +259,7 @@ def main(arguments: List[str] = None) -> Any:
             return results
     except KeyboardInterrupt:
         pass
-    except MyQueueCLIError as x:
+    except MQError as x:
         parser.exit(1, str(x) + '\n')
     except Exception as x:
         if args.traceback:
@@ -275,8 +275,8 @@ def main(arguments: List[str] = None) -> Any:
 def run(args):
     from myqueue.config import config, initialize_config
     from myqueue.resources import Resources
-    from myqueue.task import task, taskstates
-    from myqueue.tasks import Tasks, Selection
+    from myqueue.task import task, Task, taskstates
+    from myqueue.tasks import Tasks, Selection, pprint
     from myqueue.utils import get_home_folders, is_inside
 
     verbosity = 1 - args.quiet + args.verbose
@@ -285,14 +285,14 @@ def run(args):
         folders = get_home_folders()
         home = Path.cwd()
         if home == Path.home():
-            raise MyQueueCLIError(
+            raise MQError(
                 'Using ~/ as a myqueue folder is not allowed!')
         for folder in folders:
             if is_inside(home, folder):
-                raise MyQueueCLIError(
+                raise MQError(
                     'You are already inside a myqueue folder:', folder)
             if is_inside(folder, home):
-                raise MyQueueCLIError(
+                raise MQError(
                     'You can not have a myqueue folder inside a '
                     'myqueue folder:', folder)
 
@@ -316,14 +316,14 @@ def run(args):
 
     if args.command in ['list', 'sync', 'kick']:
         if args.all and args.folder is not None:
-            raise MyQueueCLIError('Specifying a folder together with --all '
-                                  'does not make sense')
+            raise MQError('Specifying a folder together with --all '
+                          'does not make sense')
         args.folder = [args.folder or '.']
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in args.folder]
     if args.command in ['remove', 'resubmit', 'modify']:
         if not args.id and not folders:
-            raise MyQueueCLIError('Missing folder!')
+            raise MQError('Missing folder!')
 
     if folders:
         start = folders[0]
@@ -337,8 +337,8 @@ def run(args):
         try:
             folder.relative_to(home)
         except ValueError:
-            raise MyQueueCLIError('{folder} not inside {home}'
-                                  .format(folder=folder, home=home))
+            raise MQError('{folder} not inside {home}'
+                          .format(folder=folder, home=home))
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -349,12 +349,12 @@ def run(args):
                     states.add(state)
                     break
             else:
-                raise MyQueueCLIError('Unknown state: ' + s)
+                raise MQError('Unknown state: ' + s)
 
         ids = None  # type: Set[int]
         if args.id:
             if args.states is not None:
-                raise MyQueueCLIError("You can't use both -i and -s!")
+                raise MQError("You can't use both -i and -s!")
             if len(args.folder) > 0:
                 raise ValueError("You can't use both -i and folder(s)!")
 
@@ -363,17 +363,32 @@ def run(args):
             else:
                 ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
-            raise MyQueueCLIError('You must use "-i <id>" OR "-s <state(s)>"!')
+            raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
 
-    if args.command in ['list', 'sync', 'kick'] and args.all:
+    if args.command == 'list':
+        alltasks: List[Task] = []
         for folder in get_home_folders():
             config['home'] = folder
             with Tasks(verbosity) as tasks:
-
+                tasks.tasks = alltasks
+                tasks._read()
+        alltasks = tasks.select(selection)
+        pprint(alltasks, verbosity, args.columns)
         return
+
+    if args.command in ['sync', 'kick'] and args.all:
+        for folder in get_home_folders():
+            config['home'] = folder
+            with Tasks(verbosity) as tasks:
+                if args.command == 'sync':
+                    tasks.sync(args.dry_run)
+                else:
+                    tasks.kick(args.dry_run)
+        return
+
     with Tasks(verbosity, need_lock=args.command != 'list') as tasks:
         if args.command == 'list':
             return tasks.list(selection, args.columns)
