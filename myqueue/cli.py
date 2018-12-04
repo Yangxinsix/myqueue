@@ -368,15 +368,16 @@ def run(args):
         selection = Selection(ids, args.name, states,
                               folders, getattr(args, 'recursive', True))
 
-    if args.command == 'list':
+    if args.command == 'list' and args.all:
         alltasks: List[Task] = []
         for folder in get_home_folders():
             config['home'] = folder
             with Tasks(verbosity) as tasks:
                 tasks.tasks = alltasks
                 tasks._read()
-        alltasks = tasks.select(selection)
-        pprint(alltasks, verbosity, args.columns)
+        if alltasks:
+            alltasks = tasks.select(selection)
+            pprint(alltasks, verbosity, args.columns)
         return
 
     if args.command in ['sync', 'kick'] and args.all:

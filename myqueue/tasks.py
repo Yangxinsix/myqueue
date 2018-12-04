@@ -59,11 +59,12 @@ class Tasks(Lock):
     def __enter__(self):
         if self.need_lock:
             self.acquire()
-            return
-        try:
-            self.acquire()
-        except PermissionError:
-            pass
+        else:
+            try:
+                self.acquire()
+            except PermissionError:
+                pass
+        return self
 
     def __exit__(self, type, value, tb):
         if self.changed:
