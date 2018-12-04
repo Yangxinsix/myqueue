@@ -4,7 +4,7 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-from typing import IO, Union, Generator, List
+from typing import IO, Union, Generator, List, Dict
 from pathlib import Path
 
 
@@ -109,9 +109,9 @@ def update_completion() -> None:
             continue
         help = commands[cmd][0].rstrip('.')
         title = f'{cmd.title()}: {help}'
-        a = [alias for alias, command in aliases.items() if command == cmd]
-        if a:
-            title = title.replace(':', f' ({a[0]}):')
+        A = [alias for alias, command in aliases.items() if command == cmd]
+        if A:
+            title = title.replace(':', f' ({A[0]}):')
         print('\n\n{}\n{}\n'.format(title, '-' * len(title)))
         main(['help', cmd])
 
@@ -124,7 +124,7 @@ def update_completion() -> None:
     while n < len(newlines):
         line = newlines[n]
         if line == 'positional arguments:':
-            L = []
+            L: List[str] = []
             n += 1
             while True:
                 line = newlines.pop(n)
@@ -148,7 +148,7 @@ def update_completion() -> None:
 
     filename = dir / 'complete.py'
 
-    dct = {}
+    dct: Dict[str, List[str]] = {}
 
     class MyException(Exception):
         pass
@@ -178,7 +178,7 @@ def update_completion() -> None:
             dct[self.command].extend(arg for arg in args
                                      if arg.startswith('-'))
 
-    argparse.ArgumentParser = Parser
+    argparse.ArgumentParser = Parser  # type: ignore
     try:
         main()
     except MyException:
