@@ -343,7 +343,7 @@ def run(args):
 
         home = config['home']
         if verbosity > 0:
-            print('Home:', home)
+            print('Root:', home)
         for folder in folders[1:]:
             try:
                 folder.relative_to(home)
