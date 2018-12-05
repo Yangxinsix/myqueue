@@ -326,8 +326,11 @@ def run(args):
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in args.folder]
     if args.command in ['remove', 'resubmit', 'modify']:
-        if not args.id and not folders:
-            raise MQError('Missing folder!')
+        if not folders:
+            if args.id:
+                folders = [Path.cwd()]
+            else:
+                raise MQError('Missing folder!')
 
     if folders:
         start = folders[0]
