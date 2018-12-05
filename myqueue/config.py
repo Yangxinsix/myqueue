@@ -4,8 +4,8 @@ from typing import Dict, Any
 config: Dict[str, Any] = {}
 
 
-def initialize_config(start: Path) -> None:
-    if 'home' in config:
+def initialize_config(start: Path, force: bool = False) -> None:
+    if not force and 'home' in config:
         return
     home = find_home_folder(start)
     config['home'] = home

@@ -384,7 +384,7 @@ def run(args):
         selection.folders = folders
         alltasks: List[Task] = []
         for folder in folders:
-            config['home'] = folder
+            initialize_config(folder, force=True)
             with Tasks(verbosity) as tasks:
                 tasks.tasks = alltasks
                 tasks._read()
@@ -395,7 +395,7 @@ def run(args):
 
     if args.command in ['sync', 'kick'] and args.all:
         for folder in get_home_folders():
-            config['home'] = folder
+            initialize_config(folder, force=True)
             with Tasks(verbosity) as tasks:
                 if args.command == 'sync':
                     tasks.sync(args.dry_run)
