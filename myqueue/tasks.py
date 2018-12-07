@@ -272,7 +272,7 @@ class Tasks(Lock):
         for task in tasks:
             remove(task)
 
-        return removed
+        return list(set(removed))
 
     def modify(self,
                selection: Selection,
