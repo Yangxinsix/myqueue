@@ -102,19 +102,29 @@ def update_completion() -> None:
     import textwrap
     from myqueue.cli import main, commands, aliases
 
+    aliases = {command: alias for alias, command in aliases.items()}
+
     # Path of the complete.py script:
     dir = Path(__file__).parent
 
     sys.stdout = StringIO()
+
+    print('\n.. list-table::\n')
     for cmd, (help, description) in commands.items():
-        if cmd == 'help':
-            continue
+        print(f'  * - :ref:`{cmd} <{cmd}>`', end='')
+        if cmd in aliases:
+            print(f' ({aliases[cmd]})')
+        else:
+            print()
+        print('    -', help.rstrip('.'))
+
+    for cmd, (help, description) in commands.items():
         help = commands[cmd][0].rstrip('.')
         title = f'{cmd.title()}: {help}'
-        A = [alias for alias, command in aliases.items() if command == cmd]
-        if A:
-            title = title.replace(':', f' ({A[0]}):')
-        print('\n\n{}\n{}\n'.format(title, '-' * len(title)))
+        if cmd in aliases:
+            title = title.replace(':', f' ({aliases[cmd]}):')
+        print(f'\n\n.. _{cmd}:\n')
+        print('{}\n{}\n'.format(title, '-' * len(title)))
         main(['help', cmd])
 
     txt = sys.stdout.getvalue()

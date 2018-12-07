@@ -121,7 +121,7 @@ def main(arguments: List[str] = None) -> Any:
         a = p.add_argument
 
         if cmd == 'help':
-            a('cmd', nargs='?')
+            a('cmd', nargs='?', help='Subcommand.')
             continue
 
         if cmd == 'test':

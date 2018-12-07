@@ -9,6 +9,53 @@ Commands
 
 .. computer generated text:
 
+.. list-table::
+
+  * - :ref:`help <help>`
+    - Show how to use this tool
+  * - :ref:`list <list>` (ls)
+    - List tasks in queue
+  * - :ref:`submit <submit>`
+    - Submit task(s) to queue
+  * - :ref:`resubmit <resubmit>`
+    - Resubmit failed or timed-out tasks
+  * - :ref:`remove <remove>` (rm)
+    - Remove or cancel task(s)
+  * - :ref:`workflow <workflow>`
+    - Submit tasks from Python script
+  * - :ref:`kick <kick>`
+    - Restart T and M tasks (timed-out and out-of-memory)
+  * - :ref:`completion <completion>`
+    - Set up tab-completion for Bash
+  * - :ref:`test <test>`
+    - Run tests
+  * - :ref:`modify <modify>`
+    - Modify task(s)
+  * - :ref:`init <init>`
+    - Initialize new queue
+  * - :ref:`sync <sync>`
+    - Make sure SLURM/PBS and MyQueue are in sync
+
+
+.. _help:
+
+Help: Show how to use this tool
+-------------------------------
+
+usage: mq help [-h] [cmd]
+
+Show how to use this tool.
+
+More help can be found here: https://myqueue.readthedocs.io/.
+
+cmd:
+    Subcommand.
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+
+.. _list:
 
 List (ls): List tasks in queue
 ------------------------------
@@ -46,6 +93,8 @@ optional arguments:
   -T, --traceback       Show full traceback.
   -A, --all             List all myqueue folders (from ~/.myqueue/folders.txt)
 
+
+.. _submit:
 
 Submit: Submit task(s) to queue
 -------------------------------
@@ -87,6 +136,8 @@ optional arguments:
   -T, --traceback       Show full traceback.
 
 
+.. _resubmit:
+
 Resubmit: Resubmit failed or timed-out tasks
 --------------------------------------------
 
@@ -126,6 +177,8 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
+.. _remove:
+
 Remove (rm): Remove or cancel task(s)
 -------------------------------------
 
@@ -159,6 +212,8 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
+.. _workflow:
+
 Workflow: Submit tasks from Python script
 -----------------------------------------
 
@@ -188,6 +243,8 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
+.. _kick:
+
 Kick: Restart T and M tasks (timed-out and out-of-memory)
 ---------------------------------------------------------
 
@@ -213,6 +270,8 @@ optional arguments:
                         hour.
 
 
+.. _completion:
+
 Completion: Set up tab-completion for Bash
 ------------------------------------------
 
@@ -230,6 +289,8 @@ optional arguments:
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
 
+
+.. _test:
 
 Test: Run tests
 ---------------
@@ -256,6 +317,8 @@ optional arguments:
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
 
+
+.. _modify:
 
 Modify: Modify task(s)
 ----------------------
@@ -287,6 +350,8 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
+.. _init:
+
 Init: Initialize new queue
 --------------------------
 
@@ -304,6 +369,8 @@ optional arguments:
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
 
+
+.. _sync:
 
 Sync: Make sure SLURM/PBS and MyQueue are in sync
 -------------------------------------------------
