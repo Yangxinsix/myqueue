@@ -22,8 +22,6 @@ def find_home_folder(start: Path) -> Path:
     while True:
         dir = f / '.myqueue'
         if dir.is_dir():
-            if f == Path.home():
-                break
             return f
         newf = f.parent
         if newf == f:
