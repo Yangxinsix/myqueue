@@ -109,14 +109,15 @@ def update_completion() -> None:
 
     sys.stdout = StringIO()
 
-    print('\n.. list-table::\n')
+    print('\n.. list-table::')
+    print('    :widths: 1 3\n')
     for cmd, (help, description) in commands.items():
-        print(f'  * - :ref:`{cmd} <{cmd}>`', end='')
+        print(f'    * - :ref:`{cmd} <{cmd}>`', end='')
         if cmd in aliases:
             print(f' ({aliases[cmd]})')
         else:
             print()
-        print('    -', help.rstrip('.'))
+        print('      -', help.rstrip('.'))
 
     for cmd, (help, description) in commands.items():
         help = commands[cmd][0].rstrip('.')

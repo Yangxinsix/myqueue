@@ -4,8 +4,10 @@
 Command-line interface
 ======================
 
-Commands
-========
+.. _commands:
+
+Sub-commands
+============
 
 .. computer generated text:
 
