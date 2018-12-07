@@ -21,11 +21,6 @@ help
 Show how to use this tool.
 More help can be found here: https://myqueue.readthedocs.io/.
 .
-init
-Initialize new queue.
-This will create a .myqueue/ folder in your current working directory
-and copy ~/.myqueue/config.py into it.
-.
 list
 List tasks in queue.
 Only tasks in the chosen folder and its subfolders are shown.
@@ -83,6 +78,11 @@ Please report errors to https://gitlab.com/jensj/myqueue/issues.
 modify
 Modify task(s).
 
+.
+init
+Initialize new queue.
+This will create a .myqueue/ folder in your current working directory
+and copy ~/.myqueue/config.py into it.
 .
 sync
 Make sure SLURM/PBS and MyQueue are in sync.
@@ -277,33 +277,24 @@ def run(args):
     from myqueue.resources import Resources
     from myqueue.task import task, Task, taskstates
     from myqueue.tasks import Tasks, Selection, pprint
-    from myqueue.utils import get_home_folders, is_inside
+    from myqueue.utils import get_home_folders
 
     verbosity = 1 - args.quiet + args.verbose
 
     if args.command == 'init':
         folders = get_home_folders()
-        home = Path.cwd()
-        if home == Path.home():
+        root = Path.cwd()
+        if root in folders:
             raise MQError(
-                'Using ~/ as a myqueue folder is not allowed!')
-        for folder in folders:
-            if is_inside(home, folder):
-                raise MQError(
-                    'You are already inside a myqueue folder:', folder)
-            if is_inside(folder, home):
-                raise MQError(
-                    'You can not have a myqueue folder inside a '
-                    'myqueue folder:', folder)
-
-        mq = home / '.myqueue'
+                f'The folder {root} has already been initialized!')
+        mq = root / '.myqueue'
         mq.mkdir()
         path = Path.home() / '.myqueue'
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
 
-        folders.append(home)
+        folders.append(root)
         (path / 'folders.txt').write_text('\n'.join(str(folder)
                                                     for folder in folders) +
                                           '\n')

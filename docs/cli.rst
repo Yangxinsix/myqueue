@@ -10,24 +10,6 @@ Commands
 .. computer generated text:
 
 
-Init: Initialize new queue
---------------------------
-
-usage: mq init [-h] [-z] [-v] [-q] [-T]
-
-Initialize new queue.
-
-This will create a .myqueue/ folder in your current working directory and copy
-~/.myqueue/config.py into it.
-
-optional arguments:
-  -h, --help       show this help message and exit
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
-
-
 List (ls): List tasks in queue
 ------------------------------
 
@@ -303,6 +285,24 @@ optional arguments:
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
   -r, --recursive       Use also subfolders.
+
+
+Init: Initialize new queue
+--------------------------
+
+usage: mq init [-h] [-z] [-v] [-q] [-T]
+
+Initialize new queue.
+
+This will create a .myqueue/ folder in your current working directory and copy
+~/.myqueue/config.py into it.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
 
 
 Sync: Make sure SLURM/PBS and MyQueue are in sync
