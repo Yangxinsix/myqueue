@@ -217,6 +217,7 @@ class Tasks(Lock):
         self._read()
 
         tasks = self.select(selection)
+        tasks = self.find_depending(tasks)
 
         t = time.time()
         for task in tasks:

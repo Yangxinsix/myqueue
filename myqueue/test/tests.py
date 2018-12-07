@@ -191,3 +191,13 @@ def workflow2():
     mq('kick')
     wait()
     assert states() == 'dddd'
+
+
+@test
+def cancel():
+    mq('submit sleep+2')
+    mq('submit sleep+999')
+    mq('submit echo+hello -d sleep+999')
+    mq('rm -n sleep+999 -srq .')
+    wait()
+    assert states() == 'd'
