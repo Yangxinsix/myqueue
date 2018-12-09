@@ -56,4 +56,3 @@ def run_command(cmd: str,
 if __name__ == '__main__':
     import sys
     run_document(Path(sys.argv[1]))
-        
