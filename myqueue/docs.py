@@ -31,15 +31,13 @@ def run_document(path: Path) -> None:
     offset = 0
     folder = '.'
     for cmd, output, L in blocks:
-        actual_output, folder = run_command(cmd, folder)
         print('$', cmd)
+        actual_output, folder = run_command(cmd, folder)
         if actual_output:
             print('    ' + '\n    '.join(actual_output))
         L += 1 + offset
         lines[L:L + len(output)] = ('    ' + line for line in actual_output)
         offset += len(actual_output) - len(output)
-
-    print('\n'.join(lines))
 
     path.write_text('\n'.join(lines) + '\n')
 

@@ -34,20 +34,12 @@ def command(cmd: str,
     if type is None:
         if cmd.endswith('.py'):
             type = 'python-script'
+        elif ':' in cmd:
+            type = 'python-function'
+        elif is_module(cmd):
+            type = 'python-module'
         else:
-            mod = cmd
-            func = None
-            if is_module(mod):
-                type = 'python-module'
-            else:
-                mod, _, func = cmd.rpartition('.')
-                if func:
-                    if is_module(mod):
-                        type = 'python-function'
-                    else:
-                        type = 'shell-script'
-                else:
-                    type = 'shell-script'
+            type = 'shell-script'
 
     if type == 'shell-script':
         return ShellScript(cmd, args)
@@ -111,7 +103,7 @@ class PythonModule(Command):
 
 class PythonFunction(Command):
     def __init__(self, cmd, args):
-        self.mod, self.func = cmd.rsplit('.', 1)
+        self.mod, self.func = cmd.rsplit(':', 1)
         Command.__init__(self, cmd, args)
 
     def __str__(self):

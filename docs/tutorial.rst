@@ -7,9 +7,9 @@ Tasks
 
 A task can be one of these:
 
-* a Python script (script.py)
-* a Python module (module)
-* a function in a Python module (module.function)
+* a Python script (``script.py``)
+* a Python module (``module``)
+* a function in a Python module (``module:function``)
 * an executable or shell-script
 
 
@@ -39,11 +39,11 @@ Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
 
 Sleep for 25 seconds on 1 core using the ``time.sleep()`` function::
 
-    $ mq submit time.sleep -a 25 -R 1:1m
+    $ mq submit time:sleep -a 25 -R 1:1m
 
 or equivalently::
 
-    $ mq submit time.sleep+25@1:1m
+    $ mq submit time:sleep+25@1:1m
 
 Say "hello" (using the defaults of 1 core for 10 minutes)::
 
