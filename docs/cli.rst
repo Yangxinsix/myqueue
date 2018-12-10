@@ -12,31 +12,32 @@ Sub-commands
 .. computer generated text:
 
 .. list-table::
+    :widths: 1 3
 
-  * - :ref:`help <help>`
-    - Show how to use this tool
-  * - :ref:`list <list>` (ls)
-    - List tasks in queue
-  * - :ref:`submit <submit>`
-    - Submit task(s) to queue
-  * - :ref:`resubmit <resubmit>`
-    - Resubmit failed or timed-out tasks
-  * - :ref:`remove <remove>` (rm)
-    - Remove or cancel task(s)
-  * - :ref:`workflow <workflow>`
-    - Submit tasks from Python script
-  * - :ref:`kick <kick>`
-    - Restart T and M tasks (timed-out and out-of-memory)
-  * - :ref:`completion <completion>`
-    - Set up tab-completion for Bash
-  * - :ref:`test <test>`
-    - Run tests
-  * - :ref:`modify <modify>`
-    - Modify task(s)
-  * - :ref:`init <init>`
-    - Initialize new queue
-  * - :ref:`sync <sync>`
-    - Make sure SLURM/PBS and MyQueue are in sync
+    * - :ref:`help <help>`
+      - Show how to use this tool
+    * - :ref:`list <list>` (ls)
+      - List tasks in queue
+    * - :ref:`submit <submit>`
+      - Submit task(s) to queue
+    * - :ref:`resubmit <resubmit>`
+      - Resubmit failed or timed-out tasks
+    * - :ref:`remove <remove>` (rm)
+      - Remove or cancel task(s)
+    * - :ref:`workflow <workflow>`
+      - Submit tasks from Python script
+    * - :ref:`kick <kick>`
+      - Restart T and M tasks (timed-out and out-of-memory)
+    * - :ref:`completion <completion>`
+      - Set up tab-completion for Bash
+    * - :ref:`test <test>`
+      - Run tests
+    * - :ref:`modify <modify>`
+      - Modify task(s)
+    * - :ref:`init <init>`
+      - Initialize new queue
+    * - :ref:`sync <sync>`
+      - Make sure SLURM/PBS and MyQueue are in sync
 
 
 .. _help:
