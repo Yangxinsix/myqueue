@@ -95,8 +95,8 @@ def run_tests(tests: List[str],
 
 @test
 def submit():
-    mq('submit time.sleep+2')
-    mq('submit echo+hello -d time.sleep+2')
+    mq('submit time:sleep+2')
+    mq('submit echo+hello -d time:sleep+2')
     wait()
     for job in mq('list'):
         assert job.state == 'done'
@@ -104,8 +104,8 @@ def submit():
 
 @test
 def fail():
-    mq('submit time.sleep+a')
-    mq('submit echo+hello -d time.sleep+a')
+    mq('submit time:sleep+a')
+    mq('submit echo+hello -d time:sleep+a')
     wait()
     assert states() == 'FC'
     mq('resubmit -sF .')
@@ -115,11 +115,11 @@ def fail():
 
 @test
 def fail2():
-    mq('submit time.sleep+a --workflow')
+    mq('submit time:sleep+a --workflow')
     wait()
     assert states() == 'F'
     mq('remove --state F .')
-    mq('submit time.sleep+a --workflow')
+    mq('submit time:sleep+a --workflow')
     wait()
     assert states() == ''
 
@@ -151,7 +151,7 @@ def timeout2():
 
 @test
 def oom():
-    mq('submit myqueue.test.oom --restart 2 -a {}'.format(LOCAL))
+    mq('submit myqueue.test:oom --restart 2 -a {}'.format(LOCAL))
     wait()
     assert states() == 'M'
     mq('kick')
