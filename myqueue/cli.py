@@ -77,7 +77,7 @@ Please report errors to https://gitlab.com/jensj/myqueue/issues.
 .
 modify
 Modify task(s).
-
+The following state changes are allowed: h->q, q->h, F->M and F->T.
 .
 init
 Initialize new queue.
