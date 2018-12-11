@@ -452,6 +452,7 @@ class Tasks(Lock):
                 for task in tasks:
                     self.tasks.remove(task)
                     task.error = ''
+                    task.id = 0
                 self.submit(tasks, read=False)
 
         self.hold_or_release(dry_run)
