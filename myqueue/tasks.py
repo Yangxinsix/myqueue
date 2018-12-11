@@ -337,7 +337,7 @@ class Tasks(Lock):
             self.read_change_files()
             self.check()
 
-    def read_change_files(self):
+    def read_change_files(self) -> None:
         paths = list(self.folder.glob('*-*-*'))
         files = []
         for path in paths:
@@ -348,6 +348,8 @@ class Tasks(Lock):
                   '2': 'FAILED',
                   '3': 'TIMEOUT'}
         for t, id, state in sorted(files):
+            if self.debug:
+                print('READ', t, id, state)
             self.update(id, states[state], t)
 
         if files:
