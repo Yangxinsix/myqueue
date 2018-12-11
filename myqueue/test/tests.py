@@ -35,7 +35,7 @@ tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
 
 def wait()-> None:
     t0 = time.time()
-    timeout = 10.0 if LOCAL else 300.0
+    timeout = 10.0 if LOCAL else 1300.0
     sleep = 0.1 if LOCAL else 3.0
     while mq('list -s qr -qq'):
         time.sleep(sleep)
