@@ -14,18 +14,17 @@ def run_document(path: Path) -> None:
             output: List[str] = []
             L = 0
             for n, line in enumerate(lines[n + 2:], n + 2):
-                if not line or line[4] == '$':
+                if not line:
+                    break
+                if line[4] == '$':
                     if cmd:
                         blocks.append((cmd, output, L))
-                    if line:
-                        cmd = line[6:]
-                        output = []
-                        L = n
-                    else:
-                        cmd = ''
-                        break
-            else:
-                blocks.append((cmd, output, L))
+                    cmd = line[6:]
+                    output = []
+                    L = n
+                else:
+                    output.append(line)
+            blocks.append((cmd, output, L))
         n += 1
 
     offset = 0
@@ -33,8 +32,10 @@ def run_document(path: Path) -> None:
     for cmd, output, L in blocks:
         print('$', cmd)
         actual_output, folder = run_command(cmd, folder)
+        actual_output = [line.replace('1:2s', '1:10m').rstrip()
+                         for line in actual_output]
         if actual_output:
-            print('    ' + '\n    '.join(actual_output))
+            print('\n'.join(actual_output))
         L += 1 + offset
         lines[L:L + len(output)] = ('    ' + line for line in actual_output)
         offset += len(actual_output) - len(output)

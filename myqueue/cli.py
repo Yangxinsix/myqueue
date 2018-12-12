@@ -333,7 +333,7 @@ def run(args):
                 'You can create a tree with "cd <root-of-tree>; mq init".')
 
         home = config['home']
-        if verbosity > 0:
+        if verbosity > 1:
             print('Root:', home)
         for folder in folders[1:]:
             try:
