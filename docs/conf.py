@@ -27,6 +27,8 @@ author = 'J. J. Mortensen'
 with open('../myqueue/__init__.py') as fd:
     version = re.search("__version__ = '(.*)'", fd.read()).group(1)
 
+intersphinx_mapping = {'python': ('https://docs.python.org/3.6', None)}
+
 # The full version, including alpha/beta/rc tags
 release = version
 
