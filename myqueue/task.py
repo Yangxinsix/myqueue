@@ -79,7 +79,7 @@ class Task:
             deps = ''
 
         return [str(self.id),
-                str(self.folder),
+                str(self.folder) + '/',
                 self.cmd.name,
                 str(self.resources) + deps +
                 ('*' if self.workflow else '') +
