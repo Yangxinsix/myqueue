@@ -50,8 +50,9 @@ class Lock:
         self.locked = True
 
     def release(self):
-        self.lock.unlink()
-        self.locked = False
+        if self.locked:
+            self.lock.unlink()
+            self.locked = False
 
     def __enter__(self):
         self.acquire()

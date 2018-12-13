@@ -69,8 +69,7 @@ class Tasks(Lock):
     def __exit__(self, type, value, tb):
         if self.changed:
             self._write()
-        if self.locked:
-            self.release()
+        self.release()
 
     def list(self, selection: Selection, columns: str) -> List[Task]:
         self._read()

@@ -1,6 +1,6 @@
 import json
 import subprocess
-
+import sys
 
 from myqueue.config import config, initialize_config
 from myqueue.queue import Queue
@@ -144,7 +144,27 @@ class LocalQueue(Queue, Lock):
         else:
             return
 
-        self._run(task)
+        import os
+        sys.stdout.flush()
+        pid = os.fork()
+        if pid == 0:
+            self.locked = False
+            # os.chdir('/')
+            # os.setsid()
+            # os.umask(0)
+            # do second fork
+            pid = os.fork()
+            if pid == 0:
+                # redirect standard file descriptors
+                sys.stderr.flush()
+                si = open(os.devnull, 'r')
+                so = open(os.devnull, 'w')
+                se = open(os.devnull, 'w')
+                os.dup2(si.fileno(), sys.stdin.fileno())
+                os.dup2(so.fileno(), sys.stdout.fileno())
+                os.dup2(se.fileno(), sys.stderr.fileno())
+                self._run(task)
+            os._exit(0)
 
     def _run(self, task):
         out = '{name}.out'.format(name=task.name)
@@ -162,10 +182,10 @@ class LocalQueue(Queue, Lock):
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
         msg = ('python3 -m myqueue.local {} {}'
                .format(config['home'], task.id))
-        cmd = ('(({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
+        cmd = ('({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
-               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi)&'
+               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi'
                .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
@@ -173,7 +193,6 @@ class LocalQueue(Queue, Lock):
 
 
 if __name__ == '__main__':
-    import sys
     from pathlib import Path
     home, id, state = sys.argv[1:4]
     initialize_config(Path(home))
