@@ -2,8 +2,11 @@
 A quick start
 =============
 
+.. This file contains computer generated output.  Do not touch!
+
 .. highlight:: bash
 
+.. mq: cd /tmp; rm -r .myqueue proj1 proj2
 
 Let's create a simple "Hello world!" Python script::
 
@@ -31,9 +34,9 @@ There is now an output file and an empty error file in the folder::
 
     $ ls -ltr
     total 8
-    -rw-r--r-- 1 jensj jensj 22 Dec 13 13:05 hello.py
-    -rw-r--r-- 1 jensj jensj  0 Dec 13 13:05 hello.py.1.err
-    -rw-r--r-- 1 jensj jensj 13 Dec 13 13:05 hello.py.1.out
+    -rw-r--r-- 1 jensj jensj 22 Dec 13 13:30 hello.py
+    -rw-r--r-- 1 jensj jensj  0 Dec 13 13:30 hello.py.1.err
+    -rw-r--r-- 1 jensj jensj 13 Dec 13 13:30 hello.py.1.out
     $ cat hello.py.1.out
     Hello world!
 
@@ -43,7 +46,7 @@ Now we run some calculations in another folder::
     $ mkdir proj2
     $ cd proj2
     $ mq submit math:sin -a 3.14 -R 1:10s
-    2 ./ math:sin+3.14 1:10m
+    2 ./ math:sin+3.14 1:10s
     1 task submitted
 
 This will call the :func:`~math.sin` function from the Python :mod:`math`
@@ -60,7 +63,7 @@ current folder::
     $ mq ls
     id folder name           res.   age state  time error
     -- ------ -------------- ----- ---- ------ ---- ---------------------------------------
-    2  ./     math:sin+3.14  1:10m 0:00 done   0:00
+    2  ./     math:sin+3.14  1:10s 0:00 done   0:00
     3  ./     math:sin+hello 1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
     -- ------ -------------- ----- ---- ------ ---- ---------------------------------------
     done: 1, FAILED: 1, total: 2
@@ -72,7 +75,7 @@ To see the status of both the ``proj1`` and ``proj2`` folders, do this::
     id folder   name           res.   age state  time error
     -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
     1  ./proj1/ hello.py       1:10m 0:00 done   0:00
-    2  ./proj2/ math:sin+3.14  1:10m 0:00 done   0:00
+    2  ./proj2/ math:sin+3.14  1:10s 0:00 done   0:00
     3  ./proj2/ math:sin+hello 1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
     -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
     done: 2, FAILED: 1, total: 3
@@ -91,7 +94,7 @@ them so that only queued and failed tasks are left::
 
     $ mq rm -s d proj*
     1 ./proj1/ hello.py      1:10m 0:01 done 0:00
-    2 ./proj2/ math:sin+3.14 1:10m 0:00 done 0:00
+    2 ./proj2/ math:sin+3.14 1:10s 0:00 done 0:00
     2 tasks removed
 
 .. tip::
