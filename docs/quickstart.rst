@@ -26,7 +26,7 @@ The :ref:`list <list>` command shows that the job is done::
     -- ------ -------- ----- ---- ----- ---- -----
     done: 1, total: 1
 
-The "1:10m" means that 1 core and 10 minutes was reserved for the task.
+The ``1:10m`` means that 1 core and 10 minutes was reserved for the task.
 There is now an output file and an empty error file in the folder::
 
     $ ls -ltr
@@ -42,12 +42,13 @@ Now we run some calculations in another folder::
     $ cd ..
     $ mkdir proj2
     $ cd proj2
-    $ mq submit math:sin -a 3.14
+    $ mq submit math:sin -a 3.14 -R 1:10s
     2 ./ math:sin+3.14 1:10m
     1 task submitted
 
-This :func:`~math.sin` function from the Python :mod:`math` module with an
-argument of ``3.14``.  Let's also submit a task that will fail::
+This will call the :func:`~math.sin` function from the Python :mod:`math`
+module with an argument of ``3.14`` and we ask for 10 seconds on 1 core.
+Let's also submit a task that will fail::
 
     $ mq submit math:sin -a hello
     3 ./ math:sin+hello 1:10m
@@ -76,7 +77,7 @@ To see the status of both the ``proj1`` and ``proj2`` folders, do this::
     -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
     done: 2, FAILED: 1, total: 3
 
-Status of the ``proj1`` folder only::
+See status of the ``proj1`` folder only::
 
     $ mq ls proj1
     id folder   name     res.   age state time error
