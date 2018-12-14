@@ -36,6 +36,8 @@ Sub-commands
       - Modify task(s)
     * - :ref:`init <init>`
       - Initialize new queue
+    * - :ref:`sten <sten>`
+      - Show detailed information about task
     * - :ref:`sync <sync>`
       - Make sure SLURM/PBS and MyQueue are in sync
 
@@ -331,6 +333,8 @@ usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
 
 Modify task(s).
 
+The following state changes are allowed: h->q, q->h, F->M and F->T.
+
 newstate:
     New state (one of the letters: qhrdFCTM).
 folder:
@@ -364,6 +368,28 @@ Initialize new queue.
 
 This will create a .myqueue/ folder in your current working directory and copy
 ~/.myqueue/config.py into it.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
+.. _sten:
+
+Sten: Show detailed information about task
+------------------------------------------
+
+usage: mq sten [-h] [-z] [-v] [-q] [-T] id [folder]
+
+Show detailed information about task.
+
+id:
+    Task ID.
+folder:
+    Show task from this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit

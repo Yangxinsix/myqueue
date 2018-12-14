@@ -81,6 +81,26 @@ class Tasks(Lock):
         pprint(tasks, self.verbosity, columns)
         return tasks
 
+    def sten(self, id: int):
+        self._read()
+        task = self.select(Selection({id}, '', set(), [], False))[0]
+        print(json.dumps(task.todict(), indent='    '))
+        if self.verbosity > 1:
+            path = task.folder / (task.name + '.err')
+            try:
+                err = path.read_text()
+            except FileNotFoundError:
+                pass
+            else:
+                try:
+                    N = os.get_terminal_size().columns - 1
+                except OSError:
+                    N = 70
+                print(f'\nError file: {path}')
+                print('v' * N)
+                print(err)
+                print('^' * N)
+
     def submit(self,
                tasks: List[Task],
                dry_run: bool = False,

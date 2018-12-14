@@ -84,6 +84,10 @@ Initialize new queue.
 This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
 .
+sten
+Show detailed information about task.
+
+.
 sync
 Make sure SLURM/PBS and MyQueue are in sync.
 
@@ -213,6 +217,12 @@ def main(arguments: List[str] = None) -> Any:
             a('--install-crontab-job', action='store_true',
               help='Install crontab job to kick your queues every half hour.')
 
+        if cmd == 'sten':
+            a('id', type=int, help='Task ID.')
+            a('folder',
+              nargs='?',
+              help='Show task from this folder.  Defaults to current folder.')
+
     args = parser.parse_args(arguments)
 
     args.command = aliases.get(args.command, args.command)
@@ -305,8 +315,8 @@ def run(args):
         install_crontab_job(args.dry_run)
         return
 
-    if args.command in ['list', 'sync', 'kick']:
-        if args.all:
+    if args.command in ['list', 'sync', 'kick', 'sten']:
+        if args.command != 'sten' and args.all:
             if args.folder is not None:
                 raise MQError('Specifying a folder together with --all '
                               'does not make sense')
@@ -435,6 +445,9 @@ def run(args):
 
         elif args.command == 'kick':
             tasks.kick(args.dry_run)
+
+        elif args.command == 'sten':
+            tasks.sten(args.id)
 
         else:
             assert False

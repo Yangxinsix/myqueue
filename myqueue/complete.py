@@ -57,6 +57,9 @@ commands = {
          '--id', '-n', '--name', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
+    'sten':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'submit':
         ['-d', '--dependencies', '-a', '--arguments', '--restart', '-R',
          '--resources', '-w', '--workflow', '-z', '--dry-run',
