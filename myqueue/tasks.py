@@ -26,6 +26,10 @@ class Selection:
         self.folders = folders
         self.recursive = recursive
 
+    def __repr__(self):
+        return (f'Selection({self.ids}, {self.name}, {self.states}, '
+                f'{self.folders}, {self.recursive})')
+
 
 class Tasks(Lock):
     def __init__(self, verbosity: int = 1, need_lock: bool = True) -> None:
