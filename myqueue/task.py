@@ -219,6 +219,30 @@ def task(cmd: str,
 
     cmd: str
         Command to be run.
+    resources: str
+        Resources: "cores[:nodename][:processes]:tmax".  Examples:
+        "48:1d", "32:1h", "8:xeon8:1:30m".  Can not be used togeter with
+        any of "cores", "nodename", "processes" and "tmax".
+    args: list of str
+        Command-line arguments of function arguments.
+    deps: str, list of str or list of Task objects
+        Dependencies.  Examples: "task1,task2", "['task1', 'task2']".
+    cores: int
+        Number of cores (default is 1).
+    nodename: str
+        Name of node.
+    processes: int
+        Number of processes to start (default is one for each core).
+    tmax: str
+        Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
+    folder: str
+        Folder where task should run (default is current folder).
+    workflow: bool
+        Task is part of a workflow.
+    restart: int
+        How many times to restart task.
+    diskspace: float
+        Diskspace used.
     """
 
     path = Path(folder).absolute()
