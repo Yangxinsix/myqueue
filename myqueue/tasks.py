@@ -19,7 +19,7 @@ class Selection:
                  name: str,
                  states: Set[str],
                  folders: List[Path],
-                 recursive: bool) -> None:
+                 recursive: bool):
         self.ids = ids
         self.name = name
         self.states = states
@@ -32,7 +32,7 @@ class Selection:
 
 
 class Tasks(Lock):
-    def __init__(self, verbosity: int = 1, need_lock: bool = True) -> None:
+    def __init__(self, verbosity: int = 1, need_lock: bool = True):
         self.verbosity = verbosity
         self.need_lock = need_lock
 
@@ -219,6 +219,7 @@ class Tasks(Lock):
 
             if ex:
                 print('ERROR:', task)
+                print(task, task.todict(), ex, todo, file=sys.stderr)
                 raise ex
 
     def select(self, s: Selection) -> List[Task]:
