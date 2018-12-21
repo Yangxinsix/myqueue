@@ -201,3 +201,9 @@ def cancel():
     mq('rm -n sleep+999 -srq .')
     wait()
     assert states() == 'd'
+
+
+@test
+def check_dependency_order():
+    ...
+    pass
