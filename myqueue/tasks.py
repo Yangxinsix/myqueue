@@ -202,7 +202,7 @@ class Tasks(Lock):
             ex = None
             while todo:
                 task = todo.pop(0)
-                if not all(task.dtasks):
+                if not all(t.id != 0 for t in task.dtasks):
                     # dependency has not been submitted yet
                     todo.append(task)
                 else:
