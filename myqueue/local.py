@@ -19,6 +19,10 @@ class LocalQueue(Queue, Lock):
     @lock
     def submit(self, task: Task) -> None:
         self._read()
+        if task.dtasks:
+            ids = {t.id for t in self.tasks}
+            for t in task.dtasks:
+                assert t.id in ids
         self.number += 1
         task.id = self.number
         self.tasks.append(task)
@@ -165,6 +169,7 @@ class LocalQueue(Queue, Lock):
                 os.dup2(se.fileno(), sys.stderr.fileno())
                 self._run(task)
             os._exit(0)
+        task.state = 'running'
 
     def _run(self, task):
         out = '{name}.out'.format(name=task.name)
@@ -189,7 +194,6 @@ class LocalQueue(Queue, Lock):
                .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
-        task.state = 'running'
 
 
 if __name__ == '__main__':
