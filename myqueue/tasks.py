@@ -200,14 +200,19 @@ class Tasks(Lock):
         else:
             submitted = []
             ex = None
-            for task in todo:
-                try:
-                    self.queue.submit(task)
-                except Exception as x:
-                    ex = x
-                    break
+            while todo:
+                task = todo.pop(0)
+                if not all(t.id != 0 for t in task.dtasks):
+                    # dependency has not been submitted yet
+                    todo.append(task)
                 else:
-                    submitted.append(task)
+                    try:
+                        self.queue.submit(task)
+                    except Exception as x:
+                        ex = x
+                        break
+                    else:
+                        submitted.append(task)
 
             pprint(submitted, 0, 'ifnr')
             if submitted:
