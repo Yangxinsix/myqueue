@@ -1,4 +1,6 @@
 import sys
+import time
+from pathlib import Path
 
 
 def oom(local: bool = True) -> None:
@@ -15,3 +17,10 @@ def oom(local: bool = True) -> None:
     while True:
         print(len(x))
         x = x + x
+
+
+def timeout_once():
+    path = Path('timeout_once.out')
+    if not path.is_file():
+        path.touch()
+        time.sleep(1000)

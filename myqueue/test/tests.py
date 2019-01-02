@@ -201,3 +201,14 @@ def cancel():
     mq('rm -n sleep+999 -srq .')
     wait()
     assert states() == 'd'
+
+
+@test
+def check_dependency_order():
+    mq('submit myqueue.test:timeout_once -R 1:1s --restart 1')
+    mq('submit echo+ok -d myqueue.test:timeout_once --restart 1')
+    wait()
+    assert states() == 'TC'
+    mq('kick')
+    wait()
+    assert states() == 'dd'
