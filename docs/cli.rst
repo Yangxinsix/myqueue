@@ -229,9 +229,10 @@ Submit tasks from Python script.
 Example::
 
     $ cat flow.py
-    from myqueue.tas import task
+    from myqueue.task import task
     def create_tasks():
-        return [task('task1'), task('task2', deps='task1')]
+        return [task('task1'),
+                task('task2', deps='task1')]
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 
 script:
