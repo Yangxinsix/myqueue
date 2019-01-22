@@ -217,12 +217,21 @@ def task(cmd: str,
          diskspace: float = 0.0) -> Task:
     """Create a Task object.
 
+    ::
+
+        task = task('abc.py')
+
+    Parameters
+    ----------
     cmd: str
         Command to be run.
     resources: str
-        Resources: "cores[:nodename][:processes]:tmax".  Examples:
-        "48:1d", "32:1h", "8:xeon8:1:30m".  Can not be used togeter with
-        any of "cores", "nodename", "processes" and "tmax".
+        Resources::
+
+            'cores[:nodename][:processes]:tmax'
+
+        Examples: '48:1d', '32:1h', '8:xeon8:1:30m'.  Can not be used
+        togeter with any of "cores", "nodename", "processes" and "tmax".
     args: list of str
         Command-line arguments of function arguments.
     deps: str, list of str or list of Task objects
@@ -243,6 +252,11 @@ def task(cmd: str,
         How many times to restart task.
     diskspace: float
         Diskspace used.
+
+    Returns
+    -------
+    Task
+        Object representing the task.
     """
 
     path = Path(folder).absolute()

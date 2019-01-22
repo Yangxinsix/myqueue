@@ -4,23 +4,31 @@
 Workflows
 =========
 
-.. module:: myqueue.task
+The :ref:`workflow <workflow>` subcommand combined with a :ref:`workflow
+script` can be used to run several similar tasks in several folders.  The
+script describes the tasks, their requirements and dependencies.
 
 
 Simple example
 ==============
 
 We want to factor some integers into primes.  We want to do two tasks: factor
-the integer and check if the number was a prime number.  Here is the code we
-want to use:
+the integer and check if the number was a prime number.
+
+:download:`prime/factor.py`:
 
 .. literalinclude:: prime/factor.py
+
+:download:`prime/check.py`:
+
 .. literalinclude:: prime/check.py
 
-Our workflow script will create two tasks using the :func:`myqueue.task.task`
-function:
+Our :ref:`workflow script` will create two tasks using the
+:func:`myqueue.task.task` function:
 
 .. literalinclude:: prime/workflow.py
+
+.. highlight:: bash
 
 We put the two python files in a ``prime/`` folder and add that folder to
 ``$PYTHONPATH`` so that Python can find the files::
@@ -142,4 +150,51 @@ Turns out, there were two prime numbers::
     36791/PRIME
     8069/PRIME
 
+
+.. _workflow script:
+
+Workflow script
+===============
+
+.. module:: myqueue.task
+
+A workflow script must contain a function:
+
+.. function:: create_tasks() -> List[myqueue.task.Task]
+
+.. highlight:: python
+
+It should return a list of :class:`myqueu.task.Task` objects created with the
+:func:`myqueue.tast.task` helper function.  Here is an example::
+
+    from myqueue.task import task
+    def create_tasks():
+        t1 = task('<task-1>', resources=...)
+        t2 = task('<task-2>', resources=...)
+        t3 = task('<task-3>', resources=...,
+                  deps=['<task-1>', '<task-2>'])
+        return [t1, t2, t3]
+
+where ``<task-n>`` is the name of a task.  See :ref:`task examples` below.
+
 .. autofunction:: myqueue.task.task
+
+
+.. _task examples:
+
+Examples
+--------
+
+::
+
+    task('prime.factor@8:1h')
+    task('prime.factor', resources='8:1h')
+    task('prime.factor', cores=8, tmax='1h')
+
+
+Task class
+==========
+
+Use the :func:`myqueue.tast.task` function instead of the class:
+
+.. autoclass:: myqueue.task.Task
