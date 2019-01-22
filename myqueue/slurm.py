@@ -8,6 +8,14 @@ from myqueue.config import config
 from myqueue.queue import Queue
 
 
+def mpi_implementation() -> str:
+    if 'mpi' in config:
+        return config['mpi']
+    if b'intel' in subprocess.check_output(['mpiexec', '-V']).lower():
+        return 'intel'
+    return 'openmpi'
+
+
 class SLURM(Queue):
     def submit(self, task: Task) -> None:
         nodelist = config['nodes']
@@ -41,16 +49,24 @@ class SLURM(Queue):
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append('--dependency=afterok:{}'.format(ids))
 
+        env = [('OMP_NUM_THREADS', '1'),
+               ('MPLBACKEND', 'Agg')]
+
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            if config.get('mpi') == 'intel':
-                mpiexec = mpiexec.replace('-x', '--env').replace('=', ' ')
+            if mpi_implementation() == 'intel':
+                mpiexec = 'mpiexec ' + ' '.join(f'--env {name} {val}'
+                                                for name, val in env)
+            else:
+                mpiexec = 'mpiexec ' + ' '.join(f'-x {name}={val}'
+                                                for name, val in env)
             if 'mpiargs' in nodedct:
-                mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
+                mpiexec += ' ' + nodedct['mpiargs']
+            cmd = (mpiexec +
+                   ' ' +
+                   cmd.replace('python3', config['parallel_python']))
         else:
-            cmd = 'MPLBACKEND=Agg ' + cmd
+            cmd = ''.join(f'{name}={val} ' for name, val in env) + cmd
 
         home = config['home']
 
