@@ -45,6 +45,7 @@ def run_document(path: Path) -> None:
 
 def run_command(cmd: str,
                 folder: str) -> Tuple[List[str], str]:
+    cmd, _, _ = cmd.partition('  #')
     result = run(f'cd {folder}; {cmd}; pwd',
                  shell=True, check=True, stdout=PIPE)
     output = result.stdout.decode().splitlines()
