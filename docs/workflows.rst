@@ -24,13 +24,15 @@ the integer and check if the number was a prime number.
 .. literalinclude:: prime/check.py
 
 Our :ref:`workflow script` will create two tasks using the
-:func:`myqueue.task.task` function:
+:func:`myqueue.task.task` function.
+
+:download:`prime/workflow.py`:
 
 .. literalinclude:: prime/workflow.py
 
 .. highlight:: bash
 
-We put the two python files in a ``prime/`` folder and add that folder to
+We put the three Python files in a ``prime/`` folder and add that folder to
 ``$PYTHONPATH`` so that Python can find the files::
 
     $ ls -l prime/
@@ -46,7 +48,7 @@ Create some folders::
     $ cd numbers
     $ mkdir 99 1001 8069 36791 98769 100007
 
-and start the workflow in a single folder::
+and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
     ./1001/ prime.factor 1:10m*
@@ -113,7 +115,7 @@ and now in all subfolders::
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
-Note that a ``<task-name>.<id>.done`` file is created when a task has been
+Note that a ``<task-name>.done`` file is created when a task has been
 completed::
 
     $ ls -l 1001/
@@ -156,16 +158,14 @@ Turns out, there were two prime numbers::
 Workflow script
 ===============
 
-.. module:: myqueue.task
-
 A workflow script must contain a function:
 
 .. function:: create_tasks() -> List[myqueue.task.Task]
 
 .. highlight:: python
 
-It should return a list of :class:`myqueu.task.Task` objects created with the
-:func:`myqueue.tast.task` helper function.  Here is an example::
+It should return a list of :class:`myqueue.task.Task` objects created with the
+:func:`myqueue.task.task` helper function.  Here is an example::
 
     from myqueue.task import task
     def create_tasks():
@@ -176,6 +176,8 @@ It should return a list of :class:`myqueu.task.Task` objects created with the
         return [t1, t2, t3]
 
 where ``<task-n>`` is the name of a task.  See :ref:`task examples` below.
+
+.. module:: myqueue.task
 
 .. autofunction:: myqueue.task.task
 
@@ -195,6 +197,6 @@ Examples
 Task class
 ==========
 
-Use the :func:`myqueue.tast.task` function instead of the class:
+Use the :func:`myqueue.task.task` function instead of the class:
 
 .. autoclass:: myqueue.task.Task

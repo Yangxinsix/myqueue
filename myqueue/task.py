@@ -233,7 +233,7 @@ def task(cmd: str,
         Examples: '48:1d', '32:1h', '8:xeon8:1:30m'.  Can not be used
         togeter with any of "cores", "nodename", "processes" and "tmax".
     args: list of str
-        Command-line arguments of function arguments.
+        Command-line arguments or function arguments.
     deps: str, list of str or list of Task objects
         Dependencies.  Examples: "task1,task2", "['task1', 'task2']".
     cores: int
