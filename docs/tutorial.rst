@@ -2,6 +2,8 @@
 Tutorial
 ========
 
+.. _tasks:
+
 Tasks
 =====
 
@@ -9,6 +11,7 @@ A task can be one of these:
 
 * a Python script (``script.py``)
 * a Python module (``module``)
+* a Python submodule (``module.submodule``)
 * a function in a Python module (``module:function``)
 * an executable or shell-script
 
@@ -82,6 +85,8 @@ If a job fails or times out, then you can resubmit it with more resources::
     TIMEOUT: 1
     $ mq resubmit -i 2 -R 1:1h
 
+
+.. _resources:
 
 Resources
 =========
