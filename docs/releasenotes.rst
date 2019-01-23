@@ -3,6 +3,14 @@ Release notes
 =============
 
 
+Version 19.1.0
+==============
+
+* Recognizes mpiexex variant automatically.
+
+* New "detailed information" subcommand.
+
+
 Version 18.12.0
 ===============
 
