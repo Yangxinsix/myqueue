@@ -2,7 +2,7 @@ import argparse
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any, Tuple, Dict
+from typing import List, Any, Tuple, Dict, Set
 
 
 class MQError(Exception):
@@ -364,7 +364,7 @@ def run(args):
             else:
                 raise MQError('Unknown state: ' + s)
 
-        ids = None  # type: Set[int]
+        ids: Set[int] = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")

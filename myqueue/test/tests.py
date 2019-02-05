@@ -33,7 +33,7 @@ tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
                                dir=str(Path.home())))
 
 
-def wait()-> None:
+def wait() -> None:
     t0 = time.time()
     timeout = 10.0 if LOCAL else 1300.0
     sleep = 0.1 if LOCAL else 3.0
@@ -87,7 +87,7 @@ def run_tests(tests: List[str],
                 f.unlink()
 
     for f in tmpdir.glob('.myqueue/*'):
-            f.unlink()
+        f.unlink()
 
     (tmpdir / '.myqueue').rmdir()
     tmpdir.rmdir()

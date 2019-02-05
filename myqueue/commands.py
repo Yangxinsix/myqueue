@@ -10,7 +10,7 @@ class Command:
             name += '+' + '_'.join(self.args)
         self.name = name
 
-    def todict(self)-> Dict[str, Any]:
+    def todict(self) -> Dict[str, Any]:
         raise NotImplementedError
 
 
