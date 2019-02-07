@@ -3,6 +3,12 @@ Release notes
 =============
 
 
+Version 19.2.0
+==============
+
+* Fix test-suite.
+
+
 Version 19.1.0
 ==============
 
