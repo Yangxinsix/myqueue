@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import time
 from typing import List, Optional
@@ -29,10 +30,6 @@ def states():
     return ''.join(job.state[0] for job in mq('list'))
 
 
-tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
-                               dir=str(Path.home())))
-
-
 def wait() -> None:
     t0 = time.time()
     timeout = 10.0 if LOCAL else 1300.0
@@ -45,9 +42,17 @@ def wait() -> None:
 
 def run_tests(tests: List[str],
               config_file: Optional[Path],
-              exclude: List[str]) -> None:
+              exclude: List[str],
+              verbose: bool) -> None:
     global LOCAL
     LOCAL = config_file is None
+
+    if LOCAL:
+        tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-'))
+    else:
+        tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
+                                       dir=str(Path.home())))
+
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
 
@@ -70,21 +75,36 @@ def run_tests(tests: List[str],
     for test in exclude:
         tests.remove(test)
 
+    if not verbose:
+        sys.stdout = open(tmpdir / '.myqueue/stdout.txt', 'w')
+
     N = 79
     for name in tests:
-        print()
-        print('#' * N)
-        print(' Running "{}" test '.format(name).center(N, '#'))
-        print('#' * N)
-        print()
+        if verbose:
+            print()
+            print('#' * N)
+            print(' Running "{}" test '.format(name).center(N, '#'))
+            print('#' * N)
+            print()
+        else:
+            print(name, '...', end=' ', flush=True, file=sys.__stdout__)
 
-        all_tests[name]()
+        try:
+            all_tests[name]()
+        except Exception:
+            sys.stdout = sys.__stdout__
+            print('FAILED')
+            raise
+        else:
+            print('OK', file=sys.__stdout__)
 
         mq('rm -s qrdFTCM . -r')
 
         for f in tmpdir.glob('*'):
             if f.is_file():
                 f.unlink()
+
+    sys.stdout = sys.__stdout__
 
     for f in tmpdir.glob('.myqueue/*'):
         f.unlink()
