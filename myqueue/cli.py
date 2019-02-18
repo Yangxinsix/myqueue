@@ -85,7 +85,7 @@ Initialize new queue.
 This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
 .
-sten
+info
 Show detailed information about task.
 
 .
@@ -218,7 +218,7 @@ def main(arguments: List[str] = None) -> Any:
             a('--install-crontab-job', action='store_true',
               help='Install crontab job to kick your queues every half hour.')
 
-        if cmd == 'sten':
+        if cmd == 'info':
             a('id', type=int, help='Task ID.')
             a('folder',
               nargs='?',
@@ -316,8 +316,8 @@ def run(args):
         install_crontab_job(args.dry_run)
         return
 
-    if args.command in ['list', 'sync', 'kick', 'sten']:
-        if args.command != 'sten' and args.all:
+    if args.command in ['list', 'sync', 'kick', 'info']:
+        if args.command != 'info' and args.all:
             if args.folder is not None:
                 raise MQError('Specifying a folder together with --all '
                               'does not make sense')
@@ -447,8 +447,8 @@ def run(args):
         elif args.command == 'kick':
             tasks.kick(args.dry_run)
 
-        elif args.command == 'sten':
-            tasks.sten(args.id)
+        elif args.command == 'info':
+            tasks.info(args.id)
 
         else:
             assert False

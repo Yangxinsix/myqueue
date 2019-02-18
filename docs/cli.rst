@@ -36,7 +36,7 @@ Sub-commands
       - Modify task(s)
     * - :ref:`init <init>`
       - Initialize new queue
-    * - :ref:`sten <sten>`
+    * - :ref:`info <info>`
       - Show detailed information about task
     * - :ref:`sync <sync>`
       - Make sure SLURM/PBS and MyQueue are in sync
@@ -378,12 +378,12 @@ optional arguments:
   -T, --traceback  Show full traceback.
 
 
-.. _sten:
+.. _info:
 
-Sten: Show detailed information about task
+Info: Show detailed information about task
 ------------------------------------------
 
-usage: mq sten [-h] [-z] [-v] [-q] [-T] id [folder]
+usage: mq info [-h] [-z] [-v] [-q] [-T] id [folder]
 
 Show detailed information about task.
 

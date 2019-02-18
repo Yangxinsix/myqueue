@@ -81,7 +81,7 @@ class Tasks(Lock):
         pprint(tasks, self.verbosity, columns)
         return tasks
 
-    def sten(self, id: int):
+    def info(self, id: int):
         self._read()
         task = self.select(Selection({id}, '', set(), [], False))[0]
         print(json.dumps(task.todict(), indent='    '))

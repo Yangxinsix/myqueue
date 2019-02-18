@@ -34,6 +34,9 @@ commands = {
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'help':
         [''],
+    'info':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'init':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
@@ -57,9 +60,6 @@ commands = {
          '--id', '-n', '--name', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
-    'sten':
-        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
     'submit':
         ['-d', '--dependencies', '-a', '--arguments', '--restart', '-R',
          '--resources', '-w', '--workflow', '-z', '--dry-run',

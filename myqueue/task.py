@@ -2,9 +2,9 @@ import time
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional  # noqa
 
-from myqueue.commands import command, Command
-from myqueue.config import config
-from myqueue.resources import Resources, T
+from .commands import command, Command
+from .config import config
+from .resources import Resources, T
 
 
 taskstates = ['queued', 'hold', 'running', 'done',
