@@ -1,12 +1,13 @@
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, List, Dict, Any
 
 from .task import Task
+from .tasks import Tasks
 from .utils import chdir
 
 
-def workflow(args, tasks: List[Task], folders: List[Path]):
-    alltasks = []
+def workflow(args, tasks: Tasks, folders: List[Path]):
+    alltasks: List[Task] = []
 
     if args.pattern:
         for folder in folders:
@@ -35,7 +36,7 @@ def workflow(args, tasks: List[Task], folders: List[Path]):
 def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
     script = path.read_text()
     code = compile(script, str(path), 'exec')
-    namespace = {}
+    namespace: Dict[str, Any] = {}
     exec(code, namespace)
     create_tasks = namespace['create_tasks']
     return create_tasks
