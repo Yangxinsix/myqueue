@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-from typing import List, Any, Dict, Union, Optional  # noqa
+from typing import List, Any, Dict, Union, Optional, Iterator  # noqa
 
 from .commands import command, Command
 from .config import config
@@ -201,6 +201,11 @@ class Task:
         if lines:
             self.error = lines[-1]
         return False
+
+    def ideps(self, map: Dict[Path, 'Task']) -> Iterator['Task']:
+        yield self
+        for dname in self.deps:
+            yield from map[dname].ideps(map)
 
 
 def task(cmd: str,
