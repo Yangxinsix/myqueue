@@ -222,7 +222,8 @@ optional arguments:
 Workflow: Submit tasks from Python script
 -----------------------------------------
 
-usage: mq workflow [-h] [-p] [-z] [-v] [-q] [-T] script [folder [folder ...]]
+usage: mq workflow [-h] [-t TARGETS] [-p] [-z] [-v] [-q] [-T]
+                   script [folder [folder ...]]
 
 Submit tasks from Python script.
 
@@ -241,12 +242,16 @@ folder:
     Submit tasks in this folder. Defaults to current folder.
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -p, --pattern    Use submit scripts matching "script" in all subfolders.
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
+  -h, --help            show this help message and exit
+  -t TARGETS, --targets TARGETS
+                        Comma-separated target names. Without any targets, all
+                        tasks will be submitted.
+  -p, --pattern         Use submit scripts matching "script" in all
+                        subfolders.
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
 
 
 .. _kick:

@@ -72,8 +72,8 @@ commands = {
         ['--config-file', '-x', '--exclude', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'workflow':
-        ['-p', '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
-         '--quiet', '-T', '--traceback']}
+        ['-t', '--targets', '-p', '--pattern', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback']}
 # End of computer generated data
 
 
