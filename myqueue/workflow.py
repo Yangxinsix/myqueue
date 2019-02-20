@@ -25,7 +25,7 @@ def workflow(args, tasks: Tasks, folders: List[Path]):
         include = set()
         map = {task.dname: task for task in alltasks}
         for task in alltasks:
-            if task.name in names:
+            if task.cmd.name in names:
                 for t in task.ideps(map):
                     include.add(task)
         alltasks = list(include)
