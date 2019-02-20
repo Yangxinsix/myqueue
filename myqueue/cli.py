@@ -163,6 +163,9 @@ def main(arguments: List[str] = None) -> Any:
 
         if cmd == 'workflow':
             a('script', help='Submit script.')
+            a('-t', '--targets',
+              help='Comma-separated target names.  Without any targets, '
+              'all tasks will be submitted.')
             a('-p', '--pattern', action='store_true',
               help='Use submit scripts matching "script" in all '
               'subfolders.')
@@ -284,11 +287,12 @@ def main(arguments: List[str] = None) -> Any:
 
 
 def run(args):
-    from myqueue.config import config, initialize_config
-    from myqueue.resources import Resources
-    from myqueue.task import task, Task, taskstates
-    from myqueue.tasks import Tasks, Selection, pprint
-    from myqueue.utils import get_home_folders
+    from .config import config, initialize_config
+    from .resources import Resources
+    from .task import task, Task, taskstates
+    from .tasks import Tasks, Selection, pprint
+    from .utils import get_home_folders
+    from .workflow import workflow
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -452,53 +456,6 @@ def run(args):
 
         else:
             assert False
-
-
-def workflow(args, tasks, folders):
-    from myqueue.utils import chdir
-
-    if args.pattern:
-        workflow2(args, tasks, folders)
-        return
-
-    script = Path(args.script).read_text()
-    code = compile(script, args.script, 'exec')
-    namespace = {}
-    exec(code, namespace)
-    create_tasks = namespace['create_tasks']
-
-    alltasks = []
-    for folder in folders:
-        with chdir(folder):
-            newtasks = create_tasks()
-        for task in newtasks:
-            if not task.skip():
-                task.workflow = True
-                alltasks.append(task)
-
-    tasks.submit(alltasks, args.dry_run)
-
-
-def workflow2(args, tasks, folders):
-    from myqueue.utils import chdir
-
-    alltasks = []
-    for folder in folders:
-        for path in folder.glob('**/*' + args.script):
-            script = path.read_text()
-            code = compile(script, str(path), 'exec')
-            namespace = {}
-            exec(code, namespace)
-            create_tasks = namespace['create_tasks']
-
-            with chdir(path.parent):
-                newtasks = create_tasks()
-            for task in newtasks:
-                task.workflow = True
-
-            alltasks += newtasks
-
-    tasks.submit(alltasks, args.dry_run)
 
 
 class Formatter(argparse.HelpFormatter):

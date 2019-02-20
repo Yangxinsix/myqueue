@@ -1,0 +1,54 @@
+from pathlib import Path
+from typing import Callable, List
+
+from .task import Task
+from .utils import chdir
+
+
+def workflow(args, tasks: List[Task], folders: List[Path]):
+    alltasks = []
+
+    if args.pattern:
+        for folder in folders:
+            for path in folder.glob('**/*' + args.script):
+                create_tasks = compile_create_tasks_function(path)
+
+                alltasks += get_tasks_from_folder(path.parent, create_tasks)
+    else:
+        create_tasks = compile_create_tasks_function(Path(args.script))
+        for folder in folders:
+            alltasks += get_tasks_from_folder(folder, create_tasks)
+
+    if args.targets:
+        names = args.targets.split(',')
+        include = set()
+        map = {task.dname: task for task in alltasks}
+        for task in alltasks:
+            if task.name in names:
+                for t in task.ideps(map):
+                    include.add(task)
+        alltasks = list(include)
+
+    tasks.submit(alltasks, args.dry_run)
+
+
+def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
+    script = path.read_text()
+    code = compile(script, str(path), 'exec')
+    namespace = {}
+    exec(code, namespace)
+    create_tasks = namespace['create_tasks']
+    return create_tasks
+
+
+def get_tasks_from_folder(folder: Path,
+                          create_tasks: Callable[[], List[Task]]
+                          ) -> List[Task]:
+    tasks = []
+    with chdir(folder):
+        newtasks = create_tasks()
+    for task in newtasks:
+        if not task.skip():
+            task.workflow = True
+            tasks.append(task)
+    return tasks
