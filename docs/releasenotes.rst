@@ -3,6 +3,12 @@ Release notes
 =============
 
 
+Next release
+============
+
+* New ``--target`` option for :ref:`worflows <worflows>`.
+
+
 Version 19.2.0
 ==============
 
