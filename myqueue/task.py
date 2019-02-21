@@ -211,7 +211,7 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
-         deps: Union[str, List[str], List[Task]] = '',
+         deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 1,
          nodename: str = '',
          processes: int = 0,
@@ -239,7 +239,7 @@ def task(cmd: str,
         togeter with any of "cores", "nodename", "processes" and "tmax".
     args: list of str
         Command-line arguments or function arguments.
-    deps: str, list of str or list of Task objects
+    deps: str, list of str, Task object  or list of Task objects
         Dependencies.  Examples: "task1,task2", "['task1', 'task2']".
     cores: int
         Number of cores (default is 1).
@@ -270,6 +270,8 @@ def task(cmd: str,
     if deps:
         if isinstance(deps, str):
             deps = deps.split(',')
+        elif isinstance(deps, Task):
+            deps = [deps]
         for dep in deps:
             if isinstance(dep, str):
                 p = path / dep
