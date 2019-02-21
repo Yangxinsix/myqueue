@@ -174,6 +174,7 @@ class Runner(Lock):
                 if tsk is not None:
                     task.dtasks.append(tsk)
             else:
+                task.deps = [t.dname for t in task.dtasks]
                 todo.append(task)
 
         # All dependensies must have an id or be in the list of tasks
