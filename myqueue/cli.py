@@ -290,7 +290,7 @@ def run(args):
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, Task, taskstates
-    from .tasks import Tasks, Selection, pprint
+    from .runner import Runner, Selection, pprint
     from .utils import get_home_folders
     from .workflow import workflow
 
@@ -391,37 +391,37 @@ def run(args):
         alltasks: List[Task] = []
         for folder in folders:
             initialize_config(folder, force=True)
-            with Tasks(verbosity) as tasks:
-                tasks.tasks = alltasks
-                tasks._read()
+            with Runner(verbosity) as runner:
+                runner.tasks = alltasks
+                runner._read()
         if alltasks:
-            alltasks = tasks.select(selection)
+            alltasks = runner.select(selection)
             pprint(alltasks, verbosity, args.columns)
         return
 
     if args.command in ['sync', 'kick'] and args.all:
         for folder in get_home_folders():
             initialize_config(folder, force=True)
-            with Tasks(verbosity) as tasks:
+            with Runner(verbosity) as runner:
                 if args.command == 'sync':
-                    tasks.sync(args.dry_run)
+                    runner.sync(args.dry_run)
                 else:
-                    tasks.kick(args.dry_run)
+                    runner.kick(args.dry_run)
         return
 
-    with Tasks(verbosity, need_lock=args.command != 'list') as tasks:
+    with Runner(verbosity, need_lock=args.command != 'list') as runner:
         if args.command == 'list':
-            return tasks.list(selection, args.columns)
+            return runner.list(selection, args.columns)
 
         if args.command == 'remove':
-            tasks.remove(selection, args.dry_run)
+            runner.remove(selection, args.dry_run)
 
         elif args.command == 'resubmit':
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            tasks.resubmit(selection, args.dry_run, resources)
+            runner.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
             if args.arguments:
@@ -437,22 +437,23 @@ def run(args):
                              restart=args.restart)
                         for folder in folders]
 
-            tasks.submit(newtasks, args.dry_run)
+            runner.submit(newtasks, args.dry_run)
 
         elif args.command == 'modify':
-            tasks.modify(selection, args.newstate, args.dry_run)
+            runner.modify(selection, args.newstate, args.dry_run)
 
         elif args.command == 'workflow':
-            workflow(args, tasks, folders)
+            tasks = workflow(args, folders)
+            runner.submit(tasks, args.dry_run)
 
         elif args.command == 'sync':
-            tasks.sync(args.dry_run)
+            runner.sync(args.dry_run)
 
         elif args.command == 'kick':
-            tasks.kick(args.dry_run)
+            runner.kick(args.dry_run)
 
         elif args.command == 'info':
-            tasks.info(args.id)
+            runner.info(args.id)
 
         else:
             assert False

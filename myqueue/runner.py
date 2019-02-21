@@ -31,7 +31,7 @@ class Selection:
                 f'{self.folders}, {self.recursive})')
 
 
-class Tasks(Lock):
+class Runner(Lock):
     def __init__(self, verbosity: int = 1, need_lock: bool = True):
         self.verbosity = verbosity
         self.need_lock = need_lock

@@ -2,11 +2,10 @@ from pathlib import Path
 from typing import Callable, List, Dict, Any
 
 from .task import Task
-from .tasks import Tasks
 from .utils import chdir
 
 
-def workflow(args, tasks: Tasks, folders: List[Path]):
+def workflow(args, folders: List[Path]) -> List[Task]:
     alltasks: List[Task] = []
 
     if args.pattern:
@@ -30,7 +29,7 @@ def workflow(args, tasks: Tasks, folders: List[Path]):
                     include.add(task)
         alltasks = list(include)
 
-    tasks.submit(alltasks, args.dry_run)
+    return alltasks
 
 
 def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
