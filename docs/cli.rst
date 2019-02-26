@@ -65,8 +65,8 @@ optional arguments:
 List (ls): List tasks in queue
 ------------------------------
 
-usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-v] [-q]
-               [-T] [-A]
+usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-S c] [-v]
+               [-q] [-T] [-A]
                [folder]
 
 List tasks in queue.
@@ -93,6 +93,8 @@ optional arguments:
   -n NAME, --name NAME  Select only tasks named "NAME".
   -c ifnraste, --columns ifnraste
                         Select columns to show.
+  -S c, --sort c        Sort rows using column c, where c must be one of i, f,
+                        n, r, a, s, t or e. Use "-S c-" for a descending sort.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.

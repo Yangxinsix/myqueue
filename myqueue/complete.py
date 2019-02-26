@@ -45,8 +45,8 @@ commands = {
          '--traceback', '-A', '--all', '--install-crontab-job'],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-c',
-         '--columns', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-A', '--all'],
+         '--columns', '-S', '--sort', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback', '-A', '--all'],
     'modify':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
