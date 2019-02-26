@@ -75,9 +75,15 @@ class Runner(Lock):
             self._write()
         self.release()
 
-    def list(self, selection: Selection, columns: str) -> List[Task]:
+    def list(self,
+             selection: Selection,
+             columns: str,
+             sort: str = None,
+             reverse: bool = False) -> List[Task]:
         self._read()
         tasks = self.select(selection)
+        if sort:
+            tasks.sort(key=lambda task: task.order(sort), reverse=reverse)
         pprint(tasks, self.verbosity, columns)
         return tasks
 

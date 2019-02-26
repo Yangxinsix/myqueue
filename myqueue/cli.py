@@ -183,6 +183,9 @@ def main(arguments: List[str] = None) -> Any:
         if cmd == 'list':
             a('-c', '--columns', metavar='ifnraste', default='ifnraste',
               help='Select columns to show.')
+            a('-S', '--sort', metavar='c',
+              help='Sort rows using column c, where c must be one of '
+              'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
 
         if cmd not in ['list', 'completion']:
             a('-z', '--dry-run',
@@ -411,7 +414,13 @@ def run(args):
 
     with Runner(verbosity, need_lock=args.command != 'list') as runner:
         if args.command == 'list':
-            return runner.list(selection, args.columns)
+            if args.sort:
+                reverse = args.sort.endswith('-')
+                column = args.sort.rstrip('-')
+            else:
+                reverse = False
+                column = None
+            return runner.list(selection, args.columns, column, reverse)
 
         if args.command == 'remove':
             runner.remove(selection, args.dry_run)

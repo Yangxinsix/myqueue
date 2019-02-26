@@ -54,24 +54,20 @@ class Task:
     def name(self) -> str:
         return '{}.{}'.format(self.cmd.name, self.id)
 
+    def running_time(self, t=None):
+        if self.state in ['running', 'hold']:
+            dt = 0.0
+        elif self.state == 'running':
+            t = t or time.time()
+            dt = t - self.trunning
+        else:
+            dt = self.tstop - self.trunning
+        return dt
+
     def words(self) -> List[str]:
         t = time.time()
-        if self.state == 'queued':
-            dt = t - self.tqueued
-            age = dt
-        elif self.state == 'running':
-            dt = t - self.trunning
-            age = dt
-        elif self.state == 'CANCELED':
-            dt = self.tstop - self.tqueued
-            age = t - self.tstop
-        else:
-            if self.trunning is None:
-                dt = 0
-                print('???')
-            else:
-                dt = self.tstop - self.trunning
-            age = t - self.tstop
+        age = t - self.tqueued
+        dt = self.running_time(t)
 
         if self.deps:
             deps = '({})'.format(len(self.deps))
@@ -97,6 +93,26 @@ class Task:
         return str(self.dname)
         dct = self.todict()
         return 'Task({!r})'.format(dct)
+
+    def order(self, column):
+        """ifnraste"""
+        if column == 'i':
+            return self.id
+        if column == 'f':
+            return self.folder
+        if column == 'n':
+            return self.name
+        if column == 'r':
+            return self.resources.cores * self.resources.tmax
+        if column == 'a':
+            return self.tqueued
+        if column == 's':
+            return self.state
+        if column == 't':
+            return self.running_time()
+        if column == 'e':
+            return self.error
+        raise ValueError(f'Unknown column: {column}!')
 
     def todict(self) -> Dict[str, Any]:
         return {'cmd': self.cmd.todict(),
