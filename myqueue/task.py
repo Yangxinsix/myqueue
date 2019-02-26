@@ -55,7 +55,7 @@ class Task:
         return '{}.{}'.format(self.cmd.name, self.id)
 
     def running_time(self, t=None):
-        if self.state in ['running', 'hold']:
+        if self.state in ['queued', 'hold']:
             dt = 0.0
         elif self.state == 'running':
             t = t or time.time()
