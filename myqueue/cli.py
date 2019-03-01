@@ -2,7 +2,7 @@ import argparse
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any, Tuple, Dict, Set
+from typing import List, Any, Tuple, Dict, Set, Optional
 
 
 class MQError(Exception):
@@ -94,6 +94,13 @@ Make sure SLURM/PBS and MyQueue are in sync.
 
 """
 
+submit_usage = """\
+mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-R RESOURCES]
+                 [-w] [-z] [-v] [-q] [-T]
+                 task [folder [folder ...]]
+                 [-- arg [arg ...]]
+"""
+
 aliases = {'rm': 'remove',
            'ls': 'list'}
 
@@ -120,6 +127,8 @@ def main(arguments: List[str] = None) -> Any:
         p = subparsers.add_parser(cmd,
                                   description=description,
                                   help=help,
+                                  usage=(submit_usage if cmd == 'submit'
+                                         else None),
                                   formatter_class=Formatter,
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
@@ -141,12 +150,16 @@ def main(arguments: List[str] = None) -> Any:
             a('task', help='Task to submit.')
             a('-d', '--dependencies', default='',
               help='Comma-separated task names.')
-            a('-a', '--arguments', help='Comma-separated arguments for task.')
+            a('-n', '--name', help='Name used for task.')
             a('--restart', type=int, default=0, metavar='N',
               help='Restart N times if task times out or runs out of memory. '
               'Time-limit will be doubled for a timed out task and '
               'number of cores will be doubled for a task that runs out '
               'of memory.')
+            a('folder',
+              nargs='*', default=['.'],
+              help='Submit tasks in this folder.  '
+              'Defaults to current folder.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
@@ -169,6 +182,10 @@ def main(arguments: List[str] = None) -> Any:
             a('-p', '--pattern', action='store_true',
               help='Use submit scripts matching "script" in all '
               'subfolders.')
+            a('folder',
+              nargs='*', default=['.'],
+              help='Submit tasks in this folder.  '
+              'Defaults to current folder.')
 
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTM',
@@ -214,12 +231,6 @@ def main(arguments: List[str] = None) -> Any:
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
-        if cmd in ['submit', 'workflow']:
-            a('folder',
-              nargs='*', default=['.'],
-              help='Submit tasks in this folder.  '
-              'Defaults to current folder.')
-
         if cmd == 'kick':
             a('--install-crontab-job', action='store_true',
               help='Install crontab job to kick your queues every half hour.')
@@ -230,7 +241,17 @@ def main(arguments: List[str] = None) -> Any:
               nargs='?',
               help='Show task from this folder.  Defaults to current folder.')
 
-    args = parser.parse_args(arguments)
+    # Extract extra argument for task:
+    args1 = arguments or sys.argv[1:]
+    try:
+        i = args1.index('--')
+    except ValueError:
+        extra: List[str] = []
+    else:
+        extra = args1[i + 1:]
+        del args1[i:]
+
+    args = parser.parse_args(args1)
 
     args.command = aliases.get(args.command, args.command)
 
@@ -271,7 +292,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     try:
-        results = run(args)
+        results = run(args, extra)
         if arguments:
             return results
     except KeyboardInterrupt:
@@ -289,7 +310,7 @@ def main(arguments: List[str] = None) -> Any:
             return 1
 
 
-def run(args):
+def run(args: argparse.Namespace, extra: List[str]):
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, Task, taskstates
@@ -332,8 +353,12 @@ def run(args):
         else:
             args.folder = [args.folder or '.']
 
+    if args.command != 'submit' and extra:
+        raise MQError('No extra arguments allowed')
+
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in args.folder]
+
     if args.command in ['remove', 'resubmit', 'modify']:
         if not folders:
             if args.id:
@@ -371,7 +396,7 @@ def run(args):
             else:
                 raise MQError('Unknown state: ' + s)
 
-        ids: Set[int] = None
+        ids: Optional[Set[int]] = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -433,14 +458,11 @@ def run(args):
             runner.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
-            if args.arguments:
-                arguments = args.arguments.split(',')
-            else:
-                arguments = []
             newtasks = [task(args.task,
-                             args=arguments,
+                             args=extra,
                              resources=args.resources,
-                             folder=folder,
+                             name=args.name,
+                             folder=str(folder),
                              deps=args.dependencies,
                              workflow=args.workflow,
                              restart=args.restart)

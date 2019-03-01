@@ -7,6 +7,10 @@ Next release
 ============
 
 * New ``--target`` option for :ref:`worflows <worflows>`.
+* New ``--name`` option for the :ref:`submit <submit>` command.
+* No more ``--arguments`` option.  Use::
+
+    $ mq submit [options] <task> [folder1 [folder2 ...]] -- <arg1> <arg2> ...
 
 
 Version 19.2.0

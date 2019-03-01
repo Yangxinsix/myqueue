@@ -15,7 +15,7 @@ from myqueue.config import config
 
 class Selection:
     def __init__(self,
-                 ids: Set[int],
+                 ids: Optional[Set[int]],
                  name: str,
                  states: Set[str],
                  folders: List[Path],
