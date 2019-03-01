@@ -147,8 +147,8 @@ def fail2():
 @test
 def timeout():
     t = 3 if LOCAL else 120
-    mq('submit sleep@1:1s -a {}'.format(t))
-    mq('submit echo+hello -d sleep+{}'.format(t))
+    mq(f'submit -n zzz sleep@1:1s -- {t}')
+    mq('submit echo+hello -d zzz')
     wait()
     mq('resubmit -sT . -R 1:5m')
     wait()
@@ -158,7 +158,7 @@ def timeout():
 @test
 def timeout2():
     t = 3 if LOCAL else 120
-    mq('submit sleep@1:{}s --restart 2 -a {}'.format(t // 3, t))
+    mq('submit sleep@1:{}s --restart 2 -- {}'.format(t // 3, t))
     mq('submit echo+hello -d sleep+{}'.format(t))
     wait()
     mq('kick')
@@ -171,7 +171,7 @@ def timeout2():
 
 @test
 def oom():
-    mq('submit myqueue.test:oom --restart 2 -a {}'.format(LOCAL))
+    mq('submit myqueue.test:oom --restart 2 -- {}'.format(LOCAL))
     wait()
     assert states() == 'M'
     mq('kick')

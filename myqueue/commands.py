@@ -4,11 +4,16 @@ from importlib.util import find_spec
 
 
 class Command:
-    def __init__(self, name: str, args: List[str]) -> None:
-        self.args = args or []
+    def __init__(self, name: str, args: List[str]):
+        self.args = args
         if args:
             name += '+' + '_'.join(self.args)
         self.name = name
+        self.dct = {'args': args}
+
+    def set_non_standard_name(self, name):
+        self.name = name
+        self.dct['name'] = name
 
     def todict(self) -> Dict[str, Any]:
         raise NotImplementedError
@@ -24,12 +29,13 @@ def is_module(mod: str) -> bool:
 
 def command(cmd: str,
             args: List[str] = [],
-            type: str = None) -> Command:
-    path, sep, name = cmd.rpartition('/')
-    if '+' in name:
-        name, _, rest = name.rpartition('+')
+            type: str = None,
+            name: str = '') -> Command:
+    path, sep, cmd = cmd.rpartition('/')
+    if '+' in cmd:
+        cmd, _, rest = cmd.rpartition('+')
         args = rest.split('_') + args
-    cmd = path + sep + name
+    cmd = path + sep + cmd
 
     if type is None:
         if cmd.endswith('.py'):
@@ -41,16 +47,22 @@ def command(cmd: str,
         else:
             type = 'shell-script'
 
+    command: Command
     if type == 'shell-script':
-        return ShellScript(cmd, args)
-    if type == 'python-script':
-        return PythonScript(cmd, args)
-    if type == 'python-module':
-        return PythonModule(cmd, args)
-    if type == 'python-function':
-        return PythonFunction(cmd, args)
+        command = ShellScript(cmd, args)
+    elif type == 'python-script':
+        command = PythonScript(cmd, args)
+    elif type == 'python-module':
+        command = PythonModule(cmd, args)
+    elif type == 'python-function':
+        command = PythonFunction(cmd, args)
+    else:
+        raise ValueError
 
-    raise ValueError
+    if name:
+        command.set_non_standard_name(name)
+
+    return command
 
 
 class ShellScript(Command):
@@ -64,9 +76,9 @@ class ShellScript(Command):
         return ' '.join([self.cmd] + self.args)
 
     def todict(self):
-        return {'type': 'shell-script',
-                'cmd': self.cmd,
-                'args': self.args}
+        return {**self.dct,
+                'type': 'shell-script',
+                'cmd': self.cmd}
 
 
 class PythonScript(Command):
@@ -82,9 +94,9 @@ class PythonScript(Command):
         return 'python3 ' + ' '.join([self.script] + self.args)
 
     def todict(self):
-        return {'type': 'python-script',
-                'cmd': self.script,
-                'args': self.args}
+        return {**self.dct,
+                'type': 'python-script',
+                'cmd': self.script}
 
 
 class PythonModule(Command):
@@ -96,9 +108,9 @@ class PythonModule(Command):
         return ' '.join(['python3', '-m', self.mod] + self.args)
 
     def todict(self):
-        return {'type': 'python-module',
-                'cmd': self.name.split('+')[0],
-                'args': self.args}
+        return {**self.dct,
+                'type': 'python-module',
+                'cmd': self.mod}
 
 
 class PythonFunction(Command):
@@ -112,9 +124,9 @@ class PythonFunction(Command):
                 .format(mod=self.mod, func=self.func, args=args))
 
     def todict(self):
-        return {'type': 'python-function',
-                'cmd': self.name.split('+')[0],
-                'args': self.args}
+        return {**self.dct,
+                'type': 'python-function',
+                'cmd': self.mod + ':' + self.func}
 
 
 def convert(x: str) -> Union[bool, int, float, str]:
