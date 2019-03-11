@@ -290,9 +290,10 @@ def main(arguments: List[str] = None) -> Any:
 
 
 def run(args):
+    from . import task
     from .config import config, initialize_config
     from .resources import Resources
-    from .task import task, Task, taskstates
+    from .task import Task, taskstates
     from .runner import Runner, Selection, pprint
     from .utils import get_home_folders
     from .workflow import workflow
