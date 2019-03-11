@@ -46,7 +46,7 @@ class Task:
         self.tstop = tstop
 
         self.dname = folder / cmd.name
-        self.dtasks = []  # type: List[Task]
+        self.dtasks: List[Task] = []
 
         self._done = None  # type: Optional[bool]
 
