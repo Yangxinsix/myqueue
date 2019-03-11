@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 __version__ = '19.2.1b1'
 
 
-def submit(task: Task, verbosity: int = 1, dry_run: bool = False):
+def submit(task: 'Task', verbosity: int = 1, dry_run: bool = False):
     from .runner import Runner
     with Runner(verbosity) as runner:
         runner.submit([task], dry_run)
