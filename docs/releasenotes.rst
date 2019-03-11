@@ -9,6 +9,10 @@ Next release
 * New ``--target`` option for :ref:`workflows <workflows>`.
 * New API's for submitting jobs: :meth:`myqueue.task.Task.submit` and
   :func:`myqueue.submit`.
+* New ``--name`` option for the :ref:`submit <submit>` command.
+* No more ``--arguments`` option.  Use::
+
+    $ mq submit [options] <task> [folder1 [folder2 ...]] -- arg1 arg2 ...
 
 
 Version 19.2.0

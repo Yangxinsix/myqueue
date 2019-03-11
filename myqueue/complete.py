@@ -61,7 +61,7 @@ commands = {
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
     'submit':
-        ['-d', '--dependencies', '-a', '--arguments', '--restart', '-R',
+        ['-d', '--dependencies', '-n', '--name', '--restart', '-R',
          '--resources', '-w', '--workflow', '-z', '--dry-run',
          '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],

@@ -106,9 +106,10 @@ optional arguments:
 Submit: Submit task(s) to queue
 -------------------------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-a ARGUMENTS] [--restart N]
-                 [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
+usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-R RESOURCES]
+                 [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
+                 [-- arg [arg ...]]
 
 Submit task(s) to queue.
 
@@ -125,8 +126,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -d DEPENDENCIES, --dependencies DEPENDENCIES
                         Comma-separated task names.
-  -a ARGUMENTS, --arguments ARGUMENTS
-                        Comma-separated arguments for task.
+  -n NAME, --name NAME  Name used for task.
   --restart N           Restart N times if task times out or runs out of
                         memory. Time-limit will be doubled for a timed out
                         task and number of cores will be doubled for a task

@@ -61,7 +61,7 @@ class Resources:
         return s + ':' + seconds_to_short_time_string(self.tmax)
 
     def todict(self) -> Dict[str, Union[int, str]]:
-        dct = {'cores': self.cores}  # type: Dict[str, Union[int, str]]
+        dct: Dict[str, Union[int, str]] = {'cores': self.cores}
         if self.processes != self.cores:
             dct['processes'] = self.processes
         if self.tmax != 600:

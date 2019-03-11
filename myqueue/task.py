@@ -66,7 +66,7 @@ class Task:
         self.tstop = tstop
 
         self.dname = folder / cmd.name
-        self.dtasks = []  # type: List[Task]
+        self.dtasks: List[Task] = []
 
         self._done = None  # type: Optional[bool]
 
@@ -262,6 +262,7 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
+         name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 1,
          nodename: str = '',
@@ -290,6 +291,8 @@ def task(cmd: str,
         togeter with any of "cores", "nodename", "processes" and "tmax".
     args: list of str
         Command-line arguments or function arguments.
+    name: str
+        Name to use for task.  Default is <cmd>[+<arg1>[_<arg2>[_<arg3>]...]].
     deps: str, list of str, Task object  or list of Task objects
         Dependencies.  Examples: "task1,task2", "['task1', 'task2']".
     cores: int
@@ -340,8 +343,13 @@ def task(cmd: str,
     else:
         res = Resources(cores, nodename, processes, T(tmax))
 
-    return Task(command(cmd, args), res, dpaths, workflow, restart,
-                int(diskspace), path)
+    return Task(command(cmd, args, name=name),
+                res,
+                dpaths,
+                workflow,
+                restart,
+                int(diskspace),
+                path)
 
 
 def seconds_to_time_string(n: float) -> str:

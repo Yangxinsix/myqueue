@@ -15,7 +15,7 @@ from myqueue.config import config
 
 class Selection:
     def __init__(self,
-                 ids: Set[int],
+                 ids: Optional[Set[int]],
                  name: str,
                  states: Set[str],
                  folders: List[Path],
@@ -43,8 +43,8 @@ class Runner(Lock):
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
-        self._queue = None  # type: Optional[Queue]
-        self.tasks = []  # type: List[Task]
+        self._queue: Optional[Queue] = None
+        self.tasks: List[Task] = []
         self.changed = False
 
     @property
@@ -52,11 +52,12 @@ class Runner(Lock):
         if self._queue is None:
             queuename = config.get('queue')
             if queuename is None:
+                home = config['home']
                 raise ValueError(
-                    ('Please specify type of queue in your '
-                     '{}/.myqueue/config.py '
-                     'file (must be slurm, pbs or local).'
-                     .format(config['home'])))
+                    'Please specify type of queue in your '
+                    f'{home}/.myqueue/config.py '
+                    'file (must be slurm, pbs or local).  See '
+                    'https://myqueue.rtfd.io/en/latest/configuration.html')
             self._queue = get_queue(queuename)
         return self._queue
 
@@ -139,7 +140,7 @@ class Runner(Lock):
         current = {task.dname: task for task in self.tasks}
 
         tasks2 = []
-        inqueue = defaultdict(int)  # type: Dict[str, int]
+        inqueue: Dict[str, int] = defaultdict(int)
         for task in tasks:
             if task.workflow and task.dname in current:
                 inqueue[current[task.dname].state] += 1
@@ -291,7 +292,7 @@ class Runner(Lock):
 
     def find_depending(self, tasks: List[Task]):
         map = {task.dname: task for task in self.tasks}
-        d = defaultdict(list)  # type: Dict[Task, List[Task]]
+        d: Dict[Task, List[Task]] = defaultdict(list)
         for task in self.tasks:
             for dname in task.deps:
                 tsk = map.get(dname)
@@ -575,7 +576,7 @@ def pprint(tasks: List[Task],
         lines = []
         lengths = [0] * len(columns)
 
-    count = defaultdict(int)  # type: Dict[str, int]
+    count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
         _, folder, _, _, _, state, _, _ = words
