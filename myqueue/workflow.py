@@ -114,34 +114,22 @@ def get_tasks(path: Path, modules: Dict[str, Any], tasks: List[Task]):
             get_tasks(Path(dependency), modules, tasks)
 
 
-def task_from_module(cmd: Path, module: Any, resources: str = '',
-                     diskspace: float = 0, dependencies: str = '',
-                     restart: int = 0):
+def task_from_module(cmd: Path, module: Any):
     from myqueue.task import task
-    try:
-        resources = module.resources
-    except AttributeError:
-        pass
-    try:
-        diskspace = module.diskspace
-    except AttributeError:
-        pass
-    try:
-        dependencies = module.dependencies
-    except AttributeError:
-        pass
-    try:
-        restart = module.restart
-    except AttributeError:
-        pass
 
-    if callable(resources):
-        resources = resources()
-    if callable(diskspace):
-        diskspace = diskspace()
+    attributes = ['resources', 'diskspace',
+                  'dependencies', 'restart']
+    kwargs = {}
+    for attr in attributes:
+        if hasattr(module, attr):
+            var = getattr(module, attr)
+            if callable(var):
+                var = var()
+            kwargs[attr] = var
+
+    if 'dependencies' in kwargs:
+        deps = kwargs.pop('dependencies')
+        kwargs['deps'] = deps
 
     return task(cmd=str(cmd),
-                resources=resources,
-                diskspace=diskspace,
-                deps=dependencies,
-                restart=restart)
+                **kwargs)
