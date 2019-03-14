@@ -248,7 +248,7 @@ optional arguments:
   -t TARGETS, --targets TARGETS
                         Comma-separated target names. Without any targets, all
                         tasks will be submitted.
-  -p, --pattern         Use submit scripts matching "script" in all
+  -p, --pattern         Use submit scripts matching "pattern" in all
                         subfolders.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
