@@ -175,7 +175,9 @@ def main(arguments: List[str] = None) -> Any:
             a('newstate', help='New state (one of the letters: qhrdFCTM).')
 
         if cmd == 'workflow':
-            a('script', help='Submit script.')
+            a('-s', '--script', metavar='script.py', help='Submit script.',
+              default=None)
+            a('-m', '--module', help='Create workflow from module')
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
