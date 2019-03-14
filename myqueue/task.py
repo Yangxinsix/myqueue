@@ -12,6 +12,27 @@ taskstates = ['queued', 'hold', 'running', 'done',
 
 
 class Task:
+    """Task object.
+
+    Parameters
+    ----------
+
+    cmd: :class:`myqueue.commands.Command`
+        Command to be run.
+    resources: Resources
+        Combination of number of cores, nodename, number of processes
+        and maximum time.
+    deps: list of Path objects
+        Dependencies.
+    workflow: bool
+        Task is part of a workflow.
+    restart: int
+        How many times to restart task.
+    diskspace: float
+        Diskspace used.
+    folder: Path
+        Folder where task should run.
+    """
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
@@ -26,7 +47,6 @@ class Task:
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
                  tstop: float = 0.0) -> None:
-        """Description of a task."""
 
         self.cmd = cmd
         self.resources = resources
@@ -222,6 +242,21 @@ class Task:
         yield self
         for dname in self.deps:
             yield from map[dname].ideps(map)
+
+    def submit(self, verbosity: int = 1, dry_run: bool = False):
+        """Submit task.
+
+        Parameters
+        ----------
+
+        verbosity: int
+            Must be 0, 1 or 2.
+        dry_run: bool
+            Don't actually submit the task.
+        """
+        from .runner import Runner
+        with Runner(verbosity) as runner:
+            runner.submit([self], dry_run)
 
 
 def task(cmd: str,

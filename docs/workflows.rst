@@ -177,10 +177,6 @@ It should return a list of :class:`myqueue.task.Task` objects created with the
 
 where ``<task-n>`` is the name of a task.  See :ref:`task examples` below.
 
-.. module:: myqueue.task
-
-.. autofunction:: myqueue.task.task
-
 
 .. _task examples:
 
@@ -214,12 +210,3 @@ Arguments::
     task('math:sin+3.14@1:10m')
     task('math:sin', args=[3.14])
     task('math:sin', args=['3.14'])
-
-
-Task class
-==========
-
-Don't create the :class:`myqueue.task.Task` object directly --- use the
-:func:`myqueue.task.task` function instead.
-
-.. autoclass:: myqueue.task.Task

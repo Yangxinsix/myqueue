@@ -8,8 +8,14 @@ MyQueue is a simple frontend for SLURM_ and PBS_.  It has a :ref:`cli` called
 
 Features:
 
-* Easy task submission: ``mq submit <task> -R <cores>:<time>``
+* Easy task submission:
+
+  * from the command line: ``mq submit <task> -R <cores>:<time>``
+  * from Python: :meth:`myqueue.task.Task.submit` or
+    :func:`myqueue.submit`
+
 * Automatic restarting of timed-out/out-of-memory tasks with more time/cores
+
 * :ref:`Workflows`
 
 
@@ -21,6 +27,7 @@ Features:
     configuration
     quickstart
     tutorial
+    api
     workflows
     cli
     releasenotes
