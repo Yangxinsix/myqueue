@@ -77,18 +77,19 @@ def create_tasks_from_module(path: Path) -> Callable[[], List[Task]]:
     return create_tasks
 
 
-def get_relevant_modules(path, modules={}):
-    name = str(path)
-    if name not in modules:
+def get_relevant_modules(path: Path,
+                         modules: Dict[str, Any] = {}):
+    cmd = str(path)
+    if cmd not in modules:
         module = get_module(path)
-        modules[name] = module
+        modules[cmd] = module
 
         if hasattr(module, 'dependencies'):
             for dep in module.dependencies:
                 get_relevant_modules(Path(dep), modules=modules)
 
 
-def get_module(path):
+def get_module(path: Path) -> Dict[str, Any]:
     if path.is_file():
         spec = importlib.util.spec_from_file_location('', str(path))
         module = importlib.util.module_from_spec(spec)
@@ -99,13 +100,13 @@ def get_module(path):
     return module
 
 
-def get_tasks(path, modules, tasks):
+def get_tasks(path: Path, modules: Dict[str, Any], tasks: List[Task]):
     # Is this recipe already in the tasks?
-    name = str(path)
-    if name in [task.cmd.name for task in tasks]:
+    cmd = str(path)
+    if cmd in [task.cmd.name for task in tasks]:
         return
-    module = modules[name]
-    task = task_from_module(name, module)
+    module = modules[cmd]
+    task = task_from_module(cmd, module)
     tasks.append(task)
 
     if hasattr(module, 'dependencies'):
@@ -113,9 +114,9 @@ def get_tasks(path, modules, tasks):
             get_tasks(Path(dependency), modules, tasks)
 
 
-def task_from_module(name, module, resources='',
-                     diskspace=0, dependencies='',
-                     restart=0):
+def task_from_module(cmd: Path, module: Any, resources: str = '',
+                     diskspace: float = 0, dependencies: str = '',
+                     restart: int = 0):
     from myqueue.task import task
     try:
         resources = module.resources
@@ -139,7 +140,7 @@ def task_from_module(name, module, resources='',
     if callable(diskspace):
         diskspace = diskspace()
 
-    return task(cmd=str(name),
+    return task(cmd=str(cmd),
                 resources=resources,
                 diskspace=diskspace,
                 deps=dependencies,
