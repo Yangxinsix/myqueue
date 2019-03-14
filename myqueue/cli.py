@@ -180,7 +180,7 @@ def main(arguments: List[str] = None) -> Any:
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
             a('-p', '--pattern', action='store_true',
-              help='Use submit scripts matching "script" in all '
+              help='Use submit scripts matching "pattern" in all '
               'subfolders.')
             a('folder',
               nargs='*', default=['.'],
