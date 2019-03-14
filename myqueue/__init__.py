@@ -21,5 +21,8 @@ def submit(*tasks: List['Task'], verbosity: int = 1, dry_run: bool = False):
         Don't actually submit the task.
     """
     from .runner import Runner
+    from .config import initialize_config
+    from pathlib import Path
+    initialize_config(Path('.').resolve())
     with Runner(verbosity) as runner:
         runner.submit(tasks, dry_run)
