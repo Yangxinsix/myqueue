@@ -11,17 +11,15 @@ def workflow(args, folders: List[Path]) -> List[Task]:
     alltasks: List[Task] = []
 
     if args.pattern:
-        assert args.script
         for folder in folders:
             for path in folder.glob('**/*' + args.script):
                 create_tasks = compile_create_tasks_function(path)
 
                 alltasks += get_tasks_from_folder(path.parent, create_tasks)
     else:
-        if args.script:
+        if args.script.endswith('.py'):
             create_tasks = compile_create_tasks_function(Path(args.script))
         else:
-            assert args.module
             # Make create tasks from dependency tree
             create_tasks = create_tasks_from_module(Path(args.module))
 
