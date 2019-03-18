@@ -21,7 +21,7 @@ def workflow(args, folders: List[Path]) -> List[Task]:
             create_tasks = compile_create_tasks_function(Path(args.script))
         else:
             # Make create tasks from dependency tree
-            create_tasks = create_tasks_from_module(Path(args.module))
+            create_tasks = create_tasks_from_module(Path(args.script))
 
         for folder in folders:
             alltasks += get_tasks_from_folder(folder, create_tasks)
