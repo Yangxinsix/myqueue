@@ -21,7 +21,7 @@ def workflow(args, folders: List[Path]) -> List[Task]:
             create_tasks = compile_create_tasks_function(Path(args.script))
         else:
             # Make create tasks from dependency tree
-            create_tasks = create_tasks_from_module(Path(args.script))
+            create_tasks = create_tasks_from_module(args.script)
 
         for folder in folders:
             alltasks += get_tasks_from_folder(folder, create_tasks)
@@ -61,46 +61,45 @@ def get_tasks_from_folder(folder: Path,
     return tasks
 
 
-def create_tasks_from_module(path: Path) -> Callable[[], List[Task]]:
+def create_tasks_from_module(cmd: str) -> Callable[[], List[Task]]:
     # Initialize before running
-    modules = {}
-    get_relevant_modules(path, modules=modules)
+    modules: Dict[str, Any] = {}
+    get_relevant_modules(cmd, modules=modules)
 
     def create_tasks():
         tasks = []
-        get_tasks(path, modules, tasks)
+        get_tasks(cmd, modules, tasks)
         tasks = tasks[::-1]
         return tasks
 
     return create_tasks
 
 
-def get_relevant_modules(path: Path,
+def get_relevant_modules(cmd: str,
                          modules: Dict[str, Any] = {}):
-    cmd = str(path)
     if cmd not in modules:
-        module = get_module(path)
+        module = get_module(cmd)
         modules[cmd] = module
 
         if hasattr(module, 'dependencies'):
             for dep in module.dependencies:
-                get_relevant_modules(Path(dep), modules=modules)
+                get_relevant_modules(dep, modules=modules)
 
 
-def get_module(path: Path) -> Dict[str, Any]:
+def get_module(cmd: str) -> Any:
+    path = Path(cmd)
     if path.is_file():
         spec = importlib.util.spec_from_file_location('', str(path))
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
     else:
-        module = import_module(str(path))
+        module = import_module(cmd)
 
     return module
 
 
-def get_tasks(path: Path, modules: Dict[str, Any], tasks: List[Task]):
+def get_tasks(cmd: str, modules: Dict[str, Any], tasks: List[Task]):
     # Is this recipe already in the tasks?
-    cmd = str(path)
     if cmd in [task.cmd.name for task in tasks]:
         return
     module = modules[cmd]
@@ -109,10 +108,10 @@ def get_tasks(path: Path, modules: Dict[str, Any], tasks: List[Task]):
 
     if hasattr(module, 'dependencies'):
         for dependency in module.dependencies:
-            get_tasks(Path(dependency), modules, tasks)
+            get_tasks(dependency, modules, tasks)
 
 
-def task_from_module(cmd: Path, module: Any):
+def task_from_module(cmd: str, module: Any):
     from myqueue.task import task
 
     attributes = ['resources', 'diskspace',
@@ -129,5 +128,5 @@ def task_from_module(cmd: Path, module: Any):
         deps = kwargs.pop('dependencies')
         kwargs['deps'] = deps
 
-    return task(cmd=str(cmd),
+    return task(cmd=cmd,
                 **kwargs)
