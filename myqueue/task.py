@@ -207,7 +207,7 @@ class Task:
         """
         self.error = '-'  # mark as already read
 
-        if config.get('queue') == 'pbs':
+        if config.get('queue').lower() == 'pbs':
             path = self.folder / '{}.e{}'.format(self.cmd.name, self.id)
         else:
             path = self.folder / (self.name + '.err')

@@ -29,13 +29,14 @@ class Queue:
 
 
 def get_queue(name: str) -> Queue:
-    if 'local'.startswith(name):
+    name = name.lower()
+    if name == 'local':
         from myqueue.local import LocalQueue
         return LocalQueue()
-    if 'slurm'.startswith(name):
+    if name == 'slurm':
         from myqueue.slurm import SLURM
         return SLURM()
-    if 'pbs'.startswith(name):
+    if name == 'pbs':
         from myqueue.pbs import PBS
         return PBS()
     else:

@@ -56,7 +56,7 @@ class Runner(Lock):
                 raise ValueError(
                     'Please specify type of queue in your '
                     f'{home}/.myqueue/config.py '
-                    'file (must be slurm, pbs or local).  See '
+                    "file (must be 'slurm', 'pbs' or 'local').  See "
                     'https://myqueue.rtfd.io/en/latest/configuration.html')
             self._queue = get_queue(queuename)
         return self._queue

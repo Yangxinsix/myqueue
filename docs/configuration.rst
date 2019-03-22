@@ -19,6 +19,15 @@ Here is an example configuration file:
 
 .. literalinclude:: example_config.py
 
+The type of queue you are using must be ``'slurm'``, ``'pbs'`` or ``'local'``.
+
 If you are running your Python scripts in parallel then you must specify which
-MPI enabled Python interpreter you want to use: ``mpi4py``, ``asap-python``
-or ``gpaw-python``.
+MPI enabled Python interpreter you want to use:
+
+* MPI4PY_: ``'python'``
+* ASAP_: ``'asap-python'``
+* GPAW_: ``'gpaw-python'``
+
+.. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
+.. _ASAP: https://wiki.fysik.dtu.dk/asap
+.. _GPAW: https://wiki.fysik.dtu.dk/gpaw/
