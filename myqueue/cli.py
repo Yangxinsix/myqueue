@@ -50,8 +50,11 @@ Examples:
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 .
 workflow
-Submit tasks from Python script.
-Example:
+Submit tasks from script where script can be a simple python script or a python
+module. If script/module contains create_tasks() then create
+tasks defined in this function. Otherwise look for "dependencies" and
+"resources" variables in script and create workflow tree from these variables.
+Example of script containing "create_tasks()":
 
     $ cat flow.py
     from myqueue.task import task
@@ -59,6 +62,16 @@ Example:
         return [task('task1'),
                 task('task2', deps='task1')]
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
+
+Myqueue can also deduce a workflow from a script itself by looking for the
+resources and dependencies variables. For example, to tell myqueue that script
+"a.py" depends on "b.py" then "a.py" must contain
+    $ cat a.py
+    ... Something
+    dependencies = ['b.py']
+    ... Some other thing
+Similarly, resources can be given by specifying "resources = 8:10h" which would
+give 8 cores for 10 hours.
 .
 kick
 Restart T and M tasks (timed-out and out-of-memory).
