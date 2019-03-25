@@ -344,12 +344,12 @@ def run(args: argparse.Namespace, extra: List[str]):
         install_crontab_job(args.dry_run)
         return
 
+    folder_names: List[str] = []
     if args.command in ['list', 'sync', 'kick', 'info']:
         if args.command != 'info' and args.all:
             if args.folder is not None:
                 raise MQError('Specifying a folder together with --all '
                               'does not make sense')
-            folder_names = []
         else:
             folder_names = [args.folder or '.']
     else:
