@@ -32,15 +32,17 @@ Our :ref:`workflow script` will create two tasks using the
 
 .. highlight:: bash
 
-We put the three Python files in a ``prime/`` folder and add that folder to
-``$PYTHONPATH`` so that Python can find the files::
+We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
     -rw-r--r-- 1 jensj jensj 170 Jan 22 12:56 check.py
     -rw-rw-r-- 1 jensj jensj 361 Jan 22 12:53 factor.py
     -rw-r--r-- 1 jensj jensj 140 Jan 22 13:32 workflow.py
-    $ export PYTHONPATH=$PWD:$PYTHONPATH
+
+and add that folder to ``$PYTHONPATH`` so that Python can find the files::
+
+    $ echo "export PYTHONPATH=$PWD:$PYTHONPATH" >> ~/.bash_profile
 
 Create some folders::
 
