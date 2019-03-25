@@ -54,17 +54,19 @@ class SLURM(Queue):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
+            mpiexec = config.get('mpiexec', 'mpiexec')
             if mpi_implementation() == 'intel':
-                mpiexec = 'mpiexec ' + ' '.join(f'--env {name} {val}'
-                                                for name, val in env)
+                mpiexec += ' ' + ' '.join(f'--env {name} {val}'
+                                          for name, val in env)
             else:
-                mpiexec = 'mpiexec ' + ' '.join(f'-x {name}={val}'
-                                                for name, val in env)
+                mpiexec += ' ' + ' '.join(f'-x {name}={val}'
+                                          for name, val in env)
             if 'mpiargs' in nodedct:
                 mpiexec += ' ' + nodedct['mpiargs']
             cmd = (mpiexec +
                    ' ' +
-                   cmd.replace('python3', config['parallel_python']))
+                   cmd.replace('python3',
+                               config.get('parallel_python', 'python3')))
         else:
             cmd = ''.join(f'{name}={val} ' for name, val in env) + cmd
 
