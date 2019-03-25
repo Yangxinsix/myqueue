@@ -91,7 +91,8 @@ def get_module(cmd: str) -> Any:
     if path.is_file():
         spec = importlib.util.spec_from_file_location('', str(path))
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)  # type:ignore
     else:
         module = import_module(cmd)
 
