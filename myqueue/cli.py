@@ -51,8 +51,8 @@ Examples:
 .
 workflow
 Submit tasks from script.
-Here where script can be a simple python script or a python
-module. If script/module contains create_tasks() then create
+The script can be a simple Python script or a Python
+module. If script/module contains a create_tasks() function then create
 tasks defined in this function. Otherwise look for "dependencies" and
 "resources" variables in script and create workflow tree from these variables.
 Example of script containing "create_tasks()":
@@ -66,13 +66,15 @@ Example of script containing "create_tasks()":
 
 Myqueue can also deduce a workflow from a script itself by looking for the
 resources and dependencies variables. For example, to tell myqueue that script
-"a.py" depends on "b.py" then "a.py" must contain
+"a.py" depends on "b.py" then "a.py" must contain:
+
     $ cat a.py
-    ... Something
+    ...
     dependencies = ['b.py']
-    ... Some other thing
-Similarly, resources can be given by specifying "resources = 8:10h" which would
-give 8 cores for 10 hours.
+    ...
+
+Similarly, resources can be given by specifying "resources = '8:10h'"
+which would give 8 cores for 10 hours.
 .
 kick
 Restart T and M tasks (timed-out and out-of-memory).
