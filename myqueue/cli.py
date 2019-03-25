@@ -351,6 +351,8 @@ def run(args: argparse.Namespace, extra: List[str]):
                               'does not make sense')
             args.folder = []
         else:
+            if args.id and args.folder is not None:
+                raise ValueError("You can't use both -i and folder(s)!")
             args.folder = [args.folder or '.']
 
     if args.command != 'submit' and extra:
@@ -400,8 +402,6 @@ def run(args: argparse.Namespace, extra: List[str]):
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
-            if len(args.folder) > 0:
-                raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
                 ids = {int(line.split()[0]) for line in sys.stdin}
