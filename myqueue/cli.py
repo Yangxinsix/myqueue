@@ -50,7 +50,8 @@ Examples:
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 .
 workflow
-Submit tasks from script where script can be a simple python script or a python
+Submit tasks from script.
+Here where script can be a simple python script or a python
 module. If script/module contains create_tasks() then create
 tasks defined in this function. Otherwise look for "dependencies" and
 "resources" variables in script and create workflow tree from these variables.
