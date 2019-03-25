@@ -349,17 +349,17 @@ def run(args: argparse.Namespace, extra: List[str]):
             if args.folder is not None:
                 raise MQError('Specifying a folder together with --all '
                               'does not make sense')
-            args.folder = []
+            folder_names = []
         else:
-            if args.id and args.folder is not None:
-                raise ValueError("You can't use both -i and folder(s)!")
-            args.folder = [args.folder or '.']
+            folder_names = [args.folder or '.']
+    else:
+        folder_names = args.folder
+
+    folders = [Path(folder).expanduser().absolute().resolve()
+               for folder in folder_names]
 
     if args.command != 'submit' and extra:
         raise MQError('No extra arguments allowed')
-
-    folders = [Path(folder).expanduser().absolute().resolve()
-               for folder in args.folder]
 
     if args.command in ['remove', 'resubmit', 'modify']:
         if not folders:
@@ -402,6 +402,8 @@ def run(args: argparse.Namespace, extra: List[str]):
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
+            if args.folder:
+                raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
                 ids = {int(line.split()[0]) for line in sys.stdin}
