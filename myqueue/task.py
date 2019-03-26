@@ -75,7 +75,7 @@ class Task:
         return '{}.{}'.format(self.cmd.name, self.id)
 
     def running_time(self, t=None):
-        if self.state in ['queued', 'hold']:
+        if self.state in ['CANCELED', 'queued', 'hold']:
             dt = 0.0
         elif self.state == 'running':
             t = t or time.time()
@@ -257,6 +257,13 @@ class Task:
         from .runner import Runner
         with Runner(verbosity) as runner:
             runner.submit([self], dry_run)
+
+    def cancel_dependents(self, tasks: List['Task'], t: float) -> None:
+        for tsk in tasks:
+            if self.dname in tsk.deps and self is not tsk:
+                tsk.state = 'CANCELED'
+                tsk.tstop = t
+                tsk.cancel_dependents(tasks, t)
 
 
 def task(cmd: str,

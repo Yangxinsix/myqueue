@@ -22,7 +22,7 @@
 import re
 
 project = 'MyQueue'
-copyright = '2018, J. J. Mortensen'
+copyright = '2018-2019, J. J. Mortensen'
 author = 'J. J. Mortensen'
 with open('../myqueue/__init__.py') as fd:
     version = re.search("__version__ = '(.*)'", fd.read()).group(1)

@@ -122,11 +122,10 @@ class LocalQueue(Queue, Lock):
             task.state = 'running'
         else:
             assert state in ['FAILED', 'TIMEOUT'], state
-            tasks = []
-            for j in self.tasks:
-                if j is not task and task.dname not in j.deps:
-                    tasks.append(j)
-            self.tasks = tasks
+            task.state = 'CANCELED'
+            task.cancel_dependents(self.tasks, 0)
+            self.tasks = [task for task in self.tasks
+                          if task.state != 'CANCELED']
 
         self._kick()
         self._write()

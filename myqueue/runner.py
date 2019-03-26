@@ -271,6 +271,7 @@ class Runner(Lock):
                 if task.state in ['running', 'hold', 'queued']:
                     self.queue.cancel(task)
                 self.tasks.remove(task)
+                task.cancel_dependents(self.tasks, time.time())
             self.changed = True
 
     def sync(self, dry_run: bool) -> None:
@@ -426,10 +427,7 @@ class Runner(Lock):
             task.trunning = t
 
         elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
-            for tsk in self.tasks:
-                if task.dname in tsk.deps:
-                    tsk.state = 'CANCELED'
-                    tsk.tstop = t
+            task.cancel_dependents(self.tasks, t)
             task.tstop = t
             if state == 'FAILED':
                 task.write_failed_file()
@@ -449,10 +447,7 @@ class Runner(Lock):
                     if self.queue.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.tstop = t
-                        for tsk in self.tasks:
-                            if task.dname in tsk.deps:
-                                tsk.state = 'CANCELED'
-                                tsk.tstop = t
+                        task.cancel_dependents(self.tasks, t)
                         self.changed = True
 
         bad = {task.dname for task in self.tasks if task.state.isupper()}

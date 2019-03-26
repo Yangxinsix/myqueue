@@ -126,11 +126,12 @@ def submit():
 def fail():
     mq('submit time:sleep+a')
     mq('submit echo+hello -d time:sleep+a')
+    mq('submit echo+hello2 -d echo+hello')
     wait()
-    assert states() == 'FC'
+    assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
-    assert states() == 'CF'
+    assert states() == 'CCF'
 
 
 @test
