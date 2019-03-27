@@ -11,7 +11,8 @@ from myqueue.queue import Queue
 def mpi_implementation() -> str:
     if 'mpi' in config:
         return config['mpi']
-    if b'intel' in subprocess.check_output(['mpiexec', '-V']).lower():
+    mpiexec = config.get('mpiexec', 'mpiexec')
+    if b'intel' in subprocess.check_output([mpiexec, '-V']).lower():
         return 'intel'
     return 'openmpi'
 
