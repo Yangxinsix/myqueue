@@ -121,8 +121,7 @@ class Runner(Lock):
         n2 = len(tasks)
 
         if n2 < n1:
-            print(plural(n1 - n2, 'task'),
-                  'already marked as done ("<task-name>.done" file exists)')
+            print(plural(n1 - n2, 'task'), 'already done')
 
         tasks = [task
                  for task in tasks
@@ -166,7 +165,7 @@ class Runner(Lock):
                         if dep == tsk.dname:
                             break
                     else:
-                        donefile = dep.with_name(dep.name + '.done')
+                        ????donefile = dep.with_name(dep.name + '.done')
                         if not donefile.is_file():
                             print('Missing dependency:', dep)
                             break
@@ -521,7 +520,7 @@ class Runner(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 3,
+        text = json.dumps({'version': 4,
                            'tasks': [task.todict() for task in self.tasks]},
                           indent=2)
         self.fname.write_text(text)
