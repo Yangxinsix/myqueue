@@ -184,7 +184,7 @@ wf = """
 from myqueue.task import task
 def create_tasks():
     t1 = task('sleep+3')
-    return [t1, task('echo+hello', deps=[t1])]
+    return [t1, task('touch+hello', deps=[t1], creates=['hello'])]
 """
 
 
