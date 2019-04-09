@@ -113,23 +113,24 @@ class Runner(Lock):
                dry_run: bool = False,
                read: bool = True) -> None:
 
-        n1 = len(tasks)
+        tasks2 = []
+        done = set()
+        for task in tasks:
+            if task.workflow and task.is_done():
+                done.add(task.dname)
+            else:
+                tasks2.apend(task)
+        tasks = tasks2
 
-        tasks = [task
-                 for task in tasks
-                 if not task.workflow or not task.is_done()]
-        n2 = len(tasks)
-
-        if n2 < n1:
-            print(plural(n1 - n2, 'task'), 'already done')
+        if done:
+            print(plural(len(done), 'task'), 'already done')
 
         tasks = [task
                  for task in tasks
                  if not task.workflow or not task.has_failed()]
-        n3 = len(tasks)
-
-        if n3 < n2:
-            print(plural(n2 - n3, 'task'),
+        nfailed = len(tasks2) - len(tasks)
+        if nfailed:
+            print(plural(nfailed, 'task'),
                   'already marked as FAILED '
                   '("<task-name>.FAILED" file exists)')
 
@@ -165,8 +166,7 @@ class Runner(Lock):
                         if dep == tsk.dname:
                             break
                     else:
-                        ????donefile = dep.with_name(dep.name + '.done')
-                        if not donefile.is_file():
+                        if dep not in done:
                             print('Missing dependency:', dep)
                             break
                         tsk = None
