@@ -119,7 +119,7 @@ class Runner(Lock):
             if task.workflow and task.is_done():
                 done.add(task.dname)
             else:
-                tasks2.apend(task)
+                tasks2.append(task)
         tasks = tasks2
 
         if done:
@@ -359,6 +359,7 @@ class Runner(Lock):
                         folder=task.folder,
                         workflow=task.workflow,
                         restart=task.restart,
+                        creates=task.creates,
                         diskspace=0)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
