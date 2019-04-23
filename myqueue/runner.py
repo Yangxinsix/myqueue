@@ -113,24 +113,24 @@ class Runner(Lock):
                dry_run: bool = False,
                read: bool = True) -> None:
 
-        n1 = len(tasks)
+        tasks2 = []
+        done = set()
+        for task in tasks:
+            if task.workflow and task.is_done():
+                done.add(task.dname)
+            else:
+                tasks2.append(task)
+        tasks = tasks2
 
-        tasks = [task
-                 for task in tasks
-                 if not task.workflow or not task.is_done()]
-        n2 = len(tasks)
-
-        if n2 < n1:
-            print(plural(n1 - n2, 'task'),
-                  'already marked as done ("<task-name>.done" file exists)')
+        if done:
+            print(plural(len(done), 'task'), 'already done')
 
         tasks = [task
                  for task in tasks
                  if not task.workflow or not task.has_failed()]
-        n3 = len(tasks)
-
-        if n3 < n2:
-            print(plural(n2 - n3, 'task'),
+        nfailed = len(tasks2) - len(tasks)
+        if nfailed:
+            print(plural(nfailed, 'task'),
                   'already marked as FAILED '
                   '("<task-name>.FAILED" file exists)')
 
@@ -166,8 +166,7 @@ class Runner(Lock):
                         if dep == tsk.dname:
                             break
                     else:
-                        donefile = dep.with_name(dep.name + '.done')
-                        if not donefile.is_file():
+                        if dep not in done:
                             print('Missing dependency:', dep)
                             break
                         tsk = None
@@ -276,20 +275,20 @@ class Runner(Lock):
 
     def sync(self, dry_run: bool) -> None:
         self._read()
-        n = 0
         in_the_queue = ['running', 'hold', 'queued']
         ids = self.queue.get_ids()
+        remove = []
         for task in self.tasks:
             if task.state in in_the_queue and task.id not in ids:
-                if not dry_run:
-                    self.tasks.remove(task)
-                    self.changed = True
-                n += 1
-        if n:
+                remove.append(task)
+        if remove:
             if dry_run:
-                print(plural(n, 'job'), 'to be removed')
+                print(plural(len(remove), 'job'), 'to be removed')
             else:
-                print(plural(n, 'job'), 'removed')
+                for task in remove:
+                    self.tasks.remove(task)
+                self.changed = True
+                print(plural(len(remove), 'job'), 'removed')
 
     def find_depending(self, tasks: List[Task]):
         map = {task.dname: task for task in self.tasks}
@@ -360,6 +359,7 @@ class Runner(Lock):
                         folder=task.folder,
                         workflow=task.workflow,
                         restart=task.restart,
+                        creates=task.creates,
                         diskspace=0)
             tasks.append(task)
         self.submit(tasks, dry_run, read=False)
@@ -521,7 +521,7 @@ class Runner(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 3,
+        text = json.dumps({'version': 4,
                            'tasks': [task.todict() for task in self.tasks]},
                           indent=2)
         self.fname.write_text(text)

@@ -32,6 +32,8 @@ class Task:
         Diskspace used.
     folder: Path
         Folder where task should run.
+    creates: list of str
+        Name of files created by task.
     """
     def __init__(self,
                  cmd: Command,
@@ -41,6 +43,7 @@ class Task:
                  restart: int,
                  diskspace: int,
                  folder: Path,
+                 creates: List[str],
                  state: str = '',
                  id: int = 0,
                  error: str = '',
@@ -55,6 +58,7 @@ class Task:
         self.restart = restart
         self.diskspace = diskspace
         self.folder = folder
+        self.creates = creates
 
         self.state = state
         self.id = id
@@ -143,6 +147,7 @@ class Task:
                 'workflow': self.workflow,
                 'restart': self.restart,
                 'diskspace': self.diskspace,
+                'creates': self.creates,
                 'state': self.state,
                 'tqueued': self.tqueued,
                 'trunning': self.trunning,
@@ -161,6 +166,10 @@ class Task:
         if 'diskspace' not in dct:
             dct['diskspace'] = 0
 
+        # Backwards compatibility with version 3:
+        if 'creates' not in dct:
+            dct['creates'] = []
+
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=Path(dct.pop('folder')),
@@ -173,8 +182,12 @@ class Task:
 
     def is_done(self) -> bool:
         if self._done is None:
-            p = self.folder / '{}.done'.format(self.cmd.name)
-            self._done = p.is_file()
+            for pattern in self.creates or '{}.done'.format(self.cmd.name):
+                if not any(self.folder.glob(pattern)):
+                    self._done = False
+                    break
+            else:
+                self._done = True
         return self._done
 
     def has_failed(self) -> bool:
@@ -186,7 +199,7 @@ class Task:
         return p.is_file()
 
     def write_done_file(self) -> None:
-        if self.workflow and self.folder.is_dir():
+        if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
             p = self.folder / '{}.done'.format(self.cmd.name)
             p.write_text('')
 
@@ -278,7 +291,8 @@ def task(cmd: str,
          folder: str = '',
          workflow: bool = False,
          restart: int = 0,
-         diskspace: float = 0.0) -> Task:
+         diskspace: float = 0.0,
+         creates: List[str] = []) -> Task:
     """Create a Task object.
 
     ::
@@ -318,6 +332,8 @@ def task(cmd: str,
         How many times to restart task.
     diskspace: float
         Diskspace used.
+    creates: list of str
+        Name of files created by task.
 
     Returns
     -------
@@ -356,7 +372,8 @@ def task(cmd: str,
                 workflow,
                 restart,
                 int(diskspace),
-                path)
+                path,
+                creates)
 
 
 def seconds_to_time_string(n: float) -> str:
