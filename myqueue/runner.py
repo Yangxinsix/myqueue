@@ -275,20 +275,20 @@ class Runner(Lock):
 
     def sync(self, dry_run: bool) -> None:
         self._read()
-        n = 0
         in_the_queue = ['running', 'hold', 'queued']
         ids = self.queue.get_ids()
+        remove = []
         for task in self.tasks:
             if task.state in in_the_queue and task.id not in ids:
-                if not dry_run:
-                    self.tasks.remove(task)
-                    self.changed = True
-                n += 1
-        if n:
+                remove.append(task)
+        if remove:
             if dry_run:
-                print(plural(n, 'job'), 'to be removed')
+                print(plural(len(remove), 'job'), 'to be removed')
             else:
-                print(plural(n, 'job'), 'removed')
+                for task in remove:
+                    self.tasks.remove(task)
+                self.changed = True
+                print(plural(len(remove), 'job'), 'removed')
 
     def find_depending(self, tasks: List[Task]):
         map = {task.dname: task for task in self.tasks}
