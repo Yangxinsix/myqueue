@@ -21,6 +21,9 @@ def T(t: str) -> int:
             'd': 24 * 3600}[t[-1]] * int(t[:-1])
 
 
+Node = Tuple[str, Dict[str, Any]]
+
+
 class Resources:
     def __init__(self,
                  cores: int = 1,
@@ -70,19 +73,30 @@ class Resources:
             dct['nodename'] = self.nodename
         return dct
 
-    def double(self, state: str, maxtmax: int = 2 * 24 * 3600) -> None:
+    def double(self,
+               state: str,
+               nodelist: List[Node],
+               maxtmax: int = 2 * 24 * 3600) -> None:
         if state == 'TIMEOUT':
             self.tmax = int(min(self.tmax * 2, maxtmax))
         elif state == 'MEMORY':
+            nnodes = 1
+            while True:
+                for name, dct in nodelist:
+                    cores = nnodes * dct['cores']
+                    if cores > self.cores:
+                        break
+                else:
+                    nnodes += 1
+                    continue
+                break
             if self.processes == self.cores:
-                self.processes *= 2
-            self.cores *= 2
+                self.processes = cores
+            self.cores = cores
         else:
             raise ValueError
 
-    def select(self,
-               nodelist: List[Tuple[str, Dict[str, Any]]]
-               ) -> Tuple[int, str, Dict[str, Any]]:
+    def select(self, nodelist: List[Node]) -> Node:
         if self.nodename:
             for name, dct in nodelist:
                 if name == self.nodename:
