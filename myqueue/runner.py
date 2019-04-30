@@ -474,7 +474,8 @@ class Runner(Lock):
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
-                task.resources.double(task.state, config['nodes'])
+                nodes = config.get('nodes') or [('', {'cores': 1})]
+                task.resources.double(task.state, nodes)
                 task.restart -= 1
                 tasks.append(task)
         if tasks:
