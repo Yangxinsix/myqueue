@@ -170,8 +170,8 @@ def main(arguments: List[str] = None) -> Any:
             a('--restart', type=int, default=0, metavar='N',
               help='Restart N times if task times out or runs out of memory. '
               'Time-limit will be doubled for a timed out task and '
-              'number of cores will be doubled for a task that runs out '
-              'of memory.')
+              'number of cores will be increased to the next number of nodes '
+              'for a task that runs out of memory.')
             a('folder',
               nargs='*', default=['.'],
               help='Submit tasks in this folder.  '
