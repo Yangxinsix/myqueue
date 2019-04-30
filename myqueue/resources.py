@@ -80,10 +80,11 @@ class Resources:
         if state == 'TIMEOUT':
             self.tmax = int(min(self.tmax * 2, maxtmax))
         elif state == 'MEMORY':
+            coreslist = sorted({dct['cores'] for name, dct in nodelist})
             nnodes = 1
             while True:
-                for name, dct in nodelist:
-                    cores = nnodes * dct['cores']
+                for c in coreslist:
+                    cores = nnodes * c
                     if cores > self.cores:
                         break
                 else:
@@ -96,7 +97,7 @@ class Resources:
         else:
             raise ValueError
 
-    def select(self, nodelist: List[Node]) -> Node:
+    def select(self, nodelist: List[Node]) -> Tuple[int, str, Dict]:
         if self.nodename:
             for name, dct in nodelist:
                 if name == self.nodename:
