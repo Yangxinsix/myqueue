@@ -107,7 +107,8 @@ Show detailed information about task.
 .
 sync
 Make sure SLURM/PBS and MyQueue are in sync.
-
+Remove tasks that SLURM/PBS doesn't know about.  Also removes a task
+if its corresponding folder no longer exists.
 """
 
 submit_usage = """\

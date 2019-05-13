@@ -281,6 +281,9 @@ class Runner(Lock):
         for task in self.tasks:
             if task.state in in_the_queue and task.id not in ids:
                 remove.append(task)
+            elif not task.folder.is_dir():
+                remove.append(task)
+
         if remove:
             if dry_run:
                 print(plural(len(remove), 'job'), 'to be removed')
