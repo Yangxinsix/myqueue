@@ -472,7 +472,7 @@ class Runner(Lock):
                         task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run: bool) -> None:
+    def kick(self, dry_run=False) -> int:
         self._read()
         tasks = []
         for task in self.tasks:
@@ -494,6 +494,8 @@ class Runner(Lock):
                 self.submit(tasks, read=False)
 
         self.hold_or_release(dry_run)
+
+        return len(tasks)
 
     def hold_or_release(self, dry_run: bool) -> None:
         maxmem = config.get('maximum_diskspace', float('inf'))
