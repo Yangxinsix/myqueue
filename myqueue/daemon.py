@@ -45,9 +45,9 @@ def loop() -> None:
                                 shell=True,
                                 stderr=subprocess.PIPE)
         if result.returncode:
-            err.write(result.stderr)
+            err.write_bytes(result.stderr)
             break
 
 
 if __name__ == '__main__':
-    run()
+    print(run())
