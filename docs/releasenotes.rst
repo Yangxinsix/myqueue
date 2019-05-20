@@ -6,6 +6,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 19.5.0
+==============
+
 * New ``--target`` option for :ref:`workflows <workflows>`.
 * New API's for submitting jobs: :meth:`myqueue.task.Task.submit` and
   :func:`myqueue.submit`.

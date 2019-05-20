@@ -129,8 +129,8 @@ optional arguments:
   -n NAME, --name NAME  Name used for task.
   --restart N           Restart N times if task times out or runs out of
                         memory. Time-limit will be doubled for a timed out
-                        task and number of cores will be doubled for a task
-                        that runs out of memory.
+                        task and number of cores will be increased to the next
+                        number of nodes for a task that runs out of memory.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -431,6 +431,9 @@ Sync: Make sure SLURM/PBS and MyQueue are in sync
 usage: mq sync [-h] [-z] [-v] [-q] [-T] [-A] [folder]
 
 Make sure SLURM/PBS and MyQueue are in sync.
+
+Remove tasks that SLURM/PBS doesn't know about.  Also removes a task if its
+corresponding folder no longer exists.
 
 folder:
     Sync tasks in this folder and its subfolders. Defaults to current folder.
