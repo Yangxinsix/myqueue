@@ -281,6 +281,9 @@ class Runner(Lock):
         for task in self.tasks:
             if task.state in in_the_queue and task.id not in ids:
                 remove.append(task)
+            elif not task.folder.is_dir():
+                remove.append(task)
+
         if remove:
             if dry_run:
                 print(plural(len(remove), 'job'), 'to be removed')
@@ -469,12 +472,13 @@ class Runner(Lock):
                         task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run: bool) -> None:
+    def kick(self, dry_run=False) -> int:
         self._read()
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
-                task.resources.double(task.state)
+                nodes = config.get('nodes') or [('', {'cores': 1})]
+                task.resources.double(task.state, nodes)
                 task.restart -= 1
                 tasks.append(task)
         if tasks:
@@ -490,6 +494,8 @@ class Runner(Lock):
                 self.submit(tasks, read=False)
 
         self.hold_or_release(dry_run)
+
+        return len(tasks)
 
     def hold_or_release(self, dry_run: bool) -> None:
         maxmem = config.get('maximum_diskspace', float('inf'))

@@ -182,7 +182,7 @@ class Task:
 
     def is_done(self) -> bool:
         if self._done is None:
-            for pattern in self.creates or '{}.done'.format(self.cmd.name):
+            for pattern in self.creates or ['{}.done'.format(self.cmd.name)]:
                 if not any(self.folder.glob(pattern)):
                     self._done = False
                     break

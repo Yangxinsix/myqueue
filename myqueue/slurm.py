@@ -40,11 +40,15 @@ class SLURM(Queue):
             cores = task.resources.cores
             if nodes == 1 and cores < nodedct['cores']:
                 mbytes = int(mbytes * cores / nodedct['cores'])
-            sbatch.append('--mem={mbytes}M'.format(mbytes=mbytes))
+            sbatch.append(f'--mem={mbytes}M')
 
         features = nodedct.get('features')
         if features:
-            sbatch.append('--constraint={}'.format(features))
+            sbatch.append(f'--constraint={features}')
+
+        reservation = nodedct.get('reservation')
+        if reservation:
+            sbatch.append(f'--reservation={reservation}')
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
@@ -85,8 +89,6 @@ class SLURM(Queue):
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
-
-        # print(script.encode(), sbatch)
 
         assert p.returncode == 0
         id = int(out.split()[-1])
