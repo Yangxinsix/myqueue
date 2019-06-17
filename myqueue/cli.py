@@ -377,6 +377,10 @@ def run(args: argparse.Namespace, extra: List[str]):
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in folder_names]
 
+    for folder in folders:
+        if not folder.is_dir():
+            raise MQError('No such folder:', folder)
+
     if args.command != 'submit' and extra:
         raise MQError('No extra arguments allowed')
 

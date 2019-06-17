@@ -117,7 +117,7 @@ and now in all subfolders::
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
-Note that a ``<task-name>.done`` file is created when a task has been
+Note that a ``prime.check.done`` file is created to mark that the ``prime.check`` task is done.   and the when a task has been
 completed::
 
     $ ls -l 1001/
