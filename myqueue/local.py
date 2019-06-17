@@ -1,11 +1,12 @@
 import json
 import subprocess
 import sys
+from pathlib import Path
 
-from myqueue.config import config, initialize_config
-from myqueue.queue import Queue
-from myqueue.task import Task
-from myqueue.utils import Lock, lock
+from .config import config, initialize_config
+from .queue import Queue
+from .task import Task
+from .utils import Lock, lock
 
 
 class LocalQueue(Queue, Lock):
@@ -17,7 +18,7 @@ class LocalQueue(Queue, Lock):
         Queue.__init__(self)
 
     @lock
-    def submit(self, task: Task) -> None:
+    def submit(self, task: Task, activation_script: Path = None) -> None:
         self._read()
         if task.dtasks:
             ids = {t.id for t in self.tasks}

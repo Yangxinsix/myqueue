@@ -1,9 +1,11 @@
+from pathlib import Path
+from typing import Set, Optional
 from myqueue.task import Task
-from typing import Set
 
 
 class Queue:
-    def submit(self, task: Task) -> None:
+    def submit(self, task: Task,
+               activation_script: Optional[Path]) -> None:
         pass
 
     def update(self, id: int, state: str) -> None:

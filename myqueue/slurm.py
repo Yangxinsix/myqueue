@@ -1,11 +1,12 @@
 import os
 import subprocess
 from math import ceil
+from pathlib import Path
 from typing import Set
 
-from myqueue.task import Task
-from myqueue.config import config
-from myqueue.queue import Queue
+from .task import Task
+from .config import config
+from .queue import Queue
 
 
 def mpi_implementation() -> str:
@@ -18,7 +19,7 @@ def mpi_implementation() -> str:
 
 
 class SLURM(Queue):
-    def submit(self, task: Task) -> None:
+    def submit(self, task: Task, activation_script: Path = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -80,10 +81,16 @@ class SLURM(Queue):
         script = (
             '#!/bin/bash -l\n'
             'id=$SLURM_JOB_ID\n'
-            'mq={home}/.myqueue/slurm-$id\n'
-            '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
-            '(touch $mq-2; exit 1)\n'
-            .format(home=home, dir=task.folder, cmd=cmd))
+            f'mq={home}/.myqueue/slurm-$id\n')
+
+        if activation_script:
+            script += (
+                f'source {activation_script}\n'
+                f'echo "venv: {activation_script}"\n')
+
+        script += (
+            f'(touch $mq-0 && cd {task.folder} && {cmd} && touch $mq-1) || '
+            '(touch $mq-2; exit 1)\n')
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,

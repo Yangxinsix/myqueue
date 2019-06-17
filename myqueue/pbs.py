@@ -1,13 +1,14 @@
 import os
 import subprocess
+from pathlib import Path
 
-from myqueue.task import Task
-from myqueue.config import config
-from myqueue.queue import Queue
+from .task import Task
+from .config import config
+from .queue import Queue
 
 
 class PBS(Queue):
-    def submit(self, task: Task) -> None:
+    def submit(self, task: Task, activation_script: Path = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 

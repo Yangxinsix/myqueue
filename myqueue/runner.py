@@ -6,11 +6,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, List, Dict, Optional  # noqa
 
-from myqueue.resources import Resources
-from myqueue.task import Task
-from myqueue.queue import get_queue, Queue
-from myqueue.utils import Lock
-from myqueue.config import config
+from .resources import Resources
+from .task import Task
+from .queue import get_queue, Queue
+from .utils import Lock
+from .config import config
+from .virtenv import find_activation_scripts
 
 
 class Selection:
@@ -205,6 +206,8 @@ class Runner(Lock):
             pprint(todo, 0, 'fnr')
             print(plural(len(todo), 'task'), 'to submit')
         else:
+            activation_scripts = find_activation_scripts([task.folder
+                                                          for task in todo])
             submitted = []
             ex = None
             while todo:
@@ -214,7 +217,8 @@ class Runner(Lock):
                     todo.append(task)
                 else:
                     try:
-                        self.queue.submit(task)
+                        self.queue.submit(task,
+                                          activation_scripts.get(task.folder))
                     except Exception as x:
                         ex = x
                         break
