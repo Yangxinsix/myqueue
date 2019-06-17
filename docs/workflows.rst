@@ -117,7 +117,8 @@ and now in all subfolders::
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
-Note that a ``prime.check.done`` file is created to mark that the ``prime.check`` task has been completed::
+Note that a ``prime.check.done`` file is created to mark that the
+``prime.check`` task has been completed::
 
     $ ls -l 1001/
     total 4
@@ -127,6 +128,9 @@ Note that a ``prime.check.done`` file is created to mark that the ``prime.check`
     -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.check.done
     -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.factor.16.err
     -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.factor.16.out
+
+There is no ``prime.factor.done`` file because ``factors.json`` serves that
+purpose.
 
 Now, add another number::
 
