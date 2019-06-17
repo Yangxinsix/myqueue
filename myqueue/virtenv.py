@@ -3,7 +3,8 @@ from typing import List, Dict
 
 
 def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
-    scripts = {}
+    """Find virtualenv activation scripts."""
+    scripts: Dict[Path, Path] = {}
     for folder in folders:
         found = []
         while True:
