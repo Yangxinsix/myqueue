@@ -8,6 +8,7 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
         found = []
         while True:
             if folder in scripts:
+                script = scripts[folder]
                 break
 
             script = folder / 'venv/activate'
@@ -20,9 +21,11 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
                 found.append(folder)
                 break
 
-            folder = folder.parent
-            if folder == Path('/'):
+            newfolder = folder.parent
+            if newfolder == Path('/'):
                 break
+            found.append(folder)
+            folder = newfolder
 
         for dir in found:
             scripts[dir] = script
@@ -34,6 +37,7 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
 
 if __name__ == '__main__':
     import sys
-    scripts = find_activation_scripts([Path(dir) for dir in sys.argv[1:]])
+    scripts = find_activation_scripts([Path(dir).absolute()
+                                       for dir in sys.argv[1:]])
     for folder, script in scripts.items():
         print(f'{folder}: {script}')
