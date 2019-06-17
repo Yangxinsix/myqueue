@@ -3,6 +3,6 @@ tests:
   script:
     - pip install flake8 mypy
     - pip install -e .
-    - mq test
+    - mq test -v
     - mypy -p myqueue
     - flake8 myqueue
