@@ -9,6 +9,14 @@ Next release
 * ...
 
 
+Version 19.6.0
+==============
+
+* Tasks will now activate a virtual environment if a ``venv/`` folder is found
+  in one of the parent folders.  The activation script will be ``venv/activate``
+  or ``venv/bin/activate`` if ``venv/activate`` does not exist.
+
+
 Version 19.5.0
 ==============
 
