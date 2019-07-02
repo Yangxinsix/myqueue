@@ -38,17 +38,21 @@ def command(cmd: str,
     cmd = path + sep + cmd
 
     if type is None:
-        if cmd.endswith('.py'):
+        if cmd.startswith('shell:'):
+            type = 'shell-command'
+        elif cmd.endswith('.py'):
             type = 'python-script'
         elif ':' in cmd:
             type = 'python-function'
-        elif is_module(cmd):
-            type = 'python-module'
-        else:
+        elif path:
             type = 'shell-script'
+        else:
+            type = 'python-module'
 
     command: Command
-    if type == 'shell-script':
+    if type == 'shell-command':
+        command = ShellCommand(cmd, args)
+    elif type == 'shell-script':
         command = ShellScript(cmd, args)
     elif type == 'python-script':
         command = PythonScript(cmd, args)
@@ -65,15 +69,27 @@ def command(cmd: str,
     return command
 
 
+class ShellCommand(Command):
+    def __init__(self, cmd, args):
+        Command.__init__(self, cmd, args)
+        self.cmd = cmd
+
+    def __str__(self):
+        return ' '.join([self.cmd[6:]] + self.args)
+
+    def todict(self):
+        return {**self.dct,
+                'type': 'shell-command',
+                'cmd': self.cmd}
+
+
 class ShellScript(Command):
     def __init__(self, cmd, args):
         Command.__init__(self, Path(cmd).name, args)
         self.cmd = cmd
 
     def __str__(self):
-        if '/' in self.cmd:
-            return ' '.join(['.', self.cmd] + self.args)
-        return ' '.join([self.cmd] + self.args)
+        return ' '.join(['.', self.cmd] + self.args)
 
     def todict(self):
         return {**self.dct,

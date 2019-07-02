@@ -116,7 +116,7 @@ def run_tests(tests: List[str],
 @test
 def submit():
     mq('submit time:sleep+2')
-    mq('submit echo+hello -d time:sleep+2')
+    mq('submit shell:echo+hello -d time:sleep+2')
     wait()
     for job in mq('list'):
         assert job.state == 'done'
@@ -125,8 +125,8 @@ def submit():
 @test
 def fail():
     mq('submit time:sleep+a')
-    mq('submit echo+hello -d time:sleep+a')
-    mq('submit echo+hello2 -d echo+hello')
+    mq('submit shell:echo+hello -d time:sleep+a')
+    mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
     assert states() == 'FCC'
     mq('resubmit -sF .')
@@ -148,8 +148,8 @@ def fail2():
 @test
 def timeout():
     t = 3 if LOCAL else 120
-    mq(f'submit -n zzz sleep@1:1s -- {t}')
-    mq('submit echo+hello -d zzz')
+    mq(f'submit -n zzz shell:sleep@1:1s -- {t}')
+    mq('submit shell:echo+hello -d zzz')
     wait()
     mq('resubmit -sT . -R 1:5m')
     wait()
@@ -159,8 +159,8 @@ def timeout():
 @test
 def timeout2():
     t = 3 if LOCAL else 120
-    mq('submit sleep@1:{}s --restart 2 -- {}'.format(t // 3, t))
-    mq('submit echo+hello -d sleep+{}'.format(t))
+    mq('submit shell:sleep@1:{}s --restart 2 -- {}'.format(t // 3, t))
+    mq('submit shell:echo+hello -d shell:sleep+{}'.format(t))
     wait()
     mq('kick')
     wait()
@@ -183,17 +183,17 @@ def oom():
 wf = """
 from myqueue.task import task
 def create_tasks():
-    t1 = task('sleep+3')
-    return [t1, task('touch+hello', deps=[t1], creates=['hello'])]
+    t1 = task('shell:sleep+3')
+    return [t1, task('shell:touch+hello', deps=[t1], creates=['hello'])]
 """
 
 
 @test
 def workflow():
-    mq('submit sleep+3@1:1m -w')
+    mq('submit shell:sleep+3@1:1m -w')
     time.sleep(2)
     Path('wf.py').write_text(wf)
-    mq('workflow wf.py . -t touch+hello')
+    mq('workflow wf.py . -t shell:touch+hello')
     wait()
     assert states() == 'dd'
 
@@ -201,7 +201,7 @@ def workflow():
 wf2 = """
 from myqueue.task import task
 def create_tasks():
-    return [task('echo+hi', diskspace=1) for _ in range(4)]
+    return [task('shell:echo+hi', diskspace=1) for _ in range(4)]
 """
 
 
@@ -216,10 +216,10 @@ def workflow2():
 
 @test
 def cancel():
-    mq('submit sleep+2')
-    mq('submit sleep+999')
-    mq('submit echo+hello -d sleep+999')
-    mq('rm -n sleep+999 -srq .')
+    mq('submit shell:sleep+2')
+    mq('submit shell:sleep+999')
+    mq('submit shell:echo+hello -d shell:sleep+999')
+    mq('rm -n shell:sleep+999 -srq .')
     wait()
     assert states() == 'd'
 
@@ -227,7 +227,7 @@ def cancel():
 @test
 def check_dependency_order():
     mq('submit myqueue.test:timeout_once -R 1:1s --restart 1')
-    mq('submit echo+ok -d myqueue.test:timeout_once --restart 1')
+    mq('submit shell:echo+ok -d myqueue.test:timeout_once --restart 1')
     wait()
     assert states() == 'TC'
     mq('kick')
