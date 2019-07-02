@@ -9,11 +9,12 @@ Tasks
 
 A task can be one of these:
 
-* a Python script (``script.py``)
-* a Python module (``module``)
-* a Python submodule (``module.submodule``)
-* a function in a Python module (``module:function``)
-* an executable or shell-script
+* a Python script: ``script.py``
+* a Python module: ``module``
+* a Python submodule: ``module.submodule``
+* a function in a Python module: ``module:function``
+* a shell command (from ``$PATH``): ``shell:command``
+* a shell-script: ``./script``
 
 
 States
@@ -50,38 +51,38 @@ or equivalently::
 
 Say "hello" (using the defaults of 1 core for 10 minutes)::
 
-    $ mq submit echo -- hello
+    $ mq submit shell:echo -- hello
 
 You can see the status of your jobs with::
 
     $ mq list
-    id folder name       res.   age state time error
-    -- ------ ---------- ----- ---- ----- ---- -----
-    1  ~      echo+hello 1:10m 0:06 done  0:00
-    -- ------ ---------- ----- ---- ----- ---- -----
+    id folder name             res.   age state time error
+    -- ------ ---------------- ----- ---- ----- ---- -----
+    1  ~      shell:echo+hello 1:10m 0:06 done  0:00
+    -- ------ ---------------- ----- ---- ----- ---- -----
     done: 1
 
 Remove the job from the list with::
 
     $ mq remove -s d .
 
-The output from the job will be in ``~/echo+hello.1.out`` and
-``~/echo+hello.1.err`` (if there was any output).
+The output from the job will be in ``~/shell:echo+hello.1.out`` and
+``~/shell:echo+hello.1.err`` (if there was any output).
 
 ::
 
-    $ cat echo+hello.1.out
+    $ cat shell:echo+hello.1.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
 
-    $ mq submit sleep+3000@1:30m
+    $ mq submit shell:sleep+3000@1:30m
     ...
     $ mq list
-    id folder name       res.   age state   time  error
-    -- ------ ---------- ----- ---- ------- ----- -----
-    2  ~      sleep+3000 1:30m 1:16 TIMEOUT 50:00
-    -- ------ ---------- ----- ---- ------- ----- -----
+    id folder name             res.   age state   time  error
+    -- ------ ---------------- ----- ---- ------- ----- -----
+    2  ~      shell:sleep+3000 1:30m 1:16 TIMEOUT 50:00
+    -- ------ ---------------- ----- ---- ------- ----- -----
     TIMEOUT: 1
     $ mq resubmit -i 2 -R 1:1h
 
