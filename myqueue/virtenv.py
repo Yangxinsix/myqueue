@@ -24,12 +24,14 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
 
             newfolder = folder.parent
             if newfolder == Path('/'):
+                script = None
                 break
             found.append(folder)
             folder = newfolder
 
-        for dir in found:
-            scripts[dir] = script
+        if script is not None:
+            for dir in found:
+                scripts[dir] = script
 
     return {folder: scripts[folder]
             for folder in folders
