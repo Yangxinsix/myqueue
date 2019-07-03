@@ -28,8 +28,9 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
             found.append(folder)
             folder = newfolder
 
-        for dir in found:
-            scripts[dir] = script
+        if script.is_file():
+            for dir in found:
+                scripts[dir] = script
 
     return {folder: scripts[folder]
             for folder in folders
