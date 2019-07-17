@@ -89,7 +89,7 @@ class SLURM(Queue):
                 f'echo "venv: {activation_script}"\n')
 
         script += (
-            f'(touch $mq-0 && cd {task.folder!r} && {cmd} && touch $mq-1) || '
+            f'(touch $mq-0 && cd {str(task.folder)!r} && {cmd} && touch $mq-1) || '
             '(touch $mq-2; exit 1)\n')
 
         p = subprocess.Popen(sbatch,
