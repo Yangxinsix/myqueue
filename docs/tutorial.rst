@@ -12,7 +12,7 @@ A task can be one of these:
 * a Python script: ``script.py``
 * a Python module: ``module``
 * a Python submodule: ``module.submodule``
-* a function in a Python module: ``module:function``
+* a function in a Python module: ``module@function``
 * a shell command (from ``$PATH``): ``shell:command``
 * a shell-script: ``./script``
 
@@ -39,15 +39,15 @@ Examples
 
 Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
 
-    $ mq submit script.py@8:10h folder1/ folder2/
+    $ mq submit script.py -R 8:10h folder1/ folder2/
 
 Sleep for 25 seconds on 1 core using the ``time.sleep()`` function::
 
-    $ mq submit -R 1:1m time:sleep -- 25
+    $ mq submit time@sleep -R 1:1m -- 25
 
 or equivalently::
 
-    $ mq submit time:sleep+25@1:1m
+    $ mq submit time@sleep+25 -R 1:1m
 
 Say "hello" (using the defaults of 1 core for 10 minutes)::
 
@@ -76,7 +76,7 @@ The output from the job will be in ``~/shell:echo+hello.1.out`` and
 
 If a job fails or times out, then you can resubmit it with more resources::
 
-    $ mq submit shell:sleep+3000@1:30m
+    $ mq submit shell:sleep+3000 -R 1:30m
     ...
     $ mq list
     id folder name             res.   age state   time  error

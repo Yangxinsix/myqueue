@@ -42,7 +42,7 @@ def command(cmd: str,
             type = 'shell-command'
         elif cmd.endswith('.py'):
             type = 'python-script'
-        elif ':' in cmd:
+        elif '@' in cmd:
             type = 'python-function'
         elif path:
             type = 'shell-script'
@@ -131,7 +131,7 @@ class PythonModule(Command):
 
 class PythonFunction(Command):
     def __init__(self, cmd, args):
-        self.mod, self.func = cmd.rsplit(':', 1)
+        self.mod, self.func = cmd.rsplit('@', 1)
         Command.__init__(self, cmd, args)
 
     def __str__(self):
@@ -142,7 +142,7 @@ class PythonFunction(Command):
     def todict(self):
         return {**self.dct,
                 'type': 'python-function',
-                'cmd': self.mod + ':' + self.func}
+                'cmd': self.mod + '@' + self.func}
 
 
 def convert(x: str) -> Union[bool, int, float, str]:

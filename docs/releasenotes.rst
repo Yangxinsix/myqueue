@@ -6,7 +6,7 @@ Release notes
 Next release
 ============
 
-* ...
+* The ``module:function`` syntax has been changed to ``module@function``.
 
 
 Version 19.6.0
