@@ -359,7 +359,10 @@ def task(cmd: str,
                 dpaths.append(dep.dname)
 
     if '@' in cmd:
-        cmd, resources = cmd.split('@')
+        c, r = cmd.rsplit('@', 1)
+        if r[0].isdigit():
+            cmd = c
+            resources = r
 
     if resources:
         res = Resources.from_string(resources)

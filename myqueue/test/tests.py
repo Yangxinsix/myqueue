@@ -115,8 +115,8 @@ def run_tests(tests: List[str],
 
 @test
 def submit():
-    mq('submit time:sleep+2')
-    mq('submit shell:echo+hello -d time:sleep+2')
+    mq('submit time@sleep+2')
+    mq('submit shell:echo+hello -d time@sleep+2')
     wait()
     for job in mq('list'):
         assert job.state == 'done'
@@ -124,8 +124,8 @@ def submit():
 
 @test
 def fail():
-    mq('submit time:sleep+a')
-    mq('submit shell:echo+hello -d time:sleep+a')
+    mq('submit time@sleep+a')
+    mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
     assert states() == 'FCC'
@@ -136,11 +136,11 @@ def fail():
 
 @test
 def fail2():
-    mq('submit time:sleep+a --workflow')
+    mq('submit time@sleep+a --workflow')
     wait()
     assert states() == 'F'
     mq('remove --state F .')
-    mq('submit time:sleep+a --workflow')
+    mq('submit time@sleep+a --workflow')
     wait()
     assert states() == ''
 
@@ -172,7 +172,7 @@ def timeout2():
 
 @test
 def oom():
-    mq('submit myqueue.test:oom --restart 2 -- {}'.format(LOCAL))
+    mq('submit myqueue.test@oom --restart 2 -- {}'.format(LOCAL))
     wait()
     assert states() == 'M'
     mq('kick')
@@ -226,8 +226,8 @@ def cancel():
 
 @test
 def check_dependency_order():
-    mq('submit myqueue.test:timeout_once -R 1:1s --restart 1')
-    mq('submit shell:echo+ok -d myqueue.test:timeout_once --restart 1')
+    mq('submit myqueue.test@timeout_once -R 1:1s --restart 1')
+    mq('submit shell:echo+ok -d myqueue.test@timeout_once --restart 1')
     wait()
     assert states() == 'TC'
     mq('kick')

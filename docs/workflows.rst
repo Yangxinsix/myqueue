@@ -193,26 +193,35 @@ Examples
 
     :ref:`tasks` and :ref:`resources`.
 
-Three equivalent ways to set the resources::
+Two equivalent ways to set the resources::
 
-    task('prime.factor@8:1h')
     task('prime.factor', resources='8:1h')
     task('prime.factor', cores=8, tmax='1h')
 
 Given these two tasks::
 
-    t1 = task('mod:f1')
-    t2 = task('mod:f2')
+    t1 = task('mod@f1')
+    t2 = task('mod@f2')
 
 here are three equivalent ways to set dependencies::
 
-    t3 = task('mod:f3', deps=[t1, t2])
-    t3 = task('mod:f3', deps=['mod:f1', 'mod:f2'])
-    t3 = task('mod:f3', deps='mod:f1,mod:f2')
+    t3 = task('mod@f3', deps=[t1, t2])
+    t3 = task('mod@f3', deps=['mod@f1', 'mod@f2'])
+    t3 = task('mod@f3', deps='mod@f1,mod@f2')
 
-Arguments::
+Arguments in three equivalent ways::
 
-    task('math:sin+3.14')
-    task('math:sin+3.14@1:10m')
-    task('math:sin', args=[3.14])
-    task('math:sin', args=['3.14'])
+    task('math@sin+3.14')
+    task('math@sin', args=[3.14])
+    task('math@sin', args=['3.14'])
+
+More than one argument::
+
+    task('math@gcd+42_117')
+    task('math@gcd', args=[42, 117]')
+
+same as:
+
+>>> import math
+>>> math.gcd(42, 117)
+3
