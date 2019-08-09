@@ -227,7 +227,7 @@ class Task:
 
         try:
             lines = path.read_text().splitlines()
-        except FileNotFoundError:
+        except (FileNotFoundError, UnicodeDecodeError):
             return False
 
         for line in lines[::-1]:
