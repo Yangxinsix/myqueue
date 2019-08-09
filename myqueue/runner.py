@@ -531,7 +531,7 @@ class Runner(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 4,
+        text = json.dumps({'version': 5,
                            'tasks': [task.todict() for task in self.tasks]},
                           indent=2)
         self.fname.write_text(text)
