@@ -81,17 +81,6 @@ Restart T and M tasks (timed-out and out-of-memory).
 You can kick the queue manually with "mq kick" or automatically by adding that
 command to a crontab job (can be done with "mq kick --install-crontab-job").
 .
-completion
-Set up tab-completion for Bash.
-Do this:
-
-    $ mq completion >> ~/.bashrc
-.
-test
-Run tests.
-Please report errors to https://gitlab.com/jensj/myqueue/issues.
-
-.
 modify
 Modify task(s).
 The following state changes are allowed: h->q, q->h, F->M and F->T.
@@ -109,6 +98,17 @@ sync
 Make sure SLURM/PBS and MyQueue are in sync.
 Remove tasks that SLURM/PBS doesn't know about.  Also removes a task
 if its corresponding folder no longer exists.
+.
+completion
+Set up tab-completion for Bash.
+Do this:
+
+    $ mq completion >> ~/.bashrc
+.
+test
+Run tests.
+Please report errors to https://gitlab.com/jensj/myqueue/issues.
+
 """
 
 submit_usage = """\
@@ -261,17 +261,7 @@ def main(arguments: List[str] = None) -> Any:
               nargs='?',
               help='Show task from this folder.  Defaults to current folder.')
 
-    # Extract extra argument for task:
-    args1 = arguments or sys.argv[1:]
-    try:
-        i = args1.index('--')
-    except ValueError:
-        extra: List[str] = []
-    else:
-        extra = args1[i + 1:]
-        del args1[i:]
-
-    args = parser.parse_args(args1)
+    args = parser.parse_args(arguments or sys.argv[1:])
 
     args.command = aliases.get(args.command, args.command)
 
@@ -312,7 +302,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     try:
-        results = run(args, extra)
+        results = run(args)
         if arguments:
             return results
     except KeyboardInterrupt:
@@ -330,7 +320,7 @@ def main(arguments: List[str] = None) -> Any:
             return 1
 
 
-def run(args: argparse.Namespace, extra: List[str]):
+def run(args: argparse.Namespace):
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, Task, taskstates
@@ -381,9 +371,6 @@ def run(args: argparse.Namespace, extra: List[str]):
     for folder in folders:
         if not folder.is_dir():
             raise MQError('No such folder:', folder)
-
-    if args.command != 'submit' and extra:
-        raise MQError('No extra arguments allowed')
 
     if args.command in ['remove', 'resubmit', 'modify']:
         if not folders:
@@ -485,7 +472,6 @@ def run(args: argparse.Namespace, extra: List[str]):
 
         elif args.command == 'submit':
             newtasks = [task(args.task,
-                             args=extra,
                              resources=args.resources,
                              name=args.name,
                              folder=str(folder),
