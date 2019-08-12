@@ -7,6 +7,9 @@ Next release
 ============
 
 * The ``module:function`` syntax has been changed to ``module@function``.
+* Arguments to tasks are now specified like this::
+
+    $ mq submit [options] "<task> arg1 arg2 ..." [folder1 [folder2 ...]]
 
 
 Version 19.6.0

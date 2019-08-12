@@ -16,41 +16,41 @@ Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
 """
 
-_help = """\
-help
-Show how to use this tool.
+_help = [
+    ('help',
+     'Show how to use this tool.', """
 More help can be found here: https://myqueue.readthedocs.io/.
-.
-list
-List tasks in queue.
+"""),
+    ('list',
+     'List tasks in queue.', """
 Only tasks in the chosen folder and its subfolders are shown.
 
 Examples:
 
     $ mq list -s rq  # show running and queued jobs
     $ mq ls -s F abc/  # show failed jobs in abc/ folder
-.
-submit
-Submit task(s) to queue.
+"""),
+    ('submit',
+     'Submit task(s) to queue.', """
 Example:
 
     $ mq submit script.py -R 24:1d  # 24 cores for 1 day
-.
-resubmit
-Resubmit failed or timed-out tasks.
+"""),
+    ('resubmit',
+     'Resubmit failed or timed-out tasks.', """
 Example:
 
     $ mq resubmit -i 4321  # resubmit job with id=4321
-.
-remove
-Remove or cancel task(s).
+"""),
+    ('remove',
+     'Remove or cancel task(s).', """
 Examples:
 
     $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
-.
-workflow
-Submit tasks from script.
+"""),
+    ('workflow',
+     'Submit tasks from script.', """
 The script can be a simple Python script or a Python
 module. If script/module contains a create_tasks() function then create
 tasks defined in this function. Otherwise look for "dependencies" and
@@ -75,60 +75,50 @@ resources and dependencies variables. For example, to tell myqueue that script
 
 Similarly, resources can be given by specifying "resources = '8:10h'"
 which would give 8 cores for 10 hours.
-.
-kick
-Restart T and M tasks (timed-out and out-of-memory).
+"""),
+    ('kick',
+     'Restart T and M tasks (timed-out and out-of-memory).', """
 You can kick the queue manually with "mq kick" or automatically by adding that
 command to a crontab job (can be done with "mq kick --install-crontab-job").
-.
-modify
-Modify task(s).
+"""),
+    ('modify',
+     'Modify task(s).', """
 The following state changes are allowed: h->q, q->h, F->M and F->T.
-.
-init
-Initialize new queue.
+"""),
+    ('init',
+     'Initialize new queue.', """
 This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
-.
-info
-Show detailed information about task.
+"""),
+    ('info',
+     'Show detailed information about task.', """
+Example:
 
-.
-sync
-Make sure SLURM/PBS and MyQueue are in sync.
+    $ mq info 12345
+"""),
+    ('sync',
+     'Make sure SLURM/PBS and MyQueue are in sync.', """
 Remove tasks that SLURM/PBS doesn't know about.  Also removes a task
 if its corresponding folder no longer exists.
-.
-completion
-Set up tab-completion for Bash.
+"""),
+    ('completion',
+     'Set up tab-completion for Bash.', """
 Do this:
 
     $ mq completion >> ~/.bashrc
-.
-test
-Run tests.
+"""),
+    ('test',
+     'Run tests.', """
 Please report errors to https://gitlab.com/jensj/myqueue/issues.
-
-"""
-
-submit_usage = """\
-mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-R RESOURCES]
-                 [-w] [-z] [-v] [-q] [-T]
-                 task [folder [folder ...]]
-                 [-- arg [arg ...]]
-"""
+""")]
 
 aliases = {'rm': 'remove',
            'ls': 'list'}
 
 
 commands: Dict[str, Tuple[str, str]] = {}
-for lines in _help.split('\n.\n'):
-    cmd, help, description = lines.split('\n', 2)
-    if description:
-        description = help + '\n\n' + description
-    else:
-        description = help
+for cmd, help, description in _help:
+    description = help + '\n\n' + description[1:]
     commands[cmd] = (help, description)
 
 
@@ -144,8 +134,6 @@ def main(arguments: List[str] = None) -> Any:
         p = subparsers.add_parser(cmd,
                                   description=description,
                                   help=help,
-                                  usage=(submit_usage if cmd == 'submit'
-                                         else None),
                                   formatter_class=Formatter,
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])

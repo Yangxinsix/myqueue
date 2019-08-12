@@ -28,10 +28,6 @@ Sub-commands
       - Submit tasks from script
     * - :ref:`kick <kick>`
       - Restart T and M tasks (timed-out and out-of-memory)
-    * - :ref:`completion <completion>`
-      - Set up tab-completion for Bash
-    * - :ref:`test <test>`
-      - Run tests
     * - :ref:`modify <modify>`
       - Modify task(s)
     * - :ref:`init <init>`
@@ -40,6 +36,10 @@ Sub-commands
       - Show detailed information about task
     * - :ref:`sync <sync>`
       - Make sure SLURM/PBS and MyQueue are in sync
+    * - :ref:`completion <completion>`
+      - Set up tab-completion for Bash
+    * - :ref:`test <test>`
+      - Run tests
 
 
 .. _help:
@@ -109,7 +109,6 @@ Submit: Submit task(s) to queue
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-R RESOURCES]
                  [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
-                 [-- arg [arg ...]]
 
 Submit task(s) to queue.
 
@@ -299,54 +298,6 @@ optional arguments:
                         hour.
 
 
-.. _completion:
-
-Completion: Set up tab-completion for Bash
-------------------------------------------
-
-usage: mq completion [-h] [-v] [-q] [-T]
-
-Set up tab-completion for Bash.
-
-Do this::
-
-    $ mq completion >> ~/.bashrc
-
-optional arguments:
-  -h, --help       show this help message and exit
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
-
-
-.. _test:
-
-Test: Run tests
----------------
-
-usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-z] [-v] [-q]
-               [-T]
-               [test [test ...]]
-
-Run tests.
-
-Please report errors to https://gitlab.com/jensj/myqueue/issues.
-
-test:
-    Test to run. Default behaviour is to run all.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --config-file CONFIG_FILE
-                        Use specific config.py file.
-  -x EXCLUDE, --exclude EXCLUDE
-                        Exclude test(s).
-  -z, --dry-run         Show what will happen without doing anything.
-  -v, --verbose         More output.
-  -q, --quiet           Less output.
-  -T, --traceback       Show full traceback.
-
-
 .. _modify:
 
 Modify: Modify task(s)
@@ -410,6 +361,10 @@ usage: mq info [-h] [-z] [-v] [-q] [-T] id [folder]
 
 Show detailed information about task.
 
+Example::
+
+    $ mq info 12345
+
 id:
     Task ID.
 folder:
@@ -445,3 +400,51 @@ optional arguments:
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
   -A, --all        Sync all myqueue folders (from ~/.myqueue/folders.txt)
+
+
+.. _completion:
+
+Completion: Set up tab-completion for Bash
+------------------------------------------
+
+usage: mq completion [-h] [-v] [-q] [-T]
+
+Set up tab-completion for Bash.
+
+Do this::
+
+    $ mq completion >> ~/.bashrc
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
+.. _test:
+
+Test: Run tests
+---------------
+
+usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-z] [-v] [-q]
+               [-T]
+               [test [test ...]]
+
+Run tests.
+
+Please report errors to https://gitlab.com/jensj/myqueue/issues.
+
+test:
+    Test to run. Default behaviour is to run all.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config-file CONFIG_FILE
+                        Use specific config.py file.
+  -x EXCLUDE, --exclude EXCLUDE
+                        Exclude test(s).
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
