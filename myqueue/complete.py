@@ -60,6 +60,9 @@ commands = {
          '--id', '-n', '--name', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
+    'run':
+        ['-n', '--name', '-w', '--workflow', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'submit':
         ['-d', '--dependencies', '-n', '--name', '--restart', '-R',
          '--resources', '-w', '--workflow', '-z', '--dry-run',

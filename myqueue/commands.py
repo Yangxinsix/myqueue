@@ -31,6 +31,9 @@ def command(cmd: str,
             args: List[str] = [],
             type: str = None,
             name: str = '') -> Command:
+    cmd, _, args2 = cmd.partition(' ')
+    if args2:
+        args = args2.split() + args
     path, sep, cmd = cmd.rpartition('/')
     if '+' in cmd:
         cmd, _, rest = cmd.rpartition('+')

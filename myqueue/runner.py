@@ -238,6 +238,12 @@ class Runner(Lock):
                 print(task, task.todict(), ex, todo, file=sys.stderr)
                 raise ex
 
+    def run(self,
+            tasks: List[Task],
+            dry_run: bool = False,
+            read: bool = True) -> None:
+        print(tasks, dry_run, read)
+
     def select(self, s: Selection) -> List[Task]:
         if s.ids is not None:
             return [task for task in self.tasks if task.id in s.ids]

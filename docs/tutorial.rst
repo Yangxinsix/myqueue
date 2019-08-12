@@ -43,15 +43,11 @@ Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
 
 Sleep for 25 seconds on 1 core using the ``time.sleep()`` function::
 
-    $ mq submit time@sleep -R 1:1m -- 25
-
-or equivalently::
-
-    $ mq submit time@sleep+25 -R 1:1m
+    $ mq submit "time@sleep 25" -R 1:1m
 
 Say "hello" (using the defaults of 1 core for 10 minutes)::
 
-    $ mq submit shell:echo -- hello
+    $ mq submit "shell:echo hello"
 
 You can see the status of your jobs with::
 
