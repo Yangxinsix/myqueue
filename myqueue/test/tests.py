@@ -1,4 +1,5 @@
 import os
+import shlex
 import sys
 import tempfile
 import time
@@ -13,7 +14,7 @@ LOCAL = True
 
 
 def mq(cmd):
-    args = cmd.split()
+    args = shlex.split(cmd)
     args[1:1] = ['--traceback']
     return main(args)
 
@@ -148,8 +149,8 @@ def fail2():
 @test
 def timeout():
     t = 3 if LOCAL else 120
-    mq(f'submit -n zzz shell:sleep@1:1s -- {t}')
-    mq('submit shell:echo+hello -d zzz')
+    mq(f'submit -n zzz "shell:sleep {t}" -R 1:1s')
+    mq('submit "shell:echo hello" -d zzz')
     wait()
     mq('resubmit -sT . -R 1:5m')
     wait()
@@ -159,8 +160,8 @@ def timeout():
 @test
 def timeout2():
     t = 3 if LOCAL else 120
-    mq('submit shell:sleep@1:{}s --restart 2 -- {}'.format(t // 3, t))
-    mq('submit shell:echo+hello -d shell:sleep+{}'.format(t))
+    mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
+    mq('submit "shell:echo hello" -d shell:sleep+{}'.format(t))
     wait()
     mq('kick')
     wait()
@@ -172,7 +173,7 @@ def timeout2():
 
 @test
 def oom():
-    mq('submit myqueue.test@oom --restart 2 -- {}'.format(LOCAL))
+    mq(f'submit "myqueue.test@oom {LOCAL}" --restart 2')
     wait()
     assert states() == 'M'
     mq('kick')
