@@ -482,8 +482,9 @@ class Runner(Lock):
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 nodes = config.get('nodes') or [('', {'cores': 1})]
-                task.resources.double(task.state, nodes)
-                task.restart -= 1
+                if not dry_run:
+                    task.resources.double(task.state, nodes)
+                    task.restart -= 1
                 tasks.append(task)
         if tasks:
             tasks = self.find_depending(tasks)
