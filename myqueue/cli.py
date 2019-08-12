@@ -49,6 +49,12 @@ Examples:
     $ mq remove -i 4321,4322  # remove jobs with ids 4321 and 4322
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 """),
+    ('info',
+     'Show detailed information about task.', """
+Example:
+
+    $ mq info 12345
+"""),
     ('workflow',
      'Submit tasks from script.', """
 The script can be a simple Python script or a Python
@@ -76,6 +82,14 @@ resources and dependencies variables. For example, to tell myqueue that script
 Similarly, resources can be given by specifying "resources = '8:10h'"
 which would give 8 cores for 10 hours.
 """),
+    ('run',
+     'Run task(s) on local computer.', """
+Remove task(s) from queue and run locally.
+
+Example:
+
+    $ mq run script.py f1/ f2/
+"""),
     ('kick',
      'Restart T and M tasks (timed-out and out-of-memory).', """
 You can kick the queue manually with "mq kick" or automatically by adding that
@@ -89,12 +103,6 @@ The following state changes are allowed: h->q, q->h, F->M and F->T.
      'Initialize new queue.', """
 This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
-"""),
-    ('info',
-     'Show detailed information about task.', """
-Example:
-
-    $ mq info 12345
 """),
     ('sync',
      'Make sure SLURM/PBS and MyQueue are in sync.', """
@@ -166,12 +174,22 @@ def main(arguments: List[str] = None) -> Any:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
+        elif cmd == 'run':
+            a('task', help='Task to run locally.')
+            a('-n', '--name', help='Name used for task.')
+            a('folder',
+              nargs='*', default=['.'],
+              help='Submit tasks in this folder.  '
+              'Defaults to current folder.')
+
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8:1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days. '
               '"16:1:30m": 16 cores, 1 process, half an hour.')
+
+        if cmd in ['resubmit', 'submit', 'run']:
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.done or <task-name>.FAILED file '
               'when done.')
@@ -469,6 +487,15 @@ def run(args: argparse.Namespace):
                         for folder in folders]
 
             runner.submit(newtasks, args.dry_run)
+
+        elif args.command == 'run':
+            newtasks = [task(args.task,
+                             name=args.name,
+                             folder=str(folder),
+                             workflow=args.workflow)
+                        for folder in folders]
+
+            runner.run(newtasks, args.dry_run)
 
         elif args.command == 'modify':
             runner.modify(selection, args.newstate, args.dry_run)

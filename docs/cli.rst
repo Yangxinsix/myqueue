@@ -24,16 +24,18 @@ Sub-commands
       - Resubmit failed or timed-out tasks
     * - :ref:`remove <remove>` (rm)
       - Remove or cancel task(s)
+    * - :ref:`info <info>`
+      - Show detailed information about task
     * - :ref:`workflow <workflow>`
       - Submit tasks from script
+    * - :ref:`run <run>`
+      - Run task(s) on local computer
     * - :ref:`kick <kick>`
       - Restart T and M tasks (timed-out and out-of-memory)
     * - :ref:`modify <modify>`
       - Modify task(s)
     * - :ref:`init <init>`
       - Initialize new queue
-    * - :ref:`info <info>`
-      - Show detailed information about task
     * - :ref:`sync <sync>`
       - Make sure SLURM/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
@@ -218,6 +220,32 @@ optional arguments:
   -r, --recursive       Use also subfolders.
 
 
+.. _info:
+
+Info: Show detailed information about task
+------------------------------------------
+
+usage: mq info [-h] [-z] [-v] [-q] [-T] id [folder]
+
+Show detailed information about task.
+
+Example::
+
+    $ mq info 12345
+
+id:
+    Task ID.
+folder:
+    Show task from this folder. Defaults to current folder.
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+
+
 .. _workflow:
 
 Workflow: Submit tasks from script
@@ -265,6 +293,38 @@ optional arguments:
                         tasks will be submitted.
   -p, --pattern         Use submit scripts matching "pattern" in all
                         subfolders.
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
+
+
+.. _run:
+
+Run: Run task(s) on local computer
+----------------------------------
+
+usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T]
+              task [folder [folder ...]]
+
+Run task(s) on local computer.
+
+Remove task(s) from queue and run locally.
+
+Example::
+
+    $ mq run script.py f1/ f2/
+
+task:
+    Task to run locally.
+folder:
+    Submit tasks in this folder. Defaults to current folder.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n NAME, --name NAME  Name used for task.
+  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
+                        done.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -343,32 +403,6 @@ Initialize new queue.
 
 This will create a .myqueue/ folder in your current working directory and copy
 ~/.myqueue/config.py into it.
-
-optional arguments:
-  -h, --help       show this help message and exit
-  -z, --dry-run    Show what will happen without doing anything.
-  -v, --verbose    More output.
-  -q, --quiet      Less output.
-  -T, --traceback  Show full traceback.
-
-
-.. _info:
-
-Info: Show detailed information about task
-------------------------------------------
-
-usage: mq info [-h] [-z] [-v] [-q] [-T] id [folder]
-
-Show detailed information about task.
-
-Example::
-
-    $ mq info 12345
-
-id:
-    Task ID.
-folder:
-    Show task from this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit
