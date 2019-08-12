@@ -1,3 +1,11 @@
+"""Runner class for interacting with the queue.
+
+File format versions:
+
+5) Changed from mod:func to mod@func.
+6) Relative paths.
+
+"""
 import json
 import os
 import sys
@@ -380,8 +388,9 @@ class Runner(Lock):
     def _read(self) -> None:
         if self.fname.is_file():
             data = json.loads(self.fname.read_text())
+            root = self.folder.parent
             for dct in data['tasks']:
-                task = Task.fromdict(dct)
+                task = Task.fromdict(dct, root)
                 self.tasks.append(task)
 
         if self.locked:
@@ -538,8 +547,10 @@ class Runner(Lock):
     def _write(self):
         if self.debug:
             print('WRITE', len(self.tasks))
-        text = json.dumps({'version': 5,
-                           'tasks': [task.todict() for task in self.tasks]},
+        root = self.folder.parent
+        text = json.dumps({'version': 6,
+                           'tasks': [task.todict(root)
+                                     for task in self.tasks]},
                           indent=2)
         self.fname.write_text(text)
 

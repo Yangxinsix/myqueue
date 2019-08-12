@@ -138,11 +138,11 @@ class Task:
             return self.error
         raise ValueError(f'Unknown column: {column}!')
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self, root) -> Dict[str, Any]:
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
-                'folder': str(self.folder),
-                'deps': [str(dep) for dep in self.deps],
+                'folder': str(self.folder.relative_to(root)),
+                'deps': [str(dep.relative_to(root)) for dep in self.deps],
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
                 'restart': self.restart,
@@ -155,7 +155,7 @@ class Task:
                 'error': self.error}
 
     @staticmethod
-    def fromdict(dct: dict) -> 'Task':
+    def fromdict(dct: dict, root: Path) -> 'Task':
         dct = dct.copy()
 
         # Backwards compatibility with version 2:
@@ -170,9 +170,16 @@ class Task:
         if 'creates' not in dct:
             dct['creates'] = []
 
+        f = dct.pop('folder')
+        if f.startswith('/'):
+            # Backwards compatibility with version 5:
+            folder = Path(f)
+        else:
+            folder = root / f
+
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
-                    folder=Path(dct.pop('folder')),
+                    folder=folder,
                     deps=[Path(dep) for dep in dct.pop('deps')],
                     **dct)
 
