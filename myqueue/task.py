@@ -138,11 +138,16 @@ class Task:
             return self.error
         raise ValueError(f'Unknown column: {column}!')
 
-    def todict(self, root: Path) -> Dict[str, Any]:
+    def todict(self, root: Path = None) -> Dict[str, Any]:
+        folder = self.folder
+        deps = self.deps
+        if root:
+            folder = folder.relative_to(root)
+            deps = [dep.relative_to(root) for dep in self.deps]
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
-                'folder': str(self.folder.relative_to(root)),
-                'deps': [str(dep.relative_to(root)) for dep in self.deps],
+                'folder': str(folder),
+                'deps': [str(dep) for dep in deps],
                 'resources': self.resources.todict(),
                 'workflow': self.workflow,
                 'restart': self.restart,
