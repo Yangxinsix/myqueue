@@ -138,7 +138,7 @@ class Task:
             return self.error
         raise ValueError(f'Unknown column: {column}!')
 
-    def todict(self, root) -> Dict[str, Any]:
+    def todict(self, root: Path) -> Dict[str, Any]:
         return {'cmd': self.cmd.todict(),
                 'id': self.id,
                 'folder': str(self.folder.relative_to(root)),
@@ -174,13 +174,15 @@ class Task:
         if f.startswith('/'):
             # Backwards compatibility with version 5:
             folder = Path(f)
+            deps = [Path(dep) for dep in dct.pop('deps')]
         else:
             folder = root / f
+            deps = [root / dep for dep in dct.pop('deps')]
 
         return Task(cmd=command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=folder,
-                    deps=[Path(dep) for dep in dct.pop('deps')],
+                    deps=deps,
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:

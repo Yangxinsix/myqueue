@@ -11,6 +11,7 @@ from .utils import Lock, lock
 
 class LocalQueue(Queue, Lock):
     def __init__(self):
+        self.root = config['home']
         self.fname = config['home'] / '.myqueue' / 'local.json'
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
@@ -77,12 +78,12 @@ class LocalQueue(Queue, Lock):
 
         data = json.loads(self.fname.read_text())
 
-        self.tasks = [Task.fromdict(dct) for dct in data['tasks']]
+        self.tasks = [Task.fromdict(dct, self.root) for dct in data['tasks']]
 
         self.number = data['number']
 
     def _write(self):
-        text = json.dumps({'tasks': [task.todict()
+        text = json.dumps({'tasks': [task.todict(self.root)
                                      for task in self.tasks],
                            'number': self.number},
                           indent=2)
