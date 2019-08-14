@@ -11,6 +11,10 @@ Next release
 
     $ mq submit [options] "<task> arg1 arg2 ..." [folder1 [folder2 ...]]
 
+* New ``run`` command::
+
+    $ mq run [options] "<task> arg1 arg2 ..." [folder1 [folder2 ...]]
+
 
 Version 19.6.0
 ==============
