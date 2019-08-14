@@ -67,7 +67,7 @@ def clean(line):
     line = re.sub(r' 0:[0-9][0-9] ', ' ### ', line)
     line = re.sub(r' 0:[0-9][0-9] ', ' ### ', line)
     line = re.sub(r'[rw.-]{10,11}', '###', line)
-    line = re.sub(r' total \d+ ', '###', line)
+    line = re.sub(r' total \d+', '###', line)
     line = line.replace(user, 'jensj')
     return line
 
