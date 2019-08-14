@@ -121,11 +121,17 @@ def run_tests(tests: List[str],
 
 @test
 def submit():
-    mq('submit time@sleep+2')
+    f = Path('folder')
+    f.mkdir()
+    mq('submit time@sleep+2 . folder')
     mq('submit shell:echo+hello -d time@sleep+2')
     wait()
-    for job in mq('list'):
-        assert job.state == 'done'
+    assert states() == 'ddd'
+    for p in f.glob('time@sleep+2.*.???'):
+        p.unlink()
+    f.rmdir()
+    mq('sync')
+    assert states() == 'dd'
 
 
 @test
