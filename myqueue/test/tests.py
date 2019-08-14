@@ -6,6 +6,7 @@ import time
 from typing import List, Optional
 from pathlib import Path
 
+import myqueue.runner
 from myqueue.cli import main
 from myqueue.config import initialize_config
 
@@ -54,6 +55,8 @@ def run_tests(tests: List[str],
         tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
                                        dir=str(Path.home())))
 
+    myqueue.runner.use_color = False
+
     print('\nRunning tests in', tmpdir)
     os.chdir(str(tmpdir))
 
@@ -96,10 +99,10 @@ def run_tests(tests: List[str],
             sys.stdout = sys.__stdout__
             print('FAILED')
             raise
-        else:
-            print('OK', file=sys.__stdout__)
 
         mq('rm -s qrdFTCM . -r')
+
+        print('OK', file=sys.__stdout__)
 
         for f in tmpdir.glob('*'):
             if f.is_file():

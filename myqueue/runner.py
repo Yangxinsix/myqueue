@@ -22,6 +22,8 @@ from .task import Task
 from .utils import Lock
 from .virtenv import find_activation_scripts
 
+use_color = sys.stdout.isatty()
+
 
 class Selection:
     def __init__(self,
@@ -591,7 +593,6 @@ def pprint(tasks: List[Task],
     if not tasks:
         return
 
-    color = sys.stdout.isatty()
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
@@ -639,7 +640,7 @@ def pprint(tasks: List[Task],
                 word = word.rjust(L)
             else:
                 word = word.ljust(L)
-                if c == 's' and color:
+                if c == 's' and use_color:
                     word = colored(word)
             words2.append(word)
         print(' '.join(words2))
