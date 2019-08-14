@@ -1,7 +1,10 @@
+import os
 import re
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
+
+user = os.environ.get('USER', 'root')
 
 
 def run_document(path: Path, test=False) -> None:
@@ -59,6 +62,7 @@ def run_command(cmd: str,
 
 def clean(line):
     line = re.sub('[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', 'ok', line)
+    line = line.replace(user, 'jensj')
     return line
 
 
@@ -73,6 +77,7 @@ def compare(t1, t2):
     print('\n'.join(t2))
     print('>>>>>>>>>>>')
     return 1
+
 
 if __name__ == '__main__':
     import sys

@@ -78,23 +78,6 @@ and now in all subfolders::
     24 ./99/     prime.factor 1:10m*
     25 ./99/     prime.check  1:10m(1)*
     10 tasks submitted
-    $ mq ls
-    id folder    name         res.       age state   time error
-    -- --------- ------------ --------- ---- ------- ---- -----
-    14 ./1001/   prime.factor 1:10m*    0:00 done    0:00
-    15 ./1001/   prime.check  1:10m*    0:00 done    0:00
-    16 ./100007/ prime.factor 1:10m*    0:00 running 0:00
-    17 ./100007/ prime.check  1:10m(1)* 0:00 queued  0:00
-    18 ./36791/  prime.factor 1:10m*    0:00 queued  0:00
-    19 ./36791/  prime.check  1:10m(1)* 0:00 queued  0:00
-    20 ./8069/   prime.factor 1:10m*    0:00 queued  0:00
-    21 ./8069/   prime.check  1:10m(1)* 0:00 queued  0:00
-    22 ./98769/  prime.factor 1:10m*    0:00 queued  0:00
-    23 ./98769/  prime.check  1:10m(1)* 0:00 queued  0:00
-    24 ./99/     prime.factor 1:10m*    0:00 queued  0:00
-    25 ./99/     prime.check  1:10m(1)* 0:00 queued  0:00
-    -- --------- ------------ --------- ---- ------- ---- -----
-    done: 2, running: 1, queued: 9, total: 12
 
 ::
 

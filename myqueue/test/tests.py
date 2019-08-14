@@ -259,4 +259,5 @@ def run_rst():
     p.mkdir()
     for f in dir.glob('prime/*.*'):
         (p / f.name).write_text(f.read_text())
+    time.sleep(1)
     run_document(dir / 'workflows.rst', test=True)
