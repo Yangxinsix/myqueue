@@ -3,8 +3,7 @@ tests:
   script:
     - pip install flake8 mypy coverage
     - pip install -e .
-    - export PYTHONPATH=$PWD/myqueue/docs
-    - ls $PYTHONPATH
+    - export PYTHONPATH=$PWD/docs
     - coverage run -m myqueue test -v
     - coverage report -i --fail-under=68
     - mypy -p myqueue

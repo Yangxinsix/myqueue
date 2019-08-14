@@ -29,7 +29,7 @@ def test(func):
 
 
 def states():
-    return ''.join(job.state[0] for job in mq('list'))
+    return ''.join(task.state[0] for task in mq('list'))
 
 
 def wait() -> None:
@@ -134,6 +134,8 @@ def fail():
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
+    id = mq('list')[0].id
+    mq(f'info {id}')
     assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
