@@ -1,5 +1,6 @@
 import os
 import shlex
+import shutil
 import sys
 import tempfile
 import time
@@ -28,7 +29,7 @@ def test(func):
 
 
 def states():
-    return ''.join(job.state[0] for job in mq('list'))
+    return ''.join(task.state[0] for task in mq('list'))
 
 
 def wait() -> None:
@@ -106,6 +107,8 @@ def run_tests(tests: List[str],
         for f in tmpdir.glob('*'):
             if f.is_file():
                 f.unlink()
+            elif f.name != '.myqueue':
+                shutil.rmtree(f)
 
     sys.stdout = sys.__stdout__
 
@@ -118,11 +121,17 @@ def run_tests(tests: List[str],
 
 @test
 def submit():
-    mq('submit time@sleep+2')
+    f = Path('folder')
+    f.mkdir()
+    mq('submit time@sleep+2 . folder')
     mq('submit shell:echo+hello -d time@sleep+2')
     wait()
-    for job in mq('list'):
-        assert job.state == 'done'
+    assert states() == 'ddd'
+    for p in f.glob('time@sleep+2.*.???'):
+        p.unlink()
+    f.rmdir()
+    mq('sync')
+    assert states() == 'dd'
 
 
 @test
@@ -131,6 +140,8 @@ def fail():
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
+    id = mq('list')[0].id
+    mq(f'info {id} -v')
     assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
@@ -239,6 +250,22 @@ def check_dependency_order():
 
 
 @test
-def check_docs():
+def completion():
     from myqueue.utils import update_completion
     update_completion(test=True)
+
+
+@test
+def run_rst():
+    from myqueue.docs import run_document
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 13}')
+    p = Path('prime')
+    p.mkdir()
+    for f in dir.glob('prime/*.*'):
+        (p / f.name).write_text(f.read_text())
+    time.sleep(1)
+    run_document(dir / 'workflows.rst', test=True)

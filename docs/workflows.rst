@@ -36,9 +36,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-r--r-- 1 jensj jensj 190 Feb  5 14:24 check.py
-    -rw-r--r-- 1 jensj jensj 387 Jun 17 08:18 factor.py
-    -rw-r--r-- 1 jensj jensj 166 Jun 17 08:18 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 Aug 14 21:50 check.py
+    -rw-rw-r-- 1 jensj jensj 387 Aug 14 21:50 factor.py
+    -rw-rw-r-- 1 jensj jensj 166 Aug 14 21:50 workflow.py
 
 and add that folder to ``$PYTHONPATH`` so that Python can find the files::
 
@@ -57,44 +57,33 @@ and start the workflow in one of the folders::
     ./1001/ prime.check  1:10m(1)*
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
-    16 ./1001/ prime.factor 1:10m*
-    17 ./1001/ prime.check  1:10m(1)*
+    14 ./1001/ prime.factor 1:10m*
+    15 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
+    $ sleep 2
 
 and now in all subfolders::
 
-    $ mq workflow ../prime/workflow.py */
-    1 task already done
-    1 task already in the queue:
-        running : 1
-    18 ./100007/ prime.factor 1:10m*
-    19 ./100007/ prime.check  1:10m(1)*
-    20 ./36791/  prime.factor 1:10m*
-    21 ./36791/  prime.check  1:10m(1)*
-    22 ./8069/   prime.factor 1:10m*
-    23 ./8069/   prime.check  1:10m(1)*
-    24 ./98769/  prime.factor 1:10m*
-    25 ./98769/  prime.check  1:10m(1)*
-    26 ./99/     prime.factor 1:10m*
-    27 ./99/     prime.check  1:10m(1)*
-    10 tasks submitted
     $ mq ls
-    id folder    name         res.       age state   time error
-    -- --------- ------------ --------- ---- ------- ---- -----
-    16 ./1001/   prime.factor 1:10m*    0:00 done    0:00
-    17 ./1001/   prime.check  1:10m*    0:00 done    0:00
-    18 ./100007/ prime.factor 1:10m*    0:00 running 0:00
-    19 ./100007/ prime.check  1:10m(1)* 0:00 queued  0:00
-    20 ./36791/  prime.factor 1:10m*    0:00 queued  0:00
-    21 ./36791/  prime.check  1:10m(1)* 0:00 queued  0:00
-    22 ./8069/   prime.factor 1:10m*    0:00 queued  0:00
-    23 ./8069/   prime.check  1:10m(1)* 0:00 queued  0:00
-    24 ./98769/  prime.factor 1:10m*    0:00 queued  0:00
-    25 ./98769/  prime.check  1:10m(1)* 0:00 queued  0:00
-    26 ./99/     prime.factor 1:10m*    0:00 queued  0:00
-    27 ./99/     prime.check  1:10m(1)* 0:00 queued  0:00
-    -- --------- ------------ --------- ---- ------- ---- -----
-    done: 2, running: 1, queued: 9, total: 12
+    id folder  name         res.    age state time error
+    -- ------- ------------ ------ ---- ----- ---- -----
+    14 ./1001/ prime.factor 1:10m* 0:02 done  0:00
+    15 ./1001/ prime.check  1:10m* 0:02 done  0:00
+    -- ------- ------------ ------ ---- ----- ---- -----
+    done: 2, total: 2
+    $ mq workflow ../prime/workflow.py */
+    2 tasks already done
+    16 ./100007/ prime.factor 1:10m*
+    17 ./100007/ prime.check  1:10m(1)*
+    18 ./36791/  prime.factor 1:10m*
+    19 ./36791/  prime.check  1:10m(1)*
+    20 ./8069/   prime.factor 1:10m*
+    21 ./8069/   prime.check  1:10m(1)*
+    22 ./98769/  prime.factor 1:10m*
+    23 ./98769/  prime.check  1:10m(1)*
+    24 ./99/     prime.factor 1:10m*
+    25 ./99/     prime.check  1:10m(1)*
+    10 tasks submitted
 
 ::
 
@@ -102,18 +91,18 @@ and now in all subfolders::
     $ mq ls
     id folder    name         res.    age state time error
     -- --------- ------------ ------ ---- ----- ---- -----
-    16 ./1001/   prime.factor 1:10m* 0:02 done  0:00
-    17 ./1001/   prime.check  1:10m* 0:02 done  0:00
-    18 ./100007/ prime.factor 1:10m* 0:02 done  0:00
-    19 ./100007/ prime.check  1:10m* 0:02 done  0:00
-    20 ./36791/  prime.factor 1:10m* 0:02 done  0:00
-    21 ./36791/  prime.check  1:10m* 0:02 done  0:00
-    22 ./8069/   prime.factor 1:10m* 0:02 done  0:00
-    23 ./8069/   prime.check  1:10m* 0:02 done  0:00
-    24 ./98769/  prime.factor 1:10m* 0:02 done  0:00
-    25 ./98769/  prime.check  1:10m* 0:02 done  0:00
-    26 ./99/     prime.factor 1:10m* 0:02 done  0:00
-    27 ./99/     prime.check  1:10m* 0:02 done  0:00
+    14 ./1001/   prime.factor 1:10m* 0:06 done  0:00
+    15 ./1001/   prime.check  1:10m* 0:06 done  0:00
+    16 ./100007/ prime.factor 1:10m* 0:02 done  0:00
+    17 ./100007/ prime.check  1:10m* 0:02 done  0:00
+    18 ./36791/  prime.factor 1:10m* 0:02 done  0:00
+    19 ./36791/  prime.check  1:10m* 0:02 done  0:00
+    20 ./8069/   prime.factor 1:10m* 0:02 done  0:00
+    21 ./8069/   prime.check  1:10m* 0:02 done  0:00
+    22 ./98769/  prime.factor 1:10m* 0:02 done  0:00
+    23 ./98769/  prime.check  1:10m* 0:02 done  0:00
+    24 ./99/     prime.factor 1:10m* 0:02 done  0:00
+    25 ./99/     prime.check  1:10m* 0:02 done  0:00
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
@@ -122,12 +111,12 @@ Note that a ``prime.check.done`` file is created to mark that the
 
     $ ls -l 1001/
     total 4
-    -rw-r--r-- 1 jensj jensj 24 Jun 17 08:39 factors.json
-    -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.check.17.err
-    -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.check.17.out
-    -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.check.done
-    -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.factor.16.err
-    -rw-r--r-- 1 jensj jensj  0 Jun 17 08:39 prime.factor.16.out
+    -rw-rw-r-- 1 jensj jensj 24 Aug 14 21:50 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.err
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.out
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.done
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.err
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.out
 
 There is no ``prime.factor.done`` file because ``factors.json`` serves that
 purpose.
@@ -136,11 +125,9 @@ Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
-    6 tasks already done
-    6 tasks already in the queue:
-        done    : 6
-    28 ./42/ prime.factor 1:10m*
-    29 ./42/ prime.check  1:10m(1)*
+    12 tasks already done
+    26 ./42/ prime.factor 1:10m*
+    27 ./42/ prime.check  1:10m(1)*
     2 tasks submitted
 
 Turns out, there were two prime numbers::

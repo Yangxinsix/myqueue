@@ -202,7 +202,7 @@ def update_completion(test=False) -> None:
     except MyException:
         pass
     finally:
-        argparse.ArgumentParser = AP
+        argparse.ArgumentParser = AP  # type: ignore
 
     txt = 'commands = {'
     for command, opts in sorted(dct.items()):
