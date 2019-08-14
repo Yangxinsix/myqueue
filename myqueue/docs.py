@@ -30,17 +30,20 @@ def run_document(path: Path, test=False) -> None:
 
     offset = 0
     folder = '.'
+    errors = 0
     for cmd, output, L in blocks:
         print('$', cmd)
         actual_output, folder = run_command(cmd, folder)
         actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
                          for line in actual_output]
-        compare(output, actual_output)
+        errors += compare(output, actual_output)
         L += 1 + offset
         lines[L:L + len(output)] = ('    ' + line for line in actual_output)
         offset += len(actual_output) - len(output)
 
-    if not test:
+    if test:
+        assert errors == 0
+    else:
         path.write_text('\n'.join(lines) + '\n')
 
 
@@ -63,13 +66,13 @@ def compare(t1, t2):
     t1 = [clean(line) for line in t1]
     t2 = [clean(line) for line in t2]
     if t1 == t2:
-        return
+        return 0
     print('<<<<<<<<<<<')
     print('\n'.join(t1))
     print('===========')
     print('\n'.join(t2))
     print('>>>>>>>>>>>')
-
+    return 1
 
 if __name__ == '__main__':
     import sys
