@@ -76,7 +76,7 @@ class Task:
 
     @property
     def name(self) -> str:
-        return '{}.{}'.format(self.cmd.name, self.id)
+        return f'{self.cmd.name}.{self.id}'
 
     def running_time(self, t=None):
         if self.state in ['CANCELED', 'queued', 'hold']:

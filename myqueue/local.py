@@ -173,13 +173,13 @@ class LocalQueue(Queue, Lock):
         task.state = 'running'
 
     def _run(self, task):
-        out = '{name}.out'.format(name=task.name)
-        err = '{name}.err'.format(name=task.name)
+        out = f'{task.name}.out'
+        err = f'{task.name}.err'
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            mpiexec += '-np {} '.format(task.resources.processes)
+            mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
                                         config.get('parallel_python',
                                                    'python3'))
@@ -188,11 +188,11 @@ class LocalQueue(Queue, Lock):
         cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
         msg = ('python3 -m myqueue.local {} {}'
                .format(config['home'], task.id))
-        cmd = ('({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
-               '(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
+        tmax = task.resources.tmax
+        cmd = (f'({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
+               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
                'p2=$!; wait $p1; '
-               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi'
-               .format(cmd=cmd, msg=msg, tmax=task.resources.tmax))
+               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi')
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
 

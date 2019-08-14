@@ -14,11 +14,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, List, Dict, Optional  # noqa
 
-from .resources import Resources
-from .task import Task
-from .queue import get_queue, Queue
-from .utils import Lock
 from .config import config
+from .queue import get_queue, Queue
+from .resources import Resources
+from .run import run_tasks
+from .task import Task
+from .utils import Lock
 from .virtenv import find_activation_scripts
 
 
@@ -248,9 +249,12 @@ class Runner(Lock):
 
     def run(self,
             tasks: List[Task],
-            dry_run: bool = False,
-            read: bool = True) -> None:
-        print(tasks, dry_run, read)
+            dry_run: bool = False) -> None:
+        if dry_run:
+            for task in tasks:
+                print(f'{task.folder}: {task.cmd}')
+        else:
+            run_tasks(tasks)
 
     def select(self, s: Selection) -> List[Task]:
         if s.ids is not None:
