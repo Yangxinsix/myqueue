@@ -456,7 +456,8 @@ def run(args: argparse.Namespace):
                     runner.kick(args.dry_run)
         return
 
-    with Runner(verbosity, need_lock=args.command != 'list') as runner:
+    need_lock = args.command not in ['list', 'info']
+    with Runner(verbosity, need_lock) as runner:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
