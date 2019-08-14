@@ -141,7 +141,7 @@ def fail():
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
     id = mq('list')[0].id
-    mq(f'info {id}')
+    mq(f'info {id} -v')
     assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
