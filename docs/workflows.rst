@@ -36,9 +36,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-rw-r-- 1 jensj jensj 190 May 15 12:19 check.py
-    -rw-rw-r-- 1 jensj jensj 387 Aug 14 08:05 factor.py
-    -rw-rw-r-- 1 jensj jensj 166 Aug 14 08:05 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 Aug 14 21:50 check.py
+    -rw-rw-r-- 1 jensj jensj 387 Aug 14 21:50 factor.py
+    -rw-rw-r-- 1 jensj jensj 166 Aug 14 21:50 workflow.py
 
 and add that folder to ``$PYTHONPATH`` so that Python can find the files::
 
@@ -60,14 +60,19 @@ and start the workflow in one of the folders::
     14 ./1001/ prime.factor 1:10m*
     15 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
-    $ sleep 1
+    $ sleep 2
 
 and now in all subfolders::
 
+    $ mq ls
+    id folder  name         res.    age state time error
+    -- ------- ------------ ------ ---- ----- ---- -----
+    14 ./1001/ prime.factor 1:10m* 0:02 done  0:00
+    15 ./1001/ prime.check  1:10m* 0:02 done  0:00
+    -- ------- ------------ ------ ---- ----- ---- -----
+    done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
-    1 task already done
-    1 task already in the queue:
-        running : 1
+    2 tasks already done
     16 ./100007/ prime.factor 1:10m*
     17 ./100007/ prime.check  1:10m(1)*
     18 ./36791/  prime.factor 1:10m*
@@ -86,8 +91,8 @@ and now in all subfolders::
     $ mq ls
     id folder    name         res.    age state time error
     -- --------- ------------ ------ ---- ----- ---- -----
-    14 ./1001/   prime.factor 1:10m* 0:03 done  0:00
-    15 ./1001/   prime.check  1:10m* 0:03 done  0:00
+    14 ./1001/   prime.factor 1:10m* 0:06 done  0:00
+    15 ./1001/   prime.check  1:10m* 0:06 done  0:00
     16 ./100007/ prime.factor 1:10m* 0:02 done  0:00
     17 ./100007/ prime.check  1:10m* 0:02 done  0:00
     18 ./36791/  prime.factor 1:10m* 0:02 done  0:00
@@ -106,12 +111,12 @@ Note that a ``prime.check.done`` file is created to mark that the
 
     $ ls -l 1001/
     total 4
-    -rw-rw-r-- 1 jensj jensj 24 Aug 14 15:51 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 15:51 prime.check.15.err
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 15:51 prime.check.15.out
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 15:51 prime.check.done
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 15:51 prime.factor.14.err
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 15:51 prime.factor.14.out
+    -rw-rw-r-- 1 jensj jensj 24 Aug 14 21:50 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.err
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.out
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.done
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.err
+    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.out
 
 There is no ``prime.factor.done`` file because ``factors.json`` serves that
 purpose.

@@ -43,7 +43,7 @@ def run_document(path: Path, test=False) -> None:
                          for line in actual_output]
         errors += compare(output, actual_output)
         L += 1 + offset
-        lines[L:L + len(output)] = ('    ' + line for line in actual_output)
+        lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
     if not test:
@@ -64,6 +64,7 @@ def run_command(cmd: str,
 
 def clean(line):
     line = re.sub(r'[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', '###', line)
+    line = re.sub(r' 0:[0-9][0-9] ', ' ### ', line)
     line = re.sub(r'[rw.-]{10,11}', '###', line)
     line = line.replace(user, 'jensj')
     return line
