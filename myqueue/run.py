@@ -12,8 +12,10 @@ def run_tasks(tasks):
 
 
 def run(tasks):
-    import mp
-    mp.pool(run1)
+    pass
+
+    # import mp
+    # mp.pool(run1)
 
 
 def run1(task):
