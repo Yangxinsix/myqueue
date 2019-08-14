@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
@@ -36,6 +37,7 @@ def run_document(path: Path, test=False) -> None:
     errors = 0
     for cmd, output, L in blocks:
         print('$', cmd)
+        time.sleep(0.3)
         actual_output, folder = run_command(cmd, folder)
         actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
                          for line in actual_output]
@@ -44,7 +46,7 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = ('    ' + line for line in actual_output)
         offset += len(actual_output) - len(output)
 
-    if test:
+    if not test:
         assert errors == 0
     else:
         path.write_text('\n'.join(lines) + '\n')
@@ -61,7 +63,8 @@ def run_command(cmd: str,
 
 
 def clean(line):
-    line = re.sub('[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', 'ok', line)
+    line = re.sub(r'[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', '###', line)
+    line = re.sub(r'[rw.-]{10,11}', '###', line)
     line = line.replace(user, 'jensj')
     return line
 

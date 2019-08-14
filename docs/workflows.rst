@@ -60,6 +60,7 @@ and start the workflow in one of the folders::
     14 ./1001/ prime.factor 1:10m*
     15 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
+    $ sleep 1
 
 and now in all subfolders::
 
