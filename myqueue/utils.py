@@ -90,7 +90,7 @@ def get_home_folders() -> List[Path]:
         return [Path.home()]
 
 
-def update_completion() -> None:
+def update_completion(test=False) -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
@@ -157,8 +157,11 @@ def update_completion() -> None:
 
     lines = readme.read_text().splitlines()
     a = lines.index('.. computer generated text:')
-    lines[a + 1:] = newlines
-    readme.write_text('\n'.join(lines) + '\n')
+    if test:
+        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines), readme
+    else:
+        lines[a + 1:] = newlines
+        readme.write_text('\n'.join(lines) + '\n')
 
     filename = dir / 'complete.py'
 
@@ -192,11 +195,14 @@ def update_completion() -> None:
             dct[self.command].extend(arg for arg in args
                                      if arg.startswith('-'))
 
+    AP = argparse.ArgumentParser
     argparse.ArgumentParser = Parser  # type: ignore
     try:
         main()
     except MyException:
         pass
+    finally:
+        argparse.ArgumentParser = AP
 
     txt = 'commands = {'
     for command, opts in sorted(dct.items()):
@@ -211,9 +217,12 @@ def update_completion() -> None:
 
     a = lines.index('# Beginning of computer generated data:')
     b = lines.index('# End of computer generated data')
-    lines[a + 1:b] = [txt]
 
-    filename.write_text('\n'.join(lines) + '\n')
+    if test:
+        assert '\n'.join(lines[a + 1:b]) == txt
+    else:
+        lines[a + 1:b] = [txt]
+        filename.write_text('\n'.join(lines) + '\n')
 
 
 if __name__ == '__main__':

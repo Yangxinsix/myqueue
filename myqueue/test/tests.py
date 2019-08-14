@@ -10,7 +10,6 @@ import myqueue.runner
 from myqueue.cli import main
 from myqueue.config import initialize_config
 
-
 LOCAL = True
 
 
@@ -57,7 +56,7 @@ def run_tests(tests: List[str],
 
     myqueue.runner.use_color = False
 
-    print('\nRunning tests in', tmpdir)
+    print(f'Running tests in {tmpdir}:')
     os.chdir(str(tmpdir))
 
     if not tests:
@@ -100,7 +99,7 @@ def run_tests(tests: List[str],
             print('FAILED')
             raise
 
-        mq('rm -s qrdFTCM . -r')
+        mq('rm -s qrdFTCM . -rq')
 
         print('OK', file=sys.__stdout__)
 
@@ -237,3 +236,9 @@ def check_dependency_order():
     mq('kick')
     wait()
     assert states() == 'dd'
+
+
+@test
+def check_docs():
+    from myqueue.utils import update_completion
+    update_completion(test=True)

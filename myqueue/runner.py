@@ -288,8 +288,9 @@ class Runner(Lock):
             pprint(tasks, 0)
             print(plural(len(tasks), 'task'), 'to be removed')
         else:
-            pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'removed')
+            if self.verbosity > 0:
+                pprint(tasks, 0)
+                print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'hold', 'queued']:
                     self.queue.cancel(task)
