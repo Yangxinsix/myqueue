@@ -46,7 +46,7 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if not test:
+    if test:
         assert errors == 0
     else:
         path.write_text('\n'.join(lines) + '\n')
