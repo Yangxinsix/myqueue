@@ -1,5 +1,6 @@
 import os
 import shlex
+import shutil
 import sys
 import tempfile
 import time
@@ -106,6 +107,8 @@ def run_tests(tests: List[str],
         for f in tmpdir.glob('*'):
             if f.is_file():
                 f.unlink()
+            elif f.name != '.myqueue':
+                shutil.rmtree(f)
 
     sys.stdout = sys.__stdout__
 
@@ -239,6 +242,21 @@ def check_dependency_order():
 
 
 @test
-def check_docs():
+def completion():
     from myqueue.utils import update_completion
     update_completion(test=True)
+
+
+@test
+def run_rst():
+    from myqueue.docs import run_document
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 13}')
+    p = Path('prime')
+    p.mkdir()
+    for f in dir.glob('prime/*.*'):
+        (p / f.name).write_text(f.read_text())
+    run_document(dir / 'workflows.rst', test=True)

@@ -1,9 +1,10 @@
+import re
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
 
 
-def run_document(path: Path) -> None:
+def run_document(path: Path, test=False) -> None:
     lines = path.read_text().splitlines()
     blocks: List[Tuple[str, List[str], int]] = []
     n = 0
@@ -32,15 +33,15 @@ def run_document(path: Path) -> None:
     for cmd, output, L in blocks:
         print('$', cmd)
         actual_output, folder = run_command(cmd, folder)
-        actual_output = [line.replace('1:2s', '1:10m').rstrip()
+        actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
                          for line in actual_output]
-        if actual_output:
-            print('\n'.join(actual_output))
+        compare(output, actual_output)
         L += 1 + offset
         lines[L:L + len(output)] = ('    ' + line for line in actual_output)
         offset += len(actual_output) - len(output)
 
-    path.write_text('\n'.join(lines) + '\n')
+    if not test:
+        path.write_text('\n'.join(lines) + '\n')
 
 
 def run_command(cmd: str,
@@ -51,6 +52,23 @@ def run_command(cmd: str,
     output = result.stdout.decode().splitlines()
     folder = output.pop()
     return output, folder
+
+
+def clean(line):
+    line = re.sub('[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', 'ok', line)
+    return line
+
+
+def compare(t1, t2):
+    t1 = [clean(line) for line in t1]
+    t2 = [clean(line) for line in t2]
+    if t1 == t2:
+        return
+    print('<<<<<<<<<<<')
+    print('\n'.join(t1))
+    print('===========')
+    print('\n'.join(t2))
+    print('>>>>>>>>>>>')
 
 
 if __name__ == '__main__':

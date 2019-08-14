@@ -416,7 +416,7 @@ class Runner(Lock):
                   '3': 'TIMEOUT'}
         for t, id, state in sorted(files):
             if self.debug:
-                print('READ', t, id, state)
+                print('READ', t, id, state, file=sys.stderr)
             self.update(id, states[state], t)
 
         if files:
@@ -431,7 +431,7 @@ class Runner(Lock):
                t: float = 0.0) -> None:
 
         if self.debug:
-            print('UPDATE', id, state)
+            print('UPDATE', id, state, file=sys.stderr)
 
         for task in self.tasks:
             if task.id == id:
@@ -553,7 +553,7 @@ class Runner(Lock):
 
     def _write(self):
         if self.debug:
-            print('WRITE', len(self.tasks))
+            print('WRITE', len(self.tasks), file=sys.stderr)
         root = self.folder.parent
         text = json.dumps(
             {'version': 6,
