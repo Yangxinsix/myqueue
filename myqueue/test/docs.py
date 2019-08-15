@@ -5,7 +5,7 @@ from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
 
-from .testrunner import test
+from .testrunner import test, wait
 
 user = os.environ.get('USER', 'root')
 
@@ -42,6 +42,7 @@ def run_document(path: Path, test=False) -> None:
         print('$', cmd)
         time.sleep(0.3)
         actual_output, folder = run_command(cmd, folder, pypath)
+        wait()
         actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
                          for line in actual_output]
         errors += compare(output, actual_output)
@@ -71,7 +72,7 @@ def clean(line):
     line = re.sub(r' 0:[0-9][0-9]', ' 0:##', line)
     line = re.sub(r'[rw.-]{10,11}', '##########', line)
     line = re.sub(r' total \d+', ' ##### #', line)
-    line = line.replace(user, 'jensj')
+    line = re.sub(r' {user} \w+ ', ' jensj ##### ', line)
     return line
 
 
