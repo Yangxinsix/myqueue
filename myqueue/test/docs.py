@@ -34,13 +34,14 @@ def run_document(path: Path, test=False) -> None:
             blocks.append((cmd, output, L))
         n += 1
 
+    pypath = Path().absolute()
     offset = 0
     folder = '.'
     errors = 0
     for cmd, output, L in blocks:
         print('$', cmd)
         time.sleep(0.3)
-        actual_output, folder = run_command(cmd, folder)
+        actual_output, folder = run_command(cmd, folder, pypath)
         actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
                          for line in actual_output]
         errors += compare(output, actual_output)
@@ -55,9 +56,10 @@ def run_document(path: Path, test=False) -> None:
 
 
 def run_command(cmd: str,
-                folder: str) -> Tuple[List[str], str]:
+                folder: str,
+                pypath: Path) -> Tuple[List[str], str]:
     cmd, _, _ = cmd.partition('  #')
-    result = run(f'cd {folder}; {cmd}; pwd',
+    result = run(f'export PYTHONPATH={pypath}; cd {folder}; {cmd}; pwd',
                  shell=True, check=True, stdout=PIPE)
     output = result.stdout.decode().splitlines()
     folder = output.pop()
@@ -88,7 +90,6 @@ def compare(t1, t2):
 
 @test
 def run_rst():
-    from myqueue.docs import run_document
     dir = Path(__file__).parent / '../../docs'
     f = Path('.myqueue/queue.json')
     if f.is_file():

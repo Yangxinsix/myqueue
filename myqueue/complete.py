@@ -109,7 +109,7 @@ def complete(word, previous, line, point):
         words = {str(task['id']) for task in dct['tasks']}
 
     elif command == 'test':
-        from myqueue.test.tests import all_tests as words
+        from myqueue.test.testrunner import all_tests as words
 
     elif command == 'help':
         words = [cmd for cmd in commands if cmd != 'help']

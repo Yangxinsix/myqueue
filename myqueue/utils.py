@@ -108,6 +108,7 @@ def update_completion(test=False) -> None:
     # Path of the complete.py script:
     dir = Path(__file__).parent
 
+    fd = sys.stdout
     sys.stdout = StringIO()
 
     print('\n.. list-table::')
@@ -132,7 +133,7 @@ def update_completion(test=False) -> None:
     txt = sys.stdout.getvalue()
     txt = txt.replace(':\n\n    ', '::\n\n    ')
     newlines = txt.splitlines()
-    sys.stdout = sys.__stdout__
+    sys.stdout = fd
 
     n = 0
     while n < len(newlines):
@@ -153,15 +154,15 @@ def update_completion(test=False) -> None:
             n += len(L)
         n += 1
 
-    readme = dir / '..' / 'docs' / 'cli.rst'
+    cli = dir / '..' / 'docs' / 'cli.rst'
 
-    lines = readme.read_text().splitlines()
+    lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines), readme
+        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines), cli
     else:
         lines[a + 1:] = newlines
-        readme.write_text('\n'.join(lines) + '\n')
+        cli.write_text('\n'.join(lines) + '\n')
 
     filename = dir / 'complete.py'
 
