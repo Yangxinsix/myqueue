@@ -5,6 +5,8 @@ from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
 
+from .testrunner import test
+
 user = os.environ.get('USER', 'root')
 
 
@@ -82,6 +84,22 @@ def compare(t1, t2):
     print('\n'.join(t2))
     print('>>>>>>>>>>>')
     return 1
+
+
+@test
+def run_rst():
+    from myqueue.docs import run_document
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 13}')
+    p = Path('prime')
+    p.mkdir()
+    for f in dir.glob('prime/*.*'):
+        (p / f.name).write_text(f.read_text())
+    time.sleep(1)
+    run_document(dir / 'workflows.rst', test=True)
 
 
 if __name__ == '__main__':
