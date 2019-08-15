@@ -120,7 +120,6 @@ def run_tests(tests: List[str],
     tmpdir.rmdir()
 
 
-import myqueue.test.mq
-import myqueue.test.more
-import myqueue.test.docs
-
+import myqueue.test.mq  # noqa
+import myqueue.test.more  # noqa
+import myqueue.test.docs  # noqa
