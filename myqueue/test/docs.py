@@ -71,7 +71,7 @@ def clean(line):
     line = re.sub(r'[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', '############', line)
     line = re.sub(r' 0:[0-9][0-9]', ' 0:##', line)
     line = re.sub(r'[rw.-]{10,11}', '##########', line)
-    line = re.sub(r' total \d+', ' ##### #', line)
+    line = re.sub(r' tot\w+ \d+', ' ##### #', line)
     line = re.sub(rf' {user} \w+ ', ' jensj ##### ', line)
     line = re.sub(r' jensj jensj ', ' jensj ##### ', line)
     return line
