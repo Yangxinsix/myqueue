@@ -1,3 +1,4 @@
+import shutil
 import time
 from pathlib import Path
 
@@ -12,9 +13,7 @@ def submit():
     mq('submit shell:echo+hello -d time@sleep+2')
     wait()
     assert states() == 'ddd'
-    for p in f.glob('time@sleep+2.*.???'):
-        p.unlink()
-    f.rmdir()
+    shutil.rmtree(f)
     mq('sync')
     assert states() == 'dd'
 

@@ -48,8 +48,6 @@ class Runner(Lock):
         self.verbosity = verbosity
         self.need_lock = need_lock
 
-        self.debug = os.environ.get('MYQUEUE_DEBUG', '')
-
         self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
 
@@ -337,7 +335,7 @@ class Runner(Lock):
         for task in tasks:
             remove(task)
 
-        return list(set(removed))
+        return sorted(set(removed), key=lambda task: task.id)
 
     def modify(self,
                selection: Selection,

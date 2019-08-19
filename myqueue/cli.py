@@ -158,6 +158,7 @@ def main(arguments: List[str] = None) -> Any:
               help='Use specific config.py file.')
             a('-x', '--exclude',
               help='Exclude test(s).')
+            a('-u', '--update-source-code', action='store_true')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -292,7 +293,8 @@ def main(arguments: List[str] = None) -> Any:
         from myqueue.test.testrunner import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
-        run_tests(args.test, config, exclude, args.verbose)
+        run_tests(args.test, config, exclude, args.verbose,
+                  args.update_source_code)
         return
 
     if args.command == 'completion':

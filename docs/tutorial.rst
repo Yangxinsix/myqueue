@@ -37,50 +37,73 @@ Abbreviations: q, h, r, d, F, C, M and T.
 Examples
 ========
 
-Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
+* Sleep for 2 seconds on 1 core using the :func:`time.sleep()` Python
+  function::
 
-    $ mq submit script.py -R 8:10h folder1/ folder2/
+    $ mq submit "time@sleep 2" -R 1:1m
+    1 ./ time@sleep+2 1:1m
+    1 task submitted
 
-Sleep for 25 seconds on 1 core using the ``time.sleep()`` function::
+* Run the ``echo hello`` shell command in two folders
+  (using the defaults of 1 core for 10 minutes)::
 
-    $ mq submit "time@sleep 25" -R 1:1m
+    $ mkdir f1 f2
+    $ mq submit "shell:echo hello" f1/ f2/
+    2 ./f1/ shell:echo+hello 1:10m
+    3 ./f2/ shell:echo+hello 1:10m
+    2 tasks submitted
 
-Say "hello" (using the defaults of 1 core for 10 minutes)::
+* Run ``script.py`` on 8 cores for 10 hours::
 
-    $ mq submit "shell:echo hello"
+    $ echo "x = 1 / 0" > script.py
+    $ mq submit script.py -R 8:10h
+    4 ./ script.py 8:10h
+    1 task submitted
 
 You can see the status of your jobs with::
 
     $ mq list
-    id folder name             res.   age state time error
-    -- ------ ---------------- ----- ---- ----- ---- -----
-    1  ~      shell:echo+hello 1:10m 0:06 done  0:00
-    -- ------ ---------------- ----- ---- ----- ---- -----
-    done: 1
+    id folder name             res.   age state  time error
+    -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
+    1  ./     time@sleep+2     1:1m  0:04 done   0:02
+    2  ./f1/  shell:echo+hello 1:10m 0:01 done   0:00
+    3  ./f2/  shell:echo+hello 1:10m 0:01 done   0:00
+    4  ./     script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
+    -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
+    done: 3, FAILED: 1, total: 4
 
-Remove the job from the list with::
+Remove the failed and done jobs from the list with::
 
-    $ mq remove -s d .
+    $ mq remove -s Fd -r .
+    1 ./    time@sleep+2     1:1m  0:04 done   0:02
+    2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
+    3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
+    4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
+    4 tasks removed
 
-The output from the job will be in ``~/shell:echo+hello.1.out`` and
-``~/shell:echo+hello.1.err`` (if there was any output).
+The output from files from a task will look like this::
 
-::
-
-    $ cat shell:echo+hello.1.out
+    $ ls -l f2
+    total 4
+    -rw-r--r-- 1 jensj jensj 0 Aug 19 14:57 shell:echo+hello.3.err
+    -rw-r--r-- 1 jensj jensj 6 Aug 19 14:57 shell:echo+hello.3.out
+    $ cat f2/shell:echo+hello.3.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
 
-    $ mq submit shell:sleep+3000 -R 1:30m
-    ...
+    $ mq submit "shell:sleep 4" -R 1:2s
+    5 ./ shell:sleep+4 1:10m
+    1 task submitted
     $ mq list
-    id folder name             res.   age state   time  error
-    -- ------ ---------------- ----- ---- ------- ----- -----
-    2  ~      shell:sleep+3000 1:30m 1:16 TIMEOUT 50:00
-    -- ------ ---------------- ----- ---- ------- ----- -----
-    TIMEOUT: 1
-    $ mq resubmit -i 2 -R 1:1h
+    id folder name          res.  age state   time error
+    -- ------ ------------- ---- ---- ------- ---- -----
+    5  ./     shell:sleep+4 1:10m 0:02 TIMEOUT 0:02
+    -- ------ ------------- ---- ---- ------- ---- -----
+    TIMEOUT: 1, total: 1
+    $ mq resubmit -i 5 -R 1:1m
+    6 ./ shell:sleep+4 1:1m
+    1 task submitted
 
 
 .. _resources:
