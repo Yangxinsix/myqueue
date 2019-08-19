@@ -7,7 +7,6 @@ import time
 from typing import List, Optional
 from pathlib import Path
 
-import myqueue.runner
 from myqueue.cli import main
 from myqueue.config import initialize_config
 
@@ -27,6 +26,12 @@ all_tests = {}
 def test(func):
     all_tests[func.__name__] = func
     return func
+
+
+def find_tests():
+    import myqueue.test.mq  # noqa
+    import myqueue.test.more  # noqa
+    import myqueue.test.docs  # noqa
 
 
 def states():
@@ -49,9 +54,13 @@ def run_tests(tests: List[str],
               verbose: bool,
               update_source_code: bool) -> None:
 
+    import myqueue.runner
+
     global LOCAL, UPDATE
     LOCAL = config_file is None
     UPDATE = update_source_code
+
+    find_tests()
 
     if LOCAL:
         tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-'))
@@ -121,8 +130,3 @@ def run_tests(tests: List[str],
 
     (tmpdir / '.myqueue').rmdir()
     tmpdir.rmdir()
-
-
-import myqueue.test.mq  # noqa
-import myqueue.test.more  # noqa
-import myqueue.test.docs  # noqa

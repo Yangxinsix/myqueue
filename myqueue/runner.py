@@ -337,7 +337,7 @@ class Runner(Lock):
         for task in tasks:
             remove(task)
 
-        return list(set(removed))
+        return sorted(set(removed), key=lambda task: task.id)
 
     def modify(self,
                selection: Selection,

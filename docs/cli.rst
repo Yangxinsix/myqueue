@@ -461,8 +461,8 @@ optional arguments:
 Test: Run tests
 ---------------
 
-usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-z] [-v] [-q]
-               [-T]
+usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-z] [-v]
+               [-q] [-T]
                [test [test ...]]
 
 Run tests.
@@ -478,6 +478,7 @@ optional arguments:
                         Use specific config.py file.
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude test(s).
+  -u, --update-source-code
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.

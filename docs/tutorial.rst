@@ -75,18 +75,18 @@ You can see the status of your jobs with::
 Remove the failed and done jobs from the list with::
 
     $ mq remove -s Fd -r .
+    1 ./    time@sleep+2     1:1m  0:04 done   0:02
     2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
     3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
     4 ./    script.py        8:10h 0:01 FAILED 0:00 --------------------------------------------------------------------------
-    1 ./    time@sleep+2     1:1m  0:04 done   0:02
     4 tasks removed
 
 The output from files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Aug 19 13:38 shell:echo+hello.3.err
-    -rw-r--r-- 1 jensj jensj 6 Aug 19 13:38 shell:echo+hello.3.out
+    -rw-r--r-- 1 jensj jensj 0 Aug 19 14:18 shell:echo+hello.3.err
+    -rw-r--r-- 1 jensj jensj 6 Aug 19 14:18 shell:echo+hello.3.out
     $ cat f2/shell:echo+hello.3.out
     hello
 

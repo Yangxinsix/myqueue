@@ -34,9 +34,9 @@ There is now an output file and an empty error file in the folder::
 
     $ ls -ltr
     total 8
-    -rw-r--r-- 1 jensj jensj 22 Aug 19 13:53 hello.py
-    -rw-r--r-- 1 jensj jensj  0 Aug 19 13:53 hello.py.1.err
-    -rw-r--r-- 1 jensj jensj 13 Aug 19 13:53 hello.py.1.out
+    -rw-r--r-- 1 jensj jensj 22 Aug 19 14:30 hello.py
+    -rw-r--r-- 1 jensj jensj  0 Aug 19 14:30 hello.py.1.err
+    -rw-r--r-- 1 jensj jensj 13 Aug 19 14:30 hello.py.1.out
     $ cat hello.py.1.out
     Hello world!
 
@@ -93,8 +93,8 @@ Once you have seen that your tasks have finished, you will typically remove
 them so that only queued and failed tasks are left::
 
     $ mq rm -s d proj*
-    2 ./proj2/ math@sin+3.14 1:10s 0:02 done 0:00
     1 ./proj1/ hello.py      1:10m 0:05 done 0:00
+    2 ./proj2/ math@sin+3.14 1:10s 0:02 done 0:00
     2 tasks removed
 
 .. tip::
