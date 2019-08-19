@@ -37,17 +37,21 @@ Abbreviations: q, h, r, d, F, C, M and T.
 Examples
 ========
 
-Run ``script.py`` on 8 cores for 10 hours in ``folder1`` and ``folder2``::
-
-    $ mq submit script.py folder1/ folder2/ -R 8:10h
-
-Sleep for 2 seconds on 1 core using the :func:`time.sleep()` function::
+* Sleep for 2 seconds on 1 core using the :func:`time.sleep()` Python
+  function::
 
     $ mq submit "time@sleep 2" -R 1:1m
 
-Say "hello" (using the defaults of 1 core for 10 minutes)::
+* Run the ``echo hello`` shell command in two folders
+  (using the defaults of 1 core for 10 minutes)::
 
-    $ mq submit "shell:echo hello"
+    $ mkdir f1 f2
+    $ mq submit "shell:echo hello" f1/ f2/
+
+* Run ``script.py`` on 8 cores for 10 hours::
+
+    $ echo "x = 1 / 0" > script.py
+    $ mq submit script.py -R 8:10h
 
 You can see the status of your jobs with::
 
@@ -58,21 +62,19 @@ You can see the status of your jobs with::
     -- ------ ---------------- ----- ---- ----- ---- -----
     done: 1
 
-Remove the job from the list with::
+Remove the failed and done jobs from the list with::
 
-    $ mq remove -s d .
+    $ mq remove -s Fd .
 
-The output from the job will be in ``~/shell:echo+hello.1.out`` and
-``~/shell:echo+hello.1.err`` (if there was any output).
+The output from files from a task will look like this::
 
-::
-
-    $ cat shell:echo+hello.1.out
+    $ ls -l f2
+    $ cat f2/shell:echo+hello.3.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
 
-    $ mq submit "shell:sleep 3000" -R 1:30m
+    $ mq submit "shell:sleep 4" -R 1:2s
     ...
     $ mq list
     id folder name             res.   age state   time  error
@@ -80,7 +82,7 @@ If a job fails or times out, then you can resubmit it with more resources::
     2  ~      shell:sleep+3000 1:30m 1:16 TIMEOUT 50:00
     -- ------ ---------------- ----- ---- ------- ----- -----
     TIMEOUT: 1
-    $ mq resubmit -i 2 -R 1:1h
+    $ mq resubmit -i 5 -R 1:1m
 
 
 .. _resources:

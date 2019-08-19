@@ -91,7 +91,7 @@ def compare(t1, t2):
 
 
 @test
-def run_rst():
+def docs_workflows():
     dir = Path(__file__).parent / '../../docs'
     f = Path('.myqueue/queue.json')
     if f.is_file():
@@ -103,6 +103,16 @@ def run_rst():
         (p / f.name).write_text(f.read_text())
     time.sleep(1)
     run_document(dir / 'workflows.rst', test=True)
+
+
+@test
+def docs_tutorial():
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
+    run_document(dir / 'tutorial.rst', test=True)
 
 
 if __name__ == '__main__':
