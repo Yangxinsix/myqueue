@@ -87,7 +87,7 @@ def run_tests(tests: List[str],
     (tmpdir / '.myqueue' / 'config.py').write_text(txt)
     initialize_config(tmpdir)
 
-    os.environ['MYQUEUE_DEBUG'] = 'yes'
+    os.environ['MYQUEUE_TESTING'] = 'yes'
 
     for test in exclude:
         tests.remove(test)

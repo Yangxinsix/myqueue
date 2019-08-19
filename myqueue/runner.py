@@ -48,8 +48,6 @@ class Runner(Lock):
         self.verbosity = verbosity
         self.need_lock = need_lock
 
-        self.debug = os.environ.get('MYQUEUE_DEBUG', '')
-
         self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
 

@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -149,7 +150,6 @@ class LocalQueue(Queue, Lock):
         else:
             return
 
-        import os
         sys.stdout.flush()
         pid = os.fork()
         if pid == 0:
@@ -176,8 +176,10 @@ class LocalQueue(Queue, Lock):
         out = f'{task.name}.out'
         err = f'{task.name}.err'
 
+        testing = os.environ.get('MYQUEUE_TESTING')
+
         cmd = str(task.cmd)
-        if task.resources.processes > 1:
+        if task.resources.processes > 1 and not testing:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
