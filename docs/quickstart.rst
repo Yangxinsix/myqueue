@@ -32,11 +32,11 @@ The :ref:`list <list>` command shows that the job is done::
 The ``1:10m`` means that 1 core and 10 minutes was reserved for the task.
 There is now an output file and an empty error file in the folder::
 
-    $ ls -ltr
+    $ ls -l
     total 8
-    -rw-r--r-- 1 jensj jensj 22 Aug 19 14:30 hello.py
-    -rw-r--r-- 1 jensj jensj  0 Aug 19 14:30 hello.py.1.err
-    -rw-r--r-- 1 jensj jensj 13 Aug 19 14:30 hello.py.1.out
+    -rw-r--r-- 1 jensj jensj 22 Aug 19 15:10 hello.py
+    -rw-r--r-- 1 jensj jensj  0 Aug 19 15:10 hello.py.1.err
+    -rw-r--r-- 1 jensj jensj 13 Aug 19 15:10 hello.py.1.out
     $ cat hello.py.1.out
     Hello world!
 
