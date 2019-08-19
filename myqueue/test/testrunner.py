@@ -45,7 +45,8 @@ def wait() -> None:
 def run_tests(tests: List[str],
               config_file: Optional[Path],
               exclude: List[str],
-              verbose: bool) -> None:
+              verbose: bool,
+              update_source_code: bool) -> None:
 
     global LOCAL
     LOCAL = config_file is None
