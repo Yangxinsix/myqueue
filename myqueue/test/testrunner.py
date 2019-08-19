@@ -12,6 +12,7 @@ from myqueue.cli import main
 from myqueue.config import initialize_config
 
 LOCAL = True
+update_source_code = False
 
 
 def mq(cmd):
@@ -48,8 +49,9 @@ def run_tests(tests: List[str],
               verbose: bool,
               update_source_code: bool) -> None:
 
-    global LOCAL
+    global LOCAL, UPDATE
     LOCAL = config_file is None
+    UPDATE = update_source_code
 
     if LOCAL:
         tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-'))

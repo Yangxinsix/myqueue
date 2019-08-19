@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
 
+import myqueue.test.testrunner as testrunner
 from .testrunner import test, wait
 
 user = os.environ.get('USER', 'root')
@@ -50,10 +51,11 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
+    if testrunner.UPDATE:
+        path.write_text('\n'.join(lines) + '\n')
+
     if test:
         assert errors == 0
-    else:
-        path.write_text('\n'.join(lines) + '\n')
 
 
 def run_command(cmd: str,
@@ -115,6 +117,11 @@ def docs_tutorial():
     run_document(dir / 'tutorial.rst', test=True)
 
 
-if __name__ == '__main__':
-    import sys
-    run_document(Path(sys.argv[1]))
+@test
+def docs_quickstart():
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
+    run_document(dir / 'quickstart.rst', test=True)

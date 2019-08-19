@@ -294,7 +294,7 @@ def main(arguments: List[str] = None) -> Any:
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
         run_tests(args.test, config, exclude, args.verbose,
-                  args.updage_source_code)
+                  args.update_source_code)
         return
 
     if args.command == 'completion':
