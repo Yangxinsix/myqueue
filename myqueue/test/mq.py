@@ -131,3 +131,9 @@ def check_dependency_order():
     mq('kick')
     wait()
     assert states() == 'dd'
+
+
+@test
+def run():
+    mq('run "math@sin 3.14" . -z')
+    mq('run "math@sin 3.14" .')
