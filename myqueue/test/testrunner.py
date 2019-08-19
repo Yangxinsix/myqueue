@@ -11,7 +11,7 @@ from myqueue.cli import main
 from myqueue.config import initialize_config
 
 LOCAL = True
-update_source_code = False
+UPDATE = False
 
 
 def mq(cmd):
