@@ -37,7 +37,7 @@ def fail2():
     mq('submit time@sleep+a --workflow')
     wait()
     assert states() == 'F'
-    mq('remove --state F .')
+    mq('remove --states F .')
     mq('submit time@sleep+a --workflow')
     wait()
     assert states() == ''

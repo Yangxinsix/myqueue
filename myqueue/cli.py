@@ -134,9 +134,13 @@ def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
-        description=main_description)
+        description=main_description,
+        allow_abbrev=False)
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
+
+    short_options: Dict[str, int] = {}
+    long_options: Dict[str, int] = {}
 
     for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
@@ -145,7 +149,17 @@ def main(arguments: List[str] = None) -> Any:
                                   formatter_class=Formatter,
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
-        a = p.add_argument
+
+        def a(*args, **kwargs):
+            x = p.add_argument(*args, **kwargs)
+            if x is None:
+                return
+            for o in x.option_strings:
+                nargs = x.nargs if x.nargs is not None else 1
+                if o.startswith('--'):
+                    long_options[o] = nargs
+                else:
+                    short_options[o[1]] = nargs
 
         if cmd == 'help':
             a('cmd', nargs='?', help='Subcommand.')
@@ -268,7 +282,8 @@ def main(arguments: List[str] = None) -> Any:
               nargs='?',
               help='Show task from this folder.  Defaults to current folder.')
 
-    args = parser.parse_args(arguments or sys.argv[1:])
+    arguments = arguments or sys.argv[1:]
+    args = parser.parse_args(fix(arguments, short_options, long_options))
 
     args.command = aliases.get(args.command, args.command)
 
@@ -542,3 +557,35 @@ class Formatter(argparse.HelpFormatter):
                 out += textwrap.fill(block, width=width) + '\n'
             out += '\n'
         return out[:-1]
+
+
+def fix(arguments, short_options, long_options):
+    args1 = []
+    args2 = []
+    i = 0
+    while i < len(arguments):
+        a = arguments[i]
+        if a == '--':
+            args2 += arguments[i:]
+            break
+        if a in long_options:
+            n = long_options[a]
+            args2 += arguments[i:i + 1 + n]
+            i += n
+        elif a.startswith('--') and '=' in a:
+            args2.append(a)
+        elif a.startswith('-'):
+            for j, b in enumerate(a[1:]):
+                n = short_options.get(b, 0)
+                if n:
+                    if j < len(a) - 2:
+                        n = 0
+                    args2 += arguments[i:i + 1 + n]
+                    i += n
+                    break
+            else:
+                args2.append(a)
+        else:
+            args1.append(a)
+        i += 1
+    return args1 + args2
