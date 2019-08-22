@@ -571,8 +571,8 @@ def fix_option_order(arguments: List[str],
                      short_options: Dict[str, int],
                      long_options: Dict[str, int]) -> List[str]:
     """Allow intermixed options and arguments."""
-    args1 = []
-    args2 = []
+    args1: List[str] = []
+    args2: List[str] = []
     i = 0
     while i < len(arguments):
         a = arguments[i]

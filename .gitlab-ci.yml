@@ -4,6 +4,6 @@ tests:
     - pip install flake8 mypy coverage
     - pip install -e .
     - coverage run -m myqueue test -v
-    - coverage report -i --fail-under=72
+    - coverage report -i --fail-under=74
     - mypy -p myqueue
     - flake8 myqueue
