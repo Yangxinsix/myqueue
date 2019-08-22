@@ -6,6 +6,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 19.8.0
+==============
+
 * The ``module:function`` syntax has been changed to ``module@function``.
 * Arguments to tasks are now specified like this::
 
