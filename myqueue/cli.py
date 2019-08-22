@@ -151,6 +151,11 @@ def main(arguments: List[str] = None) -> Any:
                                            if aliases[alias] == cmd])
 
         def a(*args, **kwargs):
+            """Wrapper for Parser.add_argument().
+
+            Hack to fix argparse's handling of options.  See
+            fix_option_order() function below."""
+
             x = p.add_argument(*args, **kwargs)
             if x is None:
                 return
@@ -282,8 +287,10 @@ def main(arguments: List[str] = None) -> Any:
               nargs='?',
               help='Show task from this folder.  Defaults to current folder.')
 
-    arguments = arguments or sys.argv[1:]
-    args = parser.parse_args(fix(arguments, short_options, long_options))
+    args = parser.parse_args(
+        fix_option_order(arguments or sys.argv[1:],
+                         short_options,
+                         long_options))
 
     args.command = aliases.get(args.command, args.command)
 
@@ -327,6 +334,7 @@ def main(arguments: List[str] = None) -> Any:
     try:
         results = run(args)
         if arguments:
+            # We are being called from the test runner:
             return results
     except KeyboardInterrupt:
         pass
@@ -559,7 +567,10 @@ class Formatter(argparse.HelpFormatter):
         return out[:-1]
 
 
-def fix(arguments, short_options, long_options):
+def fix_option_order(arguments: List[str],
+                     short_options: Dict[str, int],
+                     long_options: Dict[str, int]) -> List[str]:
+    """Allow intermixed options and arguments."""
     args1 = []
     args2 = []
     i = 0
