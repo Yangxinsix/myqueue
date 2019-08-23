@@ -13,11 +13,11 @@ setup(name='myqueue',
       long_description=long_description,
       author='J. J. Mortensen',
       author_email='jjmo@dtu.dk',
-      url='https://gitlab.com/jensj/myqueue',
+      url='https://myqueue.readthedocs.io/',
       packages=find_packages(),
       entry_points={'console_scripts': ['mq = myqueue.cli:main']},
       classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable'
           'Environment :: Console',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: '
@@ -26,4 +26,4 @@ setup(name='myqueue',
           'Programming Language :: Python :: 3 :: Only',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
-          'Topic :: Text Editors :: Text Processing'])  # ???
+          'Topic :: Scientific/Engineering'])
