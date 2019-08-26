@@ -1,3 +1,4 @@
+"""Useful utilities."""
 import errno
 import os
 import sys
@@ -10,6 +11,7 @@ from pathlib import Path
 
 @contextmanager
 def chdir(folder: Path) -> Generator:
+    """Temporarily change directory."""
     dir = os.getcwd()
     os.chdir(str(folder))
     yield
@@ -35,11 +37,13 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 
 class Lock:
+    """File lock."""
     def __init__(self, name: Path) -> None:
         self.lock = name
         self.locked = False
 
     def acquire(self):
+        """Wait for lock to become available and then acquire it."""
         delta = 0.1
         while True:
             fd = opencew(str(self.lock))
@@ -50,6 +54,7 @@ class Lock:
         self.locked = True
 
     def release(self):
+        """Release lock."""
         if self.locked:
             self.lock.unlink()
             self.locked = False
@@ -63,6 +68,7 @@ class Lock:
 
 
 def lock(method):
+    """File lock decarator for a method."""
     def m(self, *args, **kwargs):
         with self:
             return method(self, *args, **kwargs)
@@ -70,6 +76,7 @@ def lock(method):
 
 
 def is_inside(path1: Path, path2: Path) -> bool:
+    """Check if path1 is inside path2."""
     try:
         path1.relative_to(path2)
     except ValueError:
@@ -209,9 +216,9 @@ def update_completion(test=False) -> None:
     for command, opts in sorted(dct.items()):
         txt += "\n    '" + command + "':\n        ["
         txt += '\n'.join(textwrap.wrap("'" + "', '".join(opts) + "'],",
-                         width=65,
-                         break_on_hyphens=False,
-                         subsequent_indent='         '))
+                                       width=65,
+                                       break_on_hyphens=False,
+                                       subsequent_indent='         '))
     txt = txt[:-1] + '}'
 
     lines = filename.read_text().splitlines()

@@ -26,12 +26,26 @@ use_color = sys.stdout.isatty()
 
 
 class Selection:
+    """Object used for selecting tasks."""
+
     def __init__(self,
                  ids: Optional[Set[int]],
                  name: str,
                  states: Set[str],
                  folders: List[Path],
                  recursive: bool):
+        """Selection.
+
+        Selections is based on:
+
+            ids
+
+        or:
+
+            any combination of name, state, folder.
+
+        Use recursive=True to allow for tasks inside a folder.
+        """
         self.ids = ids
         self.name = name
         self.states = states
@@ -44,6 +58,7 @@ class Selection:
 
 
 class Runner(Lock):
+    """Object for interacting with the queue."""
     def __init__(self, verbosity: int = 1, need_lock: bool = True):
         self.verbosity = verbosity
         self.need_lock = need_lock
@@ -61,6 +76,7 @@ class Runner(Lock):
 
     @property
     def queue(self) -> Queue:
+        """Queue object."""
         if self._queue is None:
             queuename = config.get('queue')
             if queuename is None:
@@ -93,6 +109,7 @@ class Runner(Lock):
              columns: str,
              sort: str = None,
              reverse: bool = False) -> List[Task]:
+        """Pretty print list of tasks."""
         self._read()
         tasks = self.select(selection)
         if sort:
@@ -101,6 +118,7 @@ class Runner(Lock):
         return tasks
 
     def info(self, id: int):
+        """Print information about a single task."""
         self._read()
         task = self.select(Selection({id}, '', set(), [], False))[0]
         print(json.dumps(task.todict(), indent='    '))
@@ -124,7 +142,7 @@ class Runner(Lock):
                tasks: List[Task],
                dry_run: bool = False,
                read: bool = True) -> None:
-
+        """Submit tasks to queue."""
         tasks2 = []
         done = set()
         for task in tasks:
@@ -252,6 +270,7 @@ class Runner(Lock):
     def run(self,
             tasks: List[Task],
             dry_run: bool = False) -> None:
+        """Run tasks locally."""
         if dry_run:
             for task in tasks:
                 print(f'{task.folder}: {task.cmd}')
@@ -259,6 +278,7 @@ class Runner(Lock):
             run_tasks(tasks)
 
     def select(self, s: Selection) -> List[Task]:
+        """Filter tasks acording to selection object."""
         if s.ids is not None:
             return [task for task in self.tasks if task.id in s.ids]
 
@@ -299,6 +319,7 @@ class Runner(Lock):
             self.changed = True
 
     def sync(self, dry_run: bool) -> None:
+        """Syncronize queue with the real world."""
         self._read()
         in_the_queue = ['running', 'hold', 'queued']
         ids = self.queue.get_ids()
@@ -319,6 +340,7 @@ class Runner(Lock):
                 print(plural(len(remove), 'job'), 'removed')
 
     def find_depending(self, tasks: List[Task]):
+        """Generate list of tasks including dependencies."""
         map = {task.dname: task for task in self.tasks}
         d: Dict[Task, List[Task]] = defaultdict(list)
         for task in self.tasks:
@@ -343,6 +365,7 @@ class Runner(Lock):
                selection: Selection,
                newstate: str,
                dry_run: bool) -> None:
+        """Modify task(s)."""
         self._read()
         tasks = self.select(selection)
 
@@ -373,7 +396,7 @@ class Runner(Lock):
                  selection: Selection,
                  dry_run: bool,
                  resources: Resources) -> None:
-
+        """Resubmit failed or timed-out tasks."""
         self._read()
         tasks = []
         for task in self.select(selection):
@@ -494,6 +517,7 @@ class Runner(Lock):
                     self.changed = True
 
     def kick(self, dry_run=False) -> int:
+        """Restart timed-out and out-of-memory tasks."""
         self._read()
         tasks = []
         for task in self.tasks:
