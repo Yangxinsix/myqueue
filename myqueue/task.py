@@ -281,9 +281,9 @@ class Task:
         dry_run: bool
             Don't actually submit the task.
         """
-        from .runner import Runner
-        with Runner(verbosity) as runner:
-            runner.submit([self], dry_run)
+        from .queue import Queue
+        with Queue(verbosity) as queue:
+            queue.submit([self], dry_run)
 
     def cancel_dependents(self, tasks: List['Task'], t: float) -> None:
         for tsk in tasks:

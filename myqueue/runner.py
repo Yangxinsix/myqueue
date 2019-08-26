@@ -1,4 +1,4 @@
-"""Runner class for interacting with the queue.
+"""Queue class for interacting with the queue.
 
 File format versions:
 
@@ -57,7 +57,7 @@ class Selection:
                 f'{self.folders}, {self.recursive})')
 
 
-class Runner(Lock):
+class Queue(Lock):
     """Object for interacting with the scheduler."""
     def __init__(self, verbosity: int = 1, need_lock: bool = True):
         self.verbosity = verbosity

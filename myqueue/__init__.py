@@ -19,9 +19,9 @@ def submit(*tasks: List['Task'], verbosity: int = 1, dry_run: bool = False):
     dry_run: bool
         Don't actually submit the task.
     """
-    from .runner import Runner
+    from .queue import Queue
     from .config import initialize_config
     from pathlib import Path
     initialize_config(Path('.').resolve())
-    with Runner(verbosity) as runner:
-        runner.submit(tasks, dry_run)
+    with Queue(verbosity) as queue:
+        queue.submit(tasks, dry_run)

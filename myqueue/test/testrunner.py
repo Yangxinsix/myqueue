@@ -55,7 +55,7 @@ def run_tests(tests: List[str],
               verbose: bool,
               update_source_code: bool) -> None:
 
-    import myqueue.runner
+    import myqueue.queue
 
     global LOCAL, UPDATE
     LOCAL = config_file is None
@@ -69,7 +69,7 @@ def run_tests(tests: List[str],
         tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
                                        dir=str(Path.home())))
 
-    myqueue.runner.use_color = False
+    myqueue.queue.use_color = False
 
     print(f'Running tests in {tmpdir}:')
     os.chdir(str(tmpdir))
