@@ -40,9 +40,11 @@ We put the three Python files in a ``prime/`` folder::
     -rw-rw-r-- 1 jensj jensj 387 Aug 14 21:50 factor.py
     -rw-rw-r-- 1 jensj jensj 166 Aug 14 21:50 workflow.py
 
-and add that folder to ``$PYTHONPATH`` so that Python can find the files::
+Make sure Python can find the files by adding this line::
 
-    $ echo "export PYTHONPATH=$PWD:\$PYTHONPATH" >> ~/.bash_profile
+    export PYTHONPATH=~/path/to/prime/:$PYTHONPATH
+
+to your ``~/.bash_profile`` file.
 
 Create some folders::
 

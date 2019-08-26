@@ -134,9 +134,13 @@ def main(arguments: List[str] = None) -> Any:
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
-        description=main_description)
+        description=main_description,
+        allow_abbrev=False)
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
+
+    short_options: Dict[str, int] = {}
+    long_options: Dict[str, int] = {}
 
     for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
@@ -145,7 +149,22 @@ def main(arguments: List[str] = None) -> Any:
                                   formatter_class=Formatter,
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
-        a = p.add_argument
+
+        def a(*args, **kwargs):
+            """Wrapper for Parser.add_argument().
+
+            Hack to fix argparse's handling of options.  See
+            fix_option_order() function below."""
+
+            x = p.add_argument(*args, **kwargs)
+            if x is None:
+                return
+            for o in x.option_strings:
+                nargs = x.nargs if x.nargs is not None else 1
+                if o.startswith('--'):
+                    long_options[o] = nargs
+                else:
+                    short_options[o[1]] = nargs
 
         if cmd == 'help':
             a('cmd', nargs='?', help='Subcommand.')
@@ -158,6 +177,7 @@ def main(arguments: List[str] = None) -> Any:
               help='Use specific config.py file.')
             a('-x', '--exclude',
               help='Exclude test(s).')
+            a('-u', '--update-source-code', action='store_true')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -267,7 +287,10 @@ def main(arguments: List[str] = None) -> Any:
               nargs='?',
               help='Show task from this folder.  Defaults to current folder.')
 
-    args = parser.parse_args(arguments or sys.argv[1:])
+    args = parser.parse_args(
+        fix_option_order(arguments or sys.argv[1:],
+                         short_options,
+                         long_options))
 
     args.command = aliases.get(args.command, args.command)
 
@@ -292,7 +315,8 @@ def main(arguments: List[str] = None) -> Any:
         from myqueue.test.testrunner import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
-        run_tests(args.test, config, exclude, args.verbose)
+        run_tests(args.test, config, exclude, args.verbose,
+                  args.update_source_code)
         return
 
     if args.command == 'completion':
@@ -310,6 +334,7 @@ def main(arguments: List[str] = None) -> Any:
     try:
         results = run(args)
         if arguments:
+            # We are being called from the test runner:
             return results
     except KeyboardInterrupt:
         pass
@@ -540,3 +565,38 @@ class Formatter(argparse.HelpFormatter):
                 out += textwrap.fill(block, width=width) + '\n'
             out += '\n'
         return out[:-1]
+
+
+def fix_option_order(arguments: List[str],
+                     short_options: Dict[str, int],
+                     long_options: Dict[str, int]) -> List[str]:
+    """Allow intermixed options and arguments."""
+    args1: List[str] = []
+    args2: List[str] = []
+    i = 0
+    while i < len(arguments):
+        a = arguments[i]
+        if a == '--':
+            args2 += arguments[i:]
+            break
+        if a in long_options:
+            n = long_options[a]
+            args2 += arguments[i:i + 1 + n]
+            i += n
+        elif a.startswith('--') and '=' in a:
+            args2.append(a)
+        elif a.startswith('-'):
+            for j, b in enumerate(a[1:]):
+                n = short_options.get(b, 0)
+                if n:
+                    if j < len(a) - 2:
+                        n = 0
+                    args2 += arguments[i:i + 1 + n]
+                    i += n
+                    break
+            else:
+                args2.append(a)
+        else:
+            args1.append(a)
+        i += 1
+    return args1 + args2

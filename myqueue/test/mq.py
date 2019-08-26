@@ -1,3 +1,4 @@
+import shutil
 import time
 from pathlib import Path
 
@@ -12,9 +13,7 @@ def submit():
     mq('submit shell:echo+hello -d time@sleep+2')
     wait()
     assert states() == 'ddd'
-    for p in f.glob('time@sleep+2.*.???'):
-        p.unlink()
-    f.rmdir()
+    shutil.rmtree(f)
     mq('sync')
     assert states() == 'dd'
 
@@ -40,7 +39,7 @@ def fail2():
     mq('submit time@sleep+a --workflow')
     wait()
     assert states() == 'F'
-    mq('remove --state F .')
+    mq('remove --states F .')
     mq('submit time@sleep+a --workflow')
     wait()
     assert states() == ''
@@ -134,3 +133,9 @@ def check_dependency_order():
     mq('kick')
     wait()
     assert states() == 'dd'
+
+
+@test
+def run():
+    mq('run "math@sin 3.14" . -z')
+    mq('run "math@sin 3.14" .')

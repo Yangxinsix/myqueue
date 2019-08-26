@@ -4,13 +4,17 @@ import time
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
+from unittest import SkipTest
 
+import myqueue.test.testrunner as testrunner
 from .testrunner import test, wait
 
 user = os.environ.get('USER', 'root')
 
 
 def run_document(path: Path, test=False) -> None:
+    if not path.is_file():
+        raise SkipTest
     lines = path.read_text().splitlines()
     blocks: List[Tuple[str, List[str], int]] = []
     n = 0
@@ -50,10 +54,11 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
+    if testrunner.UPDATE:
+        path.write_text('\n'.join(lines) + '\n')
+
     if test:
         assert errors == 0
-    else:
-        path.write_text('\n'.join(lines) + '\n')
 
 
 def run_command(cmd: str,
@@ -71,7 +76,7 @@ def clean(line):
     line = re.sub(r'[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', '############', line)
     line = re.sub(r' 0:[0-9][0-9]', ' 0:##', line)
     line = re.sub(r'[rw.-]{10,11}', '##########', line)
-    line = re.sub(r' total \d+', ' ##### #', line)
+    line = re.sub(r' tot\w+ \d+', ' ##### #', line)
     line = re.sub(rf' {user} \w+ ', ' jensj ##### ', line)
     line = re.sub(r' jensj jensj ', ' jensj ##### ', line)
     return line
@@ -91,7 +96,7 @@ def compare(t1, t2):
 
 
 @test
-def run_rst():
+def docs_workflows():
     dir = Path(__file__).parent / '../../docs'
     f = Path('.myqueue/queue.json')
     if f.is_file():
@@ -105,6 +110,21 @@ def run_rst():
     run_document(dir / 'workflows.rst', test=True)
 
 
-if __name__ == '__main__':
-    import sys
-    run_document(Path(sys.argv[1]))
+@test
+def docs_tutorial():
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
+    run_document(dir / 'tutorial.rst', test=True)
+
+
+@test
+def docs_quickstart():
+    dir = Path(__file__).parent / '../../docs'
+    f = Path('.myqueue/queue.json')
+    if f.is_file():
+        f.unlink()
+    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
+    run_document(dir / 'quickstart.rst', test=True)
