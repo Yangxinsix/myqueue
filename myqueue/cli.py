@@ -312,7 +312,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     if args.command == 'test':
-        from myqueue.test.testqueue import run_tests
+        from myqueue.test.runner import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
         run_tests(args.test, config, exclude, args.verbose,

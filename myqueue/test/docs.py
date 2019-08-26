@@ -6,7 +6,7 @@ from subprocess import run, PIPE
 from typing import List, Tuple
 from unittest import SkipTest
 
-import myqueue.test.runner as testrunner
+import myqueue.test.runner as runner
 from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
