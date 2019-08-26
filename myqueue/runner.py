@@ -321,7 +321,7 @@ class Runner(Lock):
         """Syncronize queue with the real world."""
         self._read()
         in_the_queue = ['running', 'hold', 'queued']
-        ids = self.queue.get_ids()
+        ids = self.scheduler.get_ids()
         remove = []
         for task in self.tasks:
             if task.state in in_the_queue and task.id not in ids:
