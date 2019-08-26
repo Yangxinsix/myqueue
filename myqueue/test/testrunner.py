@@ -4,8 +4,9 @@ import shutil
 import sys
 import tempfile
 import time
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
+from unittest import SkipTest
 
 from myqueue.cli import main
 from myqueue.config import initialize_config
@@ -108,14 +109,16 @@ def run_tests(tests: List[str],
 
         try:
             all_tests[name]()
+        except SkipTest:
+            print('SKIPPED', file=sys.__stdout__)
         except Exception:
             sys.stdout = sys.__stdout__
             print('FAILED')
             raise
+        else:
+            print('OK', file=sys.__stdout__)
 
         mq('rm -s qrdFTCM . -rq')
-
-        print('OK', file=sys.__stdout__)
 
         for f in tmpdir.glob('*'):
             if f.is_file():

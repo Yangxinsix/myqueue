@@ -4,8 +4,9 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-from typing import IO, Union, Generator, List, Dict
 from pathlib import Path
+from typing import IO, Union, Generator, List, Dict
+from unittest import SkipTest
 
 
 @contextmanager
@@ -155,6 +156,9 @@ def update_completion(test=False) -> None:
         n += 1
 
     cli = dir / '..' / 'docs' / 'cli.rst'
+
+    if test and not cli.is_file():
+        raise SkipTest
 
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')

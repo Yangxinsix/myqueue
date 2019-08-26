@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
+from unittest import SkipTest
 
 import myqueue.test.testrunner as testrunner
 from .testrunner import test, wait
@@ -12,6 +13,8 @@ user = os.environ.get('USER', 'root')
 
 
 def run_document(path: Path, test=False) -> None:
+    if not path.is_file():
+        raise SkipTest
     lines = path.read_text().splitlines()
     blocks: List[Tuple[str, List[str], int]] = []
     n = 0
