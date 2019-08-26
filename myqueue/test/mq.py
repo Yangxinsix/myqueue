@@ -2,7 +2,7 @@ import shutil
 import time
 from pathlib import Path
 
-from .testrunner import test, mq, wait, states, LOCAL
+from .runner import test, mq, wait, states, LOCAL
 
 
 @test

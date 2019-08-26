@@ -6,8 +6,8 @@ from subprocess import run, PIPE
 from typing import List, Tuple
 from unittest import SkipTest
 
-import myqueue.test.testrunner as testrunner
-from .testrunner import test, wait
+import myqueue.test.runner as testrunner
+from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
 
@@ -54,7 +54,7 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if testrunner.UPDATE:
+    if runner.UPDATE:
         path.write_text('\n'.join(lines) + '\n')
 
     if test:
