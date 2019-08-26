@@ -10,9 +10,13 @@ Install with ``pip``::
 
     Python 3.6 or later is required.
 
-Enable bash tab-completion like this::
+Enable bash tab-completion for the current terminal session like this::
 
-    $ mq completion -q >> ~/.bashrc
+    $ `mq completion`
+
+or permanently like this::
+
+    $ mq completion >> ~/.profile
 
 Run the tests::
 
