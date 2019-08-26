@@ -82,7 +82,7 @@ def run_tests(tests: List[str],
     if config_file:
         txt = config_file.read_text()
     else:
-        txt = 'config = {}\n'.format({'queue': 'local'})
+        txt = 'config = {}\n'.format({'scheduler': 'local'})
         if 'oom' in tests:
             tests.remove('oom')
     (tmpdir / '.myqueue' / 'config.py').write_text(txt)

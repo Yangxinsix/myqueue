@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Set, List, Dict, Optional  # noqa
 
 from .config import config
-from .queue import get_queue, Queue
+from .scheduler import get_scheduler, Scheduler
 from .resources import Resources
 from .run import run_tasks
 from .task import Task
@@ -58,7 +58,7 @@ class Selection:
 
 
 class Runner(Lock):
-    """Object for interacting with the queue."""
+    """Object for interacting with the scheduler."""
     def __init__(self, verbosity: int = 1, need_lock: bool = True):
         self.verbosity = verbosity
         self.need_lock = need_lock
@@ -68,24 +68,24 @@ class Runner(Lock):
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'))
 
-        self._queue: Optional[Queue] = None
+        self._scheduler: Optional[Scheduler] = None
         self.tasks: List[Task] = []
         self.changed = False
 
     @property
-    def queue(self) -> Queue:
-        """Queue object."""
-        if self._queue is None:
-            queuename = config.get('queue')
-            if queuename is None:
+    def scheduler(self) -> Scheduler:
+        """Scheduler object."""
+        if self._scheduler is None:
+            schedulername = config.get('scheduler')
+            if schedulername is None:
                 home = config['home']
                 raise ValueError(
-                    'Please specify type of queue in your '
+                    'Please specify type of scheduler in your '
                     f'{home}/.myqueue/config.py '
                     "file (must be 'slurm', 'pbs' or 'local').  See "
                     'https://myqueue.rtfd.io/en/latest/configuration.html')
-            self._queue = get_queue(queuename)
-        return self._queue
+            self._scheduler = get_scheduler(schedulername)
+        return self._scheduler
 
     def __enter__(self):
         if self.need_lock:
@@ -244,8 +244,9 @@ class Runner(Lock):
                     todo.append(task)
                 else:
                     try:
-                        self.queue.submit(task,
-                                          activation_scripts.get(task.folder))
+                        self.scheduler.submit(
+                            task,
+                            activation_scripts.get(task.folder))
                     except Exception as x:
                         ex = x
                         break
@@ -258,7 +259,7 @@ class Runner(Lock):
 
             self.tasks += submitted
             self.changed = True
-            self.queue.kick()
+            self.scheduler.kick()
 
             if ex:
                 print('ERROR:', task)
@@ -311,7 +312,7 @@ class Runner(Lock):
                 print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'hold', 'queued']:
-                    self.queue.cancel(task)
+                    self.scheduler.cancel(task)
                 self.tasks.remove(task)
                 task.cancel_dependents(self.tasks, time.time())
             self.changed = True
@@ -372,12 +373,12 @@ class Runner(Lock):
                 if dry_run:
                     print('Release:', task)
                 else:
-                    self.queue.release_hold(task)
+                    self.scheduler.release_hold(task)
             elif task.state == 'queued' and newstate == 'hold':
                 if dry_run:
                     print('Hold:', task)
                 else:
-                    self.queue.hold(task)
+                    self.scheduler.hold(task)
             elif task.state == 'FAILED' and newstate in ['MEMORY', 'TIMEOUT']:
                 if dry_run:
                     print('FAILED ->', newstate, task)
@@ -490,7 +491,7 @@ class Runner(Lock):
             if task.state == 'running':
                 delta = t - task.trunning - task.resources.tmax
                 if delta > 0:
-                    if self.queue.timeout(task) or delta > 1800:
+                    if self.scheduler.timeout(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.tstop = t
                         task.cancel_dependents(self.tasks, t)
@@ -553,7 +554,7 @@ class Runner(Lock):
             for task in self.tasks:
                 if task.state == 'queued':
                     if task.diskspace > 0:
-                        self.queue.hold(task)
+                        self.scheduler.hold(task)
                         task.state = 'hold'
                         self.changed = True
                         mem -= task.diskspace
@@ -562,7 +563,7 @@ class Runner(Lock):
         elif mem < maxmem:
             for task in self.tasks[::-1]:
                 if task.state == 'hold' and task.diskspace > 0:
-                    self.queue.release_hold(task)
+                    self.scheduler.release_hold(task)
                     task.state = 'queued'
                     self.changed = True
                     mem += task.diskspace

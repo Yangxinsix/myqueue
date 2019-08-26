@@ -5,19 +5,19 @@ import sys
 from pathlib import Path
 
 from .config import config, initialize_config
-from .queue import Queue
+from .scheduler import Scheduler
 from .task import Task
 from .utils import Lock, lock
 
 
-class LocalQueue(Queue, Lock):
+class LocalScheduler(Scheduler, Lock):
     def __init__(self):
         self.root = config['home']
         self.fname = config['home'] / '.myqueue' / 'local.json'
         Lock.__init__(self, self.fname.with_name('local.json.lock'))
         self.tasks = []
         self.number = None
-        Queue.__init__(self)
+        Scheduler.__init__(self)
 
     @lock
     def submit(self, task: Task, activation_script: Path = None) -> None:
@@ -203,5 +203,5 @@ if __name__ == '__main__':
     from pathlib import Path
     home, id, state = sys.argv[1:4]
     initialize_config(Path(home))
-    q = LocalQueue()
+    q = LocalScheduler()
     q.update(int(id), state)

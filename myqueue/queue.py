@@ -3,7 +3,7 @@ from typing import Set, Optional
 from myqueue.task import Task
 
 
-class Queue:
+class Scheduler:
     def submit(self, task: Task,
                activation_script: Optional[Path]) -> None:
         pass
@@ -30,11 +30,11 @@ class Queue:
         raise NotImplementedError
 
 
-def get_queue(name: str) -> Queue:
+def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
     if name == 'local':
-        from myqueue.local import LocalQueue
-        return LocalQueue()
+        from myqueue.local import LocalScheduler
+        return LocalScheduler()
     if name == 'slurm':
         from myqueue.slurm import SLURM
         return SLURM()
