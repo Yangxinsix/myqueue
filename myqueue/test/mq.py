@@ -28,6 +28,8 @@ def fail():
     id = mq('list')[0].id
     mq(f'info {id} -v')
     assert states() == 'FCC'
+    mq('resubmit -sF . -z')
+    assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
     assert states() == 'CCF'
