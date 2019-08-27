@@ -14,11 +14,13 @@ def run() -> bool:
     assert not err.is_file()
     if out.is_file():
         age = time() - out.stat().st_mtime
+        if age < 1.5 * T:
+            return False
     else:
-        out.write_text('')
-        age = 2 * T
-    if age < 1.5 * T:
-        return False
+        try:
+            out.touch()
+        except PermissionError:
+            return False
 
     pid = os.fork()
     if pid == 0:
@@ -39,17 +41,32 @@ def run() -> bool:
 
 
 def loop() -> None:
-    # folders
+    dir = out.parent
+
     while not err.is_file():
         sleep(T)
-        # for f in (Path.home() / '.myqueue').glob('daemon-*'):
 
-        result = subprocess.run(f'python3 -m myqueue kick --all >> {out}',
-                                shell=True,
-                                stderr=subprocess.PIPE)
-        if result.returncode:
-            err.write_bytes(result.stderr)
-            break
+        folders = [Path(line)
+                   for line in
+                   (dir / 'folders.txt').read_text().splitlines()]
+
+        newfolders = []
+        for f in folders:
+            if (f / '.myqueue').is_dir():
+                result = subprocess.run(
+                    f'python3 -m myqueue kick {f} >> {out}',
+                    shell=True,
+                    stderr=subprocess.PIPE)
+                if result.returncode:
+                    err.write_bytes(result.stderr)
+                    return
+                newfolders.append(f)
+
+        out.touch()
+
+        if len(newfolders) < len(folders):
+            (dir / 'folders.txt').read_text().splitlines()..........
+
 
 
 if __name__ == '__main__':

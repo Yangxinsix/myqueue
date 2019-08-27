@@ -114,7 +114,7 @@ class Queue(Lock):
              columns: str,
              sort: str = None,
              reverse: bool = False) -> List[Task]:
-        """Pretty print list of tasks."""
+        """Pretty-print list of tasks."""
         self._read()
         tasks = self.select(selection)
         if sort:

@@ -92,8 +92,8 @@ Example:
 """),
     ('kick',
      'Restart T and M tasks (timed-out and out-of-memory).', """
-You can kick the queue manually with "mq kick" or automatically by adding that
-command to a crontab job (can be done with "mq kick --install-crontab-job").
+The queue is kicked automatically every ten minutes - so you don't have
+to do it manually.
 """),
     ('modify',
      'Modify task(s).', """
@@ -277,10 +277,6 @@ def main(arguments: List[str] = None) -> Any:
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
               'Defaults to current folder.')
 
-        if cmd == 'kick':
-            a('--install-crontab-job', action='store_true',
-              help='Install crontab job to kick your queues every half hour.')
-
         if cmd == 'info':
             a('id', type=int, help='Task ID.')
             a('folder',
@@ -378,11 +374,6 @@ def run(args: argparse.Namespace):
         (path / 'folders.txt').write_text('\n'.join(str(folder)
                                                     for folder in folders) +
                                           '\n')
-        return
-
-    if args.command == 'kick' and args.install_crontab_job:
-        from myqueue.crontab import install_crontab_job
-        install_crontab_job(args.dry_run)
         return
 
     folder_names: List[str] = []
