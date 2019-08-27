@@ -6,7 +6,7 @@ from typing import Set
 
 from .task import Task
 from .config import config
-from .queue import Queue
+from .scheduler import Scheduler
 
 
 def mpi_implementation() -> str:
@@ -18,7 +18,7 @@ def mpi_implementation() -> str:
     return 'openmpi'
 
 
-class SLURM(Queue):
+class SLURM(Scheduler):
     def submit(self, task: Task, activation_script: Path = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)

@@ -4,10 +4,10 @@ from pathlib import Path
 
 from .task import Task
 from .config import config
-from .queue import Queue
+from .scheduler import Scheduler
 
 
-class PBS(Queue):
+class PBS(Scheduler):
     def submit(self, task: Task, activation_script: Path = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)

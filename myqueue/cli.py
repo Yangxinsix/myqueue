@@ -312,7 +312,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     if args.command == 'test':
-        from myqueue.test.testrunner import run_tests
+        from myqueue.test.runner import run_tests
         exclude = args.exclude.split(',') if args.exclude else []
         config = Path(args.config_file) if args.config_file else None
         run_tests(args.test, config, exclude, args.verbose,
@@ -334,7 +334,7 @@ def main(arguments: List[str] = None) -> Any:
     try:
         results = run(args)
         if arguments:
-            # We are being called from the test runner:
+            # We are being called from the test queue:
             return results
     except KeyboardInterrupt:
         pass
@@ -355,7 +355,7 @@ def run(args: argparse.Namespace):
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, Task, taskstates
-    from .runner import Runner, Selection, pprint
+    from .queue import Queue, Selection, pprint
     from .utils import get_home_folders
     from .workflow import workflow
 
@@ -463,26 +463,26 @@ def run(args: argparse.Namespace):
         alltasks: List[Task] = []
         for folder in folders:
             initialize_config(folder, force=True)
-            with Runner(verbosity) as runner:
-                runner.tasks = alltasks
-                runner._read()
+            with Queue(verbosity) as queue:
+                queue.tasks = alltasks
+                queue._read()
         if alltasks:
-            alltasks = runner.select(selection)
+            alltasks = queue.select(selection)
             pprint(alltasks, verbosity, args.columns)
         return
 
     if args.command in ['sync', 'kick'] and args.all:
         for folder in get_home_folders():
             initialize_config(folder, force=True)
-            with Runner(verbosity) as runner:
+            with Queue(verbosity) as queue:
                 if args.command == 'sync':
-                    runner.sync(args.dry_run)
+                    queue.sync(args.dry_run)
                 else:
-                    runner.kick(args.dry_run)
+                    queue.kick(args.dry_run)
         return
 
     need_lock = args.command not in ['list', 'info']
-    with Runner(verbosity, need_lock) as runner:
+    with Queue(verbosity, need_lock) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -490,17 +490,17 @@ def run(args: argparse.Namespace):
             else:
                 reverse = False
                 column = None
-            return runner.list(selection, args.columns, column, reverse)
+            return queue.list(selection, args.columns, column, reverse)
 
         if args.command == 'remove':
-            runner.remove(selection, args.dry_run)
+            queue.remove(selection, args.dry_run)
 
         elif args.command == 'resubmit':
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            runner.resubmit(selection, args.dry_run, resources)
+            queue.resubmit(selection, args.dry_run, resources)
 
         elif args.command == 'submit':
             newtasks = [task(args.task,
@@ -512,7 +512,7 @@ def run(args: argparse.Namespace):
                              restart=args.restart)
                         for folder in folders]
 
-            runner.submit(newtasks, args.dry_run)
+            queue.submit(newtasks, args.dry_run)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -521,23 +521,23 @@ def run(args: argparse.Namespace):
                              workflow=args.workflow)
                         for folder in folders]
 
-            runner.run(newtasks, args.dry_run)
+            queue.run(newtasks, args.dry_run)
 
         elif args.command == 'modify':
-            runner.modify(selection, args.newstate, args.dry_run)
+            queue.modify(selection, args.newstate, args.dry_run)
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
-            runner.submit(tasks, args.dry_run)
+            queue.submit(tasks, args.dry_run)
 
         elif args.command == 'sync':
-            runner.sync(args.dry_run)
+            queue.sync(args.dry_run)
 
         elif args.command == 'kick':
-            runner.kick(args.dry_run)
+            queue.kick(args.dry_run)
 
         elif args.command == 'info':
-            runner.info(args.id)
+            queue.info(args.id)
 
         else:
             assert False

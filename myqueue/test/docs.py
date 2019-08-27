@@ -6,8 +6,8 @@ from subprocess import run, PIPE
 from typing import List, Tuple
 from unittest import SkipTest
 
-import myqueue.test.testrunner as testrunner
-from .testrunner import test, wait
+import myqueue.test.runner as runner
+from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
 
@@ -54,7 +54,7 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if testrunner.UPDATE:
+    if runner.UPDATE:
         path.write_text('\n'.join(lines) + '\n')
 
     if test:
@@ -73,7 +73,7 @@ def run_command(cmd: str,
 
 
 def clean(line):
-    line = re.sub(r'[A-Z][a-z]+ [0-9]+ [0-9]+:[0-9]+', '############', line)
+    line = re.sub(r'[A-Z]?[a-z]+ [0-9]+ [0-9]+:[0-9]+', '############', line)
     line = re.sub(r' 0:[0-9][0-9]', ' 0:##', line)
     line = re.sub(r'[rw.-]{10,11}', '##########', line)
     line = re.sub(r' tot\w+ \d+', ' ##### #', line)

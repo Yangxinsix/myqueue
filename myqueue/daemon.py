@@ -39,8 +39,11 @@ def run() -> bool:
 
 
 def loop() -> None:
+    # folders
     while not err.is_file():
         sleep(T)
+        # for f in (Path.home() / '.myqueue').glob('daemon-*'):
+
         result = subprocess.run(f'python3 -m myqueue kick --all >> {out}',
                                 shell=True,
                                 stderr=subprocess.PIPE)

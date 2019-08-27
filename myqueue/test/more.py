@@ -1,4 +1,4 @@
-from .testrunner import test, wait, states
+from .runner import test, wait, states
 
 
 @test
