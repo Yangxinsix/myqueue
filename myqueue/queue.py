@@ -59,9 +59,13 @@ class Selection:
 
 class Queue(Lock):
     """Object for interacting with the scheduler."""
-    def __init__(self, verbosity: int = 1, need_lock: bool = True):
+    def __init__(self,
+                 verbosity: int = 1,
+                 need_lock: bool = True,
+                 dry_run: bool = False):
         self.verbosity = verbosity
         self.need_lock = need_lock
+        self.dry_run = dry_run
 
         self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
@@ -88,6 +92,8 @@ class Queue(Lock):
         return self._scheduler
 
     def __enter__(self):
+        if self.dry_run:
+            return self
         if self.need_lock:
             self.acquire()
         else:
@@ -99,6 +105,7 @@ class Queue(Lock):
 
     def __exit__(self, type, value, tb):
         if self.changed:
+            assert not self.dry_run
             self._write()
         self.release()
 
@@ -138,7 +145,6 @@ class Queue(Lock):
 
     def submit(self,
                tasks: List[Task],
-               dry_run: bool = False,
                read: bool = True) -> None:
         """Submit tasks to queue."""
         tasks2 = []
@@ -229,7 +235,7 @@ class Queue(Lock):
             task.state = 'queued'
             task.tqueued = t
 
-        if dry_run:
+        if self.dry_run:
             pprint(todo, 0, 'fnr')
             print(plural(len(todo), 'task'), 'to submit')
         else:
@@ -267,10 +273,9 @@ class Queue(Lock):
                 raise ex
 
     def run(self,
-            tasks: List[Task],
-            dry_run: bool = False) -> None:
+            tasks: List[Task]) -> None:
         """Run tasks locally."""
-        if dry_run:
+        if self.dry_run:
             for task in tasks:
                 print(f'{task.folder}: {task.cmd}')
         else:
@@ -290,7 +295,7 @@ class Queue(Lock):
 
         return tasks
 
-    def remove(self, selection: Selection, dry_run: bool) -> None:
+    def remove(self, selection: Selection) -> None:
         """Remove or cancel tasks."""
 
         self._read()
@@ -303,7 +308,7 @@ class Queue(Lock):
             if task.tstop is None:
                 task.tstop = t
 
-        if dry_run:
+        if self.dry_run:
             pprint(tasks, 0)
             print(plural(len(tasks), 'task'), 'to be removed')
         else:
@@ -317,7 +322,7 @@ class Queue(Lock):
                 task.cancel_dependents(self.tasks, time.time())
             self.changed = True
 
-    def sync(self, dry_run: bool) -> None:
+    def sync(self) -> None:
         """Syncronize queue with the real world."""
         self._read()
         in_the_queue = ['running', 'hold', 'queued']
@@ -330,7 +335,7 @@ class Queue(Lock):
                 remove.append(task)
 
         if remove:
-            if dry_run:
+            if self.dry_run:
                 print(plural(len(remove), 'job'), 'to be removed')
             else:
                 for task in remove:
@@ -362,25 +367,24 @@ class Queue(Lock):
 
     def modify(self,
                selection: Selection,
-               newstate: str,
-               dry_run: bool) -> None:
+               newstate: str) -> None:
         """Modify task(s)."""
         self._read()
         tasks = self.select(selection)
 
         for task in tasks:
             if task.state == 'hold' and newstate == 'queued':
-                if dry_run:
+                if self.dry_run:
                     print('Release:', task)
                 else:
                     self.scheduler.release_hold(task)
             elif task.state == 'queued' and newstate == 'hold':
-                if dry_run:
+                if self.dry_run:
                     print('Hold:', task)
                 else:
                     self.scheduler.hold(task)
             elif task.state == 'FAILED' and newstate in ['MEMORY', 'TIMEOUT']:
-                if dry_run:
+                if self.dry_run:
                     print('FAILED ->', newstate, task)
                 else:
                     task.remove_failed_file()
@@ -393,13 +397,12 @@ class Queue(Lock):
 
     def resubmit(self,
                  selection: Selection,
-                 dry_run: bool,
                  resources: Resources) -> None:
         """Resubmit failed or timed-out tasks."""
         self._read()
         tasks = []
         for task in self.select(selection):
-            if not dry_run:
+            if not self.dry_run:
                 if task.state not in {'queued', 'hold', 'running'}:
                     self.tasks.remove(task)
                 if task.state == 'FAILED':
@@ -413,7 +416,7 @@ class Queue(Lock):
                         creates=task.creates,
                         diskspace=0)
             tasks.append(task)
-        self.submit(tasks, dry_run, read=False)
+        self.submit(tasks, read=False)
 
     def _read(self) -> None:
         if self.fname.is_file():
@@ -516,20 +519,20 @@ class Queue(Lock):
                         task.remove_failed_file()
                     self.changed = True
 
-    def kick(self, dry_run=False) -> int:
+    def kick(self) -> int:
         """Restart timed-out and out-of-memory tasks."""
         self._read()
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 nodes = config.get('nodes') or [('', {'cores': 1})]
-                if not dry_run:
+                if not self.dry_run:
                     task.resources.double(task.state, nodes)
                     task.restart -= 1
                 tasks.append(task)
         if tasks:
             tasks = self.find_depending(tasks)
-            if dry_run:
+            if self.dry_run:
                 pprint(tasks)
             else:
                 print('Restarting', plural(len(tasks), 'task'))
@@ -539,11 +542,11 @@ class Queue(Lock):
                     task.id = 0
                 self.submit(tasks, read=False)
 
-        self.hold_or_release(dry_run)
+        self.hold_or_release()
 
         return len(tasks)
 
-    def hold_or_release(self, dry_run: bool) -> None:
+    def hold_or_release(self) -> None:
         maxmem = config.get('maximum_diskspace', float('inf'))
         mem = 0
         for task in self.tasks:

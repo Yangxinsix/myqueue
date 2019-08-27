@@ -35,8 +35,7 @@ commands = {
     'help':
         [''],
     'info':
-        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
+        ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'init':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
@@ -73,8 +72,8 @@ commands = {
          '--traceback', '-A', '--all'],
     'test':
         ['--config-file', '-x', '--exclude', '-u', '--update-source-code',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback'],
+         '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'workflow':
         ['-t', '--targets', '-p', '--pattern', '-z', '--dry-run', '-v',
          '--verbose', '-q', '--quiet', '-T', '--traceback']}

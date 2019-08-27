@@ -1,3 +1,5 @@
 *.pyc
 myqueue.egg-info/
 .mypy_cache
+build/
+dist/

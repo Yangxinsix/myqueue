@@ -23,5 +23,5 @@ def submit(*tasks: List['Task'], verbosity: int = 1, dry_run: bool = False):
     from .config import initialize_config
     from pathlib import Path
     initialize_config(Path('.').resolve())
-    with Queue(verbosity) as queue:
-        queue.submit(tasks, dry_run)
+    with Queue(verbosity, dry_run=dry_run) as queue:
+        queue.submit(tasks)

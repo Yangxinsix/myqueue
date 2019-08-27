@@ -250,7 +250,7 @@ def main(arguments: List[str] = None) -> Any:
               help='Sort rows using column c, where c must be one of '
               'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
 
-        if cmd not in ['list', 'completion']:
+        if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
               action='store_true',
               help='Show what will happen without doing anything.')
@@ -482,7 +482,8 @@ def run(args: argparse.Namespace):
         return
 
     need_lock = args.command not in ['list', 'info']
-    with Queue(verbosity, need_lock) as queue:
+    dry_run = getattr(args, 'dry_run', False)
+    with Queue(verbosity, need_lock, dry_run) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -493,14 +494,13 @@ def run(args: argparse.Namespace):
             return queue.list(selection, args.columns, column, reverse)
 
         if args.command == 'remove':
-            queue.remove(selection, args.dry_run)
-
+            queue.remove(selection)
         elif args.command == 'resubmit':
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            queue.resubmit(selection, args.dry_run, resources)
+            queue.resubmit(selection, resources)
 
         elif args.command == 'submit':
             newtasks = [task(args.task,
@@ -512,7 +512,7 @@ def run(args: argparse.Namespace):
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.dry_run)
+            queue.submit(newtasks)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -521,20 +521,20 @@ def run(args: argparse.Namespace):
                              workflow=args.workflow)
                         for folder in folders]
 
-            queue.run(newtasks, args.dry_run)
+            queue.run(newtasks)
 
         elif args.command == 'modify':
-            queue.modify(selection, args.newstate, args.dry_run)
+            queue.modify(selection, args.newstate)
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
-            queue.submit(tasks, args.dry_run)
+            queue.submit(tasks)
 
         elif args.command == 'sync':
-            queue.sync(args.dry_run)
+            queue.sync()
 
         elif args.command == 'kick':
-            queue.kick(args.dry_run)
+            queue.kick()
 
         elif args.command == 'info':
             queue.info(args.id)

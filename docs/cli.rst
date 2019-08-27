@@ -225,7 +225,7 @@ optional arguments:
 Info: Show detailed information about task
 ------------------------------------------
 
-usage: mq info [-h] [-z] [-v] [-q] [-T] id [folder]
+usage: mq info [-h] [-v] [-q] [-T] id [folder]
 
 Show detailed information about task.
 
@@ -240,7 +240,6 @@ folder:
 
 optional arguments:
   -h, --help       show this help message and exit
-  -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
@@ -461,8 +460,8 @@ optional arguments:
 Test: Run tests
 ---------------
 
-usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-z] [-v]
-               [-q] [-T]
+usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-v] [-q]
+               [-T]
                [test [test ...]]
 
 Run tests.
@@ -479,7 +478,6 @@ optional arguments:
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude test(s).
   -u, --update-source-code
-  -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.

@@ -266,6 +266,7 @@ class Task:
         return False
 
     def ideps(self, map: Dict[Path, 'Task']) -> Iterator['Task']:
+        """Yield task and its dependencies."""
         yield self
         for dname in self.deps:
             yield from map[dname].ideps(map)
@@ -282,10 +283,11 @@ class Task:
             Don't actually submit the task.
         """
         from .queue import Queue
-        with Queue(verbosity) as queue:
-            queue.submit([self], dry_run)
+        with Queue(verbosity, dry_run=dry_run) as queue:
+            queue.submit([self])
 
     def cancel_dependents(self, tasks: List['Task'], t: float) -> None:
+        """Cancel dependents."""
         for tsk in tasks:
             if self.dname in tsk.deps and self is not tsk:
                 tsk.state = 'CANCELED'
