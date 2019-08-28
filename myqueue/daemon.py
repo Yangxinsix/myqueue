@@ -43,7 +43,7 @@ def run() -> bool:
 def loop() -> None:
     dir = out.parent
 
-    while not err.is_file():
+    while True:
         sleep(T)
 
         folders = [Path(line)
@@ -65,8 +65,8 @@ def loop() -> None:
         out.touch()
 
         if len(newfolders) < len(folders):
-            (dir / 'folders.txt').read_text().splitlines()..........
-
+            (dir / 'folders.txt').write_text(''.join(f'{f}\n'
+                                                     for f in newfolders))
 
 
 if __name__ == '__main__':
