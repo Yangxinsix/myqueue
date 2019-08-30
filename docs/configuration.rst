@@ -18,7 +18,8 @@ Here is an example configuration file:
 
 .. literalinclude:: example_config.py
 
-The type of queue you are using must be ``'slurm'``, ``'pbs'`` or ``'local'``.
+The type of scheduler you are using must be ``'slurm'``, ``'pbs'`` or
+``'local'``.
 
 If you are running your Python scripts in parallel then you must specify which
 MPI enabled Python interpreter you want to use:

@@ -80,7 +80,8 @@ class Queue(Lock):
     def scheduler(self) -> Scheduler:
         """Scheduler object."""
         if self._scheduler is None:
-            schedulername = config.get('scheduler')
+            schedulername = config.get('scheduler',
+                                       config.get('queue'))
             if schedulername is None:
                 home = config['home']
                 raise ValueError(

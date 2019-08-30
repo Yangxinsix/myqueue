@@ -1,5 +1,5 @@
 config = {
-    'queue': 'slurm',
+    'scheduler': 'slurm',
     'parallel_python': 'gpaw-python',
     'nodes': [
         ('xeon8', {'cores': 8,
