@@ -85,16 +85,17 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
-def get_home_folders() -> List[Path]:
+def get_home_folders(prune=True) -> List[Path]:
     path = Path.home() / '.myqueue' / 'folders.txt'
     if path.is_file():
         folders = []
         for f in path.read_text().splitlines():
             folder = Path(f)
-            if (folder / '.myqueue').is_dir():
+            if not prune or (folder / '.myqueue').is_dir():
                 folders.append(folder)
         return folders
     else:
+        path.write_text(f'{path.home()}\n')
         return [Path.home()]
 
 

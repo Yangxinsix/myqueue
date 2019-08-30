@@ -350,10 +350,13 @@ def main(arguments: List[str] = None) -> Any:
 def run(args: argparse.Namespace):
     from .config import config, initialize_config
     from .resources import Resources
-    from .task import task, Task, taskstates
-    from .queue import Queue, Selection, pprint
+    from .task import task, taskstates
+    from .queue import Queue, Selection
     from .utils import get_home_folders
     from .workflow import workflow
+    from .daemon import start_daemon
+
+    start_daemon()
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -402,6 +405,7 @@ def run(args: argparse.Namespace):
                 raise MQError('Missing folder!')
 
     if folders:
+        # Find root folder:
         start = folders[0]
         try:
             initialize_config(start)
@@ -409,7 +413,6 @@ def run(args: argparse.Namespace):
             raise MQError(
                 f'The folder {start} is not inside a MyQueue tree.\n'
                 'You can create a tree with "cd <root-of-tree>; mq init".')
-
         home = config['home']
         if verbosity > 1:
             print('Root:', home)
@@ -451,25 +454,27 @@ def run(args: argparse.Namespace):
     if args.command == 'list' and args.all:
         folders = get_home_folders()
         selection.folders = folders
-        alltasks: List[Task] = []
         for folder in folders:
             initialize_config(folder, force=True)
-            with Queue(verbosity) as queue:
-                queue.tasks = alltasks
-                queue._read()
-        if alltasks:
-            alltasks = queue.select(selection)
-            pprint(alltasks, verbosity, args.columns)
+            print(f'{folder}:')
+            with Queue(verbosity, need_lock=False) as queue:
+                if args.sort:
+                    reverse = args.sort.endswith('-')
+                    column = args.sort.rstrip('-')
+                else:
+                    reverse = False
+                    column = None
+                queue.list(selection, args.columns, column, reverse)
         return
 
     if args.command in ['sync', 'kick'] and args.all:
         for folder in get_home_folders():
             initialize_config(folder, force=True)
-            with Queue(verbosity) as queue:
+            with Queue(verbosity, dry_run=args.dry_run) as queue:
                 if args.command == 'sync':
-                    queue.sync(args.dry_run)
+                    queue.sync()
                 else:
-                    queue.kick(args.dry_run)
+                    queue.kick()
         return
 
     need_lock = args.command not in ['list', 'info']

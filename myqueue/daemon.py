@@ -4,23 +4,22 @@ import sys
 from time import sleep, time
 from pathlib import Path
 
+from myqueue.utils import get_home_folders
+
 T = 600
 
 out = Path.home() / '.myqueue/daemon.out'
 err = Path.home() / '.myqueue/daemon.err'
 
 
-def run() -> bool:
+def start_daemon() -> bool:
     assert not err.is_file()
     if out.is_file():
         age = time() - out.stat().st_mtime
         if age < 1.5 * T:
             return False
-    else:
-        try:
-            out.touch()
-        except PermissionError:
-            return False
+
+    out.touch()
 
     pid = os.fork()
     if pid == 0:
@@ -45,11 +44,7 @@ def loop() -> None:
 
     while not err.is_file():
         sleep(T)
-
-        folders = [Path(line)
-                   for line in
-                   (dir / 'folders.txt').read_text().splitlines()]
-
+        folders = get_home_folders(prune=False)
         newfolders = []
         for f in folders:
             if (f / '.myqueue').is_dir():
@@ -65,8 +60,8 @@ def loop() -> None:
         out.touch()
 
         if len(newfolders) < len(folders):
-            (dir / 'folders.txt').read_text().splitlines()..........
-
+            (dir / 'folders.txt').write_text(
+                ''.join(f'{f}\n' for f in newfolders))
 
 
 if __name__ == '__main__':
