@@ -39,7 +39,7 @@ class LocalScheduler(Scheduler, Lock):
             if task.id == j.id:
                 break
         else:
-            raise ValueError('No such task!')
+            return
         del self.tasks[i]
         self._write()
 

@@ -335,26 +335,23 @@ optional arguments:
 Kick: Restart T and M tasks (timed-out and out-of-memory)
 ---------------------------------------------------------
 
-usage: mq kick [-h] [-z] [-v] [-q] [-T] [-A] [--install-crontab-job] [folder]
+usage: mq kick [-h] [-z] [-v] [-q] [-T] [-A] [folder]
 
 Restart T and M tasks (timed-out and out-of-memory).
 
-You can kick the queue manually with "mq kick" or automatically by adding that
-command to a crontab job (can be done with "mq kick --install-crontab-job").
+The queue is kicked automatically every ten minutes - so you don't have to do
+it manually.
 
 folder:
     Kick tasks in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -z, --dry-run         Show what will happen without doing anything.
-  -v, --verbose         More output.
-  -q, --quiet           Less output.
-  -T, --traceback       Show full traceback.
-  -A, --all             Kick all myqueue folders (from ~/.myqueue/folders.txt)
-  --install-crontab-job
-                        Install crontab job to kick your queues every half
-                        hour.
+  -h, --help       show this help message and exit
+  -z, --dry-run    Show what will happen without doing anything.
+  -v, --verbose    More output.
+  -q, --quiet      Less output.
+  -T, --traceback  Show full traceback.
+  -A, --all        Kick all myqueue folders (from ~/.myqueue/folders.txt)
 
 
 .. _modify:

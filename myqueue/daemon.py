@@ -4,21 +4,22 @@ import sys
 from time import sleep, time
 from pathlib import Path
 
+from myqueue.utils import get_home_folders
+
 T = 600
 
 out = Path.home() / '.myqueue/daemon.out'
 err = Path.home() / '.myqueue/daemon.err'
 
 
-def run() -> bool:
+def start_daemon() -> bool:
     assert not err.is_file()
     if out.is_file():
         age = time() - out.stat().st_mtime
-    else:
-        out.write_text('')
-        age = 2 * T
-    if age < 1.5 * T:
-        return False
+        if age < 1.5 * T:
+            return False
+
+    out.touch()
 
     pid = os.fork()
     if pid == 0:
@@ -39,18 +40,29 @@ def run() -> bool:
 
 
 def loop() -> None:
-    # folders
-    while not err.is_file():
-        sleep(T)
-        # for f in (Path.home() / '.myqueue').glob('daemon-*'):
+    dir = out.parent
 
-        result = subprocess.run(f'python3 -m myqueue kick --all >> {out}',
-                                shell=True,
-                                stderr=subprocess.PIPE)
-        if result.returncode:
-            err.write_bytes(result.stderr)
-            break
+    while True:
+        sleep(T)
+        folders = get_home_folders(prune=False)
+        newfolders = []
+        for f in folders:
+            if (f / '.myqueue').is_dir():
+                result = subprocess.run(
+                    f'python3 -m myqueue kick {f} >> {out}',
+                    shell=True,
+                    stderr=subprocess.PIPE)
+                if result.returncode:
+                    err.write_bytes(result.stderr)
+                    return
+                newfolders.append(f)
+
+        out.touch()
+
+        if len(newfolders) < len(folders):
+            (dir / 'folders.txt').write_text(
+                ''.join(f'{f}\n' for f in newfolders))
 
 
 if __name__ == '__main__':
-    print(run())
+    print(start_daemon())
