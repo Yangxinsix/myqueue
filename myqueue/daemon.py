@@ -42,7 +42,7 @@ def start_daemon() -> bool:
 def loop() -> None:
     dir = out.parent
 
-    while not err.is_file():
+    while True:
         sleep(T)
         folders = get_home_folders(prune=False)
         newfolders = []
@@ -65,4 +65,4 @@ def loop() -> None:
 
 
 if __name__ == '__main__':
-    print(run())
+    print(start_daemon())
