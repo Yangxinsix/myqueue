@@ -476,6 +476,7 @@ optional arguments:
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude test(s).
   -u, --update-source-code
+                        Update the command-line examples in the documentation.
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.

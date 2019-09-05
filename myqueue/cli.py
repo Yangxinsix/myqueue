@@ -177,7 +177,8 @@ def main(arguments: List[str] = None) -> Any:
               help='Use specific config.py file.')
             a('-x', '--exclude',
               help='Exclude test(s).')
-            a('-u', '--update-source-code', action='store_true')
+            a('-u', '--update-source-code', action='store_true',
+              help='Update the command-line examples in the documentation.')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')

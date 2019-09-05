@@ -6,7 +6,14 @@ Release notes
 Next release
 ============
 
-* ...
+* New ``-C`` option for the :ref:`mq ls <list>` command for showing only the
+  count of tasks in the queue::
+
+    $ mq ls -C
+    running: 12, queued: 3, FAILED: 1, total: 16
+
+* A background process will now automatically :ref:`kick <kick>`
+  your queues every ten minutes.
 
 
 Version 19.8.0
