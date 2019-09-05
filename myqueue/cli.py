@@ -249,6 +249,8 @@ def main(arguments: List[str] = None) -> Any:
             a('-S', '--sort', metavar='c',
               help='Sort rows using column c, where c must be one of '
               'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
+            a('-C', '--count', action='store_true',
+              help='Just show the number of tasks.')
 
         if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
@@ -464,7 +466,8 @@ def run(args: argparse.Namespace):
                 else:
                     reverse = False
                     column = None
-                queue.list(selection, args.columns, column, reverse)
+                queue.list(selection, args.columns, column, reverse,
+                           args.count)
         return
 
     if args.command in ['sync', 'kick'] and args.all:
@@ -487,7 +490,8 @@ def run(args: argparse.Namespace):
             else:
                 reverse = False
                 column = None
-            return queue.list(selection, args.columns, column, reverse)
+            return queue.list(selection, args.columns, column, reverse,
+                              args.count)
 
         if args.command == 'remove':
             queue.remove(selection)

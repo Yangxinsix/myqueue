@@ -114,13 +114,14 @@ class Queue(Lock):
              selection: Selection,
              columns: str,
              sort: str = None,
-             reverse: bool = False) -> List[Task]:
+             reverse: bool = False,
+             short: bool = False) -> List[Task]:
         """Pretty-print list of tasks."""
         self._read()
         tasks = self.select(selection)
         if sort:
             tasks.sort(key=lambda task: task.order(sort), reverse=reverse)
-        pprint(tasks, self.verbosity, columns)
+        pprint(tasks, self.verbosity, columns, short)
         return tasks
 
     def info(self, id: int):
@@ -607,7 +608,8 @@ def colored(state: str) -> str:
 
 def pprint(tasks: List[Task],
            verbosity: int = 1,
-           columns: str = 'ifnraste') -> None:
+           columns: str = 'ifnraste',
+           short: bool = False) -> None:
 
     if verbosity < 0:
         return
@@ -653,19 +655,20 @@ def pprint(tasks: List[Task],
         lines[1:1] = [['-' * L for L in lengths]]
         lines.append(lines[1])
 
-    for words in lines:
-        words2 = []
-        for word, c, L in zip(words, columns, lengths):
-            if c == 'e':
-                word = word[:cut]
-            elif c in 'at':
-                word = word.rjust(L)
-            else:
-                word = word.ljust(L)
-                if c == 's' and use_color:
-                    word = colored(word)
-            words2.append(word)
-        print(' '.join(words2))
+    if not short:
+        for words in lines:
+            words2 = []
+            for word, c, L in zip(words, columns, lengths):
+                if c == 'e':
+                    word = word[:cut]
+                elif c in 'at':
+                    word = word.rjust(L)
+                else:
+                    word = word.ljust(L)
+                    if c == 's' and use_color:
+                        word = colored(word)
+                words2.append(word)
+            print(' '.join(words2))
 
     if verbosity:
         count['total'] = len(tasks)
