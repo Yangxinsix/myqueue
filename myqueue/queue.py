@@ -277,6 +277,9 @@ class Queue(Lock):
     def run(self,
             tasks: List[Task]) -> None:
         """Run tasks locally."""
+        self._read()
+        dnames = {task.dname for task in tasks}
+        self._remove([task for task in self.tasks if task.dname in dnames])
         if self.dry_run:
             for task in tasks:
                 print(f'{task.folder}: {task.cmd}')
@@ -305,10 +308,13 @@ class Queue(Lock):
         tasks = self.select(selection)
         tasks = self.find_depending(tasks)
 
+        self._remove(tasks)
+
+    def _remove(self, tasks: List[Task]) -> None:
         t = time.time()
         for task in tasks:
             if task.tstop is None:
-                task.tstop = t
+                task.tstop = t  # XXX is this for dry_run only?
 
         if self.dry_run:
             pprint(tasks, 0)
@@ -321,6 +327,7 @@ class Queue(Lock):
                 if task.state in ['running', 'hold', 'queued']:
                     self.scheduler.cancel(task)
                 self.tasks.remove(task)
+                # XXX why cancel?
                 task.cancel_dependents(self.tasks, time.time())
             self.changed = True
 
