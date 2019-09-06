@@ -139,3 +139,7 @@ def check_dependency_order():
 def run():
     mq('run "math@sin 3.14" . -z')
     mq('run "math@sin 3.14" .')
+    mq('submit "time@sleep 1"')
+    mq('run "time@sleep 1" .')
+    wait()
+    assert states() == ''
