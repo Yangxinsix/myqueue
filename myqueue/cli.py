@@ -521,7 +521,6 @@ def run(args: argparse.Namespace):
                              folder=str(folder),
                              workflow=args.workflow)
                         for folder in folders]
-
             queue.run(newtasks)
 
         elif args.command == 'modify':

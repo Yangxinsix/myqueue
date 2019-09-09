@@ -9,12 +9,32 @@ Tasks
 
 A task can be one of these:
 
-* a Python script: ``script.py``
-* a Python module: ``module``
-* a Python submodule: ``module.submodule``
-* a function in a Python module: ``module@function``
-* a shell command (from ``$PATH``): ``shell:command``
-* a shell-script: ``./script``
+* a Python module:
+
+  Examples:
+
+  * ``module``
+  * ``module.submodule`` (a Python submodule)
+
+* a function in a Python module:
+
+      ``module@function``
+
+* a Python script:
+
+  Examples:
+
+  * ``script.py`` (use ``script.py`` in folder where tasks are running)
+  * ``./script.py`` (use ``script.py`` from folder where tasks were submitted)
+  * ``/path/to/script.py`` (absolute path)
+
+* a shell command:
+
+      ``shell:command`` (``command`` must be in ``$PATH``)
+
+* a shell-script:
+
+      ``./script``
 
 
 States
@@ -31,8 +51,10 @@ These are the possible states a task can be in:
 * MEMORY
 * TIMEOUT
 
-Abbreviations: q, h, r, d, F, C, M and T.
+Abbreviations: ``q``, ``h``, ``r``, ``d``, ``F``, ``C``, ``M`` and ``T``.
 
+
+.. highlight:: bash
 
 Examples
 ========
@@ -81,7 +103,7 @@ Remove the failed and done jobs from the list with::
     4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     4 tasks removed
 
-The output from files from a task will look like this::
+The output files from a task will look like this::
 
     $ ls -l f2
     total 4
