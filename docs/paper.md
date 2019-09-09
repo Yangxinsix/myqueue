@@ -8,6 +8,7 @@ authors:
     orcid: 0000-0003-0872-7098
     affiliation: 1
   - name: Morten Gjerding
+    orcid: 0000-0002-5256-660X
     affiliation: 1
 affiliations:
  - name: DTU
