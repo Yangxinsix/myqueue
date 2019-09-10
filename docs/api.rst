@@ -32,7 +32,7 @@ Advanced example
     from myqueue.task import Task
 
     task = Task(PythonModule('module', []),
-                Resources(cores=8, tmax=3600)
+                Resources(cores=8, tmax=3600))
     task.submit()
 
 
@@ -44,13 +44,18 @@ API
 .. autofunction:: myqueue.task.task
 .. autoclass:: myqueue.task.Task
    :members: submit
+.. module:: myqueue.commands
 .. autofunction:: myqueue.commands.command
 .. autoclass:: myqueue.commands.ShellCommand
 .. autoclass:: myqueue.commands.ShellScript
 .. autoclass:: myqueue.commands.PythonScript
 .. autoclass:: myqueue.commands.PythonModule
 .. autoclass:: myqueue.commands.PythonFunction
+.. module:: myqueue.resources
 .. autoclass:: myqueue.resources.Resources
+.. module:: myqueue.queue
 .. autoclass:: myqueue.queue.Queue
+.. module:: myqueue.slurm
 .. autoclass:: myqueue.slurm.SLURM
+.. module:: myqueue.pbs
 .. autoclass:: myqueue.pbs.PBS
