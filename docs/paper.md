@@ -27,7 +27,7 @@ The idea behind `MyQueue` is that you have your own queue that you can
 submit tasks to and `MyQueue` will handle interactions with your
 scheduler (`SLURM` or `PBS`).  Once tasks have finished, they will stay
 in your queue so that you can list them and see the status (done, failed,
-timed out or out of memory). Tasks will stay in your queue until you
+timed-out or out-of-memory). Tasks will stay in your queue until you
 explicitly remove them.  This makes it easy to keep track of your tasks:
 If a task is listed as "done" then this will remind you that you need to do
 something with the result.  If a task failed then you need to fix something

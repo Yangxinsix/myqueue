@@ -31,10 +31,10 @@ administrator or database required.
     installation
     configuration
     quickstart
-    tutorial
-    api
-    workflows
+    documentation
     cli
+    workflows
+    api
     releasenotes
 
 

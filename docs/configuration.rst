@@ -6,6 +6,8 @@ You need to configure your SLURM/PBS system with a ``~/.myqueue/config.py``
 file.  The file describes what your system looks like:  Names of the nodes,
 number of cores and other things.
 
+.. highlight:: bash
+
 The simplest way is to copy the file from a friend who has already written a
 configuration file for you supercomputer::
 
@@ -14,6 +16,8 @@ configuration file for you supercomputer::
     /home/you/../bob/.myqueue/config.py
     ...
     $ cp ~alice/.myqueue/config.py ~/.myqueue/config.py
+
+.. highlight:: python
 
 Here is an example configuration file:
 

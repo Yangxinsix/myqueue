@@ -1,6 +1,6 @@
-========
-Tutorial
-========
+=============
+Documentation
+=============
 
 .. _tasks:
 
@@ -24,7 +24,7 @@ A task can be one of these:
 
   Examples:
 
-  * ``script.py`` (use ``script.py`` in folder where tasks are running)
+  * ``script.py`` (use ``script.py`` in folders where tasks are running)
   * ``./script.py`` (use ``script.py`` from folder where tasks were submitted)
   * ``/path/to/script.py`` (absolute path)
 
@@ -42,16 +42,29 @@ States
 
 These are the possible states a task can be in:
 
-* queued
-* hold
-* running
-* done
-* FAILED
-* CANCELED
-* MEMORY
-* TIMEOUT
+
+======  ========  =======  =======
+queued  hold      running  done
+FAILED  CANCELED  MEMORY   TIMEOUT
+======  ========  =======  =======
 
 Abbreviations: ``q``, ``h``, ``r``, ``d``, ``F``, ``C``, ``M`` and ``T``.
+
+
+.. _resources:
+
+Resources
+=========
+
+A resource specification has the form::
+
+    cores[:nodename][:processes]:tmax
+
+Examples:
+
+* ``1:1h`` 1 core and 1 process for 1 hour
+* ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
+* ``24:1:30m`` 24 cores and 1 process for 30 minutes
 
 
 .. highlight:: bash
@@ -126,19 +139,3 @@ If a job fails or times out, then you can resubmit it with more resources::
     $ mq resubmit -i 5 -R 1:1m
     6 ./ shell:sleep+4 1:1m
     1 task submitted
-
-
-.. _resources:
-
-Resources
-=========
-
-A resource specification has the form::
-
-    cores[:nodename][:processes]:tmax
-
-Examples:
-
-* ``1:1h`` 1 core and 1 process for 1 hour
-* ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
-* ``24:1:30m`` 24 cores and 1 process for 30 minutes
