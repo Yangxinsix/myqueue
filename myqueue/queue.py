@@ -128,7 +128,7 @@ class Queue(Lock):
         pprint(tasks, self.verbosity, columns, short)
         return tasks
 
-    def info(self, id: int):
+    def info(self, id: int) -> None:
         """Print information about a single task."""
         self._read()
         task = self.select(Selection({id}, '', set(), [], False))[0]
@@ -586,7 +586,7 @@ class Queue(Lock):
                     if mem > maxmem:
                         break
 
-    def _write(self):
+    def _write(self) -> None:
         root = self.folder.parent
         text = json.dumps(
             {'version': 6,
@@ -596,11 +596,6 @@ class Queue(Lock):
                        for task in self.tasks]},
             indent=2)
         self.fname.write_text(text)
-
-
-def pjoin(folder, reldir):
-    assert reldir == '.'
-    return folder
 
 
 def plural(n: int, thing: str) -> str:

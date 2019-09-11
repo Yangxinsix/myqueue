@@ -12,7 +12,7 @@ from unittest import SkipTest
 
 
 @contextmanager
-def chdir(folder: Path) -> Generator[None]:
+def chdir(folder: Path) -> Generator:
     """Temporarily change directory."""
     dir = os.getcwd()
     os.chdir(str(folder))
