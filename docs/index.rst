@@ -41,7 +41,7 @@ administrator or database required.
 
 
 .. _SLURM: https://slurm.schedmd.com/
-.. _PBS: http://www.pbspro.org/
+.. _PBS: https://www.pbspro.org/
 .. _Python: https://python.org/
 
 
