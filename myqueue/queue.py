@@ -123,8 +123,9 @@ class Queue(Lock):
         """Pretty-print list of tasks."""
         self._read()
         tasks = self.select(selection)
-        if sort:
-            tasks.sort(key=lambda task: task.order(sort), reverse=reverse)
+        if isinstance(sort, str):
+            tasks.sort(key=lambda task: task.order(sort),  # type: ignore
+                       reverse=reverse)
         pprint(tasks, self.verbosity, columns, short)
         return tasks
 
@@ -410,7 +411,7 @@ class Queue(Lock):
 
     def resubmit(self,
                  selection: Selection,
-                 resources: Resources) -> None:
+                 resources: Optional[Resources]) -> None:
         """Resubmit failed or timed-out tasks."""
         self._read()
         tasks = []

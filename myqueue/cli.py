@@ -494,6 +494,7 @@ def run(args: argparse.Namespace) -> None:
             queue.remove(selection)
 
         elif args.command == 'resubmit':
+            resources: Optional[Resources]
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
