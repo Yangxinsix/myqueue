@@ -40,7 +40,7 @@ A task can be one of these:
 States
 ======
 
-These are the possible states a task can be in:
+These are the 8 possible states a task can be in:
 
 
 ======  ========  =======  =======
