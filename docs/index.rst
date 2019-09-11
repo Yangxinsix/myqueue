@@ -32,10 +32,12 @@ administrator or database required.
     configuration
     quickstart
     documentation
+    howitworks
     cli
     workflows
     api
     releasenotes
+    development
 
 
 .. _SLURM: https://slurm.schedmd.com/
