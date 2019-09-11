@@ -331,10 +331,7 @@ def main(arguments: List[str] = None) -> Any:
         return
 
     try:
-        results = run(args)
-        if arguments:
-            # We are being called from the test queue:
-            return results
+        run(args)
     except KeyboardInterrupt:
         pass
     except MQError as x:
@@ -347,7 +344,7 @@ def main(arguments: List[str] = None) -> Any:
                   file=sys.stderr)
             print('To get a full traceback, use: mq {} ... -T'
                   .format(args.command), file=sys.stderr)
-            return 1
+            parser.exit(1)
 
 
 def run(args: argparse.Namespace):
@@ -491,11 +488,11 @@ def run(args: argparse.Namespace):
             else:
                 reverse = False
                 column = None
-            return queue.list(selection, args.columns, column, reverse,
-                              args.count)
+            queue.list(selection, args.columns, column, reverse, args.count)
 
-        if args.command == 'remove':
+        elif args.command == 'remove':
             queue.remove(selection)
+
         elif args.command == 'resubmit':
             if args.resources:
                 resources = Resources.from_string(args.resources)
@@ -545,8 +542,10 @@ def run(args: argparse.Namespace):
 
 class Formatter(argparse.HelpFormatter):
     """Improved help formatter."""
-    def _fill_text(self, text, width, indent):
-        assert indent == ''
+    # Bug in argparse types:
+    # def _fill_text(self, text: str, width: int, indent: str) -> str:
+    #     assert indent == ''
+    def _fill_text(self, text: str, width: int, indent: int) -> str:
         out = ''
         blocks = text.split('\n\n')
         for block in blocks:

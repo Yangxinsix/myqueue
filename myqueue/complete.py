@@ -10,19 +10,20 @@ Put this in your .bashrc::
 import os
 import sys
 from glob import glob
+from typing import List, Dict, Any, Iterable
 
 
-def match(word, *suffixes):
+def match(word: str, *suffixes: str) -> List[str]:
     return [w for w in glob(word + '*')
             if any(w.endswith(suffix) for suffix in suffixes)]
 
 
-def read():
+def read() -> Dict[str, Any]:
     from pathlib import Path
     import json
     path = Path.home() / '.myqueue/queue.json'
     try:
-        dct = json.loads(path.read_text())
+        dct: Dict[str, Any] = json.loads(path.read_text())
         return dct
     except Exception:
         return {}
@@ -81,7 +82,7 @@ commands = {
 # End of computer generated data
 
 
-def complete(word, previous, line, point):
+def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     for w in line[:point - len(word)].strip().split()[1:]:
         if w[0].isalpha():
             if w in commands:
@@ -96,27 +97,27 @@ def complete(word, previous, line, point):
     if word[:1] == '-':
         return commands[command]
 
-    words = []
-
     if previous in ['-n', '--name']:
         dct = read()
         words = set()
         for task in dct['tasks']:
             cmd = task['cmd']
             words.add((cmd['cmd'] + '+' + '_'.join(cmd['args'])).rstrip('+'))
+        return words
 
-    elif previous in ['-i', '--id']:
+    if previous in ['-i', '--id']:
         dct = read()
-        words = {str(task['id']) for task in dct['tasks']}
+        return {str(task['id']) for task in dct['tasks']}
 
-    elif command == 'test':
-        from myqueue.test.runner import all_tests as words, find_tests
+    if command == 'test':
+        from myqueue.test.runner import all_tests, find_tests
         find_tests()
+        return all_tests.keys()
 
-    elif command == 'help':
-        words = [cmd for cmd in commands if cmd != 'help']
+    if command == 'help':
+        return [cmd for cmd in commands if cmd != 'help']
 
-    return words
+    return []
 
 
 word, previous = sys.argv[2:]

@@ -2,7 +2,7 @@ import shutil
 import time
 from pathlib import Path
 
-from .runner import test, mq, wait, states, LOCAL
+from .runner import test, mq, wait, states, LOCAL, mqlist
 
 
 @test
@@ -24,7 +24,7 @@ def fail():
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     wait()
-    id = mq('list')[0].id
+    id = mqlist()[0].id
     mq(f'info {id} -v')
     assert states() == 'FCC'
     mq('resubmit -sF . -z')

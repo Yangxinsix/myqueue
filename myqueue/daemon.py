@@ -16,7 +16,7 @@ def start_daemon() -> bool:
     assert not err.is_file()
     if out.is_file():
         age = time() - out.stat().st_mtime
-        if age < 1.5 * T:
+        if age < 7200:
             return False
 
     out.touch()
