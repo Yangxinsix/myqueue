@@ -40,7 +40,7 @@ class Resources:
             self.processes = processes
 
     @staticmethod
-    def from_string(s):
+    def from_string(s: str) -> 'Resources':
         cores, s = s.split(':', 1)
         nodename = ''
         processes = 0
@@ -55,7 +55,7 @@ class Resources:
                 nodename = x
         return Resources(int(cores), nodename, processes, tmax)
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = str(self.cores)
         if self.nodename:
             s += ':' + self.nodename
@@ -97,7 +97,7 @@ class Resources:
         else:
             raise ValueError
 
-    def select(self, nodelist: List[Node]) -> Tuple[int, str, Dict]:
+    def select(self, nodelist: List[Node]) -> Tuple[int, str, Dict[str, Any]]:
         if self.nodename:
             for name, dct in nodelist:
                 if name == self.nodename:

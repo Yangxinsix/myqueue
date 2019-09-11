@@ -307,7 +307,7 @@ def main(arguments: List[str] = None) -> Any:
         if args.cmd is None:
             parser.print_help()
         else:
-            subparsers.choices[args.cmd].print_help()  # type: ignore
+            subparsers.choices[args.cmd].print_help()
         return
 
     if args.command == 'test':
@@ -347,7 +347,7 @@ def main(arguments: List[str] = None) -> Any:
             parser.exit(1)
 
 
-def run(args: argparse.Namespace):
+def run(args: argparse.Namespace) -> None:
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, taskstates

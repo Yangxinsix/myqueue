@@ -12,7 +12,8 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict, Optional  # noqa
+from typing import Set, List, Dict, Optional, Sequence  # noqa
+from types import TracebackType
 
 from .config import config
 from .scheduler import get_scheduler, Scheduler
@@ -52,7 +53,7 @@ class Selection:
         self.folders = folders
         self.recursive = recursive
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive})')
 
@@ -92,7 +93,7 @@ class Queue(Lock):
             self._scheduler = get_scheduler(schedulername)
         return self._scheduler
 
-    def __enter__(self):
+    def __enter__(self) -> 'Queue':
         if self.dry_run:
             return self
         if self.need_lock:
@@ -104,7 +105,10 @@ class Queue(Lock):
                 pass
         return self
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self,
+                 type: Exception,
+                 value: Exception,
+                 tb: TracebackType) -> None:
         if self.changed:
             assert not self.dry_run
             self._write()
@@ -146,7 +150,7 @@ class Queue(Lock):
                 print('^' * N)
 
     def submit(self,
-               tasks: List[Task],
+               tasks: Sequence[Task],
                read: bool = True) -> None:
         """Submit tasks to queue."""
         tasks2 = []
@@ -352,7 +356,7 @@ class Queue(Lock):
                 self.changed = True
                 print(plural(len(remove), 'job'), 'removed')
 
-    def find_depending(self, tasks: List[Task]):
+    def find_depending(self, tasks: List[Task]) -> List[Task]:
         """Generate list of tasks including dependencies."""
         map = {task.dname: task for task in self.tasks}
         d: Dict[Task, List[Task]] = defaultdict(list)
@@ -364,7 +368,7 @@ class Queue(Lock):
 
         removed = []
 
-        def remove(task):
+        def remove(task: Task) -> None:
             removed.append(task)
             for j in d[task]:
                 remove(j)
@@ -599,7 +603,7 @@ def pjoin(folder, reldir):
     return folder
 
 
-def plural(n, thing):
+def plural(n: int, thing: str) -> str:
     if n == 1:
         return '1 ' + thing
     return '{} {}s'.format(n, thing)

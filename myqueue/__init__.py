@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 __version__ = '19.8.1b1'
 
 
-def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False):
+def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:
     """Submit tasks.
 
     Parameters

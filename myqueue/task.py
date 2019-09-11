@@ -78,7 +78,7 @@ class Task:
     def name(self) -> str:
         return f'{self.cmd.name}.{self.id}'
 
-    def running_time(self, t=None):
+    def running_time(self, t: float = None) -> float:
         if self.state in ['CANCELED', 'queued', 'hold']:
             dt = 0.0
         elif self.state == 'running':
@@ -110,15 +110,15 @@ class Task:
                 seconds_to_time_string(dt),
                 self.error]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join(self.words())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.dname)
         dct = self.todict()
         return 'Task({!r})'.format(dct)
 
-    def order(self, column):
+    def order(self, column: str) -> Union[int, str, Path, float]:
         """ifnraste"""
         if column == 'i':
             return self.id
@@ -160,7 +160,7 @@ class Task:
                 'error': self.error}
 
     @staticmethod
-    def fromdict(dct: dict, root: Path) -> 'Task':
+    def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':
         dct = dct.copy()
 
         # Backwards compatibility with version 2:
@@ -271,7 +271,7 @@ class Task:
         for dname in self.deps:
             yield from map[dname].ideps(map)
 
-    def submit(self, verbosity: int = 1, dry_run: bool = False):
+    def submit(self, verbosity: int = 1, dry_run: bool = False) -> None:
         """Submit task.
 
         Parameters

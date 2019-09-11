@@ -6,12 +6,13 @@ import time
 from contextlib import contextmanager
 from io import StringIO
 from pathlib import Path
+from types import TracebackType
 from typing import IO, Union, Generator, List, Dict
 from unittest import SkipTest
 
 
 @contextmanager
-def chdir(folder: Path) -> Generator:
+def chdir(folder: Path) -> Generator[None]:
     """Temporarily change directory."""
     dir = os.getcwd()
     os.chdir(str(folder))
@@ -43,7 +44,7 @@ class Lock:
         self.lock = name
         self.locked = False
 
-    def acquire(self):
+    def acquire(self) -> None:
         """Wait for lock to become available and then acquire it."""
         delta = 0.1
         while True:
@@ -54,17 +55,18 @@ class Lock:
             delta *= 2
         self.locked = True
 
-    def release(self):
+    def release(self) -> None:
         """Release lock."""
         if self.locked:
             self.lock.unlink()
             self.locked = False
 
-    def __enter__(self):
+    def __enter__(self) -> 'Lock':
         self.acquire()
         return self
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self,
+                 type: Exception, value: Exception, tb: TracebackType) -> None:
         self.release()
 
 

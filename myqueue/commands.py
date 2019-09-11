@@ -9,9 +9,9 @@ class Command:
         if args:
             name += '+' + '_'.join(self.args)
         self.name = name
-        self.dct = {'args': args}
+        self.dct: Dict[str, Any] = {'args': args}
 
-    def set_non_standard_name(self, name):
+    def set_non_standard_name(self, name: str) -> None:
         self.name = name
         self.dct['name'] = name
 
@@ -73,35 +73,35 @@ def command(cmd: str,
 
 
 class ShellCommand(Command):
-    def __init__(self, cmd, args):
+    def __init__(self, cmd: str, args: List[str]):
         Command.__init__(self, cmd, args)
         self.cmd = cmd
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join([self.cmd[6:]] + self.args)
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'shell-command',
                 'cmd': self.cmd}
 
 
 class ShellScript(Command):
-    def __init__(self, cmd, args):
+    def __init__(self, cmd: str, args: List[str]):
         Command.__init__(self, Path(cmd).name, args)
         self.cmd = cmd
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join(['.', self.cmd] + self.args)
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
 
 class PythonScript(Command):
-    def __init__(self, script, args):
+    def __init__(self, script: str, args: List[str]):
         path = Path(script)
         Command.__init__(self, path.name, args)
         if '/' in script:
@@ -109,31 +109,31 @@ class PythonScript(Command):
         else:
             self.script = script
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'python3 ' + ' '.join([self.script] + self.args)
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'python-script',
                 'cmd': self.script}
 
 
 class PythonModule(Command):
-    def __init__(self, mod, args):
+    def __init__(self, mod: str, args: List[str]):
         Command.__init__(self, mod, args)
         self.mod = mod
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join(['python3', '-m', self.mod] + self.args)
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'python-module',
                 'cmd': self.mod}
 
 
 class PythonFunction(Command):
-    def __init__(self, cmd, args):
+    def __init__(self, cmd: str, args: List[str]):
         if ':' in cmd:
             # Backwards compatibility with version 4:
             self.mod, self.func = cmd.rsplit(':', 1)
@@ -141,12 +141,12 @@ class PythonFunction(Command):
             self.mod, self.func = cmd.rsplit('@', 1)
         Command.__init__(self, cmd, args)
 
-    def __str__(self):
+    def __str__(self) -> str:
         args = ', '.join(repr(convert(arg)) for arg in self.args)
         return ('python3 -c "import {mod}; {mod}.{func}({args})"'
                 .format(mod=self.mod, func=self.func, args=args))
 
-    def todict(self):
+    def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'python-function',
                 'cmd': self.mod + '@' + self.func}
