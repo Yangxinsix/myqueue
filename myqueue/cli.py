@@ -542,8 +542,10 @@ def run(args: argparse.Namespace):
 
 class Formatter(argparse.HelpFormatter):
     """Improved help formatter."""
-    def _fill_text(self, text: str, width: int, indent: str) -> str:
-        assert indent == ''
+    # Bug in argparse types:
+    # def _fill_text(self, text: str, width: int, indent: str) -> str:
+    #     assert indent == ''
+    def _fill_text(self, text: str, width: int, indent: int) -> str:
         out = ''
         blocks = text.split('\n\n')
         for block in blocks:
