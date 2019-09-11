@@ -112,13 +112,13 @@ def docs_workflows():
 
 
 @test
-def docs_tutorial():
+def docs_documentation():
     dir = Path(__file__).parent / '../../docs'
     f = Path('.myqueue/queue.json')
     if f.is_file():
         f.unlink()
     Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
-    run_document(dir / 'tutorial.rst', test=True)
+    run_document(dir / 'documentation.rst', test=True)
 
 
 @test

@@ -5,17 +5,19 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Callable, Set
 from unittest import SkipTest
 
 from myqueue.cli import main
 from myqueue.config import initialize_config
+from myqueue.queue import Queue, Selection
+from myqueue.task import Task, taskstates
 
 LOCAL = True
 UPDATE = False
 
 
-def mq(cmd):
+def mq(cmd: str) -> Optional[List[Task]]:
     args = shlex.split(cmd)
     args[1:1] = ['--traceback']
     return main(args)
@@ -24,26 +26,37 @@ def mq(cmd):
 all_tests = {}
 
 
-def test(func):
+def test(func: Callable[[], None]) -> Callable[[], None]:
+    """Decorator for test functions."""
     all_tests[func.__name__] = func
     return func
 
 
-def find_tests():
+def find_tests() -> None:
     import myqueue.test.mq  # noqa
     import myqueue.test.more  # noqa
     import myqueue.test.docs  # noqa
 
 
-def states():
-    return ''.join(task.state[0] for task in mq('list'))
+def mqlist(states: Set[str] = None) -> List[Task]:
+    states = states or set(taskstates)
+    with Queue(verbosity=0) as q:
+        q._read()
+        return q.select(Selection(states=states,
+                                  folders=[Path().absolute()]))
+
+
+def states() -> str:
+    return ''.join(task.state[0] for task in mqlist())
 
 
 def wait() -> None:
     t0 = time.time()
     timeout = 10.0 if LOCAL else 1300.0
     sleep = 0.1 if LOCAL else 3.0
-    while mq('list -s qr -qq'):
+    while True:
+        if len(mqlist({'queued', 'running'})) == 0:
+            return
         time.sleep(sleep)
         if time.time() - t0 > timeout:
             raise TimeoutError

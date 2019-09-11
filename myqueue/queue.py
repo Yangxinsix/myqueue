@@ -29,11 +29,11 @@ class Selection:
     """Object used for selecting tasks."""
 
     def __init__(self,
-                 ids: Optional[Set[int]],
-                 name: str,
-                 states: Set[str],
-                 folders: List[Path],
-                 recursive: bool):
+                 ids: Optional[Set[int]] = None,
+                 name: str = '',
+                 states: Set[str] = set(),
+                 folders: List[Path] = [],
+                 recursive: bool = True):
         """Selection.
 
         Selections is based on:
