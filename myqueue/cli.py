@@ -117,7 +117,7 @@ Do this:
 """),
     ('test',
      'Run tests.', """
-Please report errors to https://gitlab.com/jensj/myqueue/issues.
+Please report errors to https://gitlab.com/myqueue/myqueue/issues.
 """)]
 
 aliases = {'rm': 'remove',

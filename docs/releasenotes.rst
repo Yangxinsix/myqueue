@@ -6,6 +6,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 19.9.0
+==============
+
 * New ``-C`` option for the :ref:`mq ls <list>` command for showing only the
   count of tasks in the queue::
 
@@ -14,6 +20,8 @@ Next release
 
 * A background process will now automatically :ref:`kick <kick>`
   your queues every ten minutes.
+
+* Project moved to a new *myqueue* group: https://gitlab.com/myqueue/myqueue/
 
 
 Version 19.8.0

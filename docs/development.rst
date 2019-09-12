@@ -4,7 +4,7 @@ Development
 Git repository
 --------------
 
-https://gitlab.com/jensj/myqueue/
+https://gitlab.com/myqueue/myqueue/
 
 
 Documentation
