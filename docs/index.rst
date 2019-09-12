@@ -23,6 +23,7 @@ system administrator or database required.
 
     * Folder-based :ref:`Workflows`
 
+Latest release: :ref:`19.9.0 <releases>`.
 
 .. toctree::
     :maxdepth: 3
