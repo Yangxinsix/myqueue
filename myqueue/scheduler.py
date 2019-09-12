@@ -14,7 +14,7 @@ class Scheduler:
     def kick(self) -> None:
         pass
 
-    def timeout(self, Task) -> bool:
+    def timeout(self, task: Task) -> bool:
         return False
 
     def cancel(self, task: Task) -> None:

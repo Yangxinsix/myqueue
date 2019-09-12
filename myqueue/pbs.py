@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional, Set
 
 from .task import Task
 from .config import config
@@ -8,7 +9,9 @@ from .scheduler import Scheduler
 
 
 class PBS(Scheduler):
-    def submit(self, task: Task, activation_script: Path = None) -> None:
+    def submit(self,
+               task: Task,
+               activation_script: Optional[Path] = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -66,7 +69,7 @@ class PBS(Scheduler):
         id = int(out.split(b'.')[0])
         task.id = id
 
-    def timeout(self, task):
+    def timeout(self, task: Task) -> bool:
         path = (task.folder /
                 '{}.e{}'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
@@ -77,10 +80,10 @@ class PBS(Scheduler):
                     return True
         return False
 
-    def cancel(self, task):
+    def cancel(self, task: Task) -> None:
         subprocess.run(['qdel', str(task.id)])
 
-    def get_ids(self):
+    def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
         host = config.get('host')

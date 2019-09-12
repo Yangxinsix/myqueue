@@ -117,7 +117,7 @@ class Queue(Lock):
     def list(self,
              selection: Selection,
              columns: str,
-             sort: str = None,
+             sort: Optional[str] = None,
              reverse: bool = False,
              short: bool = False) -> List[Task]:
         """Pretty-print list of tasks."""

@@ -2,7 +2,7 @@ import os
 import subprocess
 from math import ceil
 from pathlib import Path
-from typing import Set
+from typing import Set, Optional
 
 from .task import Task
 from .config import config
@@ -19,7 +19,9 @@ def mpi_implementation() -> str:
 
 
 class SLURM(Scheduler):
-    def submit(self, task: Task, activation_script: Path = None) -> None:
+    def submit(self,
+               task: Task,
+               activation_script: Optional[Path] = None) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
