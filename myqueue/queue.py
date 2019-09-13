@@ -109,8 +109,7 @@ class Queue(Lock):
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        if self.changed:
-            assert not self.dry_run
+        if self.changed and not self.dry_run:
             self._write()
         self.release()
 
