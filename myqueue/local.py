@@ -20,7 +20,9 @@ class LocalScheduler(Scheduler, Lock):
         Scheduler.__init__(self)
 
     @lock
-    def submit(self, task: Task, activation_script: Path = None) -> None:
+    def submit(self, task: Task, activation_script: Path = None,
+               dry_run: bool = False) -> None:
+        assert not dry_run
         self._read()
         if task.dtasks:
             ids = {t.id for t in self.tasks}
