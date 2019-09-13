@@ -5,7 +5,8 @@ from myqueue.task import Task
 
 class Scheduler:
     def submit(self, task: Task,
-               activation_script: Optional[Path]) -> None:
+               activation_script: Optional[Path],
+               dry_run: bool) -> None:
         pass
 
     def update(self, id: int, state: str) -> None:

@@ -11,7 +11,8 @@ from .scheduler import Scheduler
 class PBS(Scheduler):
     def submit(self,
                task: Task,
-               activation_script: Optional[Path] = None) -> None:
+               activation_script: Optional[Path] = None,
+               dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -60,6 +61,10 @@ class PBS(Scheduler):
             '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
             'touch $mq-2\n'
             .format(home=home, dir=task.folder, cmd=cmd))
+
+        if dry_run:
+            print(qsub, script)
+            return
 
         p = subprocess.Popen(qsub,
                              stdin=subprocess.PIPE,
