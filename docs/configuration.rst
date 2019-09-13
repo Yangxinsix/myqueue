@@ -23,9 +23,38 @@ Here is an example configuration file:
 
 .. literalinclude:: example_config.py
 
+scheduler
+=========
+
 The type of scheduler you are using must be ``'slurm'``, ``'pbs'`` or
 ``'local'``.  The *local* scheduler can be used for testing on a system without
 SLURM/PBS.
+
+
+nodes
+=====
+
+This is a list of (name, dictionary) tuples describing the different types
+of nodes.  Each dictionary must have a ``cores`` entry.  Other possible keys
+that you normally don't need are: ``memory``, ``features``, ``reservation``
+and ``mpiargs`` (see the `source code`_ for how to use them).
+
+The order of your nodes is significant.  If you ask for :math:`N` cores,
+MyQueue will pick the first type of node from the list that has a core count
+that divides :math:`N`.  Given the configuration shown above, here are some
+example :ref:`resource <resources>` specifications:
+
+    ``48:12h``: 2 :math:`\times` ``xeon24``
+
+    ``48:xeon8:12h``: 6 :math:`\times` ``xeon8``
+
+    ``48:xeon16:12h``: 3 :math:`\times` ``xeon16``
+
+.. _source code: https://gitlab.com/myqueue/myqueue/blob/master/myqueue/slurm.py
+
+
+mpiexec
+=======
 
 By default, parallel jobs will be started with the ``mpiexec`` command found
 on your ``PATH``.  You can specify a different executable with this extra line
@@ -35,6 +64,10 @@ in your ``config.py`` file::
         ...,
         'mpiexec': '/path/to/your/mpiexec/my-mpiexec',
         ...}
+
+
+parallel_python
+===============
 
 If you want to use an MPI enabled Python interpreter for running your Python
 scripts in parallel then you must specify which one you want to use::
