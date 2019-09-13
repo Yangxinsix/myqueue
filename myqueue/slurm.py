@@ -21,7 +21,8 @@ def mpi_implementation() -> str:
 class SLURM(Scheduler):
     def submit(self,
                task: Task,
-               activation_script: Optional[Path] = None) -> None:
+               activation_script: Optional[Path] = None,
+               dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -91,8 +92,16 @@ class SLURM(Scheduler):
                 f'echo "venv: {activation_script}"\n')
 
         script += (
-            f'(touch $mq-0 && cd {str(task.folder)!r} && {cmd} && touch $mq-1)'
-            ' || (touch $mq-2; exit 1)\n')
+            '(touch $mq-0 && \\\n'
+            f' cd {str(task.folder)!r} && \\\n'
+            f' {cmd} && \\\n'
+            ' touch $mq-1) || \\\n'
+            '(touch $mq-2; exit 1)\n')
+
+        if dry_run:
+            print(' \\\n    '.join(sbatch))
+            print(script)
+            return
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,

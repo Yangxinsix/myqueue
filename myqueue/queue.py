@@ -109,8 +109,7 @@ class Queue(Lock):
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        if self.changed:
-            assert not self.dry_run
+        if self.changed and not self.dry_run:
             self._write()
         self.release()
 
@@ -242,7 +241,7 @@ class Queue(Lock):
             task.state = 'queued'
             task.tqueued = t
 
-        if self.dry_run:
+        if self.dry_run and self.verbosity < 2:
             pprint(todo, 0, 'fnr')
             print(plural(len(todo), 'task'), 'to submit')
         else:
@@ -259,7 +258,8 @@ class Queue(Lock):
                     try:
                         self.scheduler.submit(
                             task,
-                            activation_scripts.get(task.folder))
+                            activation_scripts.get(task.folder),
+                            self.dry_run)
                     except Exception as x:
                         ex = x
                         break
