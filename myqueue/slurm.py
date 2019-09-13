@@ -92,11 +92,14 @@ class SLURM(Scheduler):
                 f'echo "venv: {activation_script}"\n')
 
         script += (
-            f'(touch $mq-0 && cd {str(task.folder)!r} && {cmd} && touch $mq-1)'
-            ' || (touch $mq-2; exit 1)\n')
+            '(touch $mq-0 && \\\n'
+            f' cd {str(task.folder)!r} && \\\n'
+            f' {cmd} && \\\n'
+            ' touch $mq-1) || \\\n'
+            '(touch $mq-2; exit 1)\n')
 
         if dry_run:
-            print(sbatch)
+            print(' \\\n    '.join(sbatch))
             print(script)
             return
 
