@@ -234,7 +234,7 @@ class Task:
         """
         self.error = '-'  # mark as already read
 
-        if config['scheduler'].lower() == 'pbs':
+        if config.get('scheduler') == 'pbs':
             path = self.folder / '{}.e{}'.format(self.cmd.name, self.id)
         else:
             path = self.folder / (self.name + '.err')

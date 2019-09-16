@@ -49,7 +49,7 @@ def loop() -> None:
         for f in folders:
             if (f / '.myqueue').is_dir():
                 result = subprocess.run(
-                    f'python3 -m myqueue kick {f} >> {out}',
+                    f'python3 -m myqueue kick {f} -T >> {out}',
                     shell=True,
                     stderr=subprocess.PIPE)
                 if result.returncode:
