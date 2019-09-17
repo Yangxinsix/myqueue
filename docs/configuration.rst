@@ -34,7 +34,7 @@ SLURM/PBS.
 nodes
 =====
 
-This is a list of (name, dictionary) tuples describing the different types
+This is a list of (node-name, dictionary) tuples describing the different types
 of nodes.  Each dictionary must have a ``cores`` entry.  Other possible keys
 that you normally don't need are: ``memory``, ``features``, ``reservation``
 and ``mpiargs`` (see the `source code`_ for how to use them).

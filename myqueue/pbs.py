@@ -48,7 +48,9 @@ class PBS(Scheduler):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3',
+                                        config.get('parallel_python',
+                                                   'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 

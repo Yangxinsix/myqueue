@@ -107,7 +107,8 @@ You can see the status of your jobs with::
     -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
     done: 3, FAILED: 1, total: 4
 
-Remove the failed and done jobs from the list with::
+Remove the failed and done jobs from the list with
+(notice the dot meaning the current folder)::
 
     $ mq remove -s Fd -r .
     1 ./    time@sleep+2     1:1m  0:04 done   0:02
