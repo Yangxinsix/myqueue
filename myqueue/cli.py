@@ -451,7 +451,9 @@ def run(args: argparse.Namespace) -> None:
 
         name: Optional[Pattern[str]]
         if args.name:
-            name = re.compile(args.name.replace('*', '.*').replace('?', '.'))
+            name = re.compile(re.escape(args.name)
+                              .replace('\\*', '.*')
+                              .replace('\\?', '.'))
         else:
             name = None
         selection = Selection(ids, name, states,
