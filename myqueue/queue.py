@@ -12,7 +12,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict, Optional, Sequence  # noqa
+from typing import Set, List, Dict, Optional, Sequence, Pattern  # noqa
 from types import TracebackType
 
 from .config import config
@@ -31,7 +31,7 @@ class Selection:
 
     def __init__(self,
                  ids: Optional[Set[int]] = None,
-                 name: str = '',
+                 name: Optional[Pattern[str]] = None,
                  states: Set[str] = set(),
                  folders: List[Path] = [],
                  recursive: bool = True):
@@ -131,7 +131,7 @@ class Queue(Lock):
     def info(self, id: int) -> None:
         """Print information about a single task."""
         self._read()
-        task = self.select(Selection({id}, '', set(), [], False))[0]
+        task = self.select(Selection({id}, None, set(), [], False))[0]
         print(json.dumps(task.todict(), indent='    '))
         if self.verbosity > 1:
             path = task.folder / (task.name + '.err')
@@ -299,7 +299,7 @@ class Queue(Lock):
         tasks = []
         for task in self.tasks:
             if task.state in s.states:
-                if not s.name or task.cmd.name == s.name:
+                if not s.name or s.name.fullmatch(task.cmd.name):
                     if any(task.infolder(f, s.recursive) for f in s.folders):
                         tasks.append(task)
 

@@ -1,8 +1,9 @@
 import argparse
+import re
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any, Tuple, Dict, Set, Optional
+from typing import List, Any, Tuple, Dict, Set, Optional, Pattern
 
 
 class MQError(Exception):
@@ -448,7 +449,12 @@ def run(args: argparse.Namespace) -> None:
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
-        selection = Selection(ids, args.name, states,
+        name: Optional[Pattern[str]]
+        if args.name:
+            name = re.compile(args.name.replace('*', '.*').replace('?', '.'))
+        else:
+            name = None
+        selection = Selection(ids, name, states,
                               folders, getattr(args, 'recursive', True))
 
     if args.command == 'list' and args.all:

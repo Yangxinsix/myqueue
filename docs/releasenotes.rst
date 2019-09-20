@@ -8,7 +8,9 @@ Release notes
 Next release
 ============
 
-* ...
+* Shell-style wildcard matching of task names is now possible::
+
+    $ mq ls -n "*abc-??.py"
 
 
 Version 19.9.0
