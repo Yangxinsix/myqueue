@@ -11,7 +11,7 @@ class MQError(Exception):
 
 
 main_description = """\
-Simple frontend for SLURM/PBS.
+Frontend for SLURM/PBS.
 
 Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.

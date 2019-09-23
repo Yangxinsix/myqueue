@@ -6,14 +6,18 @@ from pathlib import Path
 
 from myqueue.utils import get_home_folders
 
-T = 600
+T = 600  # ten minutes
 
 out = Path.home() / '.myqueue/daemon.out'
 err = Path.home() / '.myqueue/daemon.err'
 
 
 def start_daemon() -> bool:
-    assert not err.is_file()
+    if err.is_file():
+        msg = (f'Something wrong.  See {err}.  '
+               'Fix the problem and remove the daemon.err file.')
+        raise RuntimeError(msg)
+
     if out.is_file():
         age = time() - out.stat().st_mtime
         if age < 7200:
@@ -25,15 +29,14 @@ def start_daemon() -> bool:
     if pid == 0:
         pid = os.fork()
         if pid == 0:
-            if 1:
-                # redirect standard file descriptors
-                sys.stderr.flush()
-                si = open(os.devnull, 'r')
-                so = open(os.devnull, 'w')
-                se = open(os.devnull, 'w')
-                os.dup2(si.fileno(), sys.stdin.fileno())
-                os.dup2(so.fileno(), sys.stdout.fileno())
-                os.dup2(se.fileno(), sys.stderr.fileno())
+            # redirect standard file descriptors
+            sys.stderr.flush()
+            si = open(os.devnull, 'r')
+            so = open(os.devnull, 'w')
+            se = open(os.devnull, 'w')
+            os.dup2(si.fileno(), sys.stdin.fileno())
+            os.dup2(so.fileno(), sys.stdout.fileno())
+            os.dup2(se.fileno(), sys.stderr.fileno())
             loop()
         os._exit(0)
     return True
