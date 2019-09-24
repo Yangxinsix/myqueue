@@ -19,7 +19,9 @@ system administrator or database required.
 
     * Remembers your finished and failed tasks
 
-    * Powerfull :ref:`list <list>` command for monitoring
+    * Powerful :ref:`list <list>` command for monitoring
+
+    * Can be used together with Python :mod:`venv`\ 's
 
     * Folder-based :ref:`Workflows`
 
