@@ -10,11 +10,7 @@ Install with ``pip``::
 
     Python 3.6 or later is required.
 
-Enable bash tab-completion for the current terminal session like this::
-
-    $ `mq completion`
-
-or permanently like this::
+Enable bash tab-completion for future terminal sessions like this::
 
     $ mq completion >> ~/.profile
 
@@ -22,7 +18,7 @@ Run the tests::
 
     $ mq test
 
-and report any errors you get: https://gitlab.com/jensj/myqueue/issues.
+and report any errors you get: https://gitlab.com/myqueue/myqueue/issues.
 
 Subscribe here_ if you want to be notified of updates on PyPI_.
 

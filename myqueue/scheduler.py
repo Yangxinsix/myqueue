@@ -5,7 +5,8 @@ from myqueue.task import Task
 
 class Scheduler:
     def submit(self, task: Task,
-               activation_script: Optional[Path]) -> None:
+               activation_script: Optional[Path],
+               dry_run: bool) -> None:
         pass
 
     def update(self, id: int, state: str) -> None:
@@ -14,7 +15,7 @@ class Scheduler:
     def kick(self) -> None:
         pass
 
-    def timeout(self, Task) -> bool:
+    def timeout(self, task: Task) -> bool:
         return False
 
     def cancel(self, task: Task) -> None:

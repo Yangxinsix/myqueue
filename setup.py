@@ -17,7 +17,7 @@ setup(name='myqueue',
       packages=find_packages(),
       entry_points={'console_scripts': ['mq = myqueue.cli:main']},
       classifiers=[
-          'Development Status :: 5 - Production/Stable'
+          'Development Status :: 5 - Production/Stable',
           'Environment :: Console',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: '

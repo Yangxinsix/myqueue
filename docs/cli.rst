@@ -464,7 +464,7 @@ usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-v] [-q]
 
 Run tests.
 
-Please report errors to https://gitlab.com/jensj/myqueue/issues.
+Please report errors to https://gitlab.com/myqueue/myqueue/issues.
 
 test:
     Test to run. Default behaviour is to run all.

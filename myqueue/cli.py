@@ -1,8 +1,9 @@
 import argparse
+import re
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any, Tuple, Dict, Set, Optional
+from typing import List, Any, Tuple, Dict, Set, Optional, Pattern
 
 
 class MQError(Exception):
@@ -10,7 +11,7 @@ class MQError(Exception):
 
 
 main_description = """\
-Simple frontend for SLURM/PBS.
+Frontend for SLURM/PBS.
 
 Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
@@ -117,7 +118,7 @@ Do this:
 """),
     ('test',
      'Run tests.', """
-Please report errors to https://gitlab.com/jensj/myqueue/issues.
+Please report errors to https://gitlab.com/myqueue/myqueue/issues.
 """)]
 
 aliases = {'rm': 'remove',
@@ -455,7 +456,14 @@ def run(args: argparse.Namespace) -> None:
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
-        selection = Selection(ids, args.name, states,
+        name: Optional[Pattern[str]]
+        if args.name:
+            name = re.compile(re.escape(args.name)
+                              .replace('\\*', '.*')
+                              .replace('\\?', '.'))
+        else:
+            name = None
+        selection = Selection(ids, name, states,
                               folders, getattr(args, 'recursive', True))
 
     if args.command == 'list' and args.all:

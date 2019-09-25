@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional, Set
 
 from .task import Task
 from .config import config
@@ -8,7 +9,10 @@ from .scheduler import Scheduler
 
 
 class PBS(Scheduler):
-    def submit(self, task: Task, activation_script: Path = None) -> None:
+    def submit(self,
+               task: Task,
+               activation_script: Optional[Path] = None,
+               dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -44,7 +48,9 @@ class PBS(Scheduler):
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
-            cmd = mpiexec + cmd.replace('python3', config['parallel_python'])
+            cmd = mpiexec + cmd.replace('python3',
+                                        config.get('parallel_python',
+                                                   'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
@@ -58,6 +64,10 @@ class PBS(Scheduler):
             'touch $mq-2\n'
             .format(home=home, dir=task.folder, cmd=cmd))
 
+        if dry_run:
+            print(qsub, script)
+            return
+
         p = subprocess.Popen(qsub,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
@@ -66,7 +76,7 @@ class PBS(Scheduler):
         id = int(out.split(b'.')[0])
         task.id = id
 
-    def timeout(self, task):
+    def timeout(self, task: Task) -> bool:
         path = (task.folder /
                 '{}.e{}'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
@@ -77,10 +87,10 @@ class PBS(Scheduler):
                     return True
         return False
 
-    def cancel(self, task):
+    def cancel(self, task: Task) -> None:
         subprocess.run(['qdel', str(task.id)])
 
-    def get_ids(self):
+    def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
         host = config.get('host')
