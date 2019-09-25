@@ -12,6 +12,8 @@ Next release
 
     $ mq ls -n "*abc-??.py"
 
+* Two new :ref:`cli` options: ``--verbose`` and ``--force``.
+
 
 Version 19.9.0
 ==============

@@ -109,8 +109,8 @@ optional arguments:
 Submit: Submit task(s) to queue
 -------------------------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-R RESOURCES]
-                 [-w] [-z] [-v] [-q] [-T]
+usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-f]
+                 [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
                  task [folder [folder ...]]
 
 Submit task(s) to queue.
@@ -133,6 +133,7 @@ optional arguments:
                         memory. Time-limit will be doubled for a timed out
                         task and number of cores will be increased to the next
                         number of nodes for a task that runs out of memory.
+  -f, --force           Submit also failed tasks.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -251,7 +252,7 @@ optional arguments:
 Workflow: Submit tasks from script
 ----------------------------------
 
-usage: mq workflow [-h] [-t TARGETS] [-p] [-z] [-v] [-q] [-T]
+usage: mq workflow [-h] [-f] [-t TARGETS] [-p] [-z] [-v] [-q] [-T]
                    script [folder [folder ...]]
 
 Submit tasks from script.
@@ -288,6 +289,7 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
+  -f, --force           Submit also failed tasks.
   -t TARGETS, --targets TARGETS
                         Comma-separated target names. Without any targets, all
                         tasks will be submitted.

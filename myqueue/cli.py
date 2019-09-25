@@ -206,6 +206,10 @@ def main(arguments: List[str] = None) -> Any:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
+        if cmd in ['submit', 'workflow']:
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
+
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8:1h", 8 cores for 1 hour. '
@@ -526,7 +530,7 @@ def run(args: argparse.Namespace) -> None:
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks)
+            queue.submit(newtasks, args.force)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -541,7 +545,7 @@ def run(args: argparse.Namespace) -> None:
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
-            queue.submit(tasks)
+            queue.submit(tasks, args.force)
 
         elif args.command == 'sync':
             queue.sync()

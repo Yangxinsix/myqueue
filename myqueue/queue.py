@@ -151,8 +151,16 @@ class Queue(Lock):
 
     def submit(self,
                tasks: Sequence[Task],
+               force: bool = False,
                read: bool = True) -> None:
-        """Submit tasks to queue."""
+        """Submit tasks to queue.
+
+        Parameters
+        ==========
+        force: bool
+            Ignore and remove name.FAILED files.
+        """
+
         tasks2 = []
         done = set()
         for task in tasks:
@@ -161,18 +169,24 @@ class Queue(Lock):
             else:
                 tasks2.append(task)
         tasks = tasks2
-
         if done:
             print(plural(len(done), 'task'), 'already done')
 
-        tasks = [task
-                 for task in tasks
-                 if not task.workflow or not task.has_failed()]
-        nfailed = len(tasks2) - len(tasks)
+        tasks2 = []
+        for task in tasks:
+            if task.workflow and task.has_failed():
+                if force:
+                    task.remove_failed_file()
+                    tasks2.append(task)
+            else:
+                tasks2.append(task)
+        nfailed = len(tasks) - len(tasks2)
         if nfailed:
             print(plural(nfailed, 'task'),
                   'already marked as FAILED '
-                  '("<task-name>.FAILED" file exists)')
+                  '("<task-name>.FAILED" file exists).')
+            print('Use --force to ignore and remove the .FAILED files.')
+        tasks = tasks2
 
         if read:
             self._read()
