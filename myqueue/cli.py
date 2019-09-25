@@ -136,6 +136,8 @@ def main(arguments: List[str] = None) -> Any:
         formatter_class=Formatter,
         description=main_description,
         allow_abbrev=False)
+    parser.add_argument('-V', '--version', action='store_true',
+                        help='Show version number')
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
@@ -298,9 +300,14 @@ def main(arguments: List[str] = None) -> Any:
     if not f.is_dir():
         f.mkdir()
 
+    if args.version:
+        from myqueue import __version__
+        print('Version:', __version__)
+        print('Code:   ', Path(__file__).parent)
+        return
+
     if args.command is None:
         parser.print_help()
-        print('\nCode:', Path(__file__).parent)
         return
 
     if args.command == 'help':
@@ -579,7 +586,9 @@ def fix_option_order(arguments: List[str],
         if a == '--':
             args2 += arguments[i:]
             break
-        if a in long_options:
+        if a == '-V' or a == '--version':
+            args1.append(a)
+        elif a in long_options:
             n = long_options[a]
             args2 += arguments[i:i + 1 + n]
             i += n

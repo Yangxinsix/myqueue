@@ -89,7 +89,7 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
                 command = w
                 break
     else:
-        opts = ['-h', '--help']
+        opts = ['-h', '--help', '-V', '--version']
         if word[:1] == '-':
             return opts
         return list(commands.keys()) + opts
