@@ -4,6 +4,8 @@ from myqueue.task import Task
 
 
 class Scheduler:
+    name: str
+
     def submit(self, task: Task,
                activation_script: Optional[Path],
                dry_run: bool) -> None:
@@ -35,7 +37,7 @@ def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
     if name == 'local':
         from myqueue.local import LocalScheduler
-        scheduler = LocalScheduler()
+        scheduler: Scheduler = LocalScheduler()
     elif name == 'slurm':
         from myqueue.slurm import SLURM
         scheduler = SLURM()

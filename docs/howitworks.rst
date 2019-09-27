@@ -15,6 +15,8 @@ update your queue with information about timing and possible errors.
 The processing of the status files happens whenever you interact with MyQueue
 on the command-line or every 10 minutes when the MyQueue daemon wakes up.
 
+All events are logged to ``~/.myqueue/log.csv``.
+
 
 The daemon
 ----------
