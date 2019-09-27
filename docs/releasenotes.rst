@@ -14,6 +14,9 @@ Next release
 
 * Two new :ref:`cli` options: ``--verbose`` and ``--force``.
 
+* All task-events (queued, running, stopped) are now logged to
+  ``~/.myqueue/log.csv``.
+
 
 Version 19.9.0
 ==============
