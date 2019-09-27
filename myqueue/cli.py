@@ -567,6 +567,7 @@ def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
         return re.compile(re.escape(pattern)
                           .replace('\\*', '.*')
                           .replace('\\?', '.'))
+    return None
 
 
 class Formatter(argparse.HelpFormatter):
