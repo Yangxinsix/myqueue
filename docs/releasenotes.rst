@@ -14,7 +14,7 @@ Next release
     $ mq ls -n "*abc-??.py"
     $ mq resubmit -s F -e "*ZeroDivision*"
 
-* Two new :ref:`cli` options: ``--verbose`` and ``--force``.
+* Two new :ref:`cli` options: ``--version`` and ``--force``.
 
 * All task-events (queued, running, stopped) are now logged to
   ``~/.myqueue/log.csv``.
