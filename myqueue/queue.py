@@ -430,11 +430,11 @@ class Queue(Lock):
         self._read()
         tasks = []
         for task in self.select(selection):
-            if not self.dry_run:
-                if task.state not in {'queued', 'hold', 'running'}:
-                    self.tasks.remove(task)
-                if task.state == 'FAILED':
-                    task.remove_failed_file()
+            if task.state not in {'queued', 'hold', 'running'}:
+                self.tasks.remove(task)
+            if task.state == 'FAILED':
+                task.remove_failed_file()
+            self.changed.add(task)
             task = Task(task.cmd,
                         deps=task.deps,
                         resources=resources or task.resources,
