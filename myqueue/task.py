@@ -1,4 +1,6 @@
+import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator  # noqa
 
@@ -144,20 +146,46 @@ class Task:
         if root:
             folder = folder.relative_to(root)
             deps = [dep.relative_to(root) for dep in self.deps]
-        return {'cmd': self.cmd.todict(),
-                'id': self.id,
-                'folder': str(folder),
-                'deps': [str(dep) for dep in deps],
-                'resources': self.resources.todict(),
-                'workflow': self.workflow,
-                'restart': self.restart,
-                'diskspace': self.diskspace,
-                'creates': self.creates,
-                'state': self.state,
-                'tqueued': self.tqueued,
-                'trunning': self.trunning,
-                'tstop': self.tstop,
-                'error': self.error}
+        return {
+            'id': self.id,
+            'folder': str(folder),
+            'cmd': self.cmd.todict(),
+            'state': self.state,
+            'resources': self.resources.todict(),
+            'restart': self.restart,
+            'deps': [str(dep) for dep in deps],
+            'workflow': self.workflow,
+            'diskspace': self.diskspace,
+            'creates': self.creates,
+            'tqueued': self.tqueued,
+            'trunning': self.trunning,
+            'tstop': self.tstop,
+            'error': self.error}
+
+    def tocsv(self,
+              fd=sys.stdout,
+              write_header: bool = False) -> None:
+        if write_header:
+            print('# id,folder,cmd,resources,state,restart,workflow,'
+                  'diskspace,deps,creates,tqueued,trunning,tstop,error',
+                  file=fd)
+        t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
+                      for t in [self.tqueued, self.trunning, self.tstop])
+        deps = ','.join(str(dep) for dep in self.deps)
+        creates = ','.join(self.creates)
+        print(f'{self.id},'
+              f'"{self.folder}",'
+              f'"{self.cmd.name}",'
+              f'{self.resources},'
+              f'{self.state},'
+              f'{self.restart},'
+              f'{int(self.workflow)},' +
+              f'{self.diskspace},'
+              f'"{deps}",'
+              f'{creates}",'
+              f'{t1},{t2},{t3},'
+              f'"{self.error}"',
+              file=fd)
 
     @staticmethod
     def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':

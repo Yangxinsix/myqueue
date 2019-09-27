@@ -35,12 +35,14 @@ def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
     if name == 'local':
         from myqueue.local import LocalScheduler
-        return LocalScheduler()
-    if name == 'slurm':
+        scheduler = LocalScheduler()
+    elif name == 'slurm':
         from myqueue.slurm import SLURM
-        return SLURM()
-    if name == 'pbs':
+        scheduler = SLURM()
+    elif name == 'pbs':
         from myqueue.pbs import PBS
-        return PBS()
+        scheduler = PBS()
     else:
-        assert 0
+        assert 0, name
+    scheduler.name = name
+    return scheduler
