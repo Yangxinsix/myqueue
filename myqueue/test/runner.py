@@ -10,7 +10,8 @@ from unittest import SkipTest
 
 from myqueue.cli import main
 from myqueue.config import initialize_config
-from myqueue.queue import Queue, Selection
+from myqueue.queue import Queue
+from myqueue.selection import Selection
 from myqueue.task import Task, taskstates
 
 LOCAL = True
@@ -42,8 +43,8 @@ def mqlist(states: Set[str] = None) -> List[Task]:
     states = states or set(taskstates)
     with Queue(verbosity=0) as q:
         q._read()
-        return q.select(Selection(states=states,
-                                  folders=[Path().absolute()]))
+        return Selection(states=states,
+                         folders=[Path().absolute()]).select(q.tasks)
 
 
 def states() -> str:

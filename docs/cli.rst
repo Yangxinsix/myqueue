@@ -67,8 +67,8 @@ optional arguments:
 List (ls): List tasks in queue
 ------------------------------
 
-usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-c ifnraste] [-S c] [-C]
-               [-v] [-q] [-T] [-A]
+usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
+               [-S c] [-C] [-v] [-q] [-T] [-A]
                [folder]
 
 List tasks in queue.
@@ -92,7 +92,11 @@ optional arguments:
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
-  -n NAME, --name NAME  Select only tasks named "NAME".
+  -n NAME, --name NAME  Select only tasks with names matching "NAME" (* and ?
+                        can be used).
+  -e ERROR, --error ERROR
+                        Select only tasks with error message matching "ERROR"
+                        (* and ? can be used).
   -c ifnraste, --columns ifnraste
                         Select columns to show.
   -S c, --sort c        Sort rows using column c, where c must be one of i, f,
@@ -152,7 +156,7 @@ Resubmit: Resubmit failed or timed-out tasks
 --------------------------------------------
 
 usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
-                   [-z] [-v] [-q] [-T] [-r]
+                   [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder [folder ...]]
 
 Resubmit failed or timed-out tasks.
@@ -179,7 +183,11 @@ optional arguments:
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
-  -n NAME, --name NAME  Select only tasks named "NAME".
+  -n NAME, --name NAME  Select only tasks with names matching "NAME" (* and ?
+                        can be used).
+  -e ERROR, --error ERROR
+                        Select only tasks with error message matching "ERROR"
+                        (* and ? can be used).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -192,7 +200,8 @@ optional arguments:
 Remove (rm): Remove or cancel task(s)
 -------------------------------------
 
-usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
+                 [-q] [-T] [-r]
                  [folder [folder ...]]
 
 Remove or cancel task(s).
@@ -214,7 +223,11 @@ optional arguments:
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
-  -n NAME, --name NAME  Select only tasks named "NAME".
+  -n NAME, --name NAME  Select only tasks with names matching "NAME" (* and ?
+                        can be used).
+  -e ERROR, --error ERROR
+                        Select only tasks with error message matching "ERROR"
+                        (* and ? can be used).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -362,7 +375,8 @@ optional arguments:
 Modify: Modify task(s)
 ----------------------
 
-usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-z] [-v] [-q] [-T] [-r]
+usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
+                 [-q] [-T] [-r]
                  newstate [folder [folder ...]]
 
 Modify task(s).
@@ -383,7 +397,11 @@ optional arguments:
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
-  -n NAME, --name NAME  Select only tasks named "NAME".
+  -n NAME, --name NAME  Select only tasks with names matching "NAME" (* and ?
+                        can be used).
+  -e ERROR, --error ERROR
+                        Select only tasks with error message matching "ERROR"
+                        (* and ? can be used).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.

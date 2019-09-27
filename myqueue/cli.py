@@ -249,7 +249,11 @@ def main(arguments: List[str] = None) -> Any:
               'Use "-i -" for reading ID\'s from stdin '
               '(one ID per line; extra stuff after the ID will be ignored).')
             a('-n', '--name',
-              help='Select only tasks named "NAME".')
+              help='Select only tasks with names matching "NAME" '
+              '(* and ? can be used).')
+            a('-e', '--error',
+              help='Select only tasks with error message matching "ERROR" '
+              '(* and ? can be used).')
 
         if cmd == 'list':
             a('-c', '--columns', metavar='ifnraste', default='ifnraste',
@@ -363,7 +367,8 @@ def run(args: argparse.Namespace) -> None:
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, taskstates
-    from .queue import Queue, Selection
+    from .queue import Queue
+    from .selection import Selection
     from .utils import get_home_folders
     from .workflow import workflow
     from .daemon import start_daemon
@@ -460,15 +465,12 @@ def run(args: argparse.Namespace) -> None:
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
-        name: Optional[Pattern[str]]
-        if args.name:
-            name = re.compile(re.escape(args.name)
-                              .replace('\\*', '.*')
-                              .replace('\\?', '.'))
-        else:
-            name = None
-        selection = Selection(ids, name, states,
-                              folders, getattr(args, 'recursive', True))
+        selection = Selection(ids,
+                              regex(args.name),
+                              states,
+                              folders,
+                              getattr(args, 'recursive', True),
+                              regex(args.error))
 
     if args.command == 'list' and args.all:
         folders = get_home_folders()
@@ -558,6 +560,14 @@ def run(args: argparse.Namespace) -> None:
 
         else:
             assert False
+
+
+def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+    if pattern:
+        return re.compile(re.escape(pattern)
+                          .replace('\\*', '.*')
+                          .replace('\\?', '.'))
+    return None
 
 
 class Formatter(argparse.HelpFormatter):

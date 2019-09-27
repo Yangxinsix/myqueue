@@ -19,43 +19,12 @@ from .config import config
 from .scheduler import get_scheduler, Scheduler
 from .resources import Resources
 from .run import run_tasks
+from .selection import Selection
 from .task import Task
 from .utils import Lock
 from .virtenv import find_activation_scripts
 
 use_color = sys.stdout.isatty()
-
-
-class Selection:
-    """Object used for selecting tasks."""
-
-    def __init__(self,
-                 ids: Optional[Set[int]] = None,
-                 name: Optional[Pattern[str]] = None,
-                 states: Set[str] = set(),
-                 folders: List[Path] = [],
-                 recursive: bool = True):
-        """Selection.
-
-        Selections is based on:
-
-            ids
-
-        or:
-
-            any combination of name, state, folder.
-
-        Use recursive=True to allow for tasks inside a folder.
-        """
-        self.ids = ids
-        self.name = name
-        self.states = states
-        self.folders = folders
-        self.recursive = recursive
-
-    def __repr__(self) -> str:
-        return (f'Selection({self.ids}, {self.name}, {self.states}, '
-                f'{self.folders}, {self.recursive})')
 
 
 class Queue(Lock):
@@ -121,7 +90,7 @@ class Queue(Lock):
              short: bool = False) -> List[Task]:
         """Pretty-print list of tasks."""
         self._read()
-        tasks = self.select(selection)
+        tasks = selection.select(self.tasks)
         if isinstance(sort, str):
             tasks.sort(key=lambda task: task.order(sort),  # type: ignore
                        reverse=reverse)
@@ -131,7 +100,7 @@ class Queue(Lock):
     def info(self, id: int) -> None:
         """Print information about a single task."""
         self._read()
-        task = self.select(Selection({id}, None, set(), [], False))[0]
+        task = Selection({id}).select(self.tasks)[0]
         print(json.dumps(task.todict(), indent='    '))
         if self.verbosity > 1:
             path = task.folder / (task.name + '.err')
@@ -305,26 +274,12 @@ class Queue(Lock):
         else:
             run_tasks(tasks)
 
-    def select(self, s: Selection) -> List[Task]:
-        """Filter tasks acording to selection object."""
-        if s.ids is not None:
-            return [task for task in self.tasks if task.id in s.ids]
-
-        tasks = []
-        for task in self.tasks:
-            if task.state in s.states:
-                if not s.name or s.name.fullmatch(task.cmd.name):
-                    if any(task.infolder(f, s.recursive) for f in s.folders):
-                        tasks.append(task)
-
-        return tasks
-
     def remove(self, selection: Selection) -> None:
         """Remove or cancel tasks."""
 
         self._read()
 
-        tasks = self.select(selection)
+        tasks = selection.select(self.tasks)
         tasks = self.find_depending(tasks)
 
         self._remove(tasks)
@@ -398,7 +353,7 @@ class Queue(Lock):
                newstate: str) -> None:
         """Modify task(s)."""
         self._read()
-        tasks = self.select(selection)
+        tasks = selection.select(self.tasks)
 
         for task in tasks:
             if task.state == 'hold' and newstate == 'queued':
@@ -429,7 +384,7 @@ class Queue(Lock):
         """Resubmit failed or timed-out tasks."""
         self._read()
         tasks = []
-        for task in self.select(selection):
+        for task in selection.select(self.tasks):
             if task.state not in {'queued', 'hold', 'running'}:
                 self.tasks.remove(task)
             if task.state == 'FAILED':
