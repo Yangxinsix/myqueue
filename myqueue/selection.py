@@ -22,7 +22,7 @@ class Selection:
 
         or:
 
-            any combination of name, state, folder.
+            any combination of name, state, folder and error message.
 
         Use recursive=True to allow for tasks inside a folder.
         """
