@@ -8,14 +8,17 @@ Release notes
 Next release
 ============
 
-* Shell-style wildcard matching of task names is now possible::
+* Shell-style wildcard matching of task names and error messages
+  is now possible::
 
     $ mq ls -n "*abc-??.py"
+    $ mq resubmit -s F -e "*ZeroDivision*"
 
 * Two new :ref:`cli` options: ``--verbose`` and ``--force``.
 
 * All task-events (queued, running, stopped) are now logged to
   ``~/.myqueue/log.csv``.
+
 
 
 Version 19.9.0
