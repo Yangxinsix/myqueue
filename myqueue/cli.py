@@ -265,6 +265,8 @@ def main(arguments: List[str] = None) -> Any:
               help='Just show the number of tasks.')
             a('-L', '--use-log-file', action='store_true',
               help='List tasks from logfile (~/.myqueue/log.csv).')
+            a('--not-recursive', action='store_true',
+              help='Do not list subfolders.')
 
         if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
@@ -471,7 +473,9 @@ def run(args: argparse.Namespace) -> None:
                               regex(args.name),
                               states,
                               folders,
-                              getattr(args, 'recursive', True),
+                              getattr(args, 'recursive',
+                                      not getattr(args, 'not_recursive',
+                                                  False)),
                               regex(args.error))
 
     if args.command == 'list' and args.all:
