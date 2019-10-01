@@ -46,8 +46,8 @@ commands = {
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
          '-c', '--columns', '-S', '--sort', '-C', '--count',
-         '-v', '--verbose', '-q', '--quiet', '-T', '--traceback',
-         '-A', '--all'],
+         '-L', '--use-log-file', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback', '-A', '--all'],
     'modify':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
          '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',

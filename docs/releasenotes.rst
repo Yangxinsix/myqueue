@@ -17,8 +17,9 @@ Next release
 * Two new :ref:`cli` options: ``--version`` and ``--force``.
 
 * All task-events (queued, running, stopped) are now logged to
-  ``~/.myqueue/log.csv``.
+  ``~/.myqueue/log.csv``.  List tasks from log-file with::
 
+    $ mq ls -L ...
 
 
 Version 19.9.0

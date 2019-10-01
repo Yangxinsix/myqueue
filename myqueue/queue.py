@@ -87,9 +87,10 @@ class Queue(Lock):
              columns: str,
              sort: Optional[str] = None,
              reverse: bool = False,
-             short: bool = False) -> List[Task]:
+             short: bool = False,
+             use_log_file: bool = False) -> List[Task]:
         """Pretty-print list of tasks."""
-        self._read()
+        self._read(use_log_file)
         tasks = selection.select(self.tasks)
         if isinstance(sort, str):
             tasks.sort(key=lambda task: task.order(sort),  # type: ignore
@@ -401,7 +402,15 @@ class Queue(Lock):
             tasks.append(task)
         self.submit(tasks, read=False)
 
-    def _read(self) -> None:
+    def _read(self, read_log_file: bool = False) -> None:
+        if read_log_file:
+            import csv
+            with (Path.home() / '.myqueue/log.csv').open() as fd:
+                reader = csv.reader(fd)
+                next(reader)  # skip header
+                self.tasks = [Task.fromcsv(row) for row in reader]
+                return
+
         if self.fname.is_file():
             data = json.loads(self.fname.read_text())
             root = self.folder.parent

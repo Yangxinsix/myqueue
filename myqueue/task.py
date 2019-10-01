@@ -182,10 +182,28 @@ class Task:
               f'{int(self.workflow)},' +
               f'{self.diskspace},'
               f'"{deps}",'
-              f'{creates}",'
+              f'"{creates}",'
               f'{t1},{t2},{t3},'
               f'"{self.error}"',
               file=fd)
+
+    @staticmethod
+    def fromcsv(row: List[str]) -> 'Task':
+        (id, folder, name, resources, state, restart, workflow, diskspace,
+         deps, creates, t1, t2, t3, error) = row
+        return Task(command(name),
+                    Resources.from_string(resources),
+                    [Path(dep) for dep in deps.split(',')],
+                    bool(workflow),
+                    int(restart),
+                    int(diskspace),
+                    Path(folder),
+                    creates.split(','),
+                    state,
+                    int(id),
+                    error,
+                    *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
+                      for t in (t1, t2, t3)))
 
     @staticmethod
     def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':

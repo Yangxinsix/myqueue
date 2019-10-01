@@ -263,6 +263,8 @@ def main(arguments: List[str] = None) -> Any:
               'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
+            a('-L', '--use-log-file', action='store_true',
+              help='List tasks from logfile (~/.myqueue/log.csv).')
 
         if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
@@ -509,7 +511,8 @@ def run(args: argparse.Namespace) -> None:
             else:
                 reverse = False
                 column = None
-            queue.list(selection, args.columns, column, reverse, args.count)
+            queue.list(selection, args.columns, column, reverse,
+                       args.count, args.use_log_file)
 
         elif args.command == 'remove':
             queue.remove(selection)

@@ -68,7 +68,7 @@ List (ls): List tasks in queue
 ------------------------------
 
 usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
-               [-S c] [-C] [-v] [-q] [-T] [-A]
+               [-S c] [-C] [-L] [-v] [-q] [-T] [-A]
                [folder]
 
 List tasks in queue.
@@ -102,6 +102,7 @@ optional arguments:
   -S c, --sort c        Sort rows using column c, where c must be one of i, f,
                         n, r, a, s, t or e. Use "-S c-" for a descending sort.
   -C, --count           Just show the number of tasks.
+  -L, --use-log-file    List tasks from logfile (~/.myqueue/log.csv).
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
