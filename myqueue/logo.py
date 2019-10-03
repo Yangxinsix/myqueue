@@ -1,4 +1,4 @@
-H = 200
+H = 200 - 15 - 3
 h = 100
 w = 35
 
@@ -15,7 +15,7 @@ mq = [['M', 10, 45 + h,
       ['M', 60 + 2 * w, 50 + h,
        'c', -50, 0, -50, -50, 0, -50]]
 
-print('<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">')
+print('<svg width="164" height="164" xmlns="http://www.w3.org/2000/svg">')
 for i, a in enumerate(mq[::-1]):
     i = 5 - i
     r = 255 - i * 20
@@ -35,11 +35,13 @@ for i, a in enumerate(mq[::-1]):
                 xml.append(str(H - c))
             xy = False
         else:
+            if not relative:
+                c += 2
             xml.append(str(c))
             xy = True
 
-    print('<path d="{}"'.format(' '.join(xml)))
-    print('fill="none" '
+    print(' <path d="{}"'.format(' '.join(xml)))
+    print('       fill="none" '
           'stroke-width="20" '
           'stroke-linecap="round" '
           f'stroke="{color}"/>')
