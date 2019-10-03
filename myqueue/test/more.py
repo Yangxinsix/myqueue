@@ -16,3 +16,9 @@ def api():
     submit(task('myqueue.test@timeout_once'))
     wait()
     assert states() == 'MTd'
+
+
+@test
+def logo():
+    from myqueue.logo import create
+    create()
