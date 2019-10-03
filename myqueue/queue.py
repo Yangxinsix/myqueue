@@ -292,12 +292,14 @@ class Queue(Lock):
                 task.tstop = t  # XXX is this for dry_run only?
 
         if self.dry_run:
-            pprint(tasks, 0)
-            print(plural(len(tasks), 'task'), 'to be removed')
+            if tasks:
+                pprint(tasks, 0)
+                print(plural(len(tasks), 'task'), 'to be removed')
         else:
             if self.verbosity > 0:
-                pprint(tasks, 0)
-                print(plural(len(tasks), 'task'), 'removed')
+                if tasks:
+                    pprint(tasks, 0)
+                    print(plural(len(tasks), 'task'), 'removed')
             for task in tasks:
                 if task.state in ['running', 'hold', 'queued']:
                     self.scheduler.cancel(task)
