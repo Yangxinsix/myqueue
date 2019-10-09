@@ -15,13 +15,15 @@ configuration file for you supercomputer::
     /home/you/../alice/.myqueue/config.py
     /home/you/../bob/.myqueue/config.py
     ...
-    $ cp ~alice/.myqueue/config.py ~/.myqueue/config.py
+    $ mkdir ~/.myqueue
+    $ cp ~alice/.myqueue/config.py ~/.myqueue/
 
 .. highlight:: python
 
 Here is an example configuration file:
 
 .. literalinclude:: example_config.py
+
 
 scheduler
 =========

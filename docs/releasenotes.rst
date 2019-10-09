@@ -4,6 +4,7 @@
 Release notes
 =============
 
+.. highlight:: bash
 
 Next release
 ============
@@ -14,7 +15,7 @@ Next release
     $ mq ls -n "*abc-??.py"
     $ mq resubmit -s F -e "*ZeroDivision*"
 
-* Three new :ref:`cli` options: ``mq -V/--version`` ``mq ls --not-recursive``
+* Three new :ref:`cli` options: ``mq -V/--version``, ``mq ls --not-recursive``
   and ``mq submit/workflow -f/--force``.
 
 * All task-events (queued, running, stopped) are now logged to

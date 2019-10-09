@@ -2,7 +2,7 @@
 MyQueue
 =======
 
-Simple frontend for SLURM_ and PBS_.
+Frontend for SLURM_ and PBS_.
 
 * Documentation: https://myqueue.readthedocs.io/
 * Code: https://gitlab.com/myqueue/myqueue/
