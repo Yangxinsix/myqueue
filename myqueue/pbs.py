@@ -56,7 +56,14 @@ class PBS(Scheduler):
 
         home = config['home']
 
-        script = (
+        script = '#!/bin/bash -l\n'
+
+        if activation_script:
+            script += (
+                f'source {activation_script}\n'
+                f'echo "venv: {activation_script}"\n')
+
+        script += (
             '#!/bin/bash -l\n'
             'id=${{PBS_JOBID%.*}}\n'
             'mq={home}/.myqueue/pbs-$id\n'
