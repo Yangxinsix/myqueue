@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 19.10.0
+===============
+
 * Shell-style wildcard matching of task names and error messages
   is now possible::
 
