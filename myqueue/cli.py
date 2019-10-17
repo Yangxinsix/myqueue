@@ -579,10 +579,8 @@ def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
 
 class Formatter(argparse.HelpFormatter):
     """Improved help formatter."""
-    # Bug in argparse types:
-    # def _fill_text(self, text: str, width: int, indent: str) -> str:
-    #     assert indent == ''
-    def _fill_text(self, text: str, width: int, indent: int) -> str:
+    def _fill_text(self, text: str, width: int, indent: str) -> str:
+        assert indent == ''
         out = ''
         blocks = text.split('\n\n')
         for block in blocks:
