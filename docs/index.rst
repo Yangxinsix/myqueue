@@ -27,6 +27,8 @@ system administrator or database required.
 
 Latest release: :ref:`19.10.0 <releases>`.
 
+.. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
+
 .. toctree::
     :maxdepth: 3
     :caption: Contents:
