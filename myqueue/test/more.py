@@ -1,4 +1,7 @@
+from pathlib import Path
 from .runner import test, wait, states
+from ..queue import Queue
+from ..task import task
 
 
 @test
@@ -22,3 +25,22 @@ def api():
 def logo():
     from myqueue.logo import create
     create()
+
+
+@test
+def backends():
+    from ..config import config
+    config['nodes'] = [('abc16', {'cores': 16}), ('abc8', {'cores': 8})]
+    try:
+        for name in ['slurm', 'pbs']:
+            print(name)
+            if name == 'pbs':
+                p = Path('venv/bin/')
+                p.mkdir(parents=True)
+                (p / 'activate').write_text('')
+            config['scheduler'] = name
+            with Queue(dry_run=True, verbosity=2) as q:
+                q.submit([task('shell:echo hello', cores=24)])
+    finally:
+        config['scheduler'] = 'local'
+        del config['nodes']
