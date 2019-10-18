@@ -31,6 +31,7 @@ def logo():
 def backends():
     from ..config import config
     config['nodes'] = [('abc16', {'cores': 16}), ('abc8', {'cores': 8})]
+    config['mpiexec'] = 'echo'
     try:
         for name in ['slurm', 'pbs']:
             print(name)
@@ -44,3 +45,4 @@ def backends():
     finally:
         config['scheduler'] = 'local'
         del config['nodes']
+        del config['mpiexec']
