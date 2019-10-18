@@ -406,6 +406,7 @@ class Queue(Lock):
 
     def _read(self, read_log_file: bool = False) -> None:
         if read_log_file:
+            print(config)
             import csv
             with (Path.home() / '.myqueue/log.csv').open() as fd:
                 reader = csv.reader(fd)
