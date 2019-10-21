@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 from .runner import test, mq, wait, states, LOCAL, mqlist
+from ..utils import chdir
 
 
 @test
@@ -26,12 +27,17 @@ def fail():
     wait()
     id = mqlist()[0].id
     mq(f'info {id} -v')
-    assert states() == 'FCC'
+    mq('ls -S t')
+    # mq('ls -AC')
+    mq('ls -L')
+    assert states() == 'FCC', states()
     mq('resubmit -sF . -z')
     assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
     assert states() == 'CCF'
+    mq('modify -s F T .')
+    assert states() == 'CCT'
 
 
 @test
@@ -143,3 +149,13 @@ def run():
     mq('run "time@sleep 1" .')
     wait()
     assert states() == ''
+
+
+@test
+def misc():
+    f = Path('subfolder')
+    f.mkdir()
+    with chdir(f):
+        mq('init')
+    mq('help')
+    mq('-V')

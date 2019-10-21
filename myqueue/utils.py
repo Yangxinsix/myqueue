@@ -112,7 +112,7 @@ def update_completion(test=False) -> None:
 
     import argparse
     import textwrap
-    from myqueue.cli import main, commands, aliases
+    from myqueue.cli import _main, commands, aliases
 
     aliases = {command: alias for alias, command in aliases.items()}
 
@@ -139,7 +139,7 @@ def update_completion(test=False) -> None:
             title = title.replace(':', f' ({aliases[cmd]}):')
         print(f'\n\n.. _{cmd}:\n')
         print('{}\n{}\n'.format(title, '-' * len(title)))
-        main(['help', cmd])
+        _main(['help', cmd])
 
     txt = sys.stdout.getvalue()
     txt = txt.replace(':\n\n    ', '::\n\n    ')
@@ -213,7 +213,7 @@ def update_completion(test=False) -> None:
     AP = argparse.ArgumentParser
     argparse.ArgumentParser = Parser  # type: ignore
     try:
-        main()
+        _main()
     except MyException:
         pass
     finally:

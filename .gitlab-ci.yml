@@ -1,9 +1,9 @@
 tests:
-  image: python:3.7
+  image: python:3.8
   script:
     - pip install flake8 mypy coverage
     - pip install -e .
     - coverage run -m myqueue test -v
-    - coverage report -i --fail-under=73
+    - coverage report -i --fail-under=77
     - mypy -p myqueue
     - flake8 myqueue
