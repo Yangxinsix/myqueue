@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Callable, Set
 from unittest import SkipTest
 
-from myqueue.cli import main
+from myqueue.cli import _main
 from myqueue.config import initialize_config
 from myqueue.queue import Queue
 from myqueue.selection import Selection
@@ -18,11 +18,12 @@ LOCAL = True
 UPDATE = False
 
 
-def mq(cmd: str) -> Optional[List[Task]]:
+def mq(cmd: str) -> None:
     args = shlex.split(cmd)
     if args[0][0] != '-' and args[0] != 'help':
         args[1:1] = ['--traceback']
-    return main(args)# error code?
+    error = _main(args)
+    assert error == 0
 
 
 all_tests = {}

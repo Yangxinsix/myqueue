@@ -3,7 +3,7 @@ import re
 import sys
 import textwrap
 from pathlib import Path
-from typing import List, Any, Tuple, Dict, Set, Optional, Pattern
+from typing import List, Tuple, Dict, Set, Optional, Pattern
 
 
 class MQError(Exception):
@@ -131,7 +131,11 @@ for cmd, help, description in _help:
     commands[cmd] = (help, description)
 
 
-def main(arguments: List[str] = None) -> Any:
+def main(arguments: List[str] = None) -> None:
+    sys.exit(_main(arguments))
+
+
+def _main(arguments: List[str] = None) -> int:
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
@@ -317,18 +321,18 @@ def main(arguments: List[str] = None) -> Any:
         from myqueue import __version__
         print('Version:', __version__)
         print('Code:   ', Path(__file__).parent)
-        return
+        return 0
 
     if args.command is None:
         parser.print_help()
-        return
+        return 0
 
     if args.command == 'help':
         if args.cmd is None:
             parser.print_help()
         else:
             subparsers.choices[args.cmd].print_help()
-        return
+        return 0
 
     if args.command == 'test':
         from myqueue.test.runner import run_tests
@@ -336,7 +340,7 @@ def main(arguments: List[str] = None) -> Any:
         config = Path(args.config_file) if args.config_file else None
         run_tests(args.test, config, exclude, args.verbose,
                   args.update_source_code)
-        return
+        return 0
 
     if args.command == 'completion':
         cmd = ('complete -o default -C "{py} {filename}" mq'
@@ -348,14 +352,15 @@ def main(arguments: List[str] = None) -> Any:
                   .format(cmd=cmd))
         else:
             print(cmd)
-        return
+        return 0
 
     try:
         run(args)
     except KeyboardInterrupt:
         pass
     except MQError as x:
-        parser.exit(1, str(x) + '\n')
+        print(f'{x}\n')
+        return 1
     except Exception as x:
         if args.traceback:
             raise
@@ -364,7 +369,8 @@ def main(arguments: List[str] = None) -> Any:
                   file=sys.stderr)
             print('To get a full traceback, use: mq {} ... -T'
                   .format(args.command), file=sys.stderr)
-            parser.exit(1)
+            return 1
+    return 0
 
 
 def run(args: argparse.Namespace) -> None:

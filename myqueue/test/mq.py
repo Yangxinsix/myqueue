@@ -159,4 +159,3 @@ def misc():
         mq('init')
     mq('help')
     mq('-V')
-    mq('-h')
