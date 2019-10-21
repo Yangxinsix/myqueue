@@ -28,15 +28,15 @@ def fail():
     id = mqlist()[0].id
     mq(f'info {id} -v')
     mq('ls -S t')
-    mq('ls -AC')
+    # mq('ls -AC')
     mq('ls -L')
-    assert states() == 'FCC'
+    assert states() == 'FCC', states()
     mq('resubmit -sF . -z')
     assert states() == 'FCC'
     mq('resubmit -sF .')
     wait()
     assert states() == 'CCF'
-    mq('modify -s F T')
+    mq('modify -s F T .')
     assert states() == 'CCT'
 
 

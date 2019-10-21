@@ -404,11 +404,10 @@ class Queue(Lock):
             tasks.append(task)
         self.submit(tasks, read=False)
 
-    def _read(self, read_log_file: bool = False) -> None:
-        if read_log_file:
-            print(config)
+    def _read(self, use_log_file: bool = False) -> None:
+        if use_log_file:
             import csv
-            with (Path.home() / '.myqueue/log.csv').open() as fd:
+            with (self.folder / 'log.csv').open() as fd:
                 reader = csv.reader(fd)
                 next(reader)  # skip header
                 self.tasks = [Task.fromcsv(row) for row in reader]

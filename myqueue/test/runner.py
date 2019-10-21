@@ -22,7 +22,7 @@ def mq(cmd: str) -> Optional[List[Task]]:
     args = shlex.split(cmd)
     if args[0][0] != '-' and args[0] != 'help':
         args[1:1] = ['--traceback']
-    return main(args)
+    return main(args)# error code?
 
 
 all_tests = {}

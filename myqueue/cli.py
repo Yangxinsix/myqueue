@@ -550,7 +550,12 @@ def run(args: argparse.Namespace) -> None:
             queue.run(newtasks)
 
         elif args.command == 'modify':
-            queue.modify(selection, args.newstate)
+            for state in taskstates:
+                if state.startswith(args.newstate):
+                    break
+            else:
+                1 / 0
+            queue.modify(selection, state)
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
