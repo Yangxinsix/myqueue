@@ -10,6 +10,9 @@ authors:
   - name: Morten Gjerding
     orcid: 0000-0002-5256-660X
     affiliation: 1
+  - name: Kristian Sommer Thygesen
+    orcid: 0000-????-????-????
+    affiliation: 1
 affiliations:
  - name: Technical University of Denmark
    index: 1
