@@ -38,7 +38,7 @@ If a task is listed as "done" then this will remind you that you need to do
 something with the result.  If a task failed then you need to fix something
 and resubmit the task.  In this way, `MyQueue` works as a to-do list.
 
-The *list* sub-command is very powerful.  It will by default only show tasks
+`MyQueue` has a powerful *list* sub-command.  It will by default only show tasks
 belonging to the current folder and its sub-folders making it easy to manage
 several projects by putting them in separate folders.  Failed tasks will show
 an error message read from the relevant line in the error file.  You can
