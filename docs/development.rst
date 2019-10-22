@@ -7,6 +7,18 @@ Git repository
 https://gitlab.com/myqueue/myqueue/
 
 
+Contributing
+------------
+
+...
+
+
+Getting help
+-------------
+
+https://camd.zulipchat.com/#narrow/stream/182602-myqueue
+
+
 Documentation
 -------------
 
