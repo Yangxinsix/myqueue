@@ -11,7 +11,7 @@ authors:
     orcid: 0000-0002-5256-660X
     affiliation: 1
   - name: Kristian Sommer Thygesen
-    orcid: 0000-????-????-????
+    orcid: 0000-0001-5197-214X
     affiliation: 1
 affiliations:
  - name: Technical University of Denmark
@@ -54,7 +54,9 @@ screening studies coordinating on the order of 100,000 individual tasks
 
 # Acknowledgements
 
-We acknowledge contributions from ..., and support ... during the genesis of
-this project.
+K. S. T. acknowledges funding from the European Research Council (ERC) under
+the European Union's Horizon 2020 research and innovation program (Grant
+Agreement No. 773122, LIMA).
+
 
 # References
