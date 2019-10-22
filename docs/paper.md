@@ -22,9 +22,11 @@ bibliography: paper.bib
 
 # Summary
 
-`MyQueue` is a frontend for `SLURM`[@slurm] and `PBS`[@pbs] that makes
-handling of tasks easy. It has a command-line interface called *mq* with a
-number of sub-commands and a Python interface for managing workflows.
+Task scheduling and workload management on high-performance computing (HPC)
+environments is usually done with tools such as `SLURM`[@slurm] and
+`PBS`[@pbs]. `MyQueue` is a frontend for SLURM/PBS that makes handling of
+tasks easy. It has a command-line interface called *mq* with a number of sub-
+commands and a Python interface for managing workflows.
 
 The idea behind `MyQueue` is that you have your own queue that you can
 submit tasks to and `MyQueue` will handle interactions with your
@@ -52,7 +54,9 @@ use to submit tasks. It is based on folders and files which makes it very easy
 to get started - no system administrator or central database server is needed.
 This workflow has been used successfully to drive several high-throughput
 screening studies coordinating on the order of 100,000 individual tasks
-[@c2db], [@asr], [@felix].
+[@c2db], [@felix].
+
+[@asr] ...
 
 # Acknowledgements
 
