@@ -38,11 +38,13 @@ and resubmit the task.  In this way, `MyQueue` works as a to-do list.
 
 The *list* sub-command is very powerful.  It will by default only show tasks
 belonging to the current folder and its sub-folders making it easy to manage
-several projects by putting them in separate folders.  You can select the
-tasks you want to list by status or name and failed tasks will show the error
-message.  A task can be marked with a *restarts* number indicating that
-`MyQueue` should restart the task (with increased resources) that number of
-times if it runs out of time or memory.
+several projects by putting them in separate folders.  Failed tasks will show
+an error message read from the relevant line in the error file.  You can
+select the tasks you want to list by status, task-id, name or error message.
+A task can be marked with a *restarts* number $N$, indicating that `MyQueue`
+should restart the task up to $N$ times (with increased resources) if the task
+runs out of time or memory.  The increased resources will be more time or more
+cores for the out of time and out of memory cases respectively.
 
 `MyQueue` has a Python interface that can be used to define workflows.
 In a Python script, you define a dependency tree of tasks that `MyQueue` can
@@ -50,7 +52,7 @@ use to submit tasks. It is based on folders and files which makes it very easy
 to get started - no system administrator or central database server is needed.
 This workflow has been used successfully to drive several high-throughput
 screening studies coordinating on the order of 100,000 individual tasks
-[@c2db], [@c3db], [@asr], [@felix].
+[@c2db], [@asr], [@felix].
 
 # Acknowledgements
 
