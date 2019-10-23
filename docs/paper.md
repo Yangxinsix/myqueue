@@ -20,6 +20,7 @@ date: 11 November 2019
 bibliography: paper.bib
 ---
 
+
 # Summary
 
 Task scheduling and workload management on high-performance computing (HPC)
@@ -52,16 +53,18 @@ cores for the out of time and out of memory cases respectively.
 In a Python script, you define a dependency tree of tasks that `MyQueue` can
 use to submit tasks. It is based on folders and files which makes it very easy
 to get started - no system administrator or central database server is needed.
-This workflow has been used successfully to drive several high-throughput
+This workflow has been used successfully to drive high-throughput
 screening studies coordinating on the order of 100,000 individual tasks
-[@c2db], [@felix].
+[@c2db], [@felix].  `MyQueue` is also used by the
+[Atomic Simulation Recipes](https://asr.readthedocs.io/en/latest/) project,
+which is a library of tasks for atomic simulations.
 
-[Atomic Simulation Recipes](https://asr.readthedocs.io/en/latest/) ...
 
 # Acknowledgements
 
 K. S. T. acknowledges funding from the European Research Council (ERC) under
 the European Union's Horizon 2020 research and innovation program (Grant
 Agreement No. 773122, LIMA).
+
 
 # References
