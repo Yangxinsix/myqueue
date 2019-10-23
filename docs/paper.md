@@ -14,7 +14,7 @@ authors:
     orcid: 0000-0001-5197-214X
     affiliation: 1
 affiliations:
- - name: Technical University of Denmark
+ - name: CAMD, Department of Physics, Technical University of Denmark, 2800 Kgs. Lyngby, Denmark
    index: 1
 date: 11 November 2019
 bibliography: paper.bib
