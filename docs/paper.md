@@ -23,11 +23,11 @@ bibliography: paper.bib
 
 # Summary
 
-Task scheduling and workload management on high-performance computing (HPC)
+Task scheduling and workload management on high-performance computing
 environments is usually done with tools such as `SLURM` [@slurm] and
-[PBS](https://www.pbspro.org/). `MyQueue` is a frontend for SLURM/PBS that
+[PBS](https://www.pbspro.org/). `MyQueue` is a front-end for SLURM/PBS that
 makes handling of tasks easy. It has a command-line interface called *mq* with
-a number of sub- commands and a Python interface for managing workflows.
+a number of sub-commands and a Python interface for managing workflows.
 
 The idea behind `MyQueue` is that you have your own queue that you can
 submit tasks to and `MyQueue` will handle interactions with your
@@ -60,7 +60,7 @@ screening studies coordinating on the order of 100,000 individual tasks
 which is a library of tasks for atomic simulations.
 
 
-# Acknowledgements
+# Acknowledgments
 
 K. S. T. acknowledges funding from the European Research Council (ERC) under
 the European Union's Horizon 2020 research and innovation program (Grant
