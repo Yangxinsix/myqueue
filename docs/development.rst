@@ -4,19 +4,18 @@ Development
 Git repository
 --------------
 
-https://gitlab.com/myqueue/myqueue/
+Code, merge requests and issues can be found here:
 
+    https://gitlab.com/myqueue/myqueue/
 
-Contributing
-------------
-
-...
+Contributions and suggestions for improvements are very welcome.
 
 
 Getting help
--------------
+------------
 
-https://camd.zulipchat.com/#narrow/stream/182602-myqueue
+For discussions, questions and help, go to our `#myqueue` stream on
+https://camd.zulipchat.com/.
 
 
 Documentation
