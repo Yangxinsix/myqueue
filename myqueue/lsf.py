@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Set
 
 from .task import Task
 from .config import config
@@ -76,14 +76,21 @@ class LSF(Scheduler):
 
     def timeout(self, task: Task) -> bool:
         path = (task.folder /
-                '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
+                '{}.{}.out'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():
             task.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()
             for line in lines:
-                if line.endswith('DUE TO TIME LIMIT ***'):
+                if line.startswith('TERM_RUNLIMIT:'):
                     return True
         return False
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['bkill', str(task.id)])
+
+    def get_ids(self) -> Set[int]:
+        p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
+        queued = {int(line.split()[0])
+                  for line in p.stdout.splitlines()
+                  if line[:1].isdigit()}
+        return queued

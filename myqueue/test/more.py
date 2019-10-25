@@ -33,7 +33,7 @@ def backends():
     config['nodes'] = [('abc16', {'cores': 16}), ('abc8', {'cores': 8})]
     config['mpiexec'] = 'echo'
     try:
-        for name in ['slurm', 'lfs', 'pbs']:
+        for name in ['slurm', 'lsf', 'pbs']:
             print(name)
             if name == 'pbs':
                 p = Path('venv/bin/')
