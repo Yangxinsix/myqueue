@@ -1,8 +1,6 @@
-import os
 import subprocess
-from math import ceil
 from pathlib import Path
-from typing import Set, Optional
+from typing import Optional
 
 from .task import Task
 from .config import config
@@ -18,63 +16,36 @@ class LSF(Scheduler):
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.name
-        sbatch = ['bsub',
-                  '--partition={}'.format(nodename),
-                  '--job-name={}'.format(name),
-                  '--time={}'.format(ceil(task.resources.tmax / 60)),
-                  '--ntasks={}'.format(task.resources.processes),
-                  '--nodes={}'.format(nodes),
-                  '--workdir={}'.format(task.folder),
-                  '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name)]
+        hours, minutes = divmod(max(task.resources.tmax, 60) // 60, 60)
 
-        mem = nodedct.get('memory')
-        if mem:
-            assert mem[-1] == 'G'
-            mbytes = 1000 * int(mem[:-1])
-            cores = task.resources.cores
-            if nodes == 1 and cores < nodedct['cores']:
-                mbytes = int(mbytes * cores / nodedct['cores'])
-            sbatch.append(f'--mem={mbytes}M')
+        bsub = ['bsub',
+                '-J', name,
+                '-W', f'{hours:02}:{minutes:02}',
+                '-n', task.resources.cores,
+                '-o', f'{name}.%J.out',
+                '-e', f'{name}.%J.err']
 
-        features = nodedct.get('features')
-        if features:
-            sbatch.append(f'--constraint={features}')
-
-        reservation = nodedct.get('reservation')
-        if reservation:
-            sbatch.append(f'--reservation={reservation}')
+        mem = nodedct['memory']
+        assert mem[-1] == 'G'
+        gbytes = int(mem[:-1]) // nodedct['cores']
+        bsub += ['-R', f'"rugage[mem={gbytes}G]"']
 
         if task.dtasks:
-            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
-            sbatch.append('--dependency=afterok:{}'.format(ids))
-
-        env = [('OMP_NUM_THREADS', '1'),
-               ('MPLBACKEND', 'Agg')]
+            ids = ' && '.join(f'done({t.id})'
+                              for t in task.dtasks)
+            bsub += ['-w', f'"{ids}"']
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            mpiexec = config.get('mpiexec', 'mpiexec')
-            if mpi_implementation() == 'intel':
-                mpiexec += ' ' + ' '.join(f'--env {name} {val}'
-                                          for name, val in env)
-            else:
-                mpiexec += ' ' + ' '.join(f'-x {name}={val}'
-                                          for name, val in env)
-            if 'mpiargs' in nodedct:
-                mpiexec += ' ' + nodedct['mpiargs']
-            cmd = (mpiexec +
-                   ' ' +
+            cmd = ('mpiexec ' +
                    cmd.replace('python3',
                                config.get('parallel_python', 'python3')))
-        else:
-            cmd = ''.join(f'{name}={val} ' for name, val in env) + cmd
 
         home = config['home']
 
         script = (
             '#!/bin/bash -l\n'
-            'id=$SLURM_JOB_ID\n'
+            'id=$LSB_JOBID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
         if activation_script:
@@ -90,17 +61,17 @@ class LSF(Scheduler):
             '(touch $mq-2; exit 1)\n')
 
         if dry_run:
-            print(' \\\n    '.join(sbatch))
+            print(' \\\n    '.join(bsub))
             print(script)
             return
 
-        p = subprocess.Popen(sbatch,
+        p = subprocess.Popen(bsub,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
 
         assert p.returncode == 0
-        id = int(out.split()[-1])
+        id = int(out.split()[1][1:-1])
         task.id = id
 
     def timeout(self, task: Task) -> bool:
@@ -115,20 +86,4 @@ class LSF(Scheduler):
         return False
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['scancel', str(task.id)])
-
-    def hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'hold', str(task.id)])
-
-    def release_hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'release', str(task.id)])
-
-    def get_ids(self) -> Set[int]:
-        user = os.environ['USER']
-        cmd = ['squeue', '--user', user]
-        host = config.get('host')
-        if host:
-            cmd[:0] = ['ssh', host]
-        p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
-        return queued
+        subprocess.run(['bkill', str(task.id)])

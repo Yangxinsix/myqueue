@@ -11,7 +11,7 @@ class MQError(Exception):
 
 
 main_description = """\
-Frontend for SLURM/PBS.
+Frontend for SLURM/LSF/PBS.
 
 Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
@@ -106,8 +106,8 @@ This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
 """),
     ('sync',
-     'Make sure SLURM/PBS and MyQueue are in sync.', """
-Remove tasks that SLURM/PBS doesn't know about.  Also removes a task
+     'Make sure SLURM/LSF/PBS and MyQueue are in sync.', """
+Remove tasks that SLURM/LSF/PBS doesn't know about.  Also removes a task
 if its corresponding folder no longer exists.
 """),
     ('completion',

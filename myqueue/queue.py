@@ -57,7 +57,7 @@ class Queue(Lock):
                 raise ValueError(
                     'Please specify type of scheduler in your '
                     f'{home}/.myqueue/config.py '
-                    "file (must be 'slurm', 'pbs' or 'local').  See "
+                    "file (must be 'slurm', 'lfs', 'pbs' or 'local').  See "
                     'https://myqueue.rtfd.io/en/latest/configuration.html')
             self._scheduler = get_scheduler(schedulername)
         return self._scheduler

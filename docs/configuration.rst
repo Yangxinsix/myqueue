@@ -2,7 +2,7 @@
 Configure your queue
 ====================
 
-You need to configure your SLURM/PBS system with a ``~/.myqueue/config.py``
+You need to configure your SLURM/LSF/PBS system with a ``~/.myqueue/config.py``
 file.  The file describes what your system looks like:  Names of the nodes,
 number of cores and other things.
 
@@ -28,9 +28,9 @@ Here is an example configuration file:
 scheduler
 =========
 
-The type of scheduler you are using must be ``'slurm'``, ``'pbs'`` or
+The type of scheduler you are using must be ``'slurm'``, ``'lsf'`` or ``'pbs'``
 ``'local'``.  The *local* scheduler can be used for testing on a system without
-SLURM/PBS.
+SLURM/LSF/PBS.
 
 
 nodes

@@ -2,7 +2,7 @@
 MyQueue
 =======
 
-MyQueue is a frontend for SLURM_/PBS_ that makes handling of tasks easy.
+MyQueue is a frontend for SLURM_/LSF_/PBS_ that makes handling of tasks easy.
 It has a command-line interface called ``mq`` with a number of :ref:`commands`
 and a Python interface for managing :ref:`workflows`.  Simple to set up: no
 system administrator or database required.
