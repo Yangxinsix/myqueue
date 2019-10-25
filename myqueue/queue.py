@@ -40,7 +40,8 @@ class Queue(Lock):
         self.folder = config['home'] / '.myqueue'
         self.fname = self.folder / 'queue.json'
 
-        Lock.__init__(self, self.fname.with_name('queue.json.lock'))
+        Lock.__init__(self, self.fname.with_name('queue.json.lock'),
+                      timeout=6.0)
 
         self._scheduler: Optional[Scheduler] = None
         self.tasks: List[Task] = []

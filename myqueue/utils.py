@@ -5,6 +5,7 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
+from math import inf
 from pathlib import Path
 from types import TracebackType
 from typing import IO, Union, Generator, List, Dict
@@ -40,18 +41,23 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 class Lock:
     """File lock."""
-    def __init__(self, name: Path) -> None:
+    def __init__(self, name: Path, timeout: float = inf):
         self.lock = name
+        self.timeout = timeout
         self.locked = False
 
     def acquire(self) -> None:
         """Wait for lock to become available and then acquire it."""
-        delta = 0.1
+        t = 0.0
+        delta = 0.05
         while True:
             fd = opencew(str(self.lock))
             if fd is not None:
                 break
             time.sleep(delta)
+            t += delta
+            if t > self.timeout:
+                raise TimeoutError(self.lock)
             delta *= 2
         self.locked = True
 
