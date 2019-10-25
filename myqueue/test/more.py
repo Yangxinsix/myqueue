@@ -30,7 +30,8 @@ def logo():
 @test
 def backends():
     from ..config import config
-    config['nodes'] = [('abc16', {'cores': 16}), ('abc8', {'cores': 8})]
+    config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
+                       ('abc8', {'cores': 8, 'memory': '8G'})]
     config['mpiexec'] = 'echo'
     try:
         for name in ['slurm', 'lsf', 'pbs']:
