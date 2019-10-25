@@ -28,7 +28,7 @@ class LSF(Scheduler):
         mem = nodedct['memory']
         assert mem[-1] == 'G'
         gbytes = int(mem[:-1]) // nodedct['cores']
-        bsub += ['-R', f'"rusage[mem={gbytes}G]"']
+        bsub += ['-R', f'rusage[mem={gbytes}G]']
 
         if task.dtasks:
             ids = ' && '.join(f'done({t.id})'
