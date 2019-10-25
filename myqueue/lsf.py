@@ -21,7 +21,7 @@ class LSF(Scheduler):
         bsub = ['bsub',
                 '-J', name,
                 '-W', f'{hours:02}:{minutes:02}',
-                '-n', task.resources.cores,
+                '-n', str(task.resources.cores),
                 '-o', f'{name}.%J.out',
                 '-e', f'{name}.%J.err']
 
