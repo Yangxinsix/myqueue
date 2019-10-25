@@ -28,7 +28,7 @@ class LSF(Scheduler):
         mem = nodedct['memory']
         assert mem[-1] == 'G'
         gbytes = int(mem[:-1]) // nodedct['cores']
-        bsub += ['-R', f'"rugage[mem={gbytes}G]"']
+        bsub += ['-R', f'"rusage[mem={gbytes}G]"']
 
         if task.dtasks:
             ids = ' && '.join(f'done({t.id})'
@@ -46,7 +46,7 @@ class LSF(Scheduler):
         script = (
             '#!/bin/bash -l\n'
             'id=$LSB_JOBID\n'
-            f'mq={home}/.myqueue/slurm-$id\n')
+            f'mq={home}/.myqueue/lsf-$id\n')
 
         if activation_script:
             script += (
