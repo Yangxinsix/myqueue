@@ -213,6 +213,8 @@ def _main(arguments: List[str] = None) -> int:
         if cmd in ['submit', 'workflow']:
             a('-f', '--force', action='store_true',
               help='Submit also failed tasks.')
+            a('--max-tasks', type=int, default=9999999999999999,
+              help='Maximum number of tasks to submit.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
@@ -545,7 +547,7 @@ def run(args: argparse.Namespace) -> None:
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.force)
+            queue.submit(newtasks, args.force, args.max_tasks)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -565,7 +567,7 @@ def run(args: argparse.Namespace) -> None:
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
-            queue.submit(tasks, args.force)
+            queue.submit(tasks, args.force, args.max_tasks)
 
         elif args.command == 'sync':
             queue.sync()

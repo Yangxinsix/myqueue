@@ -36,9 +36,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-rw-r-- 1 jensj jensj 190 Aug 14 21:50 check.py
-    -rw-rw-r-- 1 jensj jensj 387 Aug 14 21:50 factor.py
-    -rw-rw-r-- 1 jensj jensj 166 Aug 14 21:50 workflow.py
+    -rw-r--r-- 1 jensj jensj 190 Oct 28 11:12 check.py
+    -rw-r--r-- 1 jensj jensj 387 Oct 28 11:12 factor.py
+    -rw-r--r-- 1 jensj jensj 166 Oct 28 11:12 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -69,8 +69,8 @@ and now in all subfolders::
     $ mq ls
     id folder  name         res.    age state time error
     -- ------- ------------ ------ ---- ----- ---- -----
-    14 ./1001/ prime.factor 1:10m* 0:02 done  0:00
-    15 ./1001/ prime.check  1:10m* 0:02 done  0:00
+    14 ./1001/ prime.factor 1:10m* 0:03 done  0:00
+    15 ./1001/ prime.check  1:10m* 0:03 done  0:00
     -- ------- ------------ ------ ---- ----- ---- -----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
@@ -93,18 +93,18 @@ and now in all subfolders::
     $ mq ls
     id folder    name         res.    age state time error
     -- --------- ------------ ------ ---- ----- ---- -----
-    14 ./1001/   prime.factor 1:10m* 0:06 done  0:00
-    15 ./1001/   prime.check  1:10m* 0:06 done  0:00
-    16 ./100007/ prime.factor 1:10m* 0:02 done  0:00
-    17 ./100007/ prime.check  1:10m* 0:02 done  0:00
-    18 ./36791/  prime.factor 1:10m* 0:02 done  0:00
-    19 ./36791/  prime.check  1:10m* 0:02 done  0:00
-    20 ./8069/   prime.factor 1:10m* 0:02 done  0:00
-    21 ./8069/   prime.check  1:10m* 0:02 done  0:00
-    22 ./98769/  prime.factor 1:10m* 0:02 done  0:00
-    23 ./98769/  prime.check  1:10m* 0:02 done  0:00
-    24 ./99/     prime.factor 1:10m* 0:02 done  0:00
-    25 ./99/     prime.check  1:10m* 0:02 done  0:00
+    14 ./1001/   prime.factor 1:10m* 0:08 done  0:00
+    15 ./1001/   prime.check  1:10m* 0:08 done  0:00
+    16 ./100007/ prime.factor 1:10m* 0:04 done  0:00
+    17 ./100007/ prime.check  1:10m* 0:04 done  0:00
+    18 ./36791/  prime.factor 1:10m* 0:04 done  0:00
+    19 ./36791/  prime.check  1:10m* 0:04 done  0:00
+    20 ./8069/   prime.factor 1:10m* 0:04 done  0:00
+    21 ./8069/   prime.check  1:10m* 0:04 done  0:00
+    22 ./98769/  prime.factor 1:10m* 0:04 done  0:00
+    23 ./98769/  prime.check  1:10m* 0:04 done  0:00
+    24 ./99/     prime.factor 1:10m* 0:04 done  0:00
+    25 ./99/     prime.check  1:10m* 0:04 done  0:00
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
@@ -113,12 +113,12 @@ Note that a ``prime.check.done`` file is created to mark that the
 
     $ ls -l 1001/
     total 4
-    -rw-rw-r-- 1 jensj jensj 24 Aug 14 21:50 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.err
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.15.out
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.check.done
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.err
-    -rw-rw-r-- 1 jensj jensj  0 Aug 14 21:50 prime.factor.14.out
+    -rw-r--r-- 1 jensj jensj 24 Oct 28 11:12 factors.json
+    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.15.err
+    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.15.out
+    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.done
+    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.factor.14.err
+    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.factor.14.out
 
 There is no ``prime.factor.done`` file because ``factors.json`` serves that
 purpose.

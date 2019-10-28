@@ -67,9 +67,9 @@ commands = {
          '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'submit':
         ['-d', '--dependencies', '-n', '--name', '--restart', '-f',
-         '--force', '-R', '--resources', '-w', '--workflow',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback'],
+         '--force', '--max-tasks', '-R', '--resources', '-w',
+         '--workflow', '-z', '--dry-run', '-v', '--verbose',
+         '-q', '--quiet', '-T', '--traceback'],
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-A', '--all'],
@@ -78,9 +78,9 @@ commands = {
          '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'workflow':
-        ['-f', '--force', '-t', '--targets', '-p', '--pattern', '-z',
-         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback']}
+        ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
+         '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback']}
 # End of computer generated data
 
 

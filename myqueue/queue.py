@@ -122,6 +122,7 @@ class Queue(Lock):
     def submit(self,
                tasks: Sequence[Task],
                force: bool = False,
+               max_tasks: int = 9999999999999,
                read: bool = True) -> None:
         """Submit tasks to queue.
 
@@ -218,6 +219,8 @@ class Queue(Lock):
             if n2 == n1:
                 break
             n1 = n2
+
+        todo = todo[:max_tasks]
 
         t = time.time()
         for task in todo:
