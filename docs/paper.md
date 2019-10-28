@@ -28,8 +28,10 @@ environments is usually done with tools such as `SLURM` [@slurm].
 [MyQueue](https://myqueue.readthedocs.io/) is a front-end for schedulers that
 makes handling of tasks easy. It has a command-line interface called *mq* with
 a number of sub-commands and a Python interface for managing workflows.
-Currently, the following schedulers are supported: `SLURM` [@slurm],
-[PBS](https://www.pbspro.org/), TORQUE/MOAB, and LFS?
+Currently, the following schedulers are supported:
+[SLURM](https://en.m.wikipedia.org/wiki/Slurm_Workload_Manager),
+[PBS](https://en.m.wikipedia.org/wiki/Portable_Batch_System), and
+[LSF](https://en.m.wikipedia.org/wiki/Platform_LSF).
 
 The idea behind `MyQueue` is to define a virtual user specific queue that the
 user can interact with in an easy and efficient way while `MyQueue` handles
