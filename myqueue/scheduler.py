@@ -44,6 +44,9 @@ def get_scheduler(name: str) -> Scheduler:
     elif name == 'pbs':
         from myqueue.pbs import PBS
         scheduler = PBS()
+    elif name == 'lsf':
+        from myqueue.lsf import LSF
+        scheduler = LSF()
     else:
         assert 0, name
     scheduler.name = name

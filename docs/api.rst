@@ -57,5 +57,7 @@ API
 .. autoclass:: myqueue.queue.Queue
 .. module:: myqueue.slurm
 .. autoclass:: myqueue.slurm.SLURM
+.. module:: myqueue.lsf
+.. autoclass:: myqueue.lsf.LSF
 .. module:: myqueue.pbs
 .. autoclass:: myqueue.pbs.PBS
