@@ -37,7 +37,7 @@ Sub-commands
     * - :ref:`init <init>`
       - Initialize new queue
     * - :ref:`sync <sync>`
-      - Make sure SLURM/PBS and MyQueue are in sync
+      - Make sure SLURM/LSF/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
     * - :ref:`test <test>`
@@ -439,15 +439,15 @@ optional arguments:
 
 .. _sync:
 
-Sync: Make sure SLURM/PBS and MyQueue are in sync
--------------------------------------------------
+Sync: Make sure SLURM/LSF/PBS and MyQueue are in sync
+-----------------------------------------------------
 
 usage: mq sync [-h] [-z] [-v] [-q] [-T] [-A] [folder]
 
-Make sure SLURM/PBS and MyQueue are in sync.
+Make sure SLURM/LSF/PBS and MyQueue are in sync.
 
-Remove tasks that SLURM/PBS doesn't know about.  Also removes a task if its
-corresponding folder no longer exists.
+Remove tasks that SLURM/LSF/PBS doesn't know about.  Also removes a task if
+its corresponding folder no longer exists.
 
 folder:
     Sync tasks in this folder and its subfolders. Defaults to current folder.
