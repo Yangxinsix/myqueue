@@ -10,4 +10,5 @@ Frontend for SLURM_, LSF_ and PBS_.
 .. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
 
 .. _SLURM: https://slurm.schedmd.com/
-.. _PBS: http://www.pbspro.org/
+.. _PBS: https://en.m.wikipedia.org/wiki/Portable_Batch_System
+.. _LSF: https://en.m.wikipedia.org/wiki/Platform_LSF

@@ -46,7 +46,8 @@ Latest release: :ref:`19.10.0 <releases>`.
 
 
 .. _SLURM: https://slurm.schedmd.com/
-.. _PBS: https://www.pbspro.org/
+.. _PBS: https://en.m.wikipedia.org/wiki/Portable_Batch_System
+.. _LSF: https://en.m.wikipedia.org/wiki/Platform_LSF
 .. _Python: https://python.org/
 
 
