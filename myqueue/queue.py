@@ -122,7 +122,7 @@ class Queue(Lock):
     def submit(self,
                tasks: Sequence[Task],
                force: bool = False,
-               max_tasks: int = 9999999999999,
+               max_tasks: int = 1_000_000_000,
                read: bool = True) -> None:
         """Submit tasks to queue.
 

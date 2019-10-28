@@ -213,7 +213,7 @@ def _main(arguments: List[str] = None) -> int:
         if cmd in ['submit', 'workflow']:
             a('-f', '--force', action='store_true',
               help='Submit also failed tasks.')
-            a('--max-tasks', type=int, default=9999999999999999,
+            a('--max-tasks', type=int, default=1_000_000_000,
               help='Maximum number of tasks to submit.')
 
         if cmd in ['resubmit', 'submit']:
