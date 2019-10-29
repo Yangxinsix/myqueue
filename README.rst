@@ -6,6 +6,7 @@ Frontend for SLURM_, LSF_ and PBS_.
 
 * Documentation: https://myqueue.readthedocs.io/
 * Code: https://gitlab.com/myqueue/myqueue/
+* Chat: https://camd.zulipchat.com/ (#myqueue)
 
 .. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
 
