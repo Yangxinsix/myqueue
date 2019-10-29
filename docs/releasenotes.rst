@@ -9,9 +9,15 @@ Release notes
 Next release
 ============
 
-* Added experimental support for LSF scheduler.
+...
 
-* Added ``--max-tasks`` option for *submit* and *workflow* command.
+
+Version 19.10.1
+===============
+
+* Added support for LSF scheduler.
+
+* Added ``--max-tasks`` option for *submit* and *workflow* commands.
 
 
 Version 19.10.0
