@@ -54,14 +54,13 @@ if the task runs out of time or memory. Increased resources means longer time
 or more cores for the timed-out and out-of-memory cases, respectively.
 
 The `MyQueue` *submit* sub-command makes it easy to submit thousands
-of tasks in a single command. As input *submit* takes a Python script or
-module and executes the script/module in a number of folders. This
-makes it easy to submit a large number of tasks quickly. The *list*
-sub-command can then be used to monitor the execution of the
-tasks. Together with the *resubmit* sub-command it becomes easy to
-resubmit any tasks that might have failed. In this way the
-sub-commands of `MyQueue` synergize and greatly increases the
-efficiency of the user.
+of tasks in a single command. As input *submit* takes a shell script, Python
+script or Python module and executes the script/module in a number of folders.
+This makes it easy to submit a large number of tasks quickly. The *list* sub-
+command can then be used to monitor the execution of the tasks. Together with
+the *resubmit* sub-command it becomes easy to resubmit any tasks that might
+have failed. In this way the sub-commands of `MyQueue` synergize and greatly
+increase the efficiency of the user.
 
 `MyQueue` has a powerful Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
