@@ -59,7 +59,9 @@ module and executes the script/module in a number of folders. This
 makes it easy to submit a large number of tasks quickly. The *list*
 sub-command can then be used to monitor the execution of the
 tasks. Together with the *resubmit* sub-command it becomes easy to
-resubmit any tasks that might have failed. 
+resubmit any tasks that might have failed. In this way the
+sub-commands of `MyQueue` synergize and greatly increases the
+efficiency of the user.
 
 `MyQueue` has a powerful Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
