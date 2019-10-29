@@ -53,6 +53,14 @@ message. A task can be marked with a *restarts* number $N$, indicating that
 if the task runs out of time or memory. Increased resources means longer time
 or more cores for the timed-out and out-of-memory cases, respectively.
 
+The `MyQueue` *submit* sub-command makes it easy to submit thousands
+of tasks in a single command. As input it takes a Python script or
+module and executes the script/module in a number of folders. If the
+user has thousands of similar jobs this makes it very easy to submit
+thousands of jobs and monitor them using the *list*
+sub-command. Together with the *resubmit* sub-command it becomes easy
+to resubmit any tasks that might have failed.
+
 `MyQueue` has a powerful Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
 can use to submit tasks without user involvement. The dependencies take the
