@@ -79,9 +79,8 @@ scripts in parallel then you must specify which one you want to use::
         'parallel_python': 'your-python',
         ...}
 
-Use ``'asap-python'`` for ASAP_ and ``'gpaw-python'`` for GPAW_.  For MPI4PY_,
+Use ``'asap-python'`` for ASAP_.  For MPI4PY_,
 you don't need an MPI-enabled interpreter.
 
 .. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
 .. _ASAP: https://wiki.fysik.dtu.dk/asap
-.. _GPAW: https://wiki.fysik.dtu.dk/gpaw/
