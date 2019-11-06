@@ -58,7 +58,7 @@ class Queue(Lock):
                 raise ValueError(
                     'Please specify type of scheduler in your '
                     f'{home}/.myqueue/config.py '
-                    "file (must be 'slurm', 'pbs' or 'local').  See "
+                    "file (must be 'slurm', 'lfs', 'pbs' or 'local').  See "
                     'https://myqueue.rtfd.io/en/latest/configuration.html')
             self._scheduler = get_scheduler(schedulername)
         return self._scheduler
@@ -123,6 +123,7 @@ class Queue(Lock):
     def submit(self,
                tasks: Sequence[Task],
                force: bool = False,
+               max_tasks: int = 1_000_000_000,
                read: bool = True) -> None:
         """Submit tasks to queue.
 
@@ -219,6 +220,8 @@ class Queue(Lock):
             if n2 == n1:
                 break
             n1 = n2
+
+        todo = todo[:max_tasks]
 
         t = time.time()
         for task in todo:

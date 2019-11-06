@@ -12,7 +12,7 @@ class MQError(Exception):
 
 
 main_description = """\
-Frontend for SLURM/PBS.
+Frontend for SLURM/LSF/PBS.
 
 Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
@@ -107,8 +107,8 @@ This will create a .myqueue/ folder in your current working directory
 and copy ~/.myqueue/config.py into it.
 """),
     ('sync',
-     'Make sure SLURM/PBS and MyQueue are in sync.', """
-Remove tasks that SLURM/PBS doesn't know about.  Also removes a task
+     'Make sure SLURM/LSF/PBS and MyQueue are in sync.', """
+Remove tasks that SLURM/LSF/PBS doesn't know about.  Also removes a task
 if its corresponding folder no longer exists.
 """),
     ('completion',
@@ -214,6 +214,8 @@ def _main(arguments: List[str] = None) -> int:
         if cmd in ['submit', 'workflow']:
             a('-f', '--force', action='store_true',
               help='Submit also failed tasks.')
+            a('--max-tasks', type=int, default=1_000_000_000,
+              help='Maximum number of tasks to submit.')
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
@@ -552,7 +554,7 @@ def run(args: argparse.Namespace) -> None:
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.force)
+            queue.submit(newtasks, args.force, args.max_tasks)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -572,7 +574,7 @@ def run(args: argparse.Namespace) -> None:
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders)
-            queue.submit(tasks, args.force)
+            queue.submit(tasks, args.force, args.max_tasks)
 
         elif args.command == 'sync':
             queue.sync()

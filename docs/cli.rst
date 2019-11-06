@@ -37,7 +37,7 @@ Sub-commands
     * - :ref:`init <init>`
       - Initialize new queue
     * - :ref:`sync <sync>`
-      - Make sure SLURM/PBS and MyQueue are in sync
+      - Make sure SLURM/LSF/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
     * - :ref:`test <test>`
@@ -116,7 +116,8 @@ Submit: Submit task(s) to queue
 -------------------------------
 
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-f]
-                 [-R RESOURCES] [-w] [-z] [-v] [-q] [-T]
+                 [--max-tasks MAX_TASKS] [-R RESOURCES] [-w] [-z] [-v] [-q]
+                 [-T]
                  task [folder [folder ...]]
 
 Submit task(s) to queue.
@@ -140,6 +141,8 @@ optional arguments:
                         task and number of cores will be increased to the next
                         number of nodes for a task that runs out of memory.
   -f, --force           Submit also failed tasks.
+  --max-tasks MAX_TASKS
+                        Maximum number of tasks to submit.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -267,7 +270,8 @@ optional arguments:
 Workflow: Submit tasks from script
 ----------------------------------
 
-usage: mq workflow [-h] [-f] [-t TARGETS] [-p] [-z] [-v] [-q] [-T]
+usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p] [-z]
+                   [-v] [-q] [-T]
                    script [folder [folder ...]]
 
 Submit tasks from script.
@@ -305,6 +309,8 @@ folder:
 optional arguments:
   -h, --help            show this help message and exit
   -f, --force           Submit also failed tasks.
+  --max-tasks MAX_TASKS
+                        Maximum number of tasks to submit.
   -t TARGETS, --targets TARGETS
                         Comma-separated target names. Without any targets, all
                         tasks will be submitted.
@@ -433,15 +439,15 @@ optional arguments:
 
 .. _sync:
 
-Sync: Make sure SLURM/PBS and MyQueue are in sync
--------------------------------------------------
+Sync: Make sure SLURM/LSF/PBS and MyQueue are in sync
+-----------------------------------------------------
 
 usage: mq sync [-h] [-z] [-v] [-q] [-T] [-A] [folder]
 
-Make sure SLURM/PBS and MyQueue are in sync.
+Make sure SLURM/LSF/PBS and MyQueue are in sync.
 
-Remove tasks that SLURM/PBS doesn't know about.  Also removes a task if its
-corresponding folder no longer exists.
+Remove tasks that SLURM/LSF/PBS doesn't know about.  Also removes a task if
+its corresponding folder no longer exists.
 
 folder:
     Sync tasks in this folder and its subfolders. Defaults to current folder.

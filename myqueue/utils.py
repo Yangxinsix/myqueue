@@ -1,6 +1,7 @@
 """Useful utilities."""
 import errno
 import os
+import re
 import sys
 import time
 from contextlib import contextmanager
@@ -19,6 +20,23 @@ def chdir(folder: Path) -> Generator:
     os.chdir(str(folder))
     yield
     os.chdir(dir)
+
+
+def str2number(s: str) -> int:
+    """Convert GB, GiB, ...
+
+    >>> str2number('1MiB')
+    1048576
+    >>> str2number('2GB')
+    2000000000
+    """
+    n = re.split('[MG]', s)[0]
+    return int(n) * {'MB': 1_000_000,
+                     'GB': 1_000_000_000,
+                     'M': 1_000_000,
+                     'G': 1_000_000_000,
+                     'MiB': 1024**2,
+                     'GiB': 1024**3}[s[len(n):]]
 
 
 def opencew(filename: str) -> Union[IO[bytes], None]:
@@ -85,7 +103,13 @@ def lock(method):
 
 
 def is_inside(path1: Path, path2: Path) -> bool:
-    """Check if path1 is inside path2."""
+    """Check if path1 is inside path2.
+
+    >>> is_inside(Path('a/b'), Path('a/'))
+    True
+    >>> is_inside(Path('a/'), Path('a/b'))
+    False
+    """
     try:
         path1.relative_to(path2)
     except ValueError:

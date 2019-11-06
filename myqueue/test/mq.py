@@ -10,7 +10,7 @@ from ..utils import chdir
 def submit():
     f = Path('folder')
     f.mkdir()
-    mq('submit time@sleep+2 . folder')
+    mq('submit time@sleep+2 . folder --max-tasks=9')
     mq('submit shell:echo+hello -d time@sleep+2')
     wait()
     assert states() == 'ddd'

@@ -28,8 +28,10 @@ environments is usually done with tools such as `SLURM` [@slurm].
 [MyQueue](https://myqueue.readthedocs.io/) is a front-end for schedulers that
 makes handling of tasks easy. It has a command-line interface called *mq* with
 a number of sub-commands and a Python interface for managing workflows.
-Currently, the following schedulers are supported: `SLURM` [@slurm],
-[PBS](https://www.pbspro.org/), TORQUE/MOAB, and LFS?
+Currently, the following schedulers are supported:
+[SLURM](https://en.m.wikipedia.org/wiki/Slurm_Workload_Manager),
+[PBS](https://en.m.wikipedia.org/wiki/Portable_Batch_System), and
+[LSF](https://en.m.wikipedia.org/wiki/Platform_LSF).
 
 The idea behind `MyQueue` is to define a virtual user specific queue that the
 user can interact with in an easy and efficient way while `MyQueue` handles
@@ -50,6 +52,15 @@ message. A task can be marked with a *restarts* number $N$, indicating that
 `MyQueue` should restart the task up to $N$ times (with increased resources)
 if the task runs out of time or memory. Increased resources means longer time
 or more cores for the timed-out and out-of-memory cases, respectively.
+
+The `MyQueue` *submit* sub-command makes it easy to submit thousands
+of tasks in a single command. As input *submit* takes a shell script, Python
+script or Python module and executes the script/module in a number of folders.
+This makes it easy to submit a large number of tasks quickly. The *list* sub-
+command can then be used to monitor the execution of the tasks. Together with
+the *resubmit* sub-command it becomes easy to resubmit any tasks that might
+have failed. In this way the sub-commands of `MyQueue` synergize and greatly
+increase the efficiency of the user.
 
 `MyQueue` has a powerful Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
