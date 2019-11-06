@@ -489,7 +489,7 @@ class Queue(Lock):
             if task.state == 'running':
                 delta = t - task.trunning - task.resources.tmax
                 if delta > 0:
-                    if self.scheduler.timeout(task) or delta > 1800:
+                    if self.scheduler.has_timed_out(task) or delta > 1800:
                         task.state = 'TIMEOUT'
                         task.tstop = t
                         task.cancel_dependents(self.tasks, t)

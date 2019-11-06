@@ -74,7 +74,7 @@ class LSF(Scheduler):
         id = int(out.split()[1][1:-1])
         task.id = id
 
-    def timeout(self, task: Task) -> bool:
+    def has_timed_out(self, task: Task) -> bool:
         path = (task.folder /
                 '{}.{}.out'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():

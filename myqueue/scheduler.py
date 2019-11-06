@@ -17,7 +17,7 @@ class Scheduler:
     def kick(self) -> None:
         pass
 
-    def timeout(self, task: Task) -> bool:
+    def has_timed_out(self, task: Task) -> bool:
         return False
 
     def cancel(self, task: Task) -> None:
