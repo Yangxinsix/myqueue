@@ -21,7 +21,7 @@ from .resources import Resources
 from .run import run_tasks
 from .selection import Selection
 from .task import Task
-from .utils import Lock
+from .utils import Lock, plural
 from .virtenv import find_activation_scripts
 
 use_color = sys.stdout.isatty()
@@ -588,12 +588,6 @@ class Queue(Lock):
             for task in self.changed:
                 task.tocsv(fd, write_header)
                 write_header = False
-
-
-def plural(n: int, thing: str) -> str:
-    if n == 1:
-        return '1 ' + thing
-    return '{} {}s'.format(n, thing)
 
 
 def colored(state: str) -> str:

@@ -102,6 +102,17 @@ def lock(method):
     return m
 
 
+def plural(n: int, thing: str) -> str:
+    """Add "s" to string if needed.
+
+    >>> plural(0, 'hat'), plural(1, 'hat'), plural(2, 'hat')
+    ('0 hats', '1 hat', '2 hats')
+    """
+    if n == 1:
+        return '1 ' + thing
+    return '{} {}s'.format(n, thing)
+
+
 def is_inside(path1: Path, path2: Path) -> bool:
     """Check if path1 is inside path2.
 
