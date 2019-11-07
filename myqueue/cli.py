@@ -120,6 +120,10 @@ Do this:
     ('test',
      'Run tests.', """
 Please report errors to https://gitlab.com/myqueue/myqueue/issues.
+"""),
+    ('daemon',
+     'Interact with the background process.', """
+Manage daemon for restarting, holding and releasing tasks.
 """)]
 
 aliases = {'rm': 'remove',
@@ -187,6 +191,10 @@ def _main(arguments: List[str] = None) -> int:
               help='Exclude test(s).')
             a('-u', '--update-source-code', action='store_true',
               help='Update the command-line examples in the documentation.')
+
+        if cmd == 'daemon':
+            a('action', choises=['start', 'stop', 'status'],
+              help='Start, stop or check status.')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -344,6 +352,10 @@ def _main(arguments: List[str] = None) -> int:
         run_tests(args.test, config, exclude, args.verbose,
                   args.update_source_code)
         return 0
+
+    if args.command == 'daemon':
+        from .daemon import perform_action
+        return perform_action(args.action)
 
     if args.command == 'completion':
         cmd = ('complete -o default -C "{py} {filename}" mq'
