@@ -22,7 +22,7 @@ def find_home_folder(start: Path) -> Path:
     while True:
         dir = f / '.myqueue'
         if dir.is_dir():
-            return f
+            return f.absolute().resolve()
         newf = f.parent
         if newf == f:
             break
