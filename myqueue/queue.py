@@ -410,12 +410,14 @@ class Queue(Lock):
 
     def _read(self, use_log_file: bool = False) -> None:
         if use_log_file:
-            import csv
-            with (self.folder / 'log.csv').open() as fd:
-                reader = csv.reader(fd)
-                next(reader)  # skip header
-                self.tasks = [Task.fromcsv(row) for row in reader]
-                return
+            logfile = self.folder / 'log.csv'
+            if logfile.is_file():
+                import csv
+                with logfile.open() as fd:
+                    reader = csv.reader(fd)
+                    next(reader)  # skip header
+                    self.tasks = [Task.fromcsv(row) for row in reader]
+            return
 
         if self.fname.is_file():
             data = json.loads(self.fname.read_text())
