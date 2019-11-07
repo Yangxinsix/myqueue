@@ -581,12 +581,7 @@ class Queue(Lock):
         self.fname.write_text(text)
 
         # Write to log:
-        if self.scheduler.name == 'local':
-            # Tests should not write to ~/.myqueue/log.csv
-            logfile = root / '.myqueue/log.csv'
-        else:
-            logfile = Path.home() / '.myqueue/log.csv'
-
+        logfile = root / '.myqueue/log.csv'
         write_header = not logfile.is_file()
         with logfile.open('a') as fd:
             for task in self.changed:
