@@ -1,10 +1,12 @@
 """Useful utilities."""
 import errno
 import os
+import re
 import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
+from math import inf
 from pathlib import Path
 from types import TracebackType
 from typing import IO, Union, Generator, List, Dict
@@ -18,6 +20,23 @@ def chdir(folder: Path) -> Generator:
     os.chdir(str(folder))
     yield
     os.chdir(dir)
+
+
+def str2number(s: str) -> int:
+    """Convert GB, GiB, ...
+
+    >>> str2number('1MiB')
+    1048576
+    >>> str2number('2GB')
+    2000000000
+    """
+    n = re.split('[MG]', s)[0]
+    return int(n) * {'MB': 1_000_000,
+                     'GB': 1_000_000_000,
+                     'M': 1_000_000,
+                     'G': 1_000_000_000,
+                     'MiB': 1024**2,
+                     'GiB': 1024**3}[s[len(n):]]
 
 
 def opencew(filename: str) -> Union[IO[bytes], None]:
@@ -40,18 +59,23 @@ def opencew(filename: str) -> Union[IO[bytes], None]:
 
 class Lock:
     """File lock."""
-    def __init__(self, name: Path) -> None:
+    def __init__(self, name: Path, timeout: float = inf):
         self.lock = name
+        self.timeout = timeout
         self.locked = False
 
     def acquire(self) -> None:
         """Wait for lock to become available and then acquire it."""
-        delta = 0.1
+        t = 0.0
+        delta = 0.05
         while True:
             fd = opencew(str(self.lock))
             if fd is not None:
                 break
             time.sleep(delta)
+            t += delta
+            if t > self.timeout:
+                raise TimeoutError(self.lock)
             delta *= 2
         self.locked = True
 
@@ -79,7 +103,13 @@ def lock(method):
 
 
 def is_inside(path1: Path, path2: Path) -> bool:
-    """Check if path1 is inside path2."""
+    """Check if path1 is inside path2.
+
+    >>> is_inside(Path('a/b'), Path('a/'))
+    True
+    >>> is_inside(Path('a/'), Path('a/b'))
+    False
+    """
     try:
         path1.relative_to(path2)
     except ValueError:

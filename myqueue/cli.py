@@ -3,6 +3,7 @@ import re
 import sys
 import textwrap
 from pathlib import Path
+from time import time
 from typing import List, Tuple, Dict, Set, Optional, Pattern
 
 
@@ -360,6 +361,12 @@ def _main(arguments: List[str] = None) -> int:
         run(args)
     except KeyboardInterrupt:
         pass
+    except TimeoutError as x:
+        lockfile = x.args[0]
+        age = time() - lockfile.stat().st_mtime
+        print(f'Locked {age:.0f} seconds ago:', lockfile)
+        if age > 60:
+            print('Try removing the file and report this to the developers!')
     except MQError as x:
         print(f'{x}\n')
         return 1

@@ -7,6 +7,7 @@ from typing import Set, Optional
 from .task import Task
 from .config import config
 from .scheduler import Scheduler
+from .utils import str2number
 
 
 def mpi_implementation() -> str:
@@ -39,8 +40,7 @@ class SLURM(Scheduler):
 
         mem = nodedct.get('memory')
         if mem:
-            assert mem[-1] == 'G'
-            mbytes = 1000 * int(mem[:-1])
+            mbytes = str2number(mem) // 1_000_000
             cores = task.resources.cores
             if nodes == 1 and cores < nodedct['cores']:
                 mbytes = int(mbytes * cores / nodedct['cores'])
@@ -112,7 +112,7 @@ class SLURM(Scheduler):
         id = int(out.split()[-1])
         task.id = id
 
-    def timeout(self, task: Task) -> bool:
+    def has_timed_out(self, task: Task) -> bool:
         path = (task.folder /
                 '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
         if path.is_file():

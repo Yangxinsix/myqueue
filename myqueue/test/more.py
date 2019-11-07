@@ -47,3 +47,10 @@ def backends():
         config['scheduler'] = 'local'
         del config['nodes']
         del config['mpiexec']
+
+
+@test
+def doctests():
+    import doctest
+    import myqueue.utils as utils
+    doctest.testmod(utils)
