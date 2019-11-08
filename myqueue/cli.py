@@ -193,7 +193,7 @@ def _main(arguments: List[str] = None) -> int:
               help='Update the command-line examples in the documentation.')
 
         if cmd == 'daemon':
-            a('action', choises=['start', 'stop', 'status'],
+            a('action', choices=['start', 'stop', 'status'],
               help='Start, stop or check status.')
 
         elif cmd == 'submit':
