@@ -111,7 +111,7 @@ def perform_action(action: str) -> int:
                 os.kill(pid, signal.SIGWINCH)
             else:
                 print('You have to be on {host} in order to stop the daemon')
-                return 0
+                return 1
         else:
             print('Not running')
 
@@ -126,6 +126,6 @@ def perform_action(action: str) -> int:
             print(f'PID: {pid}')
 
     else:
-        1/0
+        assert False, action
 
-    return 1
+    return 0
