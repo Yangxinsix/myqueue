@@ -42,6 +42,8 @@ Sub-commands
       - Set up tab-completion for Bash
     * - :ref:`test <test>`
       - Run tests
+    * - :ref:`daemon <daemon>`
+      - Interact with the background process
 
 
 .. _help:
@@ -508,3 +510,25 @@ optional arguments:
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
+
+
+.. _daemon:
+
+Daemon: Interact with the background process
+--------------------------------------------
+
+usage: mq daemon [-h] [-z] [-v] [-q] [-T] {start,stop,status}
+
+Interact with the background process.
+
+Manage daemon for restarting, holding and releasing tasks.
+
+{start,stop,status}:
+    Start, stop or check status.
+
+optional arguments:
+  -h, --help           show this help message and exit
+  -z, --dry-run        Show what will happen without doing anything.
+  -v, --verbose        More output.
+  -q, --quiet          Less output.
+  -T, --traceback      Show full traceback.
