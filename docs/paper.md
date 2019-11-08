@@ -84,7 +84,7 @@ have its own queue, no central database is needed. Furthermore, using
 the `MyQueue` *init* sub-command new queues can be initalized which
 can be used to separate jobs pertaining to different projects. This
 makes `MyQueue`s design fundamentally decentralized which makes it
-easier to handle multiple projects simultaneously. 
+easier to handle multiple projects simultaneously.
 
 # Acknowledgments
 
