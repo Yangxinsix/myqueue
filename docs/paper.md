@@ -77,7 +77,14 @@ tasks [@c2db], [@felix].  `MyQueue` is also used by the [Atomic Simulation
 Recipes](https://asr.readthedocs.io/) project, which is a library of tasks for
 atomic simulations.
 
-Being essentially a frontend for schedulers `MyQueue` distinguishes it from existing workflow software [@aiida][@fireworks] in several ways. By implementing its queue locally, meaning that each user will have its own queue, no central database is needed. Furthermore, using the `MyQueue` *init* sub-command new queues can be initalized which can be used to separate jobs pertaining to different projects. This makes `MyQueue`s design fundamentally decentralized which makes it easier to handle multiple projects simultaneously.
+Being essentially a frontend for schedulers `MyQueue` distinguishes it
+from existing workflow software [@aiida][@fireworks] in several
+ways. By implementing its queue locally, meaning that each user will
+have its own queue, no central database is needed. Furthermore, using
+the `MyQueue` *init* sub-command new queues can be initalized which
+can be used to separate jobs pertaining to different projects. This
+makes `MyQueue`s design fundamentally decentralized which makes it
+easier to handle multiple projects simultaneously. 
 
 # Acknowledgments
 
