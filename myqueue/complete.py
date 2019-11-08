@@ -119,6 +119,9 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     if command == 'help':
         return [cmd for cmd in commands if cmd != 'help']
 
+    if command == 'daemon':
+        return ['start', 'stop', 'status']
+
     return []
 
 

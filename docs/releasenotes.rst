@@ -9,7 +9,13 @@ Release notes
 Next release
 ============
 
-...
+* New command: :ref:`daemon`.
+
+
+Version 19.11.0
+===============
+
+* Small bugfixes and improvements.
 
 
 Version 19.10.1
