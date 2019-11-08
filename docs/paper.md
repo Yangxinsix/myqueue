@@ -77,7 +77,7 @@ tasks [@c2db], [@felix].  `MyQueue` is also used by the [Atomic Simulation
 Recipes](https://asr.readthedocs.io/) project, which is a library of tasks for
 atomic simulations.
 
-Being essentially a frontend for schedulers `MyQueue` distinguishes it
+Being essentially a frontend for schedulers `MyQueue` distinguishes itself
 from existing workflow software
 [aiida](http://www.aiida.net) [fireworks](https://materialsproject.github.io/fireworks) in several 
 ways. By implementing its queue locally, meaning that each user will
