@@ -33,6 +33,9 @@ def read() -> Dict[str, Any]:
 commands = {
     'completion':
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
+    'daemon':
+        ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback'],
     'help':
         [''],
     'info':

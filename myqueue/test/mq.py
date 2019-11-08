@@ -17,6 +17,7 @@ def submit():
     shutil.rmtree(f)
     mq('sync')
     assert states() == 'dd'
+    mq('daemon status')
 
 
 @test

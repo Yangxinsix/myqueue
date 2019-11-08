@@ -22,11 +22,16 @@ The daemon
 ----------
 
 The daemon process wakes up every ten minutes to check if any tasks need to be
-resubmitted.  It will write its output to ``~/.myqueue/daemon.out``.
+resubmitted, held or released.  It will write its output to
+``~/.myqueue/daemon.out``.
 
 How does the daemon get started?  Whenever the time stamp of the
 ``daemon.out`` file is older that 2 hours or the file is missing, the *mq*
-command will start the daemon process.
+command will start the daemon process.  You can also use the :ref:`daemon
+<daemon>` sub-command to explicitely *start* or *stop* of the daemon
+(and check *status*)::
+
+    $ mq daemon {start,stop,status}
 
 
 More than one configuration file
