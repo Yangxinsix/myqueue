@@ -12,7 +12,7 @@ Let's create a simple "Hello world!" Python script::
 
     $ mkdir proj1
     $ cd proj1
-    $ echo "print('Hello world!')" > hello.py
+    $ echo 'print("Hello world!")' > hello.py
 
 and :ref:`submit <submit>` it::
 
