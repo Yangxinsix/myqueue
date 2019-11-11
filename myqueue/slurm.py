@@ -34,7 +34,7 @@ class SLURM(Scheduler):
                   '--time={}'.format(ceil(task.resources.tmax / 60)),
                   '--ntasks={}'.format(task.resources.processes),
                   '--nodes={}'.format(nodes),
-                  '--workdir={}'.format(task.folder),
+                  '--chdir={}'.format(task.folder),
                   '--output={}.%j.out'.format(name),
                   '--error={}.%j.err'.format(name)]
 
