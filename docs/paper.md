@@ -33,17 +33,17 @@ Currently, the following schedulers are supported:
 [PBS](https://en.m.wikipedia.org/wiki/Portable_Batch_System), and
 [LSF](https://en.m.wikipedia.org/wiki/Platform_LSF).
 
-The idea behind `MyQueue` is to define a virtual user specific queue that the
+The idea behind `MyQueue` is to define a personal queue that the
 user can interact with in an easy and efficient way while `MyQueue` handles
-the interaction with the scheduler.  Finished tasks will stay in the virtual
+the interaction with the scheduler. Finished tasks will stay in the personal
 queue until they are explicitly removed so they can be listed with their
 status (done, failed, timed-out or out-of-memory). This makes it easy to keep
 track of your tasks: If a task is listed as "done" it reminds you that some
 action should be taken, e.g. the result of the task should be checked. If a
-task failed then you need to fix something and resubmit the task.  In this
+task failed then you need to fix something and resubmit the task. In this
 sense, `MyQueue` works as a to-do list.
 
-`MyQueue` has a very convenient *list* sub-command.  It will by default only
+`MyQueue` has a convenient *list* sub-command.  It will by default only
 show tasks belonging to the current folder and its sub-folders making it easy
 to manage several projects by putting them in separate folders.  Failed tasks
 will show a short error message read from the relevant line in the error file.
@@ -59,35 +59,43 @@ script or Python module and executes the script/module in a number of folders.
 This makes it easy to submit a large number of tasks quickly. The *list* sub-
 command can then be used to monitor the execution of the tasks. Together with
 the *resubmit* sub-command it becomes easy to resubmit any tasks that might
-have failed. In this way the sub-commands of `MyQueue` synergize and greatly
-increase the efficiency of the user.
+have failed. In this way the sub-commands of `MyQueue` synergize and
+increases the efficiency of the user.
 
-`MyQueue` has a powerful Python interface that can be used to define
+`MyQueue` has a simple Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
 can use to submit tasks without user involvement. The dependencies take the
 form "if task X is done then submit task Y".  `MyQueue` works directly with
 folders and files, which makes it simple to use and easy to get started -- no
-system administrator or central database server is needed.
+system administrator or central database server is needed. Compared to existing
+workflow frameworks commonly used in the field of atomic-scale simulations
+ ([aiida](http://www.aiida.net),
+[fireworks](https://materialsproject.github.io/fireworks)), the scientific
+field of the authors, `MyQueue` provides a simple alternative solution
+to handling workflows.
+To summarize `MyQueue` is a lightweight, simple and decentralized front-end for
+schedulers with support for creating workflows.
 
-`MyQueue` is particularly useful for high-throughput computations, which
+<!-- Being a front-end for schedulers, `MyQueue` distinguishes itself -->
+<!-- from existing workflow software by not being manifestly a workflo -->
+
+<!-- ([aiida](http://www.aiida.net), -->
+<!-- [fireworks](https://materialsproject.github.io/fireworks)) commonly used within -->
+<!-- the field of atomic-scale materials design in several ways [@aiida], -->
+<!-- [@fireworks]. By implementing its queue locally, meaning that each user will -->
+<!-- have its own queue, no central database is needed. Furthermore, using the -->
+<!-- `MyQueue` *init* sub-command new queues can be initalized which can be used to -->
+<!-- separate jobs pertaining to different projects. This makes `MyQueue`s design -->
+<!-- fundamentally decentralized which makes it easier to handle multiple projects -->
+<!-- simultaneously. -->
+
+`MyQueue` is useful for high-throughput computations, which
 require automatic submission of thousands of interdependent
-jobs. For example, `MyQueue` has been used successfully to drive high-
+jobs. For example, `MyQueue` has been used to drive high-
 throughput screening studies coordinating on the order of 100,000 individual
 tasks [@c2db], [@felix].  `MyQueue` is also used by the [Atomic Simulation
 Recipes](https://asr.readthedocs.io/) project, which is a library of tasks for
 atomic simulations.
-
-Being essentially a frontend for schedulers, `MyQueue` distinguishes itself
-from existing workflow software ([aiida](http://www.aiida.net),
-[fireworks](https://materialsproject.github.io/fireworks)) commonly used within
-the field of atomic-scale materials design in several ways [@aiida],
-[@fireworks].  By implementing its queue locally, meaning that each user will
-have its own queue, no central database is needed. Furthermore, using the
-`MyQueue` *init* sub-command new queues can be initalized which can be used to
-separate jobs pertaining to different projects. This makes `MyQueue`s design
-fundamentally decentralized which makes it easier to handle multiple projects
-simultaneously.
-
 
 # Acknowledgments
 
