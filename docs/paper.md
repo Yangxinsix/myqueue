@@ -59,22 +59,22 @@ script or Python module and executes the script/module in a number of folders.
 This makes it easy to submit a large number of tasks quickly. The *list* sub-
 command can then be used to monitor the execution of the tasks. Together with
 the *resubmit* sub-command it becomes easy to resubmit any tasks that might
-have failed. In this way the sub-commands of `MyQueue` synergize and
+have failed. This example show how the sub-commands of `MyQueue` synergize and
 increases the efficiency of the user.
 
 `MyQueue` has a simple Python interface that can be used to define
 workflows. A Python script defines a dependency tree of tasks that `MyQueue`
 can use to submit tasks without user involvement. The dependencies take the
 form "if task X is done then submit task Y".  `MyQueue` works directly with
-folders and files, which makes it simple to use and easy to get started -- no
-system administrator or central database server is needed. Compared to existing
+folders and files, which makes it simple to use and easy to get started. Furthermore `MyQueue` is decentralized -- no
+system administrator or central database server is needed. In this way, compared to existing
 workflow frameworks commonly used in the field of atomic-scale simulations
  ([aiida](http://www.aiida.net),
 [fireworks](https://materialsproject.github.io/fireworks)), the scientific
 field of the authors, `MyQueue` provides a simple alternative solution
 to handling workflows.
 To summarize `MyQueue` is a lightweight, simple and decentralized front-end for
-schedulers with support for creating workflows.
+schedulers with support for submitting workflows.
 
 <!-- Being a front-end for schedulers, `MyQueue` distinguishes itself -->
 <!-- from existing workflow software by not being manifestly a workflo -->
