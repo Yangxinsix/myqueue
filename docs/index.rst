@@ -25,7 +25,7 @@ system administrator or database required.
 
     * Folder-based :ref:`Workflows`
 
-Latest release: :ref:`19.11.0 <releases>`.
+Latest release: :ref:`19.11.1 <releases>`.
 
 .. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
 
