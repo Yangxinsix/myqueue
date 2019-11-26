@@ -148,6 +148,19 @@ Turns out, there were two prime numbers::
     8069/PRIME
 
 
+Handling very many tasks
+------------------------
+
+In the case where you have a workflow script with many tasks combined with
+many folders, it can happen that ``mq workflow ... */`` will try to submit
+more tasks than allowed by the scheduler.  In that case, you will have to
+submit the tasks in batches::
+
+    $ mq workflow ../prime/workflow.py */ --max-tasks=4000
+    $ # wait ten days ...
+    $ mq workflow ../prime/workflow.py */ --max-tasks=4000
+
+
 .. _workflow script:
 
 Workflow script
