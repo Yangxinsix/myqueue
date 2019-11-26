@@ -64,6 +64,8 @@ def run_document(path: Path, test=False) -> None:
 def run_command(cmd: str,
                 folder: str,
                 pypath: Path) -> Tuple[List[str], str]:
+    if cmd.startswith('#'):
+        return [], folder
     cmd, _, _ = cmd.partition('  #')
     result = run(f'export PYTHONPATH={pypath}; cd {folder}; {cmd}; pwd',
                  shell=True, check=True, stdout=PIPE)
