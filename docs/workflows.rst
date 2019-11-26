@@ -157,8 +157,13 @@ more tasks than allowed by the scheduler.  In that case, you will have to
 submit the tasks in batches::
 
     $ mq workflow ../prime/workflow.py */ --max-tasks=4000
+    ...
+    4000 tasks submitted
     $ # wait ten days ...
     $ mq workflow ../prime/workflow.py */ --max-tasks=4000
+    4000 tasks already done
+    ...
+    3178 tasks submitted
 
 
 .. _workflow script:
