@@ -105,10 +105,13 @@ class SLURM(Scheduler):
 
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
         out, err = p.communicate(script.encode())
 
-        assert p.returncode == 0
+        if p.returncode != 0:
+            raise RuntimeError(err)
+
         id = int(out.split()[-1])
         task.id = id
 

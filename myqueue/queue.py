@@ -263,8 +263,9 @@ class Queue(Lock):
             self.scheduler.kick()
 
             if ex:
-                print('ERROR:', task)
-                print(task, task.todict(), ex, todo, file=sys.stderr)
+                print(f'ERROR!  Could not submit {task}')
+                if todo:
+                    print('Skipped', plural(len(todo), 'task'))
                 raise ex
 
     def run(self,
