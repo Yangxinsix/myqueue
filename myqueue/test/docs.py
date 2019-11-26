@@ -64,6 +64,8 @@ def run_document(path: Path, test=False) -> None:
 def run_command(cmd: str,
                 folder: str,
                 pypath: Path) -> Tuple[List[str], str]:
+    if cmd.startswith('#'):
+        return [], folder
     cmd, _, _ = cmd.partition('  #')
     result = run(f'export PYTHONPATH={pypath}; cd {folder}; {cmd}; pwd',
                  shell=True, check=True, stdout=PIPE)
@@ -86,7 +88,7 @@ def clean(line):
 def compare(t1, t2):
     t1 = [clean(line) for line in t1]
     t2 = [clean(line) for line in t2]
-    if t1 == t2:
+    if t1 == t2 or '    ...' in t1:
         return 0
     print('<<<<<<<<<<<')
     print('\n'.join(t1))
