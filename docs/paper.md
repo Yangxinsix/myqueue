@@ -69,25 +69,24 @@ form "if task X is done then submit task Y".  `MyQueue` works directly with
 folders and files, which makes it simple to use and easy to get started.
 
 Compared to the current state of the field `MyQueue` distinguishes
-itself by focusing on being lightweight and only solving one task,
-namely to submit and give an overview of submitted tasks.
-Other commonly used workflow managers in the scientific field of the authors atomic-scale simulations are AiiDA and Fireworks.
-Fireworks is based on a centralized server model useful when collaborating across HPCs and universities.
-Compared to Fireworks, `MyQueue` does not rely on a centralized server model
-Compared to AiiDA `MyQueue` does not automatically handle data provenance and does not focus on the total automization of the workflow process.
-
-These decisions on the other hand make MyQueue a light weight tool.
-The limitations of `MyQueue` provides a simple alternative solution to
-handling workflows. To summarize `MyQueue` is a lightweight, decentralized and
-*simple* front-end for schedulers with support for submitting workflows.
-
-
-Furthermore `MyQueue` is decentralized -- no system administrator or central
-database server is needed. In this way, compared to existing workflow
-frameworks commonly used in the field of atomic-scale simulations
-([AiiDA](http://www.aiida.net),
-[Fireworks](https://materialsproject.github.io/fireworks),
-[@aiida], [@fireworks]),
+itself by focusing *not* on automatic handling of crashes but *only*
+on the single problem of submitting and managing thousands of tasks.
+In the scientific field of the authors, atomic-scale simulations,
+commonly used workflow managers are
+[AiiDA](http://www.aiida.net)[@aiida] and
+[Fireworks](https://materialsproject.github.io/fireworks)[@fireworks].
+Fireworks' centralized server model is advantageous when coordinating
+tasks distributed between multiple users.  Compared to Fireworks
+`MyQueue` is installed per user, is completely decentralized and
+cannot coordinate tasks between multiple users.  AiiDA is a fully
+automatic workflow tool designed to ensure data provenance. Compared
+to AiiDA `MyQueue` does not handle data provenance and does not focus
+on the automization of the workflow process.  These design decisions
+can be seen both as a draw back and an advantage depending on the use
+case but in any case makes `MyQueue` easier to learn.  To summarize
+`MyQueue` is a personal, decentralized and lightweight front-end for
+schedulers with support for submitting workflows. It requires no
+system administrator and no database server.
 
 `MyQueue` is useful for high-throughput computations, which require automatic
 submission of thousands of interdependent jobs. For example, `MyQueue` has
