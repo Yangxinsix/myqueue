@@ -28,7 +28,7 @@ Here is an example configuration file:
 scheduler
 =========
 
-The type of scheduler you are using must be ``'slurm'``, ``'lsf'`` or ``'pbs'``
+The type of scheduler you are using must be ``'slurm'``, ``'lsf'``, ``'pbs'`` or
 ``'local'``.  The *local* scheduler can be used for testing on a system without
 SLURM/LSF/PBS.
 
@@ -46,11 +46,12 @@ MyQueue will pick the first type of node from the list that has a core count
 that divides :math:`N`.  Given the configuration shown above, here are some
 example :ref:`resource <resources>` specifications:
 
-    ``48:12h``: 2 :math:`\times` ``xeon24``
+    ``48:12h``: 2 :math:`\times` *xeon24*
 
-    ``48:xeon8:12h``: 6 :math:`\times` ``xeon8``
+    ``48:xeon8:12h``: 6 :math:`\times` *xeon8*
 
-    ``48:xeon16:12h``: 3 :math:`\times` ``xeon16``
+    ``48:xeon16:12h``: 3 :math:`\times` *xeon16*
+
 
 .. _source code: https://gitlab.com/myqueue/myqueue/blob/master/myqueue/slurm.py
 
