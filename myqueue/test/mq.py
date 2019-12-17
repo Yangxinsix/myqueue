@@ -160,3 +160,11 @@ def misc():
         mq('init')
     mq('help')
     mq('-V')
+
+
+@test
+def slash():
+    mq('submit "shell:echo a/b"')
+    wait()
+    assert states() == 'd'
+    
