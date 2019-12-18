@@ -477,9 +477,9 @@ def run(args: argparse.Namespace) -> None:
         states: Set[str] = set()
         for s in args.states if args.states is not None else default:
             if s == 'a':
-                states.update('qhrd')
+                states.update(['queued', 'hold', 'running', 'done'])
             elif s == 'A':
-                states.update('FMTC')
+                states.update(['FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY'])
             else:
                 for state in taskstates:
                     if s == state[0]:
