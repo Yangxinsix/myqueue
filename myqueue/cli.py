@@ -474,7 +474,7 @@ def run(args: argparse.Namespace) -> None:
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
-        states = set()
+        states: Set[str] = set()
         for s in args.states if args.states is not None else default:
             if s == 'a':
                 states.update('qhrd')
