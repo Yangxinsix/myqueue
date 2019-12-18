@@ -257,9 +257,10 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
-            a('-s', '--states', metavar='qhrdFCTM',
+            a('-s', '--states', metavar='qhrdFCTMaA',
               help='Selection of states. First letters of "queued", "hold", '
-              '"running", "done", "FAILED", "CANCELED" and "TIMEOUT".')
+              '"running", "done", "FAILED", "CANCELED", "TIMEOUT" '
+              '"all" and "ALL".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
               '(one ID per line; extra stuff after the ID will be ignored).')
@@ -473,14 +474,19 @@ def run(args: argparse.Namespace) -> None:
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
-        states = set()
+        states: Set[str] = set()
         for s in args.states if args.states is not None else default:
-            for state in taskstates:
-                if s == state[0]:
-                    states.add(state)
-                    break
+            if s == 'a':
+                states.update('qhrd')
+            elif s == 'A':
+                states.update('FMTC')
             else:
-                raise MQError('Unknown state: ' + s)
+                for state in taskstates:
+                    if s == state[0]:
+                        states.add(state)
+                        break
+                else:
+                    raise MQError('Unknown state: ' + s)
 
         ids: Optional[Set[int]] = None
         if args.id:

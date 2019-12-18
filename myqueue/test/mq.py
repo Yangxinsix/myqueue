@@ -159,4 +159,5 @@ def misc():
     with chdir(f):
         mq('init')
     mq('help')
+    mq('ls -saA')
     mq('-V')
