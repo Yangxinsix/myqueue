@@ -37,6 +37,8 @@ A task can be one of these:
       ``./script``
 
 
+.. _states:
+
 States
 ======
 
@@ -49,6 +51,8 @@ FAILED  CANCELED  MEMORY   TIMEOUT
 ======  ========  =======  =======
 
 Abbreviations: ``q``, ``h``, ``r``, ``d``, ``F``, ``C``, ``M`` and ``T``.
+It's also possible to use ``a`` as a shortcut for the all the "good" states
+``qhrd`` and ``A`` for the "bad" ones ``FCMT``.
 
 
 .. _resources:

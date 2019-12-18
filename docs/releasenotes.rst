@@ -9,7 +9,8 @@ Release notes
 Next release
 ============
 
-* ...
+* New shortcuts introduced for specifying :ref:`states`: ``a`` is ``qhrd``
+  and ``A`` is ``FCMT``.
 
 
 Version 19.11.1
