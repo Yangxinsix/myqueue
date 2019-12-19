@@ -30,7 +30,7 @@ class Scheduler:
         raise NotImplementedError
 
     def error_file(self, task: Task) -> Path:
-        return task.folder / f'{task.short_name}.{task.id}.err'
+        return task.folder / f'{task.cmd.short_name}.{task.id}.err'
 
     def has_timed_out(self, task: Task) -> bool:
         path = self.error_file(task).expanduser()

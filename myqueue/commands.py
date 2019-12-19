@@ -10,6 +10,7 @@ class Command:
             name += '+' + '_'.join(self.args)
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
+        self.short_name: str
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -80,6 +81,7 @@ class ShellCommand(Command):
     def __init__(self, cmd: str, args: List[str]):
         Command.__init__(self, cmd, args)
         self.cmd = cmd
+        self.short_name = cmd
 
     def __str__(self) -> str:
         return ' '.join([self.cmd[6:]] + self.args)

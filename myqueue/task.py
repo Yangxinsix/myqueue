@@ -2,12 +2,13 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Any, Dict, Union, Optional, Iterator  # noqa
+from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
 
 from .commands import command, Command
 from .resources import Resources, T
-from .scheduler import Scheduler
 
+if TYPE_CHECKING:
+    from .scheduler import Scheduler
 
 taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
