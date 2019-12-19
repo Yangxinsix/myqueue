@@ -27,7 +27,7 @@ class SLURM(Scheduler):
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        name = task.cmd.name
+        name = task.cmd.short_name
         sbatch = ['sbatch',
                   '--partition={}'.format(nodename),
                   '--job-name={}'.format(name),
@@ -44,7 +44,7 @@ class SLURM(Scheduler):
             cores = task.resources.cores
             if nodes == 1 and cores < nodedct['cores']:
                 mbytes = int(mbytes * cores / nodedct['cores'])
-            sbatch.append(f'--mem={mbytes}M')
+            sbatch.append(f'--mem={mbytes}MB')
 
         features = nodedct.get('features')
         if features:
@@ -114,17 +114,6 @@ class SLURM(Scheduler):
 
         id = int(out.split()[-1])
         task.id = id
-
-    def has_timed_out(self, task: Task) -> bool:
-        path = (task.folder /
-                '{}.{}.err'.format(task.cmd.name, task.id)).expanduser()
-        if path.is_file():
-            task.tstop = path.stat().st_mtime
-            lines = path.read_text().splitlines()
-            for line in lines:
-                if line.endswith('DUE TO TIME LIMIT ***'):
-                    return True
-        return False
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])

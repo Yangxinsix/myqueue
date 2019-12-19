@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator  # noqa
 
 from .commands import command, Command
-from .config import config
 from .resources import Resources, T
+from .scheduler import Scheduler
 
 
 taskstates = ['queued', 'hold', 'running', 'done',
@@ -242,48 +242,46 @@ class Task:
 
     def is_done(self) -> bool:
         if self._done is None:
-            for pattern in self.creates or ['{}.done'.format(self.cmd.name)]:
-                if not any(self.folder.glob(pattern)):
-                    self._done = False
-                    break
+            if self.creates:
+                for pattern in self.creates:
+                    if not any(self.folder.glob(pattern)):
+                        self._done = False
+                        break
+                else:
+                    self._done = True
             else:
-                self._done = True
+                self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
         return self._done
 
     def has_failed(self) -> bool:
-        p = self.folder / '{}.FAILED'.format(self.cmd.name)
-        return p.is_file()
+        return (self.folder / f'{self.cmd.fname}.FAILED').is_file()
 
     def skip(self) -> bool:
-        p = self.folder / '{}.SKIP'.format(self.cmd.name)
-        return p.is_file()
+        return (self.folder / f'{self.cmd.fname}.SKIP').is_file()
 
     def write_done_file(self) -> None:
         if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
-            p = self.folder / '{}.done'.format(self.cmd.name)
+            p = self.folder / f'{self.cmd.fname}.done'
             p.write_text('')
 
     def write_failed_file(self) -> None:
         if self.workflow and self.folder.is_dir():
-            p = self.folder / '{}.FAILED'.format(self.cmd.name)
+            p = self.folder / f'{self.cmd.fname}.FAILED'
             p.write_text('')
 
     def remove_failed_file(self) -> None:
-        p = self.folder / '{}.FAILED'.format(self.cmd.name)
+        p = self.folder / f'{self.cmd.fname}.FAILED'
         if p.is_file():
             p.unlink()
 
-    def read_error(self) -> bool:
+    def read_error(self, scheduler: Scheduler) -> bool:
         """Check error message.
 
         Return True if out of memory.
         """
         self.error = '-'  # mark as already read
 
-        if config.get('scheduler') == 'pbs':
-            path = self.folder / '{}.e{}'.format(self.cmd.name, self.id)
-        else:
-            path = self.folder / (self.name + '.err')
+        path = scheduler.error_file(self)
 
         try:
             lines = path.read_text().splitlines()

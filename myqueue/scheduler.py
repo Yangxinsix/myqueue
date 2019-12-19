@@ -17,9 +17,6 @@ class Scheduler:
     def kick(self) -> None:
         pass
 
-    def has_timed_out(self, task: Task) -> bool:
-        return False
-
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 
@@ -31,6 +28,19 @@ class Scheduler:
 
     def release_hold(self, task: Task) -> None:
         raise NotImplementedError
+
+    def error_file(self, task: Task) -> Path:
+        return task.folder / f'{task.short_name}.{task.id}.err'
+
+    def has_timed_out(self, task: Task) -> bool:
+        path = self.error_file(task).expanduser()
+        if path.is_file():
+            task.tstop = path.stat().st_mtime
+            lines = path.read_text().splitlines()
+            for line in lines:
+                if line.endswith('DUE TO TIME LIMIT ***'):
+                    return True
+        return False
 
 
 def get_scheduler(name: str) -> Scheduler:

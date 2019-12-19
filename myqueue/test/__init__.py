@@ -5,8 +5,8 @@ from pathlib import Path
 
 def oom(local: bool = True) -> None:
     try:
-        from ase.parallel import world  # type: ignore
-        if world.size > 1:
+        from mpi4py import MPI
+        if MPI.COMM_WORLD.size > 1:
             return
     except ImportError:
         pass
