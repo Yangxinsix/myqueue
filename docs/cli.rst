@@ -27,7 +27,7 @@ Sub-commands
     * - :ref:`info <info>`
       - Show detailed information about task
     * - :ref:`workflow <workflow>`
-      - Submit tasks from script
+      - Submit tasks from Python script
     * - :ref:`run <run>`
       - Run task(s) on local computer
     * - :ref:`kick <kick>`
@@ -69,7 +69,7 @@ optional arguments:
 List (ls): List tasks in queue
 ------------------------------
 
-usage: mq list [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
+usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
                [-S c] [-C] [-L] [--not-recursive] [-v] [-q] [-T] [-A]
                [folder]
 
@@ -87,10 +87,10 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qhrdFCTM, --states qhrdFCTM
+  -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
-                        "hold", "running", "done", "FAILED", "CANCELED" and
-                        "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED",
+                        "TIMEOUT" "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -162,7 +162,7 @@ optional arguments:
 Resubmit: Resubmit failed or timed-out tasks
 --------------------------------------------
 
-usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTM] [-i ID] [-n NAME]
+usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID] [-n NAME]
                    [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder [folder ...]]
 
@@ -183,10 +183,10 @@ optional arguments:
                         16 cores, 1 process, half an hour.
   -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
                         done.
-  -s qhrdFCTM, --states qhrdFCTM
+  -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
-                        "hold", "running", "done", "FAILED", "CANCELED" and
-                        "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED",
+                        "TIMEOUT" "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -207,7 +207,7 @@ optional arguments:
 Remove (rm): Remove or cancel task(s)
 -------------------------------------
 
-usage: mq remove [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
+usage: mq remove [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
                  [folder [folder ...]]
 
@@ -223,10 +223,10 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qhrdFCTM, --states qhrdFCTM
+  -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
-                        "hold", "running", "done", "FAILED", "CANCELED" and
-                        "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED",
+                        "TIMEOUT" "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -269,20 +269,16 @@ optional arguments:
 
 .. _workflow:
 
-Workflow: Submit tasks from script
-----------------------------------
+Workflow: Submit tasks from Python script
+-----------------------------------------
 
 usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p] [-z]
                    [-v] [-q] [-T]
                    script [folder [folder ...]]
 
-Submit tasks from script.
+Submit tasks from Python script.
 
-The script can be a simple Python script or a Python module. If script/module
-contains a create_tasks() function then create tasks defined in this function.
-Otherwise look for "dependencies" and "resources" variables in script and
-create workflow tree from these variables. Example of script containing
-"create_tasks()"::
+The script must define a create_tasks() function as shown here::
 
     $ cat flow.py
     from myqueue.task import task
@@ -291,20 +287,8 @@ create workflow tree from these variables. Example of script containing
                 task('task2', deps='task1')]
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 
-Myqueue can also deduce a workflow from a script itself by looking for the
-resources and dependencies variables. For example, to tell myqueue that script
-"a.py" depends on "b.py" then "a.py" must contain::
-
-    $ cat a.py
-    ...
-    dependencies = ['b.py']
-    ...
-
-Similarly, resources can be given by specifying "resources = '8:10h'" which
-would give 8 cores for 10 hours.
-
 script:
-    Workflow submit script or module. If module, then create workflow from module dependencies
+    Submit tasks from workflow script.
 folder:
     Submit tasks in this folder. Defaults to current folder.
 
@@ -316,7 +300,7 @@ optional arguments:
   -t TARGETS, --targets TARGETS
                         Comma-separated target names. Without any targets, all
                         tasks will be submitted.
-  -p, --pattern         Use submit scripts matching "pattern" in all
+  -p, --pattern         Use submit scripts matching "script" pattern in all
                         subfolders.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
@@ -385,7 +369,7 @@ optional arguments:
 Modify: Modify task(s)
 ----------------------
 
-usage: mq modify [-h] [-s qhrdFCTM] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
+usage: mq modify [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
                  newstate [folder [folder ...]]
 
@@ -400,10 +384,10 @@ folder:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s qhrdFCTM, --states qhrdFCTM
+  -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
-                        "hold", "running", "done", "FAILED", "CANCELED" and
-                        "TIMEOUT".
+                        "hold", "running", "done", "FAILED", "CANCELED",
+                        "TIMEOUT" "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
