@@ -58,12 +58,8 @@ Example:
     $ mq info 12345
 """),
     ('workflow',
-     'Submit tasks from script.', """
-The script can be a simple Python script or a Python
-module. If script/module contains a create_tasks() function then create
-tasks defined in this function. Otherwise look for "dependencies" and
-"resources" variables in script and create workflow tree from these variables.
-Example of script containing "create_tasks()":
+     'Submit tasks from Python script.', """
+The script must define a create_tasks() function as shown here:
 
     $ cat flow.py
     from myqueue.task import task
@@ -71,18 +67,6 @@ Example of script containing "create_tasks()":
         return [task('task1'),
                 task('task2', deps='task1')]
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
-
-Myqueue can also deduce a workflow from a script itself by looking for the
-resources and dependencies variables. For example, to tell myqueue that script
-"a.py" depends on "b.py" then "a.py" must contain:
-
-    $ cat a.py
-    ...
-    dependencies = ['b.py']
-    ...
-
-Similarly, resources can be given by specifying "resources = '8:10h'"
-which would give 8 cores for 10 hours.
 """),
     ('run',
      'Run task(s) on local computer.', """
@@ -241,15 +225,12 @@ def _main(arguments: List[str] = None) -> int:
             a('newstate', help='New state (one of the letters: qhrdFCTM).')
 
         if cmd == 'workflow':
-            help = ('Workflow submit script or module. If module, then create '
-                    'workflow from module dependencies')
-            a('script', help=help,
-              default=None)
+            a('script', help='Submit tasks from workflow script.')
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
             a('-p', '--pattern', action='store_true',
-              help='Use submit scripts matching "pattern" in all '
+              help='Use submit scripts matching "script" pattern in all '
               'subfolders.')
             a('folder',
               nargs='*', default=['.'],
