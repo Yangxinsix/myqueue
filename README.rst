@@ -1,16 +1,14 @@
 .. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
 .. image:: https://badge.fury.io/py/myqueue.svg
-    :target: https://badge.fury.io/py/myqueue
-
-.. contents::
+    :target: https://pypi.org/project/myqueue/
 
 =======
 MyQueue
 =======
 
 MyQueue is a frontend for SLURM_/LSF_/PBS_ that makes handling of tasks easy.
-It has a command-line interface called ``mq`` with a number of *commands*
-and a Python interface for managing *workflows*.  Simple to set up: no
+It has a command-line interface called *mq* with a number of commands
+and a Python interface for managing workflows.  Simple to set up: no
 system administrator or database required.
 
 .. admonition:: Features
@@ -29,7 +27,7 @@ system administrator or database required.
 
     * Can be used together with Python *venv*\ 's
 
-    * Folder-based *Workflows*
+    * Folder-based Workflows
 
 Quick links:
 
@@ -57,6 +55,7 @@ Check results of tasks in current folder and its sub-folders::
     id folder name      res.   age     state   time    error
     -- ------ --------- ------ ------- ------- ------- ------
     117 ./    script.py 32:10h 5:22:16 TIMEOUT 2:00:03
+    ...
     -- ------ --------- ------ ------- ------- ------- ------
     TIMEOUT: 1, total: 1
 
@@ -64,7 +63,20 @@ Resubmit with more resources::
 
      $ mq resubmit -i 117 -R 32:1d
 
-See all *commands* here_ and XXXX
+See more examples of use here:
+
+* `Quick-start
+  <https://myqueue.readthedocs.io/en/latest/quickstart.html>__
+* `Documentation
+  <https://myqueue.readthedocs.io/en/latest/documentation.html>__
+* `How it works
+  <https://myqueue.readthedocs.io/en/latest/howitworks.html>__
+* `Command-line interface
+  <https://myqueue.readthedocs.io/en/latest/cli.html>__
+* `Workflows
+  <https://myqueue.readthedocs.io/en/latest/workflows.html>__
+* `Python API
+  <https://myqueue.readthedocs.io/en/latest/api.html>__
 
 
 Installation
@@ -88,6 +100,9 @@ Run the tests::
 
 and report any errors you get: https://gitlab.com/myqueue/myqueue/issues/.
 
+Now, configure your system as described
+`here <https://myqueue.readthedocs.io/en/latest/configuration.html>`__.
+
 
 .. _Python: https://python.org/
 .. _PyPI: https://pypi.org/project/myqueue/
@@ -106,14 +121,14 @@ Help, support and feedback
 
 If you need help, want to report a bug or suggest a new feature then you are
 very welcome to get in touch via MyQueue's `issue tracker`_
- or the `#myqueue` stream on Zulip_.
+or the `#myqueue` stream on Zulip_.
 
-.. _issue tracker:: https://gitlab.com/myqueue/myqueue/issues/
-.. _Zulip:: https://camd.zulipchat.com/
+.. _issue tracker: https://gitlab.com/myqueue/myqueue/issues/
+.. _Zulip: https://camd.zulipchat.com/
 
 
 Contributing
 ============
 
-We welcome contributions to the code and documentation, preferably as merge-
-requests here: https://gitlab.com/myqueue/myqueue/merge_requests/.
+We welcome contributions to the code and documentation, preferably as
+merge-requests here: https://gitlab.com/myqueue/myqueue/merge_requests/.
