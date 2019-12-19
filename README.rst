@@ -114,9 +114,9 @@ Now, configure your system as described
 Release notes
 =============
 
-See the `release notes`_ for a history of notable changes to MyQueue.
-
-.. _release notes:: https://myqueue.readthedocs.io/en/latest/releasenotes.html
+See the `release notes
+<https://myqueue.readthedocs.io/en/latest/releasenotes.html>`_ for a history
+of notable changes to MyQueue.
 
 
 Help, support and feedback
@@ -134,4 +134,6 @@ Contributing
 ============
 
 We welcome contributions to the code and documentation, preferably as
-merge-requests here: https://gitlab.com/myqueue/myqueue/merge_requests/.
+`merge-requests <https://gitlab.com/myqueue/myqueue/merge_requests/>`_.
+More information `here
+<https://myqueue.readthedocs.io/en/latest/development.html>`_.
