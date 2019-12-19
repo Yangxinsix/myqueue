@@ -58,11 +58,11 @@ class SLURM(Scheduler):
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append('--dependency=afterok:{}'.format(ids))
 
-        env = [('OMP_NUM_THREADS', '1'),
-               ('MPLBACKEND', 'Agg')]
+        env = [('MPLBACKEND', 'Agg')]
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
+            env.append(('OMP_NUM_THREADS', '1'))
             mpiexec = config.get('mpiexec', 'mpiexec')
             if mpi_implementation() == 'intel':
                 mpiexec += ' ' + ' '.join(f'--env {name} {val}'
