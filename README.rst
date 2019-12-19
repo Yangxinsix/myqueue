@@ -6,10 +6,11 @@
 MyQueue
 =======
 
-MyQueue is a frontend for SLURM_/PBS_/LSF_ that makes handling of tasks easy.
-It has a command-line interface called *mq* with a number of commands
-and a Python interface for managing workflows.  Simple to set up: no
-system administrator or database required.
+MyQueue is a tool for submitting and keeping track of tasks running on a
+cluster of computers. It uses SLURM_, PBS_ or LSF_ as a backend and makes
+handling of tasks easy. It has a command-line interface called *mq* with a
+number of sub-commands and a Python interface for managing workflows.  Simple
+to set up: no system administrator or database required.
 
 .. admonition:: Features
 
@@ -49,16 +50,20 @@ Submit Python script to 32 cores for 2 hours::
 
     $ mq submit script.py -R 32:2h
 
+Submit Python module *abc.run* in two folders::
+
+    $ mq submit abc.run F1/ F2/ -R 16:30m
+
 Check results of tasks in current folder and its sub-folders::
 
     $ mq list  # or mq ls
     id  folder name      res.   age     state   time    error
     --- ------ --------- ------ ------- ------- ------- ------
-    117 ./     script.py 32:10h 5:22:16 TIMEOUT 2:00:03
-    ...
-    ...
+    117 ./     script.py 32:2h  5:28:43 TIMEOUT 2:00:03
+    118 ./F1/  abc.run   16:30m 5:22:16 done      12:12
+    118 ./F2/  abc.run   16:30m 5:22:16 done      17:50
     --- ------ --------- ------ ------- ------- ------- ------
-    TIMEOUT: 1, total: 5
+    done: 2, TIMEOUT: 1, total: 3
 
 Resubmit with more resources (1 day)::
 
