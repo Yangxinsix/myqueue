@@ -275,7 +275,7 @@ class Task:
         if p.is_file():
             p.unlink()
 
-    def read_error(self, scheduler: Scheduler) -> bool:
+    def read_error(self, scheduler: 'Scheduler') -> bool:
         """Check error message.
 
         Return True if out of memory.
