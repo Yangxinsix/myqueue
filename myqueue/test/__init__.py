@@ -5,7 +5,7 @@ from pathlib import Path
 
 def oom(local: bool = True) -> None:
     try:
-        from mpi4py import MPI  # noqa
+        from mpi4py import MPI  # type: ignore
         if MPI.COMM_WORLD.size > 1:
             return
     except ImportError:
