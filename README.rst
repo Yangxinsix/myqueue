@@ -6,7 +6,7 @@
 MyQueue
 =======
 
-MyQueue is a frontend for SLURM_/LSF_/PBS_ that makes handling of tasks easy.
+MyQueue is a frontend for SLURM_/PBS_/LSF_ that makes handling of tasks easy.
 It has a command-line interface called *mq* with a number of commands
 and a Python interface for managing workflows.  Simple to set up: no
 system administrator or database required.
@@ -34,7 +34,7 @@ Quick links:
 * Documentation: https://myqueue.readthedocs.io/
 * Code: https://gitlab.com/myqueue/myqueue/
 * Issues: https://gitlab.com/myqueue/myqueue/issues/
-* Chat: https://camd.zulipchat.com/ (#myqueue)
+* Chat: https://camd.zulipchat.com/ (#myqueue stream)
 
 
 .. _SLURM: https://slurm.schedmd.com/
@@ -66,27 +66,25 @@ Resubmit with more resources::
 See more examples of use here:
 
 * `Quick-start
-  <https://myqueue.readthedocs.io/en/latest/quickstart.html>__
+  <https://myqueue.readthedocs.io/en/latest/quickstart.html>`__
 * `Documentation
-  <https://myqueue.readthedocs.io/en/latest/documentation.html>__
+  <https://myqueue.readthedocs.io/en/latest/documentation.html>`__
 * `How it works
-  <https://myqueue.readthedocs.io/en/latest/howitworks.html>__
+  <https://myqueue.readthedocs.io/en/latest/howitworks.html>`__
 * `Command-line interface
-  <https://myqueue.readthedocs.io/en/latest/cli.html>__
+  <https://myqueue.readthedocs.io/en/latest/cli.html>`__
 * `Workflows
-  <https://myqueue.readthedocs.io/en/latest/workflows.html>__
+  <https://myqueue.readthedocs.io/en/latest/workflows.html>`__
 * `Python API
-  <https://myqueue.readthedocs.io/en/latest/api.html>__
+  <https://myqueue.readthedocs.io/en/latest/api.html>`__
 
 
 Installation
 ============
 
-Dependencies:
+MyQueue has only one dependency: Python_ version 3.6 or later.
 
-* Python_ (>= 3.6)
-
-Install MyQueue from PyPI_ with ``pip``::
+Install MyQueue from PyPI_ with *pip*::
 
     $ python3 -m pip install myqueue --user
 
@@ -98,8 +96,7 @@ Run the tests::
 
     $ mq test
 
-and report any errors you get: https://gitlab.com/myqueue/myqueue/issues/.
-
+and report any errors you get on our `issue_tracker`_.
 Now, configure your system as described
 `here <https://myqueue.readthedocs.io/en/latest/configuration.html>`__.
 
@@ -121,7 +118,7 @@ Help, support and feedback
 
 If you need help, want to report a bug or suggest a new feature then you are
 very welcome to get in touch via MyQueue's `issue tracker`_
-or the `#myqueue` stream on Zulip_.
+or the *#myqueue* stream on Zulip_.
 
 .. _issue tracker: https://gitlab.com/myqueue/myqueue/issues/
 .. _Zulip: https://camd.zulipchat.com/
