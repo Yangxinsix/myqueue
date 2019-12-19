@@ -45,21 +45,22 @@ Quick links:
 Examples
 --------
 
-Submit Python script to 32 cores and 2 hours::
+Submit Python script to 32 cores for 2 hours::
 
     $ mq submit script.py -R 32:2h
 
 Check results of tasks in current folder and its sub-folders::
 
     $ mq list  # or mq ls
-    id folder name      res.   age     state   time    error
-    -- ------ --------- ------ ------- ------- ------- ------
-    117 ./    script.py 32:10h 5:22:16 TIMEOUT 2:00:03
+    id  folder name      res.   age     state   time    error
+    --- ------ --------- ------ ------- ------- ------- ------
+    117 ./     script.py 32:10h 5:22:16 TIMEOUT 2:00:03
     ...
-    -- ------ --------- ------ ------- ------- ------- ------
-    TIMEOUT: 1, total: 1
+    ...
+    --- ------ --------- ------ ------- ------- ------- ------
+    TIMEOUT: 1, total: 5
 
-Resubmit with more resources::
+Resubmit with more resources (1 day)::
 
      $ mq resubmit -i 117 -R 32:1d
 
@@ -96,7 +97,7 @@ Run the tests::
 
     $ mq test
 
-and report any errors you get on our `issue_tracker`_.
+and report any errors you get on our `issue tracker`_.
 Now, configure your system as described
 `here <https://myqueue.readthedocs.io/en/latest/configuration.html>`__.
 
@@ -105,12 +106,12 @@ Now, configure your system as described
 .. _PyPI: https://pypi.org/project/myqueue/
 
 
-Changelog
-=========
+Release notes
+=============
 
-See the changelog_ for a history of notable changes to MyQueue.
+See the `release notes`_ for a history of notable changes to MyQueue.
 
-.. _changelog:: https://myqueue.readthedocs.io/en/latest/releasenotes.html
+.. _release notes:: https://myqueue.readthedocs.io/en/latest/releasenotes.html
 
 
 Help, support and feedback
