@@ -47,7 +47,7 @@ def run_document(path: Path, test=False) -> None:
         time.sleep(0.3)
         actual_output, folder = run_command(cmd, folder, pypath)
         wait()
-        actual_output = ['    ' + line.replace('1:2s', '1:10m').rstrip()
+        actual_output = ['    ' + line.rstrip()
                          for line in actual_output]
         errors += compare(output, actual_output)
         L += 1 + offset

@@ -133,12 +133,12 @@ The output files from a task will look like this::
 If a job fails or times out, then you can resubmit it with more resources::
 
     $ mq submit "shell:sleep 4" -R 1:2s
-    5 ./ shell:sleep+4 1:10m
+    5 ./ shell:sleep+4 1:2s
     1 task submitted
     $ mq list
     id folder name          res.  age state   time error
     -- ------ ------------- ---- ---- ------- ---- -----
-    5  ./     shell:sleep+4 1:10m 0:02 TIMEOUT 0:01
+    5  ./     shell:sleep+4 1:2s 0:02 TIMEOUT 0:02
     -- ------ ------------- ---- ---- ------- ---- -----
     TIMEOUT: 1, total: 1
     $ mq resubmit -i 5 -R 1:1m
