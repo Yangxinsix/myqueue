@@ -5,6 +5,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from textwrap import wrap
 from typing import List, Optional, Callable, Set
 from unittest import SkipTest
 
@@ -108,6 +109,9 @@ def run_tests(tests: List[str],
 
     for test in exclude:
         tests.remove(test)
+
+    if verbose:
+        print('\n'.join(wrap(', '.join(tests))))
 
     if not verbose:
         sys.stdout = open(tmpdir / '.myqueue/stdout.txt', 'w')

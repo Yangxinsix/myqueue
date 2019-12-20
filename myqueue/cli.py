@@ -102,7 +102,7 @@ Do this:
     $ mq completion >> ~/.bashrc
 """),
     ('test',
-     'Run tests.', """
+     'Run the tests.', """
 Please report errors to https://gitlab.com/myqueue/myqueue/issues.
 """),
     ('daemon',

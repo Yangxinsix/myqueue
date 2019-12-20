@@ -41,7 +41,7 @@ Sub-commands
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
     * - :ref:`test <test>`
-      - Run tests
+      - Run the tests
     * - :ref:`daemon <daemon>`
       - Interact with the background process
 
@@ -469,14 +469,14 @@ optional arguments:
 
 .. _test:
 
-Test: Run tests
----------------
+Test: Run the tests
+-------------------
 
 usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-v] [-q]
                [-T]
                [test [test ...]]
 
-Run tests.
+Run the tests.
 
 Please report errors to https://gitlab.com/myqueue/myqueue/issues.
 
