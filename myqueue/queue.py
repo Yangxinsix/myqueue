@@ -12,7 +12,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict, Optional, Sequence, Pattern
+from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
 from .config import config
