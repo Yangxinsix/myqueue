@@ -166,6 +166,6 @@ def misc():
 @test
 def slash():
     mq('submit "shell:echo a/b"')
+    mq('submit "shell:echo a/c" -w')
     wait()
-    assert states() == 'd'
-    
+    assert states() == 'dd'
