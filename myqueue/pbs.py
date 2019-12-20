@@ -16,7 +16,6 @@ class PBS(Scheduler):
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        name = task.cmd.name
         processes = task.resources.processes
 
         if processes < nodedct['cores']:
@@ -30,7 +29,7 @@ class PBS(Scheduler):
 
         qsub = ['qsub',
                 '-N',
-                name,
+                task.cmd.short_name,
                 '-l',
                 'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
                 '-l',
@@ -83,16 +82,8 @@ class PBS(Scheduler):
         id = int(out.split(b'.')[0])
         task.id = id
 
-    def has_timed_out(self, task: Task) -> bool:
-        path = (task.folder /
-                '{}.e{}'.format(task.cmd.name, task.id)).expanduser()
-        if path.is_file():
-            task.tstop = path.stat().st_mtime
-            lines = path.read_text().splitlines()
-            for line in lines:
-                if line.endswith('DUE TO TIME LIMIT ***'):
-                    return True
-        return False
+    def error_file(self, task: Task) -> Path:
+        return task.folder / f'{task.cmd.short_name}.e{task.id}'
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['qdel', str(task.id)])

@@ -175,8 +175,8 @@ class LocalScheduler(Scheduler, Lock):
         task.state = 'running'
 
     def _run(self, task):
-        out = f'{task.name}.out'
-        err = f'{task.name}.err'
+        out = f'{task.cmd.short_name}.{task.id}.out'
+        err = f'{task.cmd.short_name}.{task.id}.err'
 
         testing = os.environ.get('MYQUEUE_TESTING')
 

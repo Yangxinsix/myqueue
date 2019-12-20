@@ -511,7 +511,7 @@ class Queue(Lock):
         for task in self.tasks:
             if task.state == 'FAILED':
                 if not task.error:
-                    oom = task.read_error()
+                    oom = task.read_error(self.scheduler)
                     if oom:
                         task.state = 'MEMORY'
                         task.remove_failed_file()

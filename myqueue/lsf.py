@@ -15,7 +15,7 @@ class LSF(Scheduler):
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        name = task.cmd.name
+        name = task.cmd.short_name
         hours, minutes = divmod(max(task.resources.tmax, 60) // 60, 60)
 
         bsub = ['bsub',
@@ -75,8 +75,7 @@ class LSF(Scheduler):
         task.id = id
 
     def has_timed_out(self, task: Task) -> bool:
-        path = (task.folder /
-                '{}.{}.out'.format(task.cmd.name, task.id)).expanduser()
+        path = self.error_file(task).expanduser()
         if path.is_file():
             task.tstop = path.stat().st_mtime
             lines = path.read_text().splitlines()

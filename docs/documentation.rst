@@ -125,20 +125,20 @@ The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo+hello.3.err
-    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo+hello.3.out
-    $ cat f2/shell:echo+hello.3.out
+    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo.3.err
+    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo.3.out
+    $ cat f2/shell:echo.3.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
 
     $ mq submit "shell:sleep 4" -R 1:2s
-    5 ./ shell:sleep+4 1:10m
+    5 ./ shell:sleep+4 1:2s
     1 task submitted
     $ mq list
     id folder name          res.  age state   time error
     -- ------ ------------- ---- ---- ------- ---- -----
-    5  ./     shell:sleep+4 1:10m 0:02 TIMEOUT 0:01
+    5  ./     shell:sleep+4 1:2s 0:02 TIMEOUT 0:02
     -- ------ ------------- ---- ---- ------- ---- -----
     TIMEOUT: 1, total: 1
     $ mq resubmit -i 5 -R 1:1m
