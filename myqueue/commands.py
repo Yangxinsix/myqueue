@@ -10,6 +10,7 @@ class Command:
             name += '+' + '_'.join(self.args)
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
+        self.short_name: str
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -17,6 +18,10 @@ class Command:
 
     def todict(self) -> Dict[str, Any]:
         raise NotImplementedError
+
+    @property
+    def fname(self):
+        return self.name.replace('/', '\\')  # filename can't contain slashes
 
 
 def is_module(mod: str) -> bool:
@@ -76,6 +81,7 @@ class ShellCommand(Command):
     def __init__(self, cmd: str, args: List[str]):
         Command.__init__(self, cmd, args)
         self.cmd = cmd
+        self.short_name = cmd
 
     def __str__(self) -> str:
         return ' '.join([self.cmd[6:]] + self.args)
@@ -90,6 +96,7 @@ class ShellScript(Command):
     def __init__(self, cmd: str, args: List[str]):
         Command.__init__(self, Path(cmd).name, args)
         self.cmd = cmd
+        self.short_name = cmd
 
     def __str__(self) -> str:
         return ' '.join(['.', self.cmd] + self.args)
@@ -108,6 +115,7 @@ class PythonScript(Command):
             self.script = str(path.absolute())
         else:
             self.script = script
+        self.short_name = path.name
 
     def __str__(self) -> str:
         return 'python3 ' + ' '.join([self.script] + self.args)
@@ -122,6 +130,7 @@ class PythonModule(Command):
     def __init__(self, mod: str, args: List[str]):
         Command.__init__(self, mod, args)
         self.mod = mod
+        self.short_name = mod
 
     def __str__(self) -> str:
         return ' '.join(['python3', '-m', self.mod] + self.args)
@@ -140,6 +149,7 @@ class PythonFunction(Command):
         else:
             self.mod, self.func = cmd.rsplit('@', 1)
         Command.__init__(self, cmd, args)
+        self.short_name = cmd
 
     def __str__(self) -> str:
         args = ', '.join(repr(convert(arg)) for arg in self.args)

@@ -125,9 +125,9 @@ The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo+hello.3.err
-    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo+hello.3.out
-    $ cat f2/shell:echo+hello.3.out
+    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo.3.err
+    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo.3.out
+    $ cat f2/shell:echo.3.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
