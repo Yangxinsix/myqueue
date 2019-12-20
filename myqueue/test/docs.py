@@ -10,6 +10,7 @@ import myqueue.test.runner as runner
 from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
+skips = ['<task>', '<states>', 'ABC 123']
 
 
 def run_document(path: Path, test=False) -> None:
@@ -20,7 +21,9 @@ def run_document(path: Path, test=False) -> None:
     n = 0
     while n < len(lines):
         line = lines[n]
-        if line.endswith('::') and lines[n + 2][:5] == '    $':
+        if (line.endswith('::') and
+            lines[n + 2][:5] == '    $' and
+            not any(skip in lines[n + 2] for skip in skips)):
             cmd = ''
             output: List[str] = []
             L = 0
