@@ -12,7 +12,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Set, List, Dict, Optional, Sequence, Pattern  # noqa
+from typing import Set, List, Dict, Optional, Sequence, Pattern
 from types import TracebackType
 
 from .config import config
@@ -169,8 +169,12 @@ class Queue(Lock):
         inqueue: Dict[str, int] = defaultdict(int)
         for task in tasks:
             if task.workflow and task.dname in current:
-                inqueue[current[task.dname].state] += 1
-                task.id = current[task.dname].id
+                state = current[task.dname].state
+                if state in {'queued', 'hold', 'running'}:
+                    inqueue[state] += 1
+                else:
+                    task.id = current[task.dname].id
+                    tasks2.append(task)
             else:
                 tasks2.append(task)
         tasks = tasks2
@@ -178,7 +182,7 @@ class Queue(Lock):
         if inqueue:
             print(plural(sum(inqueue.values()), 'task'),
                   'already in the queue:')
-            print('\n'.join('    {:8}: {}'.format(state, n)
+            print('\n'.join(f'    {state:8}: {n}'
                             for state, n in inqueue.items()))
 
         todo = []
@@ -193,14 +197,14 @@ class Queue(Lock):
                             break
                     else:
                         if dep not in done:
-                            print('Missing dependency:', dep)
+                            print(f'Missing dependency for {task.name}:', dep)
                             break
                         tsk = None
                 elif tsk.state == 'done':
                     tsk = None
-                elif tsk.state not in ['queued', 'hold', 'running']:
-                    print('Dependency ({}) in bad state: {}'
-                          .format(tsk.name, tsk.state))
+                elif tsk.state not in {'queued', 'hold', 'running'}:
+                    print(f'Dependency for {task.name} ({tsk.name}) '
+                          f'in bad state: {tsk.state}')
                     break
 
                 if tsk is not None:
@@ -219,6 +223,7 @@ class Queue(Lock):
             n2 = len(todo)
             if n2 == n1:
                 break
+            1 / 0
             n1 = n2
 
         todo = todo[:max_tasks]
@@ -380,9 +385,8 @@ class Queue(Lock):
                 else:
                     task.remove_failed_file()
             else:
-                raise ValueError('Can\'t do {} -> {}!'
-                                 .format(task.state, newstate))
-            print('{} -> {}: {}'.format(task.state, newstate, task))
+                raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
+            print(f'{task.state} -> {newstate}: {task}')
             task.state = newstate
             self.changed.add(task)
 
@@ -456,8 +460,7 @@ class Queue(Lock):
             if task.id == id:
                 break
         else:
-            print('No such task: {id}, {state}'
-                  .format(id=id, state=state))
+            print(f'No such task: {id}, {state}')
             return
 
         t = t or time.time()
@@ -667,5 +670,5 @@ def pprint(tasks: List[Task],
 
     if verbosity:
         count['total'] = len(tasks)
-        print(', '.join('{}: {}'.format(state, n)
+        print(', '.join(f'{state}: {n}'
                         for state, n in count.items()))
