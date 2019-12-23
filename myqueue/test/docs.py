@@ -10,7 +10,13 @@ import myqueue.test.runner as runner
 from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
-skips = ['<task>', '<states>', 'ABC 123']
+
+
+def skip(line: str) -> bool:
+    for s in ['<task>', '<states>', 'ABC 123']:
+        if s in line:
+            return True
+    return False
 
 
 def run_document(path: Path, test=False) -> None:
@@ -21,24 +27,24 @@ def run_document(path: Path, test=False) -> None:
     n = 0
     while n < len(lines):
         line = lines[n]
-        if (line.endswith('::') and
-            lines[n + 2][:5] == '    $' and
-            not any(skip in lines[n + 2] for skip in skips)):
-            cmd = ''
-            output: List[str] = []
-            L = 0
-            for n, line in enumerate(lines[n + 2:], n + 2):
-                if not line:
-                    break
-                if line[4] == '$':
-                    if cmd:
-                        blocks.append((cmd, output, L))
-                    cmd = line[6:]
-                    output = []
-                    L = n
-                else:
-                    output.append(line)
-            blocks.append((cmd, output, L))
+        if line.endswith('::'):
+            line = lines[n + 2]
+            if line[:5] == '    $' and not skip(line):
+                cmd = ''
+                output: List[str] = []
+                L = 0
+                for n, line in enumerate(lines[n + 2:], n + 2):
+                    if not line:
+                        break
+                    if line[4] == '$':
+                        if cmd:
+                            blocks.append((cmd, output, L))
+                        cmd = line[6:]
+                        output = []
+                        L = n
+                    else:
+                        output.append(line)
+                blocks.append((cmd, output, L))
         n += 1
 
     pypath = Path().absolute()
