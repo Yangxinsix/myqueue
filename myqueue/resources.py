@@ -29,7 +29,8 @@ class Resources:
                  cores: int = 1,
                  nodename: str = '',
                  processes: int = 0,
-                 tmax: int = 600) -> None:
+                 tmax: int = 600  # seconds
+                 ):
         self.cores = cores
         self.nodename = nodename
         self.tmax = tmax
