@@ -2,89 +2,82 @@ import shutil
 import time
 from pathlib import Path
 
-from .runner import test, mq, wait, states, LOCAL, mqlist
 from ..utils import chdir
 
 
-@test
-def submit():
+def test_submit(mq):
     f = Path('folder')
     f.mkdir()
     mq('submit time@sleep+2 . folder --max-tasks=9')
     mq('submit shell:echo+hello -d time@sleep+2')
-    wait()
-    assert states() == 'ddd'
+    mq.wait()
+    assert mq.states() == 'ddd'
     shutil.rmtree(f)
     mq('sync')
-    assert states() == 'dd'
+    assert mq.states() == 'dd'
     mq('daemon status')
 
 
-@test
-def fail():
+def test_fail(mq):
     mq('submit time@sleep+a')
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
-    wait()
+    mq.wait()
     id = mqlist()[0].id
     mq(f'info {id} -v')
     mq('ls -S t')
     # mq('ls -AC')
     mq('ls -L')
-    assert states() == 'FCC', states()
+    assert mq.states() == 'FCC', mq.states()
     mq('resubmit -sF . -z')
-    assert states() == 'FCC'
+    assert mq.states() == 'FCC'
     mq('resubmit -sF .')
-    wait()
-    assert states() == 'CCF'
+    mq.wait()
+    assert mq.states() == 'CCF'
     mq('modify -s F T .')
-    assert states() == 'CCT'
+    assert mq.states() == 'CCT'
 
 
-@test
-def fail2():
+def test_fail2(mq):
     mq('submit time@sleep+a --workflow')
-    wait()
-    assert states() == 'F'
+    mq.wait()
+    assert mq.states() == 'F'
     mq('remove --states F .')
     mq('submit time@sleep+a --workflow')
-    wait()
-    assert states() == ''
+    mq.wait()
+    assert mq.states() == ''
 
 
-@test
-def timeout():
+def test_timeout(mq):
     t = 3 if LOCAL else 120
     mq(f'submit -n zzz "shell:sleep {t}" -R 1:1s')
     mq('submit "shell:echo hello" -d zzz')
-    wait()
+    mq.wait()
     mq('resubmit -sT . -R 1:5m')
-    wait()
-    assert states() == 'Cd'
+    mq.wait()
+    assert mq.states() == 'Cd'
 
 
-@test
-def timeout2():
+def test_timeout2(mq):
     t = 3 if LOCAL else 120
     mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
     mq('submit "shell:echo hello" -d shell:sleep+{}'.format(t))
-    wait()
+    mq.wait()
     mq('kick')
-    wait()
-    if states() != 'dd':
+    mq.wait()
+    if mq.states() != 'dd':
         mq('kick')
-        wait()
-        assert states() == 'dd'
+        mq.wait()
+        assert mq.states() == 'dd'
 
 
-@test
-def oom():
+def test_oom(mq):
     mq(f'submit "myqueue.test@oom {LOCAL}" --restart 2')
-    wait()
-    assert states() == 'M'
+    mq.wait()
+    assert mq.states() == 'M'
     mq('kick')
-    wait()
-    assert states() == 'd'
+    mq.wait()
+    assert mq.states() == 'd'
 
 
 wf = """
@@ -95,14 +88,13 @@ def create_tasks():
 """
 
 
-@test
-def workflow():
+def test_workflow(mq):
     mq('submit shell:sleep+3@1:1m -w')
     time.sleep(2)
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . -t shell:touch+hello')
-    wait()
-    assert states() == 'dd'
+    mq.wait()
+    assert mq.states() == 'dd'
 
 
 wf2 = """
@@ -112,48 +104,43 @@ def create_tasks():
 """
 
 
-@test
-def workflow2():
+def test_workflow2(mq):
     Path('wf2.py').write_text(wf2)
     mq('workflow wf2.py .')
     mq('kick')
-    wait()
-    assert states() == 'dddd'
+    mq.wait()
+    assert mq.states() == 'dddd'
 
 
-@test
-def cancel():
+def test_cancel(mq):
     mq('submit shell:sleep+2')
     mq('submit shell:sleep+999')
     mq('submit shell:echo+hello -d shell:sleep+999')
     mq('rm -n shell:sleep+999 -srq .')
-    wait()
-    assert states() == 'd'
+    mq.wait()
+    assert mq.states() == 'd'
 
 
-@test
-def check_dependency_order():
+def test_check_dependency_order(mq):
     mq('submit myqueue.test@timeout_once -R 1:1s --restart 1')
     mq('submit shell:echo+ok -d myqueue.test@timeout_once --restart 1')
-    wait()
-    assert states() == 'TC'
+    mq.wait()
+    assert mq.states() == 'TC'
     mq('kick')
-    wait()
-    assert states() == 'dd'
+    mq.wait()
+    assert mq.states() == 'dd'
 
 
-@test
-def run():
+def test_run(mq):
     mq('run "math@sin 3.14" . -z')
     mq('run "math@sin 3.14" .')
     mq('submit "time@sleep 1"')
     mq('run "time@sleep 1" .')
-    wait()
-    assert states() == ''
+    mq.wait()
+    assert mq.states() == ''
 
 
-@test
-def misc():
+def test_misc(mq):
     f = Path('subfolder')
     f.mkdir()
     with chdir(f):
@@ -163,9 +150,8 @@ def misc():
     mq('-V')
 
 
-@test
-def slash():
+def test_slash(mq):
     mq('submit "shell:echo a/b"')
     mq('submit "shell:echo a/c" -w')
-    wait()
-    assert states() == 'dd'
+    mq.wait()
+    assert mq.states() == 'dd'
