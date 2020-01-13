@@ -11,6 +11,13 @@ Next release
 
 * ...
 
+
+Version 20.1.1
+==============
+
+* This is the version submitted to JOSS.
+
+
 Version 20.1.0
 ==============
 
