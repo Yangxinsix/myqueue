@@ -316,7 +316,7 @@ class Queue(Lock):
     def sync(self) -> None:
         """Syncronize queue with the real world."""
         self._read()
-        in_the_queue = ['running', 'hold', 'queued']
+        in_the_queue = {'running', 'hold', 'queued'}
         ids = self.scheduler.get_ids()
         remove = []
         for task in self.tasks:
