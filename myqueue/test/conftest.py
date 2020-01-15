@@ -1,12 +1,8 @@
 import os
 import shlex
-import shutil
-import sys
-import tempfile
 import time
 from pathlib import Path
-from textwrap import wrap
-from typing import List, Optional, Callable, Set
+from typing import List, Set
 
 import pytest
 
@@ -16,18 +12,24 @@ from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.task import Task, taskstates
 
-LOCAL = True
-UPDATE = False
 
-
-@pytest.fixture
+@pytest.fixture(scope='function')
 def mq(tmpdir):
-    cd
-    yield mq1
-    cd
+    dir = os.getcwd()
+    os.chdir(tmpdir)
+    yield MQ(Path(tmpdir))
+    os.chdir(dir)
 
 
 class MQ:
+    def __init__(self, dir):
+        mqdir = dir / '.myqueue'
+        mqdir.mkdir()
+        txt = "config = {'scheduler': 'local'}\n"
+        (mqdir / 'config.py').write_text(txt)
+        initialize_config(dir)
+        os.environ['MYQUEUE_TESTING'] = 'yes'
+
     def __call__(self, cmd):
         args = shlex.split(cmd)
         if args[0][0] != '-' and args[0] != 'help':
@@ -39,6 +41,7 @@ class MQ:
         return ''.join(task.state[0] for task in mqlist())
 
     def wait(self) -> None:
+        LOCAL = True
         t0 = time.time()
         timeout = 10.0 if LOCAL else 1300.0
         sleep = 0.1 if LOCAL else 3.0
@@ -57,37 +60,3 @@ def mqlist(states: Set[str] = None) -> List[Task]:
         return Selection(states=states,
                          folders=[Path().absolute()]).select(q.tasks)
 
-
-
-
-def run_tests(tests: List[str],
-              config_file: Optional[Path],
-              exclude: List[str],
-              verbose: bool,
-              update_source_code: bool) -> None:
-
-    import myqueue.queue
-
-    global LOCAL, UPDATE
-    LOCAL = config_file is None
-    UPDATE = update_source_code
-
-
-    if LOCAL:
-        tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-'))
-    else:
-        tmpdir = Path(tempfile.mkdtemp(prefix='myqueue-test-',
-                                       dir=str(Path.home())))
-
-    myqueue.queue.use_color = False
-
-    (tmpdir / '.myqueue').mkdir()
-
-    if config_file:
-        txt = config_file.read_text()
-    else:
-        txt = 'config = {}\n'.format({'scheduler': 'local'})
-    (tmpdir / '.myqueue' / 'config.py').write_text(txt)
-    initialize_config(tmpdir)
-
-    os.environ['MYQUEUE_TESTING'] = 'yes'
