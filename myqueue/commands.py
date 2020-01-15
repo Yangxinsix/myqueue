@@ -153,8 +153,8 @@ class PythonFunction(Command):
 
     def __str__(self) -> str:
         args = ', '.join(repr(convert(arg)) for arg in self.args)
-        return ('python3 -c "import {mod}; {mod}.{func}({args})"'
-                .format(mod=self.mod, func=self.func, args=args))
+        mod = self.mod
+        return f'python3 -c "import {mod}; {mod}.{self.func}({args})"'
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,

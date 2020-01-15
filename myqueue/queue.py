@@ -379,8 +379,7 @@ class Queue(Lock):
                 else:
                     task.remove_failed_file()
             else:
-                raise ValueError('Can\'t do {} -> {}!'
-                                 .format(task.state, newstate))
+                raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
             print(f'{task.state} -> {newstate}: {task}')
             task.state = newstate
             self.changed.add(task)
