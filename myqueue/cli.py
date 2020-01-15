@@ -368,7 +368,7 @@ def _main(arguments: List[str] = None) -> int:
         if args.traceback:
             raise
         else:
-            print('{}: {}'.format(x.__class__.__name__, x),
+            print(f'{x.__class__.__name__}: {x}',
                   file=sys.stderr)
             print('To get a full traceback, use: mq {} ... -T'
                   .format(args.command), file=sys.stderr)
@@ -450,8 +450,7 @@ def run(args: argparse.Namespace) -> None:
             try:
                 folder.relative_to(home)
             except ValueError:
-                raise MQError('{folder} not inside {home}'
-                              .format(folder=folder, home=home))
+                raise MQError(f'{folder} not inside {home}')
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''

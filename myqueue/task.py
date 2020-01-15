@@ -97,7 +97,7 @@ class Task:
         dt = self.running_time(t)
 
         if self.deps:
-            deps = '({})'.format(len(self.deps))
+            deps = f'({len(self.deps)})'
         else:
             deps = ''
 
@@ -119,7 +119,7 @@ class Task:
     def __repr__(self) -> str:
         return str(self.dname)
         dct = self.todict()
-        return 'Task({!r})'.format(dct)
+        return f'Task({dct!r})'
 
     def order(self, column: str) -> Union[int, str, Path, float]:
         """ifnraste"""
