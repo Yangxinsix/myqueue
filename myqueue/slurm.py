@@ -32,7 +32,7 @@ class SLURM(Scheduler):
                   f'--partition={nodename}',
                   f'--job-name={name}',
                   f'--time={ceil(task.resources.tmax / 60)}',
-                  f'--ntasks={task.resources.processes}',
+                  f'--ntasks={task.resources.cores}',
                   f'--nodes={nodes}',
                   f'--chdir={task.folder}',
                   f'--output={name}.%j.out',
