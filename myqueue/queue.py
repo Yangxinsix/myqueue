@@ -199,8 +199,7 @@ class Queue(Lock):
                 elif tsk.state == 'done':
                     tsk = None
                 elif tsk.state not in ['queued', 'hold', 'running']:
-                    print('Dependency ({}) in bad state: {}'
-                          .format(tsk.name, tsk.state))
+                    print(f'Dependency ({tsk.name}) in bad state: {tsk.state}')
                     break
 
                 if tsk is not None:
@@ -316,7 +315,7 @@ class Queue(Lock):
     def sync(self) -> None:
         """Syncronize queue with the real world."""
         self._read()
-        in_the_queue = ['running', 'hold', 'queued']
+        in_the_queue = {'running', 'hold', 'queued'}
         ids = self.scheduler.get_ids()
         remove = []
         for task in self.tasks:
@@ -380,9 +379,8 @@ class Queue(Lock):
                 else:
                     task.remove_failed_file()
             else:
-                raise ValueError('Can\'t do {} -> {}!'
-                                 .format(task.state, newstate))
-            print('{} -> {}: {}'.format(task.state, newstate, task))
+                raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
+            print(f'{task.state} -> {newstate}: {task}')
             task.state = newstate
             self.changed.add(task)
 
@@ -456,8 +454,7 @@ class Queue(Lock):
             if task.id == id:
                 break
         else:
-            print('No such task: {id}, {state}'
-                  .format(id=id, state=state))
+            print(f'No such task: {id}, {state}')
             return
 
         t = t or time.time()

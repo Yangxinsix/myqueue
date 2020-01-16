@@ -4,6 +4,8 @@ from pathlib import Path
 
 from ..utils import chdir
 
+LOCAL = True
+
 
 def test_submit(mq):
     f = Path('folder')
@@ -23,7 +25,7 @@ def test_fail(mq):
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     mq.wait()
-    id = mqlist()[0].id
+    id = mq.list()[0].id
     mq(f'info {id} -v')
     mq('ls -S t')
     # mq('ls -AC')
@@ -61,7 +63,7 @@ def test_timeout(mq):
 def test_timeout2(mq):
     t = 3 if LOCAL else 120
     mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
-    mq('submit "shell:echo hello" -d shell:sleep+{}'.format(t))
+    mq(f'submit "shell:echo hello" -d shell:sleep+{t}')
     mq.wait()
     mq('kick')
     mq.wait()

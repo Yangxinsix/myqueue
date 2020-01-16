@@ -1,6 +1,8 @@
 .. image:: https://gitlab.com/myqueue/myqueue/badges/master/coverage.svg
 .. image:: https://badge.fury.io/py/myqueue.svg
     :target: https://pypi.org/project/myqueue/
+.. image:: https://joss.theoj.org/papers/10.21105/joss.01844/status.svg
+    :target: https://doi.org/10.21105/joss.01844
 
 =======
 MyQueue

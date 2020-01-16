@@ -37,17 +37,17 @@ The idea behind `MyQueue` is to define a personal queue that the
 user can interact with in an easy and efficient way while `MyQueue` handles
 the interaction with the scheduler. Finished tasks will stay in the personal
 queue until they are explicitly removed so they can be listed with their
-status (done, failed, timed-out or out-of-memory). This makes it easy to keep
-track of your tasks: If a task is listed as "done" it reminds you that some
-action should be taken, e.g. the result of the task should be checked. If a
+status (done, failed, timed-out, or out-of-memory). This makes it easy to keep
+track of your tasks: If a task is listed as "done", it reminds you that some
+action should be taken, e.g., the result of the task should be checked. If a
 task failed then you need to fix something and resubmit the task. In this
 sense, `MyQueue` works as a to-do list.
 
 `MyQueue` has a convenient *list* sub-command.  It will by default only
-show tasks belonging to the current folder and its sub-folders making it easy
+show tasks belonging to the current folder and its sub-folders, making it easy
 to manage several projects by putting them in separate folders.  Failed tasks
 will show a short error message read from the relevant line in the error file.
-You can select the tasks you want to list by status, task-id, name or error
+You can select the tasks you want to list by status, task-id, name, or error
 message. A task can be marked with a *restarts* number $N$, indicating that
 `MyQueue` should restart the task up to $N$ times (with increased resources)
 if the task runs out of time or memory. Increased resources means longer time
@@ -55,7 +55,7 @@ or more cores for the timed-out and out-of-memory cases, respectively.
 
 The `MyQueue` *submit* sub-command makes it easy to submit thousands
 of tasks in a single command. As input *submit* takes a shell script, Python
-script or Python module and executes the script/module in a number of folders.
+script, or Python module and executes the script/module in a number of folders.
 This makes it easy to submit a large number of tasks quickly. The *list*
 sub-command can then be used to monitor the execution of the tasks. Together
 with the *resubmit* sub-command it becomes easy to resubmit any tasks that
@@ -73,18 +73,18 @@ itself by focusing *not* on automatic handling of crashes but *only*
 on the single problem of submitting and managing thousands of tasks.
 In the scientific field of the authors, atomic-scale simulations,
 commonly used workflow managers are
-[AiiDA](http://www.aiida.net)[@aiida] and
-[Fireworks](https://materialsproject.github.io/fireworks)[@fireworks].
+[AiiDA](http://www.aiida.net) [@aiida] and
+[Fireworks](https://materialsproject.github.io/fireworks) [@fireworks].
 Fireworks' centralized server model is advantageous when coordinating
-tasks distributed between multiple users.  Compared to Fireworks
-`MyQueue` is installed per user, is completely decentralized and
+tasks distributed between multiple users.  In constrast to Fireworks,
+`MyQueue` is installed per user, is completely decentralized, and
 cannot coordinate tasks between multiple users.  AiiDA is a fully
-automatic workflow tool designed to ensure data provenance. Compared
-to AiiDA `MyQueue` does not handle data provenance and does not focus
+automatic workflow tool designed to ensure data provenance. In contrast
+to AiiDA, `MyQueue` does not handle data provenance and does not focus
 on the automization of the workflow process.  These design decisions
-can be seen both as a draw back and an advantage depending on the use
-case but in any case makes `MyQueue` easier to learn.  To summarize
-`MyQueue` is a personal, decentralized and lightweight front-end for
+can be seen both as a drawback and an advantage depending on the use
+case, but in any case makes `MyQueue` easier to learn.  To summarize,
+`MyQueue` is a personal, decentralized, and lightweight front-end for
 schedulers with support for submitting workflows. It requires no
 system administrator and no database server.
 
