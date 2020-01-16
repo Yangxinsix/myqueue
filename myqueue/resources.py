@@ -10,7 +10,7 @@ def seconds_to_short_time_string(n: float) -> str:
         if n % t == 0:
             break
 
-    return '{}{}'.format(n // t, s)
+    return f'{n // t}{s}'
 
 
 def T(t: str) -> int:
@@ -104,7 +104,7 @@ class Resources:
                 if name == self.nodename:
                     break
             else:
-                raise ValueError('No such node: {}'.format(self.nodename))
+                raise ValueError(f'No such node: {self.nodename}')
         else:
             for name, dct in nodelist:
                 if self.cores % dct['cores'] == 0:

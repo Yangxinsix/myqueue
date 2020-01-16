@@ -31,16 +31,16 @@ class PBS(Scheduler):
                 '-N',
                 task.cmd.short_name,
                 '-l',
-                'walltime={}:{:02}:{:02}'.format(hours, minutes, seconds),
+                f'walltime={hours}:{minutes:02}:{seconds:02}',
                 '-l',
-                'nodes={nodes}:ppn={ppn}' .format(nodes=nodes, ppn=ppn),
+                f'nodes={nodes}:ppn={ppn}',
                 '-d', str(task.folder)]
 
         qsub += nodedct.get('extra_args', [])
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
-            qsub.extend(['-W', 'depend=afterok:{}'.format(ids)])
+            qsub.extend(['-W', f'depend=afterok:{ids}'])
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:

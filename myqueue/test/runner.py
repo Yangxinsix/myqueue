@@ -121,7 +121,7 @@ def run_tests(tests: List[str],
         if verbose:
             print()
             print('#' * N)
-            print(' Running "{}" test '.format(name).center(N, '#'))
+            print(f' Running "{name}" test '.center(N, '#'))
             print('#' * N)
             print()
         else:

@@ -340,13 +340,12 @@ def _main(arguments: List[str] = None) -> int:
         return perform_action(args.action)
 
     if args.command == 'completion':
-        cmd = ('complete -o default -C "{py} {filename}" mq'
-               .format(py=sys.executable,
-                       filename=Path(__file__).with_name('complete.py')))
+        py = sys.executable
+        filename = Path(__file__).with_name('complete.py')
+        cmd = f'complete -o default -C "{py} {filename}" mq'
         if args.verbose:
             print('Add tab-completion for Bash by copying the following '
-                  'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n'
-                  .format(cmd=cmd))
+                  f'line to your ~/.bashrc (or similar file):\n\n   {cmd}\n')
         else:
             print(cmd)
         return 0
@@ -368,10 +367,10 @@ def _main(arguments: List[str] = None) -> int:
         if args.traceback:
             raise
         else:
-            print('{}: {}'.format(x.__class__.__name__, x),
+            print(f'{x.__class__.__name__}: {x}',
                   file=sys.stderr)
-            print('To get a full traceback, use: mq {} ... -T'
-                  .format(args.command), file=sys.stderr)
+            print(f'To get a full traceback, use: mq {args.command} ... -T',
+                  file=sys.stderr)
             return 1
     return 0
 
@@ -450,8 +449,7 @@ def run(args: argparse.Namespace) -> None:
             try:
                 folder.relative_to(home)
             except ValueError:
-                raise MQError('{folder} not inside {home}'
-                              .format(folder=folder, home=home))
+                raise MQError(f'{folder} not inside {home}')
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''

@@ -67,7 +67,7 @@ def timeout():
 def timeout2():
     t = 3 if LOCAL else 120
     mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
-    mq('submit "shell:echo hello" -d shell:sleep+{}'.format(t))
+    mq(f'submit "shell:echo hello" -d shell:sleep+{t}')
     wait()
     mq('kick')
     wait()
