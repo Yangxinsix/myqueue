@@ -45,9 +45,9 @@ class Scheduler:
 
 def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
-    if name == 'local':
-        from myqueue.local import LocalScheduler
-        scheduler: Scheduler = LocalScheduler()
+    if name == 'test':
+        from myqueue.test.scheduler import local_scheduler
+        scheduler: Scheduler = local_scheduler
     elif name == 'slurm':
         from myqueue.slurm import SLURM
         scheduler = SLURM()

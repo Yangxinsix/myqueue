@@ -100,26 +100,19 @@ class TestScheduler(Scheduler):
 
     def kick(self) -> None:
         for task in self.tasks:
-            if task.state == 'running':
-                return
-
-        for task in self.tasks:
             if task.state == 'queued' and not task.deps:
                 break
         else:
             return
 
-        self._run(task)
-        task.state = 'running'
+        self.run(task)
 
-    def _run(self, task):
+    def run(self, task):
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
 
-        testing = os.environ.get('MYQUEUE_TESTING')
-
         cmd = str(task.cmd)
-        if task.resources.processes > 1 and not testing:
+        if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
             mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
@@ -127,21 +120,12 @@ class TestScheduler(Scheduler):
                                                    'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
-        cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
-        msg = ('python3 -m myqueue.local {} {}'
-               .format(config['home'], task.id))
+        cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
         tmax = task.resources.tmax
-        cmd = (f'({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
-               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
+        cmd = (f'({cmd} ; echo $?)& p1=$!; '
+               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; echo TIMEOUT)& '
                'p2=$!; wait $p1; '
                'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi')
         p = subprocess.run(cmd, shell=True)
         assert p.returncode == 0
-
-
-if __name__ == '__main__':
-    from pathlib import Path
-    home, id, state = sys.argv[1:4]
-    initialize_config(Path(home))
-    q = LocalScheduler()
-    q.update(int(id), state)
+        self.update(p.out)

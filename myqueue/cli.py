@@ -101,10 +101,6 @@ Do this:
 
     $ mq completion >> ~/.bashrc
 """),
-    ('test',
-     'Run the tests.', """
-Please report errors to https://gitlab.com/myqueue/myqueue/issues.
-"""),
     ('daemon',
      'Interact with the background process.', """
 Manage daemon for restarting, holding and releasing tasks.
@@ -165,16 +161,6 @@ def _main(arguments: List[str] = None) -> int:
         if cmd == 'help':
             a('cmd', nargs='?', help='Subcommand.')
             continue
-
-        if cmd == 'test':
-            a('test', nargs='*',
-              help='Test to run.  Default behaviour is to run all.')
-            a('--config-file',
-              help='Use specific config.py file.')
-            a('-x', '--exclude',
-              help='Exclude test(s).')
-            a('-u', '--update-source-code', action='store_true',
-              help='Update the command-line examples in the documentation.')
 
         if cmd == 'daemon':
             a('action', choices=['start', 'stop', 'status'],
@@ -325,14 +311,6 @@ def _main(arguments: List[str] = None) -> int:
             parser.print_help()
         else:
             subparsers.choices[args.cmd].print_help()
-        return 0
-
-    if args.command == 'test':
-        from myqueue.test.runner import run_tests
-        exclude = args.exclude.split(',') if args.exclude else []
-        config = Path(args.config_file) if args.config_file else None
-        run_tests(args.test, config, exclude, args.verbose,
-                  args.update_source_code)
         return 0
 
     if args.command == 'daemon':
