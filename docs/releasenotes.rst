@@ -12,6 +12,12 @@ Next release
 * ...
 
 
+Version 20.1.2
+==============
+
+* Bug-fix release with fix for single-process tasks (see :ref:`resources`).
+
+
 Version 20.1.1
 ==============
 
