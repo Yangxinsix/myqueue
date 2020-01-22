@@ -25,7 +25,7 @@ class MQ:
     def __init__(self, dir):
         mqdir = dir / '.myqueue'
         mqdir.mkdir()
-        txt = "config = {'scheduler': 'local'}\n"
+        txt = "config = {'scheduler': 'test'}\n"
         (mqdir / 'config.py').write_text(txt)
         initialize_config(dir)
         os.environ['MYQUEUE_TESTING'] = 'yes'
