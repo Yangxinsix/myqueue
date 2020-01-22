@@ -255,7 +255,10 @@ class Queue(Lock):
 
             pprint(submitted, 0, 'ifnr')
             if submitted:
-                print(plural(len(submitted), 'task'), 'submitted')
+                if self.dry_run:
+                    print(plural(len(submitted), 'task'), 'to submit')
+                else:
+                    print(plural(len(submitted), 'task'), 'submitted')
 
             self.tasks += submitted
             self.changed.update(submitted)
