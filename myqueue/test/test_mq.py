@@ -10,8 +10,8 @@ LOCAL = True
 def test_submit(mq):
     f = Path('folder')
     f.mkdir()
-    mq('submit time@sleep+2 . folder --max-tasks=9')
-    mq('submit shell:echo+hello -d time@sleep+2')
+    mq('submit time@sleep+0.1 . folder --max-tasks=9')
+    mq('submit shell:echo+hello -d time@sleep+0.1')
     mq.wait()
     assert mq.states() == 'ddd'
     shutil.rmtree(f)
@@ -25,8 +25,7 @@ def test_fail(mq):
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     mq.wait()
-    id = mq.list()[0].id
-    mq(f'info {id} -v')
+    mq('info 1 -v')
     mq('ls -S t')
     # mq('ls -AC')
     mq('ls -L')

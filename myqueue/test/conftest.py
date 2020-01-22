@@ -1,6 +1,5 @@
 import os
 import shlex
-import time
 from pathlib import Path
 from typing import List, Set
 
@@ -11,6 +10,7 @@ from myqueue.config import initialize_config
 from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.task import Task, taskstates
+from myqueue.test.scheduler import TestScheduler
 
 
 @pytest.fixture(scope='function')
@@ -27,30 +27,26 @@ class MQ:
         mqdir.mkdir()
         txt = "config = {'scheduler': 'test'}\n"
         (mqdir / 'config.py').write_text(txt)
-        initialize_config(dir)
+        initialize_config(dir, force=True)
+        self.scheduler = TestScheduler(dir)
+        TestScheduler.current_scheduler = self.scheduler
         os.environ['MYQUEUE_TESTING'] = 'yes'
 
     def __call__(self, cmd):
         args = shlex.split(cmd)
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
-        error = _main(args)
+        error = _main(args, is_test=True)
         assert error == 0
 
     def states(self) -> str:
         return ''.join(task.state[0] for task in mqlist())
 
     def wait(self) -> None:
-        LOCAL = True
-        t0 = time.time()
-        timeout = 10.0 if LOCAL else 1300.0
-        sleep = 0.1 if LOCAL else 3.0
         while True:
-            if len(mqlist({'queued', 'running'})) == 0:
-                return
-            time.sleep(sleep)
-            if time.time() - t0 > timeout:
-                raise TimeoutError
+            done = self.scheduler.kick()
+            if done:
+                break
 
 
 def mqlist(states: Set[str] = None) -> List[Task]:

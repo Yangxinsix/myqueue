@@ -1,15 +1,17 @@
 import subprocess
 from pathlib import Path
 
-from .scheduler import Scheduler
-from .task import Task
+from myqueue.scheduler import Scheduler
+from myqueue.task import Task
 
 
 class TestScheduler(Scheduler):
+    current_scheduler: Scheduler = None
+
     def __init__(self, folder: Path):
         self.folder = folder / '.myqueue'
         self.tasks = []
-        self.number = 1
+        self.number = 0
         Scheduler.__init__(self)
 
     def submit(self, task: Task, activation_script: Path = None,
@@ -54,13 +56,15 @@ class TestScheduler(Scheduler):
         return {task.id for task in self.tasks}
 
     def kick(self) -> None:
+        print(self.tasks)
         for task in self.tasks:
             if task.state == 'queued' and not task.deps:
                 break
         else:
-            return
+            return True
 
         self.run(task)
+        return False
 
     def run(self, task):
         out = f'{task.cmd.short_name}.{task.id}.out'
@@ -75,20 +79,15 @@ class TestScheduler(Scheduler):
             cmd = 'MPLBACKEND=Agg ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
         tmax = task.resources.tmax
-        cmd = (f'({cmd} ; echo $?)& p1=$!; '
-               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; echo TIMEOUT)& '
-               'p2=$!; wait $p1; '
-               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi')
-
         (self.folder / f'test-{task.id}-0').write_text('')
-
-        result = subprocess.run(cmd,
-                                shell=True,
-                                check=True,
-                                stdout=subprocess.PIPE)
-        state = result.stdout.decode().strip()
-        if state != 'TIMEOUT':
-            if state == '0':
+        try:
+            result = subprocess.run(cmd,
+                                    shell=True,
+                                    timeout=tmax)
+        except subprocess.TimeoutExpired:
+            state = 'TIMEOUT'
+        else:
+            if result.returncode == 0:
                 state = 'done'
             else:
                 state = 'FAILED'

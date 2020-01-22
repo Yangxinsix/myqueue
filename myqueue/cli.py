@@ -120,7 +120,7 @@ def main(arguments: List[str] = None) -> None:
     sys.exit(_main(arguments))
 
 
-def _main(arguments: List[str] = None) -> int:
+def _main(arguments: List[str] = None, is_test=False) -> int:
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
@@ -329,7 +329,7 @@ def _main(arguments: List[str] = None) -> int:
         return 0
 
     try:
-        run(args)
+        run(args, is_test)
     except KeyboardInterrupt:
         pass
     except TimeoutError as x:
@@ -353,7 +353,7 @@ def _main(arguments: List[str] = None) -> int:
     return 0
 
 
-def run(args: argparse.Namespace) -> None:
+def run(args: argparse.Namespace, is_test: bool) -> None:
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, taskstates
@@ -363,7 +363,8 @@ def run(args: argparse.Namespace) -> None:
     from .workflow import workflow
     from .daemon import start_daemon
 
-    start_daemon()
+    if not is_test:
+        start_daemon()
 
     verbosity = 1 - args.quiet + args.verbose
 
