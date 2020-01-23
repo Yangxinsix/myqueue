@@ -76,10 +76,6 @@ commands = {
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-A', '--all'],
-    'test':
-        ['--config-file', '-x', '--exclude', '-u', '--update-source-code',
-         '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
     'workflow':
         ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
          '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
