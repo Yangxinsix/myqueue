@@ -3,7 +3,7 @@ import shlex
 from pathlib import Path
 from typing import List, Set
 
-import pytest
+import pytest  # type: ignore
 
 from myqueue.cli import _main
 from myqueue.config import initialize_config

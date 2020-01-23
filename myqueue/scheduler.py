@@ -41,6 +41,7 @@ def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
     if name == 'test':
         from myqueue.test.scheduler import TestScheduler
+        assert TestScheduler.current_scheduler is not None
         scheduler: Scheduler = TestScheduler.current_scheduler
     elif name == 'slurm':
         from myqueue.slurm import SLURM
