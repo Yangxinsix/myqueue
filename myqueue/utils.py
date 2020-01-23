@@ -214,7 +214,7 @@ def update_completion(test=False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines), cli
+        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')

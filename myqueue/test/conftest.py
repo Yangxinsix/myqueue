@@ -36,6 +36,7 @@ class MQ:
         args = shlex.split(cmd)
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
+        print(f'$ mq {cmd}')
         error = _main(args, is_test=True)
         assert error == 0
 

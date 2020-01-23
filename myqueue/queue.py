@@ -258,7 +258,6 @@ class Queue(Lock):
 
             self.tasks += submitted
             self.changed.update(submitted)
-            self.scheduler.kick()
 
             if ex:
                 print(f'ERROR!  Could not submit {task}')

@@ -14,9 +14,6 @@ class Scheduler:
     def update(self, id: int, state: str) -> None:
         pass
 
-    def kick(self) -> None:
-        pass
-
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 

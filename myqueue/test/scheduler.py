@@ -56,7 +56,6 @@ class TestScheduler(Scheduler):
         return {task.id for task in self.tasks}
 
     def kick(self) -> None:
-        print(self.tasks)
         for task in self.tasks:
             if task.state == 'queued' and not task.deps:
                 break
