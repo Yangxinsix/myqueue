@@ -71,14 +71,12 @@ class TestScheduler(Scheduler):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            mpiexec += f'-np {task.resources.processes} '
-            cmd = mpiexec + cmd
-        else:
-            cmd = 'MPLBACKEND=Agg ' + cmd
+            n = task.resources.processes
+            cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
         tmax = task.resources.tmax
         (self.folder / f'test-{task.id}-0').write_text('')
+        print(cmd)
         try:
             result = subprocess.run(cmd,
                                     shell=True,

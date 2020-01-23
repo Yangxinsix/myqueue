@@ -1,22 +1,14 @@
+import os
 import sys
 import time
 from pathlib import Path
 
 
 def oom(local: bool = True) -> None:
-    try:
-        from mpi4py import MPI  # type: ignore
-        if MPI.COMM_WORLD.size > 1:
-            return
-    except ImportError:
-        pass
-    if local:
+    n = int(os.environ.get('MYQUEUE_TEST_NPROCESSES', '1'))
+    if n == 1:
         print('error: exceeded memory limit at some point.', file=sys.stderr)
         raise MemoryError
-    x = 'x'
-    while True:
-        print(len(x))
-        x = x + x
 
 
 def timeout_once():
