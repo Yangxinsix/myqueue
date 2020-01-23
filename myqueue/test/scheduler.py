@@ -1,16 +1,17 @@
 import subprocess
 from pathlib import Path
+from typing import Optional, List
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
 
 
 class TestScheduler(Scheduler):
-    current_scheduler: Scheduler = None
+    current_scheduler: Optional['TestScheduler'] = None
 
     def __init__(self, folder: Path):
         self.folder = folder / '.myqueue'
-        self.tasks = []
+        self.tasks: List[Task] = []
         self.number = 0
         Scheduler.__init__(self)
 
@@ -55,7 +56,7 @@ class TestScheduler(Scheduler):
     def get_ids(self):
         return {task.id for task in self.tasks}
 
-    def kick(self) -> None:
+    def kick(self) -> bool:
         for task in self.tasks:
             if task.state == 'queued' and not task.deps:
                 break

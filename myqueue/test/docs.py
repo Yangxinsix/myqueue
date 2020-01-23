@@ -6,10 +6,9 @@ from subprocess import run, PIPE
 from typing import List, Tuple
 from unittest import SkipTest
 
-import myqueue.test.runner as runner
-from .runner import test, wait
 
 user = os.environ.get('USER', 'root')
+docs = Path(__file__).parent / '../../docs'
 
 
 def skip(line: str) -> bool:
@@ -19,7 +18,7 @@ def skip(line: str) -> bool:
     return False
 
 
-def run_document(path: Path, test=False) -> None:
+def run_document(mq, path: Path, test=False, update=False) -> None:
     if not path.is_file():
         raise SkipTest
     lines = path.read_text().splitlines()
@@ -55,7 +54,7 @@ def run_document(path: Path, test=False) -> None:
         print('$', cmd)
         time.sleep(0.3)
         actual_output, folder = run_command(cmd, folder, pypath)
-        wait()
+        mq.wait()
         actual_output = ['    ' + line.rstrip()
                          for line in actual_output]
         errors += compare(output, actual_output)
@@ -63,7 +62,7 @@ def run_document(path: Path, test=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if runner.UPDATE:
+    if update:
         path.write_text('\n'.join(lines) + '\n')
 
     if test:
@@ -107,36 +106,17 @@ def compare(t1, t2):
     return 1
 
 
-@test
-def docs_workflows():
-    dir = Path(__file__).parent / '../../docs'
-    f = Path('.myqueue/queue.json')
-    if f.is_file():
-        f.unlink()
-    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 13}')
+def test_docs_workflows(mq):
     p = Path('prime')
     p.mkdir()
-    for f in dir.glob('prime/*.*'):
+    for f in docs.glob('prime/*.*'):
         (p / f.name).write_text(f.read_text())
-    time.sleep(1)
-    run_document(dir / 'workflows.rst', test=True)
+    run_document(mq, docs / 'workflows.rst', test=True)
 
 
-@test
-def docs_documentation():
-    dir = Path(__file__).parent / '../../docs'
-    f = Path('.myqueue/queue.json')
-    if f.is_file():
-        f.unlink()
-    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
-    run_document(dir / 'documentation.rst', test=True)
+def test_docs_documentation(mq):
+    run_document(mq, docs / 'documentation.rst', test=True)
 
 
-@test
-def docs_quickstart():
-    dir = Path(__file__).parent / '../../docs'
-    f = Path('.myqueue/queue.json')
-    if f.is_file():
-        f.unlink()
-    Path('.myqueue/local.json').write_text('{"tasks": [], "number": 0}')
-    run_document(dir / 'quickstart.rst', test=True)
+def test_docs_quickstart(mq):
+    run_document(mq, docs / 'quickstart.rst', test=True)

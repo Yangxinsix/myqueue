@@ -11,9 +11,6 @@ class Scheduler:
                dry_run: bool) -> None:
         pass
 
-    def update(self, id: int, state: str) -> None:
-        pass
-
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 

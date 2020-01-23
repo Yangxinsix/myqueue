@@ -110,11 +110,6 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
         dct = read()
         return {str(task['id']) for task in dct['tasks']}
 
-    if command == 'test':
-        from myqueue.test.runner import all_tests, find_tests
-        find_tests()
-        return all_tests.keys()
-
     if command == 'help':
         return [cmd for cmd in commands if cmd != 'help']
 
