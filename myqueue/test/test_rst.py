@@ -1,5 +1,7 @@
+import io
 import os
 import re
+import sys
 import time
 from pathlib import Path
 from subprocess import run, PIPE
@@ -53,8 +55,18 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
     for cmd, output, L in blocks:
         print('$', cmd)
         time.sleep(0.3)
-        actual_output, folder = run_command(cmd, folder, pypath)
-        mq.wait()
+        if cmd.startswith('mq '):
+            os.chdir(folder)
+            out = sys.stdout
+            sys.stdout = io.StringIO()
+            try:
+                mq(cmd[3:])
+                mq.wait()
+            finally:
+                actual_output = sys.stdout.getvalue().splitlines()
+                sys.stdout = out
+        else:
+            actual_output, folder = run_command(cmd, folder, pypath)
         actual_output = ['    ' + line.rstrip()
                          for line in actual_output]
         errors += compare(output, actual_output)

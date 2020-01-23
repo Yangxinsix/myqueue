@@ -260,6 +260,8 @@ class Queue(Lock):
             self.changed.update(submitted)
 
             if ex:
+                print(config, ex, type(ex), os.environ.get('MYQUEUE_TESTING',
+                                                           '00000'))  # self.scheduler)
                 print(f'ERROR!  Could not submit {task}')
                 if todo:
                     print('Skipped', plural(len(todo), 'task'))

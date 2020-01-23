@@ -37,7 +37,7 @@ class MQ:
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
         print(f'$ mq {cmd}')
-        error = _main(args, is_test=True)
+        error = _main(args)
         assert error == 0
 
     def states(self) -> str:
