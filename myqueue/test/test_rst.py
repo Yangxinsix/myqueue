@@ -63,7 +63,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
                 mq(cmd[3:])
                 mq.wait()
             finally:
-                actual_output = sys.stdout.getvalue().splitlines()
+                actual_output = sys.stdout.getvalue().splitlines()[1:]
                 sys.stdout = out
         else:
             actual_output, folder = run_command(cmd, folder, pypath)
@@ -118,7 +118,8 @@ def compare(t1, t2):
     return 1
 
 
-def test_docs_workflows(mq):
+def test_docs_workflows(mq, monkeypatch):
+    monkeypatch.syspath_prepend('.')
     p = Path('prime')
     p.mkdir()
     for f in docs.glob('prime/*.*'):

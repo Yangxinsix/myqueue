@@ -77,7 +77,8 @@ class TestScheduler(Scheduler):
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
         tmax = task.resources.tmax
         (self.folder / f'test-{task.id}-0').write_text('')
-        print(cmd)
+        import os
+        print('?????', os.environ['MYQUEUE_TESTING'])
         try:
             result = subprocess.run(cmd,
                                     shell=True,
