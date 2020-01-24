@@ -42,9 +42,3 @@ def test_backends(mq):
         config['scheduler'] = 'test'
         del config['nodes']
         del config['mpiexec']
-
-
-def test_doctests():
-    import doctest
-    import myqueue.utils as utils
-    doctest.testmod(utils)
