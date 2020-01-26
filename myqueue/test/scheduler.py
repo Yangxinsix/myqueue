@@ -13,6 +13,7 @@ class TestScheduler(Scheduler):
         self.folder = folder / '.myqueue'
         self.tasks: List[Task] = []
         self.number = 0
+        self.activation_scripts = {}
         Scheduler.__init__(self)
 
     def submit(self, task: Task, activation_script: Path = None,
@@ -24,6 +25,7 @@ class TestScheduler(Scheduler):
                 assert t.id in ids
         self.number += 1
         task.id = self.number
+        self.activation_scripts[task] = activation_script
         self.tasks.append(task)
 
     def cancel(self, task):
@@ -75,13 +77,15 @@ class TestScheduler(Scheduler):
             n = task.resources.processes
             cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
-        tmax = task.resources.tmax
+        activation_script = self.activation_scripts.get(task)
+        if activation_script:
+            cmd = f'. {activation_script} && ' + cmd
         (self.folder / f'test-{task.id}-0').write_text('')
-        import os
-        print('?????', os.environ['MYQUEUE_TESTING'])
+        tmax = task.resources.tmax
         try:
             result = subprocess.run(cmd,
                                     shell=True,
+                                    check=not True,
                                     timeout=tmax)
         except subprocess.TimeoutExpired:
             state = 'TIMEOUT'

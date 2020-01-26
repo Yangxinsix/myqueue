@@ -124,6 +124,10 @@ def test_docs_workflows(mq, monkeypatch):
     p.mkdir()
     for f in docs.glob('prime/*.*'):
         (p / f.name).write_text(f.read_text())
+    venv = Path('venv')
+    venv.mkdir()
+    (venv / 'activate').write_text(
+        f'export PYTHONPATH={venv.parent.absolute()}\n')
     run_document(mq, docs / 'workflows.rst', test=True)
 
 

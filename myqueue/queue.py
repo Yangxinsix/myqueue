@@ -24,8 +24,7 @@ from .task import Task
 from .utils import Lock, plural
 from .virtenv import find_activation_scripts
 
-use_color = (sys.stdout.isatty() and
-             os.environ.get('MYQUEUE_TESTING') != 'yes')
+use_color = sys.stdout.isatty()
 
 
 class Queue(Lock):
@@ -648,6 +647,9 @@ def pprint(tasks: List[Task],
         lines[1:1] = [['-' * L for L in lengths]]
         lines.append(lines[1])
 
+    if os.environ.get('MYQUEUE_TESTING') == 'yes':
+        use_color = False
+
     if not short:
         for words in lines:
             words2 = []
@@ -663,7 +665,6 @@ def pprint(tasks: List[Task],
                 words2.append(word)
             print(' '.join(words2))
 
-    print(use_color, 999999999999)
     if verbosity:
         count['total'] = len(tasks)
         print(', '.join('{}: {}'.format(state, n)
