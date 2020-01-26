@@ -37,6 +37,10 @@ class MQ:
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
         print(f'$ mq {cmd}')
+        for i, arg in enumerate(args):
+            if '*' in arg:
+                args[i:i + 1] = [str(p) for p in Path().glob(arg)]
+                break
         error = _main(args)
         assert error == 0
 
