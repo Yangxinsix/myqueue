@@ -25,7 +25,8 @@ class TestScheduler(Scheduler):
                 assert t.id in ids
         self.number += 1
         task.id = self.number
-        self.activation_scripts[task] = activation_script
+        if activation_script:
+            self.activation_scripts[task] = activation_script
         self.tasks.append(task)
 
     def cancel(self, task):
