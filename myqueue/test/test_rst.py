@@ -2,7 +2,6 @@ import io
 import os
 import re
 import sys
-import time
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import List, Tuple
@@ -74,7 +73,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if update:
+    if 1:#update:
         path.write_text('\n'.join(lines) + '\n')
 
     if test:

@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
@@ -13,7 +13,7 @@ class TestScheduler(Scheduler):
         self.folder = folder / '.myqueue'
         self.tasks: List[Task] = []
         self.number = 0
-        self.activation_scripts = {}
+        self.activation_scripts: Dict[Task, Path] = {}
         Scheduler.__init__(self)
 
     def submit(self, task: Task, activation_script: Path = None,
