@@ -73,7 +73,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
         lines[L:L + len(output)] = actual_output
         offset += len(actual_output) - len(output)
 
-    if 1:#update:
+    if update:
         path.write_text('\n'.join(lines) + '\n')
 
     if test:
