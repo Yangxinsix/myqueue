@@ -18,6 +18,16 @@ For discussions, questions and help, go to our `#myqueue` stream on
 https://camd.zulipchat.com/.
 
 
+Testing
+-------
+
+Run the tests like this:
+
+    $ pytest [...]
+
+and report any errors you get: https://gitlab.com/myqueue/myqueue/issues.
+
+
 Documentation
 -------------
 

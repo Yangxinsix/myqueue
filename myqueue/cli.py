@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 import sys
 import textwrap
@@ -101,10 +102,6 @@ Do this:
 
     $ mq completion >> ~/.bashrc
 """),
-    ('test',
-     'Run the tests.', """
-Please report errors to https://gitlab.com/myqueue/myqueue/issues.
-"""),
     ('daemon',
      'Interact with the background process.', """
 Manage daemon for restarting, holding and releasing tasks.
@@ -125,6 +122,7 @@ def main(arguments: List[str] = None) -> None:
 
 
 def _main(arguments: List[str] = None) -> int:
+    is_test = os.environ.get('MYQUEUE_TESTING') == 'yes'
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
@@ -165,16 +163,6 @@ def _main(arguments: List[str] = None) -> int:
         if cmd == 'help':
             a('cmd', nargs='?', help='Subcommand.')
             continue
-
-        if cmd == 'test':
-            a('test', nargs='*',
-              help='Test to run.  Default behaviour is to run all.')
-            a('--config-file',
-              help='Use specific config.py file.')
-            a('-x', '--exclude',
-              help='Exclude test(s).')
-            a('-u', '--update-source-code', action='store_true',
-              help='Update the command-line examples in the documentation.')
 
         if cmd == 'daemon':
             a('action', choices=['start', 'stop', 'status'],
@@ -327,14 +315,6 @@ def _main(arguments: List[str] = None) -> int:
             subparsers.choices[args.cmd].print_help()
         return 0
 
-    if args.command == 'test':
-        from myqueue.test.runner import run_tests
-        exclude = args.exclude.split(',') if args.exclude else []
-        config = Path(args.config_file) if args.config_file else None
-        run_tests(args.test, config, exclude, args.verbose,
-                  args.update_source_code)
-        return 0
-
     if args.command == 'daemon':
         from .daemon import perform_action
         return perform_action(args.action)
@@ -351,7 +331,7 @@ def _main(arguments: List[str] = None) -> int:
         return 0
 
     try:
-        run(args)
+        run(args, is_test)
     except KeyboardInterrupt:
         pass
     except TimeoutError as x:
@@ -375,7 +355,7 @@ def _main(arguments: List[str] = None) -> int:
     return 0
 
 
-def run(args: argparse.Namespace) -> None:
+def run(args: argparse.Namespace, is_test: bool) -> None:
     from .config import config, initialize_config
     from .resources import Resources
     from .task import task, taskstates
@@ -385,7 +365,8 @@ def run(args: argparse.Namespace) -> None:
     from .workflow import workflow
     from .daemon import start_daemon
 
-    start_daemon()
+    if not is_test:
+        start_daemon()
 
     verbosity = 1 - args.quiet + args.verbose
 

@@ -40,8 +40,6 @@ Sub-commands
       - Make sure SLURM/LSF/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
-    * - :ref:`test <test>`
-      - Run the tests
     * - :ref:`daemon <daemon>`
       - Interact with the background process
 
@@ -465,35 +463,6 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
-
-
-.. _test:
-
-Test: Run the tests
--------------------
-
-usage: mq test [-h] [--config-file CONFIG_FILE] [-x EXCLUDE] [-u] [-v] [-q]
-               [-T]
-               [test [test ...]]
-
-Run the tests.
-
-Please report errors to https://gitlab.com/myqueue/myqueue/issues.
-
-test:
-    Test to run. Default behaviour is to run all.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --config-file CONFIG_FILE
-                        Use specific config.py file.
-  -x EXCLUDE, --exclude EXCLUDE
-                        Exclude test(s).
-  -u, --update-source-code
-                        Update the command-line examples in the documentation.
-  -v, --verbose         More output.
-  -q, --quiet           Less output.
-  -T, --traceback       Show full traceback.
 
 
 .. _daemon:

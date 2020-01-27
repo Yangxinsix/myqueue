@@ -203,7 +203,7 @@ You can see the status of your jobs with::
     $ mq list
     id folder name             res.   age state  time error
     -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
-    1  ./     time@sleep+2     1:1m  0:04 done   0:02
+    1  ./     time@sleep+2     1:1m  0:03 done   0:02
     2  ./f1/  shell:echo+hello 1:10m 0:01 done   0:00
     3  ./f2/  shell:echo+hello 1:10m 0:01 done   0:00
     4  ./     script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
@@ -214,18 +214,18 @@ Remove the failed and done jobs from the list with
 (notice the dot meaning the current folder)::
 
     $ mq remove -s Fd -r .
-    1 ./    time@sleep+2     1:1m  0:05 done   0:02
-    2 ./f1/ shell:echo+hello 1:10m 0:02 done   0:00
-    3 ./f2/ shell:echo+hello 1:10m 0:02 done   0:00
-    4 ./    script.py        8:10h 0:01 FAILED 0:00 ZeroDivisionError: division by zero
+    1 ./    time@sleep+2     1:1m  0:04 done   0:02
+    2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
+    3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
+    4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     4 tasks removed
 
 The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo.3.err
-    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo.3.out
+    -rw-r--r-- 1 jensj jensj 0 Jan 27 07:27 shell:echo.3.err
+    -rw-r--r-- 1 jensj jensj 6 Jan 27 07:27 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 

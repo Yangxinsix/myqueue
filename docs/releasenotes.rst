@@ -9,7 +9,9 @@ Release notes
 Next release
 ============
 
-* ...
+* Using pytest_ for testing.
+
+.. _pytest: https://docs.pytest.org/en/latest/
 
 
 Version 20.1.2
