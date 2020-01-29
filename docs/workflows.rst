@@ -8,6 +8,11 @@ The :ref:`workflow <workflow>` subcommand combined with a :ref:`workflow
 script` can be used to run several similar tasks in several folders.  The
 script describes the tasks, their requirements and dependencies.
 
+Example from real life:
+
+* `Workflow for C2DB project
+  <https://cmr.fysik.dtu.dk/c2db/c2db.html#workflow>`__
+
 
 Simple example
 ==============
