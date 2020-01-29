@@ -170,7 +170,6 @@ class Queue(Lock):
                 if state in {'queued', 'hold', 'running'}:
                     inqueue[state] += 1
                 else:
-                    task.id = current[task.dname].id
                     tasks2.append(task)
             else:
                 tasks2.append(task)
@@ -212,16 +211,8 @@ class Queue(Lock):
 
         # All dependensies must have an id or be in the list of tasks
         # about to be submitted
-        n1 = len(todo)
-        while True:
-            todo = [task for task in todo
-                    if all(tsk.id or tsk in todo
-                           for tsk in task.dtasks)]
-            n2 = len(todo)
-            if n2 == n1:
-                break
-            1 / 0
-            n1 = n2
+        for task in todo:
+            assert all(tsk.id or tsk in todo for tsk in task.dtasks)
 
         todo = todo[:max_tasks]
 
@@ -255,6 +246,10 @@ class Queue(Lock):
                         break
                     else:
                         submitted.append(task)
+                        if task.workflow:
+                            oldtask = current.get(task.dname)
+                            if oldtask:
+                                self.tasks.remove(oldtask)
 
             pprint(submitted, 0, 'ifnr')
             if submitted:
