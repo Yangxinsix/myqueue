@@ -105,15 +105,14 @@ class LocalScheduler(Scheduler, Lock):
              'FAILED': 2,
              'TIMEOUT': 3}[state]
 
-        self.fname.with_name('local-{}-{}'.format(id, n)).write_text('')
+        self.fname.with_name(f'local-{id}-{n}').write_text('')
 
         self._read()
         for task in self.tasks:
             if task.id == id:
                 break
         else:
-            raise ValueError('No such task: {id}, {state}'
-                             .format(id=id, state=state))
+            raise ValueError(f'No such task: {id}, {state}')
 
         if state == 'done':
             tasks = []
@@ -189,9 +188,8 @@ class LocalScheduler(Scheduler, Lock):
                                                    'python3'))
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
-        cmd = 'cd {} && {} 2> {} > {}'.format(task.folder, cmd, err, out)
-        msg = ('python3 -m myqueue.local {} {}'
-               .format(config['home'], task.id))
+        cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
+        msg = f"python3 -m myqueue.local {config['home']} {task.id}"
         tmax = task.resources.tmax
         cmd = (f'({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
                f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '

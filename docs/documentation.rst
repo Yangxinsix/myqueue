@@ -2,57 +2,118 @@
 Documentation
 =============
 
+Submitting a task with MyQueue typically works like this::
+
+    $ mq submit <task> -R <resources>
+
+or::
+
+    $ mq submit "<task> <arguments>" -R <resources>
+
+And checking the result looks like this::
+
+    $ mq list -s <states>  # or just: mq ls
+
+Below, we describe the important concepts :ref:`tasks`, :ref:`arguments`,
+:ref:`resources` and :ref:`states`.
+
+
 .. _tasks:
 
 Tasks
 =====
 
-A task can be one of these:
-
-* a Python module:
-
-  Examples:
-
-  * ``module``
-  * ``module.submodule`` (a Python submodule)
-
-* a function in a Python module:
-
-      ``module@function``
-
-* a Python script:
-
-  Examples:
-
-  * ``script.py`` (use ``script.py`` in folders where tasks are running)
-  * ``./script.py`` (use ``script.py`` from folder where tasks were submitted)
-  * ``/path/to/script.py`` (absolute path)
-
-* a shell command:
-
-      ``shell:command`` (``command`` must be in ``$PATH``)
-
-* a shell-script:
-
-      ``./script``
+There are five kinds of tasks: :ref:`pymod`, :ref:`pyfunc`, :ref:`pyscript`,
+:ref:`shellcmd` and :ref:`shellscript`.
 
 
-.. _states:
+.. _pymod:
 
-States
-======
+Python module
+-------------
 
-These are the 8 possible states a task can be in:
+Examples:
+
+* ``module``
+* ``module.submodule`` (a Python submodule)
+
+These are executed as ``python3 -m module`` so Python must be able to import
+the modules.
 
 
-======  ========  =======  =======
-queued  hold      running  done
-FAILED  CANCELED  MEMORY   TIMEOUT
-======  ========  =======  =======
+.. _pyfunc:
 
-Abbreviations: ``q``, ``h``, ``r``, ``d``, ``F``, ``C``, ``M`` and ``T``.
-It's also possible to use ``a`` as a shortcut for the all the "good" states
-``qhrd`` and ``A`` for the "bad" ones ``FCMT``.
+Function in a Python module
+---------------------------
+
+Examples:
+
+* ``module@function``
+* ``module.submodule@function``
+
+These are executed as ``python3 -c "import module; module.function(...)`` so
+Python must be able to import the modules.
+
+
+.. _pyscript:
+
+Python script
+-------------
+
+Examples:
+
+* ``script.py`` (use ``script.py`` in folders where tasks are running)
+* ``./script.py`` (use ``script.py`` from folder where tasks were submitted)
+* ``/path/to/script.py`` (absolute path)
+
+Executed as ``python3 script.py``.
+
+
+.. _shellcmd:
+
+Shell command
+-------------
+
+Example:
+
+* ``shell:command``
+
+The command must be in ``$PATH``.
+
+
+.. _shellscript:
+
+Shell-script
+------------
+
+Example:
+
+* ``./script``
+
+Executed as ``. ./script.py``.
+
+
+.. _arguments:
+
+Arguments
+.........
+
+All tasks can take extra arguments by enclosing task and arguments in quotes
+like this::
+
+    "<task> <arg1> <arg2> ..."
+
+Arguments will simply be added to the command-line that executes the task,
+except for :ref:`pyfunc` tasks where the arguments are converted to Python
+literals and passed to the function.  Some examples::
+
+    $ mq submit "script.py ABC 123"
+
+would run ``python3 script.py ABC 123`` and::
+
+    $ mq submit "mymod@func ABC 123"
+
+would run ``python3 -c "import mymod; mymod.func('ABC', 123)``.
 
 
 .. _resources:
@@ -64,11 +125,49 @@ A resource specification has the form::
 
     cores[:nodename][:processes]:tmax
 
+* ``cores``: number of cores to reserve
+* ``nodename``: node-name
+  (defaults to best match in :ref:`the list of node-types <nodes>`)
+* ``processes``: number of MPI processes to start (defaults to number of cores)
+* ``tmax``: maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
+  hours and days respectively)
+
+Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands take
+an optional *resources* argument (``-R`` or ``--resources``).
+Default resources are a modest one core and 10 minutes.
+
 Examples:
 
 * ``1:1h`` 1 core and 1 process for 1 hour
 * ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
 * ``24:1:30m`` 24 cores and 1 process for 30 minutes
+  (useful for OpenMP tasks or tasks that do their own *mpiexec* call)
+
+
+.. _states:
+
+States
+======
+
+These are the 8 possible states a task can be in:
+
+==========  ================================================
+*queued*    waiting for resources to become available
+*hold*      on hold
+*running*   actually running
+*done*      successfully finished
+*FAILED*    something bad happened
+*MEMORY*    ran out of memory
+*TIMEOUT*   ran out of time
+*CANCELED*  a dependency failed or ran out of memory or time
+==========  ================================================
+
+The  the ``-s`` or ``--states`` options of the
+:ref:`list <list>`, :ref:`resubmit <resubmit>`, :ref:`remove <remove>` and
+:ref:`modify <modify>` use the following abbreviations: ``q``, ``h``, ``r``,
+``d``, ``F``, ``C``, ``M`` and ``T``. It's also possible to use ``a`` as a
+shortcut for the all the "good" states ``qhrd`` and ``A`` for the "bad" ones
+``FCMT``.
 
 
 .. highlight:: bash
@@ -104,7 +203,7 @@ You can see the status of your jobs with::
     $ mq list
     id folder name             res.   age state  time error
     -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
-    1  ./     time@sleep+2     1:1m  0:04 done   0:02
+    1  ./     time@sleep+2     1:1m  0:03 done   0:02
     2  ./f1/  shell:echo+hello 1:10m 0:01 done   0:00
     3  ./f2/  shell:echo+hello 1:10m 0:01 done   0:00
     4  ./     script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
@@ -115,18 +214,18 @@ Remove the failed and done jobs from the list with
 (notice the dot meaning the current folder)::
 
     $ mq remove -s Fd -r .
-    1 ./    time@sleep+2     1:1m  0:05 done   0:02
-    2 ./f1/ shell:echo+hello 1:10m 0:02 done   0:00
-    3 ./f2/ shell:echo+hello 1:10m 0:02 done   0:00
-    4 ./    script.py        8:10h 0:01 FAILED 0:00 ZeroDivisionError: division by zero
+    1 ./    time@sleep+2     1:1m  0:04 done   0:02
+    2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
+    3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
+    4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     4 tasks removed
 
 The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Oct 28 11:12 shell:echo.3.err
-    -rw-r--r-- 1 jensj jensj 6 Oct 28 11:12 shell:echo.3.out
+    -rw-r--r-- 1 jensj jensj 0 Jan 27 07:27 shell:echo.3.err
+    -rw-r--r-- 1 jensj jensj 6 Jan 27 07:27 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 

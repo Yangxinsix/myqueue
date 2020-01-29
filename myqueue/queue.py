@@ -24,8 +24,6 @@ from .task import Task
 from .utils import Lock, plural
 from .virtenv import find_activation_scripts
 
-use_color = sys.stdout.isatty()
-
 
 class Queue(Lock):
     """Object for interacting with the scheduler."""
@@ -51,14 +49,13 @@ class Queue(Lock):
     def scheduler(self) -> Scheduler:
         """Scheduler object."""
         if self._scheduler is None:
-            schedulername = config.get('scheduler',
-                                       config.get('queue'))
+            schedulername = config.get('scheduler')
             if schedulername is None:
                 home = config['home']
                 raise ValueError(
                     'Please specify type of scheduler in your '
                     f'{home}/.myqueue/config.py '
-                    "file (must be 'slurm', 'lfs', 'pbs' or 'local').  See "
+                    "file (must be 'slurm', 'lfs', 'pbs' or 'test').  See "
                     'https://myqueue.rtfd.io/en/latest/configuration.html')
             self._scheduler = get_scheduler(schedulername)
         return self._scheduler
@@ -261,11 +258,13 @@ class Queue(Lock):
 
             pprint(submitted, 0, 'ifnr')
             if submitted:
-                print(plural(len(submitted), 'task'), 'submitted')
+                if self.dry_run:
+                    print(plural(len(submitted), 'task'), 'to submit')
+                else:
+                    print(plural(len(submitted), 'task'), 'submitted')
 
             self.tasks += submitted
             self.changed.update(submitted)
-            self.scheduler.kick()
 
             if ex:
                 print(f'ERROR!  Could not submit {task}')
@@ -321,7 +320,7 @@ class Queue(Lock):
     def sync(self) -> None:
         """Syncronize queue with the real world."""
         self._read()
-        in_the_queue = ['running', 'hold', 'queued']
+        in_the_queue = {'running', 'hold', 'queued'}
         ids = self.scheduler.get_ids()
         remove = []
         for task in self.tasks:
@@ -652,6 +651,9 @@ def pprint(tasks: List[Task],
     if verbosity:
         lines[1:1] = [['-' * L for L in lengths]]
         lines.append(lines[1])
+
+    use_color = (sys.stdout.isatty() and
+                 os.environ.get('MYQUEUE_TESTING') != 'yes')
 
     if not short:
         for words in lines:

@@ -29,14 +29,14 @@ class SLURM(Scheduler):
 
         name = task.cmd.short_name
         sbatch = ['sbatch',
-                  '--partition={}'.format(nodename),
-                  '--job-name={}'.format(name),
-                  '--time={}'.format(ceil(task.resources.tmax / 60)),
-                  '--ntasks={}'.format(task.resources.processes),
-                  '--nodes={}'.format(nodes),
-                  '--chdir={}'.format(task.folder),
-                  '--output={}.%j.out'.format(name),
-                  '--error={}.%j.err'.format(name)]
+                  f'--partition={nodename}',
+                  f'--job-name={name}',
+                  f'--time={ceil(task.resources.tmax / 60)}',
+                  f'--ntasks={task.resources.cores}',
+                  f'--nodes={nodes}',
+                  f'--chdir={task.folder}',
+                  f'--output={name}.%j.out',
+                  f'--error={name}.%j.err']
 
         mem = nodedct.get('memory')
         if mem:
@@ -56,7 +56,7 @@ class SLURM(Scheduler):
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
-            sbatch.append('--dependency=afterok:{}'.format(ids))
+            sbatch.append(f'--dependency=afterok:{ids}')
 
         env = [('MPLBACKEND', 'Agg')]
 

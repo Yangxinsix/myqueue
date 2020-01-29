@@ -36,9 +36,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-r--r-- 1 jensj jensj 190 Oct 28 11:12 check.py
-    -rw-r--r-- 1 jensj jensj 387 Oct 28 11:12 factor.py
-    -rw-r--r-- 1 jensj jensj 166 Oct 28 11:12 workflow.py
+    -rw-r--r-- 1 jensj jensj 190 Jan 27 07:48 check.py
+    -rw-r--r-- 1 jensj jensj 387 Jan 27 07:48 factor.py
+    -rw-r--r-- 1 jensj jensj 166 Jan 27 07:48 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -59,8 +59,8 @@ and start the workflow in one of the folders::
     ./1001/ prime.check  1:10m(1)*
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
-    14 ./1001/ prime.factor 1:10m*
-    15 ./1001/ prime.check  1:10m(1)*
+    1 ./1001/ prime.factor 1:10m*
+    2 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
     $ sleep 2
 
@@ -69,22 +69,22 @@ and now in all subfolders::
     $ mq ls
     id folder  name         res.    age state time error
     -- ------- ------------ ------ ---- ----- ---- -----
-    14 ./1001/ prime.factor 1:10m* 0:03 done  0:00
-    15 ./1001/ prime.check  1:10m* 0:03 done  0:00
+    1  ./1001/ prime.factor 1:10m* 0:02 done  0:00
+    2  ./1001/ prime.check  1:10m* 0:02 done  0:00
     -- ------- ------------ ------ ---- ----- ---- -----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
     2 tasks already done
-    16 ./100007/ prime.factor 1:10m*
-    17 ./100007/ prime.check  1:10m(1)*
-    18 ./36791/  prime.factor 1:10m*
-    19 ./36791/  prime.check  1:10m(1)*
-    20 ./8069/   prime.factor 1:10m*
-    21 ./8069/   prime.check  1:10m(1)*
-    22 ./98769/  prime.factor 1:10m*
-    23 ./98769/  prime.check  1:10m(1)*
-    24 ./99/     prime.factor 1:10m*
-    25 ./99/     prime.check  1:10m(1)*
+    3  ./100007/ prime.factor 1:10m*
+    4  ./100007/ prime.check  1:10m(1)*
+    5  ./36791/  prime.factor 1:10m*
+    6  ./36791/  prime.check  1:10m(1)*
+    7  ./8069/   prime.factor 1:10m*
+    8  ./8069/   prime.check  1:10m(1)*
+    9  ./98769/  prime.factor 1:10m*
+    10 ./98769/  prime.check  1:10m(1)*
+    11 ./99/     prime.factor 1:10m*
+    12 ./99/     prime.check  1:10m(1)*
     10 tasks submitted
 
 ::
@@ -93,18 +93,18 @@ and now in all subfolders::
     $ mq ls
     id folder    name         res.    age state time error
     -- --------- ------------ ------ ---- ----- ---- -----
-    14 ./1001/   prime.factor 1:10m* 0:08 done  0:00
-    15 ./1001/   prime.check  1:10m* 0:08 done  0:00
-    16 ./100007/ prime.factor 1:10m* 0:04 done  0:00
-    17 ./100007/ prime.check  1:10m* 0:04 done  0:00
-    18 ./36791/  prime.factor 1:10m* 0:04 done  0:00
-    19 ./36791/  prime.check  1:10m* 0:04 done  0:00
-    20 ./8069/   prime.factor 1:10m* 0:04 done  0:00
-    21 ./8069/   prime.check  1:10m* 0:04 done  0:00
-    22 ./98769/  prime.factor 1:10m* 0:04 done  0:00
-    23 ./98769/  prime.check  1:10m* 0:04 done  0:00
-    24 ./99/     prime.factor 1:10m* 0:04 done  0:00
-    25 ./99/     prime.check  1:10m* 0:04 done  0:00
+    1  ./1001/   prime.factor 1:10m* 0:05 done  0:00
+    2  ./1001/   prime.check  1:10m* 0:05 done  0:00
+    3  ./100007/ prime.factor 1:10m* 0:02 done  0:00
+    4  ./100007/ prime.check  1:10m* 0:02 done  0:00
+    5  ./36791/  prime.factor 1:10m* 0:02 done  0:00
+    6  ./36791/  prime.check  1:10m* 0:02 done  0:00
+    7  ./8069/   prime.factor 1:10m* 0:02 done  0:00
+    8  ./8069/   prime.check  1:10m* 0:02 done  0:00
+    9  ./98769/  prime.factor 1:10m* 0:02 done  0:00
+    10 ./98769/  prime.check  1:10m* 0:02 done  0:00
+    11 ./99/     prime.factor 1:10m* 0:02 done  0:00
+    12 ./99/     prime.check  1:10m* 0:02 done  0:00
     -- --------- ------------ ------ ---- ----- ---- -----
     done: 12, total: 12
 
@@ -113,12 +113,12 @@ Note that a ``prime.check.done`` file is created to mark that the
 
     $ ls -l 1001/
     total 4
-    -rw-r--r-- 1 jensj jensj 24 Oct 28 11:12 factors.json
-    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.15.err
-    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.15.out
-    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.check.done
-    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.factor.14.err
-    -rw-r--r-- 1 jensj jensj  0 Oct 28 11:12 prime.factor.14.out
+    -rw-r--r-- 1 jensj jensj 24 Jan 27 07:48 factors.json
+    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.err
+    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.out
+    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.done
+    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.err
+    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.out
 
 There is no ``prime.factor.done`` file because ``factors.json`` serves that
 purpose.
@@ -128,8 +128,8 @@ Now, add another number::
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
     12 tasks already done
-    26 ./42/ prime.factor 1:10m*
-    27 ./42/ prime.check  1:10m(1)*
+    13 ./42/ prime.factor 1:10m*
+    14 ./42/ prime.check  1:10m(1)*
     2 tasks submitted
 
 Turns out, there were two prime numbers::

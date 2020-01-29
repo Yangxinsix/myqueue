@@ -9,6 +9,26 @@ Release notes
 Next release
 ============
 
+* Using pytest_ for testing.
+
+.. _pytest: https://docs.pytest.org/en/latest/
+
+
+Version 20.1.2
+==============
+
+* Bug-fix release with fix for single-process tasks (see :ref:`resources`).
+
+
+Version 20.1.1
+==============
+
+* This is the version submitted to JOSS.
+
+
+Version 20.1.0
+==============
+
 * New shortcuts introduced for specifying :ref:`states`: ``a`` is ``qhrd``
   and ``A`` is ``FCMT``.
 

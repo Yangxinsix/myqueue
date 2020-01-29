@@ -110,7 +110,7 @@ def plural(n: int, thing: str) -> str:
     """
     if n == 1:
         return '1 ' + thing
-    return '{} {}s'.format(n, thing)
+    return f'{n} {thing}s'
 
 
 def is_inside(path1: Path, path2: Path) -> bool:
@@ -179,7 +179,7 @@ def update_completion(test=False) -> None:
         if cmd in aliases:
             title = title.replace(':', f' ({aliases[cmd]}):')
         print(f'\n\n.. _{cmd}:\n')
-        print('{}\n{}\n'.format(title, '-' * len(title)))
+        print(f"{title}\n{'-' * len(title)}\n")
         _main(['help', cmd])
 
     txt = sys.stdout.getvalue()
@@ -199,7 +199,7 @@ def update_completion(test=False) -> None:
                     break
                 if not line.startswith('                '):
                     cmd, help = line.strip().split(' ', 1)
-                    L.append('{}:\n    {}'.format(cmd, help.strip()))
+                    L.append(f'{cmd}:\n    {help.strip()}')
                 else:
                     L[-1] += ' ' + line.strip()
             newlines[n - 1:n] = L + ['']
@@ -214,7 +214,7 @@ def update_completion(test=False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines), cli
+        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')

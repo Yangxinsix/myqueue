@@ -76,10 +76,6 @@ commands = {
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-A', '--all'],
-    'test':
-        ['--config-file', '-x', '--exclude', '-u', '--update-source-code',
-         '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback'],
     'workflow':
         ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
          '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
@@ -113,11 +109,6 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     if previous in ['-i', '--id']:
         dct = read()
         return {str(task['id']) for task in dct['tasks']}
-
-    if command == 'test':
-        from myqueue.test.runner import all_tests, find_tests
-        find_tests()
-        return all_tests.keys()
 
     if command == 'help':
         return [cmd for cmd in commands if cmd != 'help']
