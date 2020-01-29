@@ -24,8 +24,6 @@ from .task import Task
 from .utils import Lock, plural
 from .virtenv import find_activation_scripts
 
-use_color = sys.stdout.isatty()
-
 
 class Queue(Lock):
     """Object for interacting with the scheduler."""
@@ -258,7 +256,6 @@ class Queue(Lock):
 
             self.tasks += submitted
             self.changed.update(submitted)
-            self.scheduler.kick()
 
             if ex:
                 print(f'ERROR!  Could not submit {task}')
@@ -645,6 +642,9 @@ def pprint(tasks: List[Task],
     if verbosity:
         lines[1:1] = [['-' * L for L in lengths]]
         lines.append(lines[1])
+
+    use_color = (sys.stdout.isatty() and
+                 os.environ.get('MYQUEUE_TESTING') != 'yes')
 
     if not short:
         for words in lines:

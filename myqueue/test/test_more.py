@@ -23,7 +23,7 @@ def test_logo():
     create()
 
 
-def test_backends():
+def test_backends(mq):
     from ..config import config
     config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
                        ('abc8', {'cores': 8, 'memory': '8G'})]
@@ -39,12 +39,6 @@ def test_backends():
             with Queue(dry_run=True, verbosity=2) as q:
                 q.submit([task('shell:echo hello', cores=24)])
     finally:
-        config['scheduler'] = 'local'
+        config['scheduler'] = 'test'
         del config['nodes']
         del config['mpiexec']
-
-
-def test_doctests():
-    import doctest
-    import myqueue.utils as utils
-    doctest.testmod(utils)

@@ -11,12 +11,6 @@ class Scheduler:
                dry_run: bool) -> None:
         pass
 
-    def update(self, id: int, state: str) -> None:
-        pass
-
-    def kick(self) -> None:
-        pass
-
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 
@@ -47,6 +41,7 @@ def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
     if name == 'test':
         from myqueue.test.scheduler import TestScheduler
+        assert TestScheduler.current_scheduler is not None
         scheduler: Scheduler = TestScheduler.current_scheduler
     elif name == 'slurm':
         from myqueue.slurm import SLURM

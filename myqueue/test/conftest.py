@@ -3,7 +3,7 @@ import shlex
 from pathlib import Path
 from typing import List, Set
 
-import pytest
+import pytest  # type: ignore
 
 from myqueue.cli import _main
 from myqueue.config import initialize_config
@@ -36,7 +36,12 @@ class MQ:
         args = shlex.split(cmd)
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
-        error = _main(args, is_test=True)
+        print(f'$ mq {cmd}')
+        for i, arg in enumerate(args):
+            if '*' in arg:
+                args[i:i + 1] = sorted([str(p) for p in Path().glob(arg)])
+                break
+        error = _main(args)
         assert error == 0
 
     def states(self) -> str:
@@ -55,4 +60,3 @@ def mqlist(states: Set[str] = None) -> List[Task]:
         q._read()
         return Selection(states=states,
                          folders=[Path().absolute()]).select(q.tasks)
-

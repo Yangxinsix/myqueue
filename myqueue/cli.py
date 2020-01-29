@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 import sys
 import textwrap
@@ -120,7 +121,8 @@ def main(arguments: List[str] = None) -> None:
     sys.exit(_main(arguments))
 
 
-def _main(arguments: List[str] = None, is_test=False) -> int:
+def _main(arguments: List[str] = None) -> int:
+    is_test = os.environ.get('MYQUEUE_TESTING') == 'yes'
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
