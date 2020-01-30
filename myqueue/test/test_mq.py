@@ -85,7 +85,8 @@ wf = """
 from myqueue.task import task
 def create_tasks():
     t1 = task('shell:sleep+3')
-    return [t1, task('shell:touch+hello', deps=[t1], creates=['hello'])]
+    t2 = task('shell:touch+hello', deps=[t1], creates=['hello'])
+    return [t1, t2]
 """
 
 
@@ -96,6 +97,17 @@ def test_workflow(mq):
     mq('workflow wf.py . -t shell:touch+hello')
     mq.wait()
     assert mq.states() == 'dd'
+    mq('workflow wf.py .')
+    assert mq.states() == 'dd'
+    hello = Path('hello')
+    hello.unlink()
+    mq('workflow wf.py .')
+    mq.wait()
+    assert hello.is_file()
+    mq('rm -s d .')
+    mq('workflow wf.py .')
+    mq.wait()
+    assert mq.states() == ''
 
 
 wf2 = """
