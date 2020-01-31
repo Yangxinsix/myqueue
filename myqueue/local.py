@@ -1,5 +1,7 @@
 import json
 import os
+import pickle
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -7,31 +9,34 @@ from pathlib import Path
 from .config import config, initialize_config
 from .scheduler import Scheduler
 from .task import Task
-from .utils import Lock, lock
 
 
-class LocalScheduler(Scheduler, Lock):
-    def __init__(self):
-        self.root = config['home']
-        self.fname = config['home'] / '.myqueue' / 'local.json'
-        Lock.__init__(self, self.fname.with_name('local.json.lock'))
-        self.tasks = []
-        self.number = None
-        Scheduler.__init__(self)
+LocalSchedulerError(Exception):
+    pass
 
-    @lock
+
+class LocalScheduler(Scheduler):
+    def send(self, *args):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(('127.0.0.1', 8888))
+            s.sendall(pickle.dumps(args))
+            chunks = []
+            while True:
+                b = s.recv(4096)
+                if b:
+                    chunks.append(b)
+                else:
+                    break
+        status, *args = pickle.loads(b''.join(chunks))
+        if status != 'ok':
+            raise LocalSchedulerError(status)
+        return args
+
     def submit(self, task: Task, activation_script: Path = None,
                dry_run: bool = False) -> None:
         assert not dry_run
-        self._read()
-        if task.dtasks:
-            ids = {t.id for t in self.tasks}
-            for t in task.dtasks:
-                assert t.id in ids
-        self.number += 1
-        task.id = self.number
-        self.tasks.append(task)
-        self._write()
+        id, = self.send('submit', task, activation_script)
+        task.id = id
 
     @lock
     def cancel(self, task):
@@ -199,9 +204,33 @@ class LocalScheduler(Scheduler, Lock):
         assert p.returncode == 0
 
 
+class
+
 if __name__ == '__main__':
-    from pathlib import Path
-    home, id, state = sys.argv[1:4]
-    initialize_config(Path(home))
-    q = LocalScheduler()
-    q.update(int(id), state)
+    import asyncio
+
+    async def handle_echo(reader, writer):
+        data = await reader.read(100)
+        message = data.decode()
+        addr = writer.get_extra_info('peername')
+
+        print(f"Received {message!r} from {addr!r}")
+
+        print(f"Send: {message!r}")
+        writer.write(data)
+        await writer.drain()
+
+        print("Close the connection")
+        writer.close()
+
+    async def main():
+        server = await asyncio.start_server(
+            handle_echo, '127.0.0.1', 8888)
+
+        addr = server.sockets[0].getsockname()
+        print(f'Serving on {addr}')
+
+        async with server:
+            await server.serve_forever()
+
+    asyncio.run(main())
