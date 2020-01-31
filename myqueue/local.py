@@ -1,4 +1,4 @@
-import json
+import asyncio
 import os
 import pickle
 import socket
@@ -6,12 +6,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .config import config, initialize_config
 from .scheduler import Scheduler
 from .task import Task
 
 
-LocalSchedulerError(Exception):
+class LocalSchedulerError(Exception):
     pass
 
 
@@ -35,69 +34,50 @@ class LocalScheduler(Scheduler):
     def submit(self, task: Task, activation_script: Path = None,
                dry_run: bool = False) -> None:
         assert not dry_run
-        id, = self.send('submit', task, activation_script)
+        (id,) = self.send('submit', task, activation_script)
         task.id = id
 
-    @lock
     def cancel(self, task):
-        assert task.state == 'queued', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
-        else:
-            return
-        del self.tasks[i]
-        self._write()
+        self.send('cancel', task.id)
 
-    @lock
     def hold(self, task):
-        assert task.state == 'queued', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
-        else:
-            raise ValueError('No such task!')
-        j.state = 'hold'
-        self._write()
+        self.send('hold', task.id)
 
-    @lock
     def release_hold(self, task):
-        assert task.state == 'hold', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
-        else:
-            raise ValueError('No such task!')
-        j.state = 'queued'
-        self._write()
+        self.send('release', task.id)
 
-    @lock
     def get_ids(self):
-        self._read()
-        return {task.id for task in self.tasks}
+        (ids,) = self.send('list')
+        return ids
 
-    def _read(self) -> None:
-        if not self.fname.is_file():
-            self.number = 0
-            return
 
-        data = json.loads(self.fname.read_text())
+class Server:
+    async def main(self):
+        server = await asyncio.start_server(
+            self.recv, '127.0.0.1', 8888)
 
-        self.tasks = [Task.fromdict(dct, self.root) for dct in data['tasks']]
+        addr = server.sockets[0].getsockname()
+        print(f'Serving on {addr}')
 
-        self.number = data['number']
+        async with server:
+            await server.serve_forever()
 
-    def _write(self):
-        text = json.dumps({'tasks': [task.todict(self.root)
-                                     for task in self.tasks],
-                           'number': self.number},
-                          indent=2)
-        self.fname.write_text(text)
+    async def recv(self, reader, writer):
+        chunks = []
+        while True:
+            data = await reader.read(100)
+            if data:
+                chunks.append(data)
+            else:
+                break
+        cmd, *args = pickle.loads(b''.join(chunks))
+        print(cmd, args)
+        writer.write(pickle.dumps(('ok', 1)))
+        await writer.drain()
 
-    @lock
+        print("Close the connection")
+        writer.close()
+
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
             if state == '0':
@@ -139,7 +119,6 @@ class LocalScheduler(Scheduler):
         self._kick()
         self._write()
 
-    @lock
     def kick(self) -> None:
         self._read()
         self._kick()
@@ -184,6 +163,7 @@ class LocalScheduler(Scheduler):
 
         testing = os.environ.get('MYQUEUE_TESTING')
 
+        config = {}
         cmd = str(task.cmd)
         if task.resources.processes > 1 and not testing:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
@@ -204,33 +184,5 @@ class LocalScheduler(Scheduler):
         assert p.returncode == 0
 
 
-class
-
 if __name__ == '__main__':
-    import asyncio
-
-    async def handle_echo(reader, writer):
-        data = await reader.read(100)
-        message = data.decode()
-        addr = writer.get_extra_info('peername')
-
-        print(f"Received {message!r} from {addr!r}")
-
-        print(f"Send: {message!r}")
-        writer.write(data)
-        await writer.drain()
-
-        print("Close the connection")
-        writer.close()
-
-    async def main():
-        server = await asyncio.start_server(
-            handle_echo, '127.0.0.1', 8888)
-
-        addr = server.sockets[0].getsockname()
-        print(f'Serving on {addr}')
-
-        async with server:
-            await server.serve_forever()
-
-    asyncio.run(main())
+    asyncio.run(Server().main())
