@@ -100,11 +100,6 @@ Enable bash tab-completion for future terminal sessions like this::
 
     $ mq completion >> ~/.profile
 
-Run the tests::
-
-    $ mq test
-
-and report any errors you get on our `issue tracker`_.
 Now, configure your system as described
 `here <https://myqueue.readthedocs.io/en/latest/configuration.html>`__.
 
