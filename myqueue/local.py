@@ -15,18 +15,29 @@ class LocalSchedulerError(Exception):
 
 
 class LocalScheduler(Scheduler):
-    def send(self, *args):
+    def send0(self, *args):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(('127.0.0.1', 8888))
             s.sendall(pickle.dumps(args))
-            chunks = []
-            while True:
-                b = s.recv(4096)
-                if b:
-                    chunks.append(b)
-                else:
-                    break
-        status, *args = pickle.loads(b''.join(chunks))
+            b = s.recv(4096)
+        status, *args = pickle.loads(b)
+        if status != 'ok':
+            raise LocalSchedulerError(status)
+        return args
+
+    def send(self, *args):
+        reader, writer = await asyncio.open_connection(
+            '127.0.0.1', 8888)
+
+        print(f'Send: {message!r}')
+        writer.write(pickle.dumps(args))
+
+        data = await reader.read()
+        print(f'Received: {data.decode()!r}')
+
+        print('Close the connection')
+        writer.close()
+        status, *args = pickle.loads(data)
         if status != 'ok':
             raise LocalSchedulerError(status)
         return args
@@ -63,14 +74,8 @@ class Server:
             await server.serve_forever()
 
     async def recv(self, reader, writer):
-        chunks = []
-        while True:
-            data = await reader.read(100)
-            if data:
-                chunks.append(data)
-            else:
-                break
-        cmd, *args = pickle.loads(b''.join(chunks))
+        data = await reader.read()
+        cmd, *args = pickle.loads(data)
         print(cmd, args)
         writer.write(pickle.dumps(('ok', 1)))
         await writer.drain()
