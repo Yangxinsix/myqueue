@@ -74,6 +74,10 @@ class Server:
         writer.close()
 
     async def submit(self, task, activation_script):
+        proc = await asyncio.create_subprocess_shell(
+            cmd,
+            timeout=10)
+        await proc.wait()
 
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
