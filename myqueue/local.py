@@ -4,6 +4,7 @@ import pickle
 import socket
 import subprocess
 import sys
+from functools import partial
 from pathlib import Path
 
 from .scheduler import Scheduler
@@ -15,28 +16,14 @@ class LocalSchedulerError(Exception):
 
 
 class LocalScheduler(Scheduler):
-    def send0(self, *args):
+    def send(self, *args):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(('127.0.0.1', 8888))
-            s.sendall(pickle.dumps(args))
-            b = s.recv(4096)
+            b = pickle.dumps(args)
+            assert len(b) < 4096
+            s.sendall(b)
+            b = b''.join(iter(partial(s.recv, 4096), b''))
         status, *args = pickle.loads(b)
-        if status != 'ok':
-            raise LocalSchedulerError(status)
-        return args
-
-    async def send(self, *args):
-        reader, writer = await asyncio.open_connection(
-            '127.0.0.1', 8888)
-
-        writer.write(pickle.dumps(args))
-
-        data = await reader.read()
-        print(f'Received: {data.decode()!r}')
-
-        print('Close the connection')
-        writer.close()
-        status, *args = pickle.loads(data)
         if status != 'ok':
             raise LocalSchedulerError(status)
         return args
@@ -44,8 +31,7 @@ class LocalScheduler(Scheduler):
     def submit(self, task: Task, activation_script: Path = None,
                dry_run: bool = False) -> None:
         assert not dry_run
-        # (id,) = self.send('submit', task, activation_script)
-        (id,) = asyncio.run(self.send('submit', task, activation_script))
+        (id,) = self.send('submit', task, activation_script)
         task.id = id
 
     def cancel(self, task):
@@ -74,14 +60,20 @@ class Server:
             await server.serve_forever()
 
     async def recv(self, reader, writer):
-        data = await reader.read()
+        data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print(cmd, args)
+        if cmd == 'submit':
+            await self.submit(*args)
+        else:
+            1 / 0
         writer.write(pickle.dumps(('ok', 1)))
         await writer.drain()
 
         print("Close the connection")
         writer.close()
+
+    async def submit(self, task, activation_script):
 
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
