@@ -25,11 +25,10 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return args
 
-    def send(self, *args):
+    async def send(self, *args):
         reader, writer = await asyncio.open_connection(
             '127.0.0.1', 8888)
 
-        print(f'Send: {message!r}')
         writer.write(pickle.dumps(args))
 
         data = await reader.read()
@@ -45,7 +44,8 @@ class LocalScheduler(Scheduler):
     def submit(self, task: Task, activation_script: Path = None,
                dry_run: bool = False) -> None:
         assert not dry_run
-        (id,) = self.send('submit', task, activation_script)
+        # (id,) = self.send('submit', task, activation_script)
+        (id,) = asyncio.run(self.send('submit', task, activation_script))
         task.id = id
 
     def cancel(self, task):
