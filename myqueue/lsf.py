@@ -37,7 +37,7 @@ class LSF(Scheduler):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            bsub += ['-R', f'"span[hosts={nodes}]"']
+            bsub += ['-R', f'span[hosts={nodes}]']
             cmd = ('mpiexec ' +
                    cmd.replace('python3',
                                config.get('parallel_python', 'python3')))
