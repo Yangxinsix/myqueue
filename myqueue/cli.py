@@ -155,6 +155,7 @@ def _main(arguments: List[str] = None) -> int:
                 return
             for o in x.option_strings:
                 nargs = x.nargs if x.nargs is not None else 1
+                assert isinstance(nargs, int)
                 if o.startswith('--'):
                     long_options[o] = nargs
                 else:
