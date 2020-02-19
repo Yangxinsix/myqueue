@@ -49,12 +49,14 @@ class LocalScheduler(Scheduler):
 
 
 class Server:
+    def __init__(self):
+        self.next_id = 1
+        self.processes = {}
+        self.tasks = []
+
     async def main(self):
         server = await asyncio.start_server(
             self.recv, '127.0.0.1', 8888)
-
-        addr = server.sockets[0].getsockname()
-        print(f'Serving on {addr}')
 
         async with server:
             await server.serve_forever()
@@ -64,7 +66,8 @@ class Server:
         cmd, *args = pickle.loads(data)
         print(cmd, args)
         if cmd == 'submit':
-            await self.submit(*args)
+            task, activation_script = args
+            self.tasks.append((task, activation_script))
         else:
             1 / 0
         writer.write(pickle.dumps(('ok', 1)))
@@ -72,12 +75,34 @@ class Server:
 
         print("Close the connection")
         writer.close()
+        await self.kick()
 
-    async def submit(self, task, activation_script):
+    async def run(self, task, activation_script):
+        id = self.next_id
+        self.next_id += 1
+        task.id = id
+        out = f'{task.cmd.short_name}.{id}.out'
+        err = f'{task.cmd.short_name}.{id}.err'
+
+        config = {}
+        cmd = str(task.cmd)
+        if task.resources.processes > 1:
+            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 '
+            mpiexec += f'-np {task.resources.processes} '
+            cmd = mpiexec + cmd.replace('python3',
+                                        config.get('parallel_python',
+                                                   'python3'))
+        cmd = f'{cmd} 2> {err} > {out}'
         proc = await asyncio.create_subprocess_shell(
-            cmd,
-            timeout=10)
-        await proc.wait()
+            cmd, cwd=task.folder)
+        self.processes[id] = proc
+        loop = asyncio.get_event_loop()
+        tmax = task.resources.tmax
+        loop.call_later(tmax, self.terminate, proc)
+
+    def terminate(self, proc):
+        if proc.returncode is None:
+            proc.terminate()
 
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
@@ -120,69 +145,19 @@ class Server:
         self._kick()
         self._write()
 
-    def kick(self) -> None:
-        self._read()
-        self._kick()
-        self._write()
-
-    def _kick(self) -> None:
-        for task in self.tasks:
+    async def kick(self) -> None:
+        for task, asc in self.tasks:
             if task.state == 'running':
                 return
 
-        for task in self.tasks:
+        for task, asc in self.tasks:
             if task.state == 'queued' and not task.deps:
                 break
         else:
             return
 
-        sys.stdout.flush()
-        pid = os.fork()
-        if pid == 0:
-            self.locked = False
-            # os.chdir('/')
-            # os.setsid()
-            # os.umask(0)
-            # do second fork
-            pid = os.fork()
-            if pid == 0:
-                # redirect standard file descriptors
-                sys.stderr.flush()
-                si = open(os.devnull, 'r')
-                so = open(os.devnull, 'w')
-                se = open(os.devnull, 'w')
-                os.dup2(si.fileno(), sys.stdin.fileno())
-                os.dup2(so.fileno(), sys.stdout.fileno())
-                os.dup2(se.fileno(), sys.stderr.fileno())
-                self._run(task)
-            os._exit(0)
+        await self.run(task, asc)
         task.state = 'running'
-
-    def _run(self, task):
-        out = f'{task.cmd.short_name}.{task.id}.out'
-        err = f'{task.cmd.short_name}.{task.id}.err'
-
-        testing = os.environ.get('MYQUEUE_TESTING')
-
-        config = {}
-        cmd = str(task.cmd)
-        if task.resources.processes > 1 and not testing:
-            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
-            mpiexec += f'-np {task.resources.processes} '
-            cmd = mpiexec + cmd.replace('python3',
-                                        config.get('parallel_python',
-                                                   'python3'))
-        else:
-            cmd = 'MPLBACKEND=Agg ' + cmd
-        cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
-        msg = f"python3 -m myqueue.local {config['home']} {task.id}"
-        tmax = task.resources.tmax
-        cmd = (f'({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
-               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
-               'p2=$!; wait $p1; '
-               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi')
-        p = subprocess.run(cmd, shell=True)
-        assert p.returncode == 0
 
 
 if __name__ == '__main__':
