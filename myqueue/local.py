@@ -53,15 +53,24 @@ class Server:
         self.next_id = 1
         self.processes = {}
         self.tasks = []
+        self.queue = asyncio.Queue()
 
     async def main(self):
         server = await asyncio.start_server(
             self.recv, '127.0.0.1', 8888)
 
+        # self.task = asyncio.create_task(self.execute())
+
         async with server:
             await server.serve_forever()
 
+    async def execute(self):
+        while True:
+            task = await self.queue.get()
+            print('execute', task)
+
     async def recv(self, reader, writer):
+
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print(cmd, args)
@@ -75,7 +84,8 @@ class Server:
 
         print("Close the connection")
         writer.close()
-        await self.kick()
+        self.kick()
+        print(self.next_id, self.processes, self.tasks)
 
     async def run(self, task, activation_script):
         id = self.next_id
@@ -99,10 +109,19 @@ class Server:
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
         loop.call_later(tmax, self.terminate, proc)
+        print('waiting ... 2')
+        await proc.wait()
+        print('waiting ... 2')
 
     def terminate(self, proc):
+        print(proc)
         if proc.returncode is None:
             proc.terminate()
+
+    async def submittttt(self, task, activation_script):
+        loop = asyncio.get_running_loop()
+        handle = loop.call_soon(self.run)
+        print(dir(handle))
 
     def update(self, id: int, state: str) -> None:
         if not state.isalpha():
@@ -145,7 +164,8 @@ class Server:
         self._kick()
         self._write()
 
-    async def kick(self) -> None:
+    def kick(self) -> None:
+        print('kick')
         for task, asc in self.tasks:
             if task.state == 'running':
                 return
@@ -156,7 +176,8 @@ class Server:
         else:
             return
 
-        await self.run(task, asc)
+        print('run')
+        asyncio.create_task(self.run(task, asc))
         task.state = 'running'
 
 
