@@ -1,6 +1,5 @@
 import subprocess
-from pathlib import Path
-from typing import Optional, Set
+from typing import Set
 
 from .task import Task
 from .config import config
@@ -10,7 +9,6 @@ from .scheduler import Scheduler
 class LSF(Scheduler):
     def submit(self,
                task: Task,
-               activation_script: Optional[Path] = None,
                dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
@@ -49,10 +47,10 @@ class LSF(Scheduler):
             'id=$LSB_JOBID\n'
             f'mq={home}/.myqueue/lsf-$id\n')
 
-        if activation_script:
+        if task.activation_script:
             script += (
-                f'source {activation_script}\n'
-                f'echo "venv: {activation_script}"\n')
+                f'source {task.activation_script}\n'
+                f'echo "venv: {task.activation_script}"\n')
 
         script += (
             '(touch $mq-0 && \\\n'

@@ -10,6 +10,7 @@ Next release
 ============
 
 * Using pytest_ for testing.
+* Simple *local* queue for use without a real scheduler.
 
 .. _pytest: https://docs.pytest.org/en/latest/
 

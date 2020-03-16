@@ -228,6 +228,9 @@ class Queue(Lock):
         else:
             activation_scripts = find_activation_scripts([task.folder
                                                           for task in todo])
+            for task in todo:
+                task.activation_script = activation_scripts.get(task.folder)
+
             submitted = []
             ex = None
             while todo:
@@ -239,7 +242,6 @@ class Queue(Lock):
                     try:
                         self.scheduler.submit(
                             task,
-                            activation_scripts.get(task.folder),
                             self.dry_run)
                     except Exception as x:
                         ex = x

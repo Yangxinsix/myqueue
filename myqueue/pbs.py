@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Set
+from typing import Set
 
 from .task import Task
 from .config import config
@@ -11,7 +11,6 @@ from .scheduler import Scheduler
 class PBS(Scheduler):
     def submit(self,
                task: Task,
-               activation_script: Optional[Path] = None,
                dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
@@ -57,10 +56,10 @@ class PBS(Scheduler):
 
         script = '#!/bin/bash -l\n'
 
-        if activation_script:
+        if task.activation_script:
             script += (
-                f'source {activation_script}\n'
-                f'echo "venv: {activation_script}"\n')
+                f'source {task.activation_script}\n'
+                f'echo "venv: {task.activation_script}"\n')
 
         script += (
             '#!/bin/bash -l\n'
