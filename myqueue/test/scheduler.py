@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
