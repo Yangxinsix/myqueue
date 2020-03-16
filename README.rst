@@ -3,6 +3,9 @@
     :target: https://pypi.org/project/myqueue/
 .. image:: https://joss.theoj.org/papers/10.21105/joss.01844/status.svg
     :target: https://doi.org/10.21105/joss.01844
+.. image:: https://readthedocs.org/projects/myqueue/badge/?version=latest
+    :target: https://myqueue.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 =======
 MyQueue
