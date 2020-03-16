@@ -1,8 +1,7 @@
 import os
 import subprocess
 from math import ceil
-from pathlib import Path
-from typing import Set, Optional
+from typing import Set
 
 from .task import Task
 from .config import config
@@ -22,7 +21,6 @@ def mpi_implementation() -> str:
 class SLURM(Scheduler):
     def submit(self,
                task: Task,
-               activation_script: Optional[Path] = None,
                dry_run: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
@@ -86,10 +84,10 @@ class SLURM(Scheduler):
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
-        if activation_script:
+        if task.activation_script:
             script += (
-                f'source {activation_script}\n'
-                f'echo "venv: {activation_script}"\n')
+                f'source {task.activation_script}\n'
+                f'echo "venv: {task.activation_script}"\n')
 
         script += (
             '(touch $mq-0 && \\\n'

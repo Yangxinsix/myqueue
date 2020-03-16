@@ -1,12 +1,11 @@
 import asyncio
-import os
 import pickle
 import socket
-import subprocess
-import sys
 from functools import partial
 from pathlib import Path
+from typing import Any, Set, Tuple
 
+from .config import config, initialize_config
 from .scheduler import Scheduler
 from .task import Task
 
@@ -16,7 +15,25 @@ class LocalSchedulerError(Exception):
 
 
 class LocalScheduler(Scheduler):
-    def send(self, *args):
+    def submit(self, task: Task, dry_run: bool = False) -> None:
+        assert not dry_run
+        (id,) = self.send('submit', task)
+        task.id = id
+
+    def cancel(self, task: Task) -> None:
+        self.send('cancel', task.id)
+
+    def hold(self, task) -> None:
+        self.send('hold', task.id)
+
+    def release_hold(self, task) -> None:
+        self.send('release', task.id)
+
+    def get_ids(self) -> Set[int]:
+        (ids,) = self.send('list')
+        return ids
+
+    def send(self, *args) -> Tuple[Any, ...]:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(('127.0.0.1', 8888))
             b = pickle.dumps(args)
@@ -28,32 +45,13 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return args
 
-    def submit(self, task: Task, activation_script: Path = None,
-               dry_run: bool = False) -> None:
-        assert not dry_run
-        (id,) = self.send('submit', task, activation_script)
-        task.id = id
-
-    def cancel(self, task):
-        self.send('cancel', task.id)
-
-    def hold(self, task):
-        self.send('hold', task.id)
-
-    def release_hold(self, task):
-        self.send('release', task.id)
-
-    def get_ids(self):
-        (ids,) = self.send('list')
-        return ids
-
 
 class Server:
     def __init__(self):
         self.next_id = 1
         self.processes = {}
         self.tasks = []
-        self.queue = asyncio.Queue()
+        self.folder = config['home'] / '.myqueue'
 
     async def main(self):
         server = await asyncio.start_server(
@@ -61,13 +59,8 @@ class Server:
 
         # self.task = asyncio.create_task(self.execute())
 
-        async with server:
+        async with server:  # type: ignore
             await server.serve_forever()
-
-    async def execute(self):
-        while True:
-            task = await self.queue.get()
-            print('execute', task)
 
     async def recv(self, reader, writer):
 
@@ -75,26 +68,36 @@ class Server:
         cmd, *args = pickle.loads(data)
         print(cmd, args)
         if cmd == 'submit':
-            task, activation_script = args
-            self.tasks.append((task, activation_script))
+            task = args[0]
+            task.id = self.next_id
+            self.next_id += 1
+            self.tasks.append(task)
+            result = (task.id,)
         else:
             1 / 0
-        writer.write(pickle.dumps(('ok', 1)))
+        writer.write(pickle.dumps(('ok',) + result))
         await writer.drain()
-
-        print("Close the connection")
         writer.close()
         self.kick()
         print(self.next_id, self.processes, self.tasks)
 
-    async def run(self, task, activation_script):
-        id = self.next_id
-        self.next_id += 1
-        task.id = id
-        out = f'{task.cmd.short_name}.{id}.out'
-        err = f'{task.cmd.short_name}.{id}.err'
+    def kick(self) -> None:
+        for task in self.tasks:
+            if task.state == 'running':
+                return
 
-        config = {}
+        for task in self.tasks:
+            if task.state == 'queued' and not task.deps:
+                break
+        else:
+            return
+
+        asyncio.create_task(self.run(task))
+
+    async def run(self, task):
+        out = f'{task.cmd.short_name}.{task.id}.out'
+        err = f'{task.cmd.short_name}.{task.id}.err'
+
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 '
@@ -108,78 +111,33 @@ class Server:
         self.processes[id] = proc
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
-        loop.call_later(tmax, self.terminate, proc)
-        print('waiting ... 2')
+        loop.call_later(tmax, self.terminate, proc, task)
+        task.state = 'running'
+        (self.folder / f'local-{task.id}-0').write_text('')  # running
         await proc.wait()
-        print('waiting ... 2')
-
-    def terminate(self, proc):
-        print(proc)
-        if proc.returncode is None:
-            proc.terminate()
-
-    async def submittttt(self, task, activation_script):
-        loop = asyncio.get_running_loop()
-        handle = loop.call_soon(self.run)
-        print(dir(handle))
-
-    def update(self, id: int, state: str) -> None:
-        if not state.isalpha():
-            if state == '0':
-                state = 'done'
+        self.tasks.remove(task)
+        if proc.returncode == 0:
+            for t in self.tasks:
+                if task.dname in t.deps:
+                    t.deps.remove(task.dname)
+            state = 1
+        else:
+            if task.state == 'TIMEOUT':
+                state = 3
             else:
-                state = 'FAILED'
-
-        n = {'running': 0,
-             'done': 1,
-             'FAILED': 2,
-             'TIMEOUT': 3}[state]
-
-        self.fname.with_name(f'local-{id}-{n}').write_text('')
-
-        self._read()
-        for task in self.tasks:
-            if task.id == id:
-                break
-        else:
-            raise ValueError(f'No such task: {id}, {state}')
-
-        if state == 'done':
-            tasks = []
-            for j in self.tasks:
-                if j is not task:
-                    if task.dname in j.deps:
-                        j.deps.remove(task.dname)
-                    tasks.append(j)
-            self.tasks = tasks
-        elif state == 'running':
-            task.state = 'running'
-        else:
-            assert state in ['FAILED', 'TIMEOUT'], state
-            task.state = 'CANCELED'
-            task.cancel_dependents(self.tasks, 0)
+                state = 2
+            task.cancel_dependents(self.tasks)
             self.tasks = [task for task in self.tasks
                           if task.state != 'CANCELED']
+        (self.folder / f'local-{task.id}-{state}').write_text('')
+        self.kick()
 
-        self._kick()
-        self._write()
-
-    def kick(self) -> None:
-        print('kick')
-        for task, asc in self.tasks:
-            if task.state == 'running':
-                return
-
-        for task, asc in self.tasks:
-            if task.state == 'queued' and not task.deps:
-                break
-        else:
-            return
-
-        print('run')
-        asyncio.create_task(self.run(task, asc))
-        task.state = 'running'
+    def terminate(self, proc, task):
+        if proc.returncode is None:
+            proc.terminate()
+            task.state = 'TIMEOUT'
 
 
 if __name__ == '__main__':
+    initialize_config(Path.cwd())
     asyncio.run(Server().main())

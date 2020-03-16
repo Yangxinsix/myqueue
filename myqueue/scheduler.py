@@ -1,14 +1,12 @@
 from pathlib import Path
-from typing import Set, Optional
+from typing import Set
 from myqueue.task import Task
 
 
 class Scheduler:
     name: str
 
-    def submit(self, task: Task,
-               activation_script: Optional[Path],
-               dry_run: bool) -> None:
+    def submit(self, task: Task, dry_run: bool) -> None:
         pass
 
     def cancel(self, task: Task) -> None:
