@@ -1,6 +1,5 @@
 import subprocess
-from pathlib import Path
-from typing import Optional, Set
+from typing import Set
 
 from .task import Task
 from .config import config
