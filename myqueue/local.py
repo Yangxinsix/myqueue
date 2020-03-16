@@ -1,146 +1,87 @@
-import json
-import os
-import subprocess
-import sys
+import asyncio
+import pickle
+import socket
+from functools import partial
 from pathlib import Path
+from typing import Any, Set, Tuple
 
 from .config import config, initialize_config
 from .scheduler import Scheduler
 from .task import Task
-from .utils import Lock, lock
 
 
-class LocalScheduler(Scheduler, Lock):
-    def __init__(self):
-        self.root = config['home']
-        self.fname = config['home'] / '.myqueue' / 'local.json'
-        Lock.__init__(self, self.fname.with_name('local.json.lock'))
-        self.tasks = []
-        self.number = None
-        Scheduler.__init__(self)
+class LocalSchedulerError(Exception):
+    pass
 
-    @lock
-    def submit(self, task: Task, activation_script: Path = None,
-               dry_run: bool = False) -> None:
+
+class LocalScheduler(Scheduler):
+    def submit(self, task: Task, dry_run: bool = False) -> None:
         assert not dry_run
-        self._read()
-        if task.dtasks:
-            ids = {t.id for t in self.tasks}
-            for t in task.dtasks:
-                assert t.id in ids
-        self.number += 1
-        task.id = self.number
-        self.tasks.append(task)
-        self._write()
+        (id,) = self.send('submit', task)
+        task.id = id
 
-    @lock
-    def cancel(self, task):
-        assert task.state == 'queued', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
+    def cancel(self, task: Task) -> None:
+        self.send('cancel', task.id)
+
+    def hold(self, task) -> None:
+        self.send('hold', task.id)
+
+    def release_hold(self, task) -> None:
+        self.send('release', task.id)
+
+    def get_ids(self) -> Set[int]:
+        (ids,) = self.send('list')
+        return ids
+
+    def send(self, *args) -> Tuple[Any, ...]:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(('127.0.0.1', 8888))
+            b = pickle.dumps(args)
+            assert len(b) < 4096
+            s.sendall(b)
+            b = b''.join(iter(partial(s.recv, 4096), b''))
+        status, *args = pickle.loads(b)
+        if status != 'ok':
+            raise LocalSchedulerError(status)
+        return args
+
+
+class Server:
+    def __init__(self):
+        self.next_id = 1
+        self.processes = {}
+        self.tasks = []
+        self.folder = config['home'] / '.myqueue'
+
+    async def main(self):
+        server = await asyncio.start_server(
+            self.recv, '127.0.0.1', 8888)
+
+        # self.task = asyncio.create_task(self.execute())
+
+        async with server:  # type: ignore
+            await server.serve_forever()
+
+    async def recv(self, reader, writer):
+
+        data = await reader.read(4096)
+        cmd, *args = pickle.loads(data)
+        print(cmd, args)
+        if cmd == 'submit':
+            task = args[0]
+            task.id = self.next_id
+            self.next_id += 1
+            self.tasks.append(task)
+            result = (task.id,)
         else:
-            return
-        del self.tasks[i]
-        self._write()
+            1 / 0
+        writer.write(pickle.dumps(('ok',) + result))
+        await writer.drain()
+        writer.close()
+        self.kick()
+        print(self.next_id, self.processes, self.tasks)
 
-    @lock
-    def hold(self, task):
-        assert task.state == 'queued', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
-        else:
-            raise ValueError('No such task!')
-        j.state = 'hold'
-        self._write()
-
-    @lock
-    def release_hold(self, task):
-        assert task.state == 'hold', task
-        self._read()
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
-                break
-        else:
-            raise ValueError('No such task!')
-        j.state = 'queued'
-        self._write()
-
-    @lock
-    def get_ids(self):
-        self._read()
-        return {task.id for task in self.tasks}
-
-    def _read(self) -> None:
-        if not self.fname.is_file():
-            self.number = 0
-            return
-
-        data = json.loads(self.fname.read_text())
-
-        self.tasks = [Task.fromdict(dct, self.root) for dct in data['tasks']]
-
-        self.number = data['number']
-
-    def _write(self):
-        text = json.dumps({'tasks': [task.todict(self.root)
-                                     for task in self.tasks],
-                           'number': self.number},
-                          indent=2)
-        self.fname.write_text(text)
-
-    @lock
-    def update(self, id: int, state: str) -> None:
-        if not state.isalpha():
-            if state == '0':
-                state = 'done'
-            else:
-                state = 'FAILED'
-
-        n = {'running': 0,
-             'done': 1,
-             'FAILED': 2,
-             'TIMEOUT': 3}[state]
-
-        self.fname.with_name(f'local-{id}-{n}').write_text('')
-
-        self._read()
-        for task in self.tasks:
-            if task.id == id:
-                break
-        else:
-            raise ValueError(f'No such task: {id}, {state}')
-
-        if state == 'done':
-            tasks = []
-            for j in self.tasks:
-                if j is not task:
-                    if task.dname in j.deps:
-                        j.deps.remove(task.dname)
-                    tasks.append(j)
-            self.tasks = tasks
-        elif state == 'running':
-            task.state = 'running'
-        else:
-            assert state in ['FAILED', 'TIMEOUT'], state
-            task.state = 'CANCELED'
-            task.cancel_dependents(self.tasks, 0)
-            self.tasks = [task for task in self.tasks
-                          if task.state != 'CANCELED']
-
-        self._kick()
-        self._write()
-
-    @lock
     def kick(self) -> None:
-        self._read()
-        self._kick()
-        self._write()
-
-    def _kick(self) -> None:
         for task in self.tasks:
             if task.state == 'running':
                 return
@@ -151,57 +92,52 @@ class LocalScheduler(Scheduler, Lock):
         else:
             return
 
-        sys.stdout.flush()
-        pid = os.fork()
-        if pid == 0:
-            self.locked = False
-            # os.chdir('/')
-            # os.setsid()
-            # os.umask(0)
-            # do second fork
-            pid = os.fork()
-            if pid == 0:
-                # redirect standard file descriptors
-                sys.stderr.flush()
-                si = open(os.devnull, 'r')
-                so = open(os.devnull, 'w')
-                se = open(os.devnull, 'w')
-                os.dup2(si.fileno(), sys.stdin.fileno())
-                os.dup2(so.fileno(), sys.stdout.fileno())
-                os.dup2(se.fileno(), sys.stderr.fileno())
-                self._run(task)
-            os._exit(0)
-        task.state = 'running'
+        asyncio.create_task(self.run(task))
 
-    def _run(self, task):
+    async def run(self, task):
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
 
-        testing = os.environ.get('MYQUEUE_TESTING')
-
         cmd = str(task.cmd)
-        if task.resources.processes > 1 and not testing:
-            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 -x MPLBACKEND=Agg '
+        if task.resources.processes > 1:
+            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 '
             mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
                                         config.get('parallel_python',
                                                    'python3'))
-        else:
-            cmd = 'MPLBACKEND=Agg ' + cmd
-        cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
-        msg = f"python3 -m myqueue.local {config['home']} {task.id}"
+        cmd = f'{cmd} 2> {err} > {out}'
+        proc = await asyncio.create_subprocess_shell(
+            cmd, cwd=task.folder)
+        self.processes[id] = proc
+        loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
-        cmd = (f'({msg} running ; {cmd} ; {msg} $?)& p1=$!; '
-               f'(sleep {tmax}; kill $p1 > /dev/null 2>&1; {msg} TIMEOUT)& '
-               'p2=$!; wait $p1; '
-               'if [ $? -eq 0 ]; then kill $p2 > /dev/null 2>&1; fi')
-        p = subprocess.run(cmd, shell=True)
-        assert p.returncode == 0
+        loop.call_later(tmax, self.terminate, proc, task)
+        task.state = 'running'
+        (self.folder / f'local-{task.id}-0').write_text('')  # running
+        await proc.wait()
+        self.tasks.remove(task)
+        if proc.returncode == 0:
+            for t in self.tasks:
+                if task.dname in t.deps:
+                    t.deps.remove(task.dname)
+            state = 1
+        else:
+            if task.state == 'TIMEOUT':
+                state = 3
+            else:
+                state = 2
+            task.cancel_dependents(self.tasks)
+            self.tasks = [task for task in self.tasks
+                          if task.state != 'CANCELED']
+        (self.folder / f'local-{task.id}-{state}').write_text('')
+        self.kick()
+
+    def terminate(self, proc, task):
+        if proc.returncode is None:
+            proc.terminate()
+            task.state = 'TIMEOUT'
 
 
 if __name__ == '__main__':
-    from pathlib import Path
-    home, id, state = sys.argv[1:4]
-    initialize_config(Path(home))
-    q = LocalScheduler()
-    q.update(int(id), state)
+    initialize_config(Path.cwd())
+    asyncio.run(Server().main())

@@ -75,6 +75,7 @@ class Task:
         self.dname = folder / cmd.name
         self.dtasks: List[Task] = []
 
+        self.activation_script = None  # type: Optional[Path]
         self._done = None  # type: Optional[bool]
 
     @property
@@ -331,7 +332,7 @@ class Task:
         with Queue(verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
-    def cancel_dependents(self, tasks: List['Task'], t: float) -> None:
+    def cancel_dependents(self, tasks: List['Task'], t: float = 0.0) -> None:
         """Cancel dependents."""
         for tsk in tasks:
             if self.dname in tsk.deps and self is not tsk:

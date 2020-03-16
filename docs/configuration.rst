@@ -46,7 +46,9 @@ Name of scheduler
 
 The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'`` or
 ``'local'``.  The *local* scheduler can be used for testing on a system without
-SLURM/LSF/PBS.
+SLURM/LSF/PBS.  Start the local scheduler with::
+
+    $ python3 -m myqueue.local
 
 
 .. _nodes:

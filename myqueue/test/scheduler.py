@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
@@ -13,11 +13,9 @@ class TestScheduler(Scheduler):
         self.folder = folder / '.myqueue'
         self.tasks: List[Task] = []
         self.number = 0
-        self.activation_scripts: Dict[Task, Path] = {}
         Scheduler.__init__(self)
 
-    def submit(self, task: Task, activation_script: Path = None,
-               dry_run: bool = False) -> None:
+    def submit(self, task: Task, dry_run: bool = False) -> None:
         assert not dry_run
         if task.dtasks:
             ids = {t.id for t in self.tasks}
@@ -25,8 +23,6 @@ class TestScheduler(Scheduler):
                 assert t.id in ids
         self.number += 1
         task.id = self.number
-        if activation_script:
-            self.activation_scripts[task] = activation_script
         self.tasks.append(task)
 
     def cancel(self, task):
@@ -78,7 +74,7 @@ class TestScheduler(Scheduler):
             n = task.resources.processes
             cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
-        activation_script = self.activation_scripts.get(task)
+        activation_script = task.activation_script
         if activation_script:
             cmd = f'. {activation_script} && ' + cmd
         (self.folder / f'test-{task.id}-0').write_text('')

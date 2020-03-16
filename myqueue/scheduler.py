@@ -1,14 +1,12 @@
 from pathlib import Path
-from typing import Set, Optional
+from typing import Set
 from myqueue.task import Task
 
 
 class Scheduler:
     name: str
 
-    def submit(self, task: Task,
-               activation_script: Optional[Path],
-               dry_run: bool) -> None:
+    def submit(self, task: Task, dry_run: bool) -> None:
         pass
 
     def cancel(self, task: Task) -> None:
@@ -43,6 +41,9 @@ def get_scheduler(name: str) -> Scheduler:
         from myqueue.test.scheduler import TestScheduler
         assert TestScheduler.current_scheduler is not None
         scheduler: Scheduler = TestScheduler.current_scheduler
+    elif name == 'local':
+        from myqueue.local import LocalScheduler
+        scheduler = LocalScheduler()
     elif name == 'slurm':
         from myqueue.slurm import SLURM
         scheduler = SLURM()
