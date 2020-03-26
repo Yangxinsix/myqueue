@@ -1,5 +1,6 @@
 import os
 import subprocess
+import warnings
 from math import ceil
 from typing import Set
 
@@ -44,12 +45,19 @@ class SLURM(Scheduler):
                 mbytes = int(mbytes * cores / nodedct['cores'])
             sbatch.append(f'--mem={mbytes}MB')
 
+        extra_args = (config.get('extra_args', []) +
+                      nodedct.get('extra_args', []))
+        if extra_args:
+            sbatch += extra_args
+
         features = nodedct.get('features')
         if features:
+            warnings.warn('Please use extra_args instead of features!')
             sbatch.append(f'--constraint={features}')
 
         reservation = nodedct.get('reservation')
         if reservation:
+            warnings.warn('Please use extra_args instead of reservation!')
             sbatch.append(f'--reservation={reservation}')
 
         if task.dtasks:
