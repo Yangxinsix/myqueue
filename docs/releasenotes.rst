@@ -11,8 +11,8 @@ Next release
 
 * Using pytest_ for testing.
 * Simple *local* queue for use without a real scheduler.
-* New ``extra_args`` configuration parameter.  Replaces now deprecated
-  ``features`` and ``reservation`` parameters.
+* New ``extra_args`` configuration parameter (:ref:`extra_args`).
+  Replaces, now deprecated, ``features`` and ``reservation`` parameters.
 
 .. _pytest: https://docs.pytest.org/en/latest/
 
