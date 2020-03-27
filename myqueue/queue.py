@@ -130,6 +130,8 @@ class Queue(Lock):
             Ignore and remove name.FAILED files.
         """
 
+        # See https://xkcd.com/1421
+
         tasks2 = []
         done = set()
         for task in tasks:
