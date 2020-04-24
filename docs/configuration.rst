@@ -34,6 +34,7 @@ Key                  Description
 ``nodes``            :ref:`nodes`            required
 ``mpiexec``          :ref:`mpiexec`          optional
 ``parallel_python``  :ref:`parallel_python`  optional
+``extra_args``       :ref:`extra_args`       optional
 ===================  ======================  ========
 
 See details below.
@@ -80,8 +81,8 @@ Each dictionary must have the following entries:
   such as ``'500GiB'``.  MyQueue understands the following memory units:
   ``MB``, ``MiB``, ``GB`` and ``GiB``.
 
-Other possible keys that you normally don't need are:, ``features``,
-``reservation`` and ``mpiargs`` (see the `source code`_ for how to use them).
+Other possible keys that you normally don't need are:, ``extra_args``,
+``mpiargs`` (see the `source code`_ for how to use them).
 
 The order of your nodes is significant.  If you ask for :math:`N` cores,
 MyQueue will pick the first type of node from the list that has a core count
@@ -129,6 +130,19 @@ scripts in parallel then you must specify which one you want to use::
 
 Use ``'asap-python'`` for ASAP_.  For MPI4PY_,
 you don't need an MPI-enabled interpreter.
+
+
+.. _extra_args:
+
+Extra arguments for submit command
+==================================
+
+::
+
+    config = {
+        ...,
+        'extra_args': ['arg1', 'arg2', ...],
+        ...}
 
 
 .. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
