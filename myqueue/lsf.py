@@ -28,6 +28,11 @@ class LSF(Scheduler):
         gbytes = int(mem[:-1]) // nodedct['cores']
         bsub += ['-R', f'rusage[mem={gbytes}G]']
 
+        extra_args = (config.get('extra_args', []) +
+                      nodedct.get('extra_args', []))
+        if extra_args:
+            bsub += extra_args
+
         if task.dtasks:
             ids = ' && '.join(f'done({t.id})'
                               for t in task.dtasks)
