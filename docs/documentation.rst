@@ -52,7 +52,7 @@ Examples:
 * ``module.submodule@function``
 
 These are executed as ``python3 -c "import module; module.function(...)`` so
-Python must be able to import the modules.
+Python must be able to import the function from the module.
 
 
 .. _pyscript:
@@ -90,7 +90,7 @@ Example:
 
 * ``./script``
 
-Executed as ``. ./script.py``.
+Executed as ``. ./script``.
 
 
 .. _arguments:
