@@ -4,6 +4,7 @@ from typing import Set
 from .task import Task
 from .config import config
 from .scheduler import Scheduler
+from .utils import str2number
 
 
 class LSF(Scheduler):
@@ -24,8 +25,7 @@ class LSF(Scheduler):
                 '-e', f'{name}.%J.err']
 
         mem = nodedct['memory']
-        assert mem[-1] == 'G'
-        gbytes = int(mem[:-1]) // nodedct['cores']
+        gbytes = int(str2number(mem) / 1_000_000_000 / nodedct['cores'])
         bsub += ['-R', f'rusage[mem={gbytes}G]']
 
         extra_args = (config.get('extra_args', []) +
