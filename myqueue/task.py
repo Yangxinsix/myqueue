@@ -52,7 +52,8 @@ class Task:
                  error: str = '',
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
-                 tstop: float = 0.0) -> None:
+                 tstop: float = 0.0,
+                 memory_usage: float = -1.0) -> None:
 
         self.cmd = cmd
         self.resources = resources
@@ -72,11 +73,12 @@ class Task:
         self.trunning = trunning
         self.tstop = tstop
 
+        self.memory_usage = memory_usage
+
         self.dname = folder / cmd.name
         self.dtasks: List[Task] = []
-
-        self.activation_script = None  # type: Optional[Path]
-        self._done = None  # type: Optional[bool]
+        self.activation_script: Optional[Path] = None
+        self._done: Optional[bool] = None
 
     @property
     def name(self) -> str:
@@ -140,7 +142,8 @@ class Task:
             return self.running_time()
         if column == 'e':
             return self.error
-        raise ValueError(f'Unknown column: {column}!')
+        raise ValueError(f'Unknown column: {column}!  '
+                         'Mus be one of i, f, n, r, a, s, t or e')
 
     def todict(self, root: Path = None) -> Dict[str, Any]:
         folder = self.folder
@@ -181,18 +184,20 @@ class Task:
               f'{self.resources},'
               f'{self.state},'
               f'{self.restart},'
-              f'{int(self.workflow)},' +
+              f'{int(self.workflow)},'
               f'{self.diskspace},'
               f'"{deps}",'
               f'"{creates}",'
               f'{t1},{t2},{t3},'
-              f'"{self.error}"',
+              f'"{self.error}",'
+              f'{self.memory_usage}',
               file=fd)
 
     @staticmethod
     def fromcsv(row: List[str]) -> 'Task':
         (id, folder, name, resources, state, restart, workflow, diskspace,
-         deps, creates, t1, t2, t3, error) = row
+         deps, creates, t1, t2, t3, error) = row[:14]
+        memory_usage = -1.0 if len(row) == 14 else float(row[14])
         return Task(command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
@@ -205,7 +210,8 @@ class Task:
                     int(id),
                     error,
                     *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
-                      for t in (t1, t2, t3)))
+                      for t in (t1, t2, t3)),
+                    memory_usage)
 
     @staticmethod
     def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':

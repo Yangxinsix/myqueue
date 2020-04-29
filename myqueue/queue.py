@@ -438,7 +438,11 @@ class Queue(Lock):
         files = []
         for path in paths:
             _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), state))
+            if state == 'mem':
+                mem = float(path.read_text().splitlines()[-1]) * 1000
+                self.update_memory_usage(int(id), mem)
+            else:
+                files.append((path.stat().st_ctime, int(id), state))
         states = {'0': 'running',
                   '1': 'done',
                   '2': 'FAILED',
@@ -448,6 +452,19 @@ class Queue(Lock):
 
         for path in paths:
             path.unlink()
+
+    def update_memory_usage(self,
+                            id: int,
+                            memory: float) -> None:
+        for task in self.tasks:
+            if task.id == id:
+                break
+        else:
+            print(f'No such task: {id}')
+            return
+
+        task.memory_usage = memory
+        self.changed.add(task)
 
     def update(self,
                id: int,
