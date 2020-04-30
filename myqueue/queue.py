@@ -460,10 +460,10 @@ class Queue(Lock):
 
         text = path.read_text()
         if text:
-            mem = float(text) * 1000
+            mem = int(text.splitlines()[-1]) * 1000
             path.unlink()
-        task.memory_usage = mem
-        self.changed.add(task)
+            task.memory_usage = mem
+            self.changed.add(task)
 
     def update(self,
                id: int,

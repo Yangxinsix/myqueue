@@ -50,7 +50,7 @@ class Task:
                  state: str = '',
                  id: int = 0,
                  error: str = '',
-                 memory_usage: float = -1.0,
+                 memory_usage: int = 0,
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
                  tstop: float = 0.0) -> None:
@@ -197,7 +197,7 @@ class Task:
     def fromcsv(row: List[str]) -> 'Task':
         (id, folder, name, resources, state, restart, workflow, diskspace,
          deps, creates, t1, t2, t3, error) = row[:14]
-        memory_usage = -1.0 if len(row) == 14 else float(row[14])
+        memory_usage = 0 if len(row) == 14 else int(row[14])
         return Task(command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
