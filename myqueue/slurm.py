@@ -100,7 +100,7 @@ class SLURM(Scheduler):
         script += (
             '(touch $mq-0 && \\\n'
             f' cd {str(task.folder)!r} && \\\n'
-            f' /usr/bin/time -f %M -o $mq-mem {cmd} && \\\n'
+            f' /usr/bin/time --quiet --format=%M -o $mq-mem {cmd} && \\\n'
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
