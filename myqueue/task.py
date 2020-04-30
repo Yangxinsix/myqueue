@@ -50,10 +50,10 @@ class Task:
                  state: str = '',
                  id: int = 0,
                  error: str = '',
+                 memory_usage: float = -1.0,
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
-                 tstop: float = 0.0,
-                 memory_usage: float = -1.0) -> None:
+                 tstop: float = 0.0) -> None:
 
         self.cmd = cmd
         self.resources = resources
@@ -209,9 +209,9 @@ class Task:
                     state,
                     int(id),
                     error,
+                    memory_usage,
                     *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
-                      for t in (t1, t2, t3)),
-                    memory_usage)
+                      for t in (t1, t2, t3)))
 
     @staticmethod
     def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':
