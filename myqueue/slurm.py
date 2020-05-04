@@ -139,3 +139,17 @@ class SLURM(Scheduler):
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
         return queued
+
+    def maxrss(self, id: int) -> int:
+        cmd = ['sacct',
+               '-j', str(id),
+               '-n',
+               '--units=K',
+               '-o', 'MaxRSS']
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        mem = 0
+        for line in p.stdout.splitlines():
+            if line.endswith('K'):
+                assert mem == 0
+                mem = int(line[:-1]) * 1000
+        return mem

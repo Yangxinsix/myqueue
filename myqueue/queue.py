@@ -449,32 +449,14 @@ class Queue(Lock):
         files = []
         for path in paths:
             _, id, state = path.name.split('-')
-            if state == 'mem':
-                self.update_memory_usage(int(id), path)
-            else:
-                files.append((path.stat().st_ctime, int(id), state))
-                path.unlink()
+            files.append((path.stat().st_ctime, int(id), state))
+            path.unlink()
         states = {'0': 'running',
                   '1': 'done',
                   '2': 'FAILED',
                   '3': 'TIMEOUT'}
         for t, id, state in sorted(files):
             self.update(id, states[state], t)
-
-    def update_memory_usage(self, id: int, path: Path) -> None:
-        for task in self.tasks:
-            if task.id == id:
-                break
-        else:
-            print(f'No such task: {id}')
-            return
-
-        text = path.read_text()
-        if text:
-            mem = int(text.splitlines()[-1]) * 1000
-            path.unlink()
-            task.memory_usage = mem
-            self.changed.add(task)
 
     def update(self,
                id: int,
@@ -510,6 +492,10 @@ class Queue(Lock):
 
         else:
             raise ValueError('Bad state: ' + state)
+
+        if state != 'running':
+            mem = self.scheduler.maxrss(id)
+            task.memory_usage = mem
 
         self.changed.add(task)
 
