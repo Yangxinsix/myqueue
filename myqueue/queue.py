@@ -213,8 +213,8 @@ class Queue(Lock):
 
         # All dependensies must have an id or be in the list of tasks
         # about to be submitted
-        for task in todo:
-            assert all(tsk.id or tsk in todo for tsk in task.dtasks)
+        todo = [task for task in todo
+                if all(tsk.id or tsk in todo for tsk in task.dtasks)]
 
         todo = todo[:max_tasks]
 
