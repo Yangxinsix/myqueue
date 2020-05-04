@@ -213,8 +213,8 @@ class Queue(Lock):
 
         # All dependensies must have an id or be in the list of tasks
         # about to be submitted
-        for task in todo:
-            assert all(tsk.id or tsk in todo for tsk in task.dtasks)
+        todo = [task for task in todo
+                if all(tsk.id or tsk in todo for tsk in task.dtasks)]
 
         todo = todo[:max_tasks]
 
@@ -450,15 +450,13 @@ class Queue(Lock):
         for path in paths:
             _, id, state = path.name.split('-')
             files.append((path.stat().st_ctime, int(id), state))
+            path.unlink()
         states = {'0': 'running',
                   '1': 'done',
                   '2': 'FAILED',
                   '3': 'TIMEOUT'}
         for t, id, state in sorted(files):
             self.update(id, states[state], t)
-
-        for path in paths:
-            path.unlink()
 
     def update(self,
                id: int,
@@ -494,6 +492,10 @@ class Queue(Lock):
 
         else:
             raise ValueError('Bad state: ' + state)
+
+        if state != 'running':
+            mem = self.scheduler.maxrss(id)
+            task.memory_usage = mem
 
         self.changed.add(task)
 
