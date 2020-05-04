@@ -64,7 +64,7 @@ class SLURM(Scheduler):
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
 
-        env = []  # ('MPLBACKEND', 'Agg')]
+        env = []
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
@@ -100,7 +100,7 @@ class SLURM(Scheduler):
         script += (
             '(touch $mq-0 && \\\n'
             f' cd {str(task.folder)!r} && \\\n'
-            f' /usr/bin/time --format=%M -o $mq-mem {cmd} && \\\n'
+            f' {cmd} && \\\n'
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
