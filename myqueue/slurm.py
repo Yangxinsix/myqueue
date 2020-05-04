@@ -149,7 +149,7 @@ class SLURM(Scheduler):
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         mem = 0
         for line in p.stdout.splitlines():
-            if line.endswith('K'):
+            if line.endswith(b'K'):
                 assert mem == 0
                 mem = int(line[:-1]) * 1000
         return mem
