@@ -34,6 +34,9 @@ class Scheduler:
                     return True
         return False
 
+    def maxrss(self, id: int) -> int:
+        return 0
+
 
 def get_scheduler(name: str) -> Scheduler:
     name = name.lower()
