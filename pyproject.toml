@@ -1,0 +1,4 @@
+[tool.interrogate]
+ignore-magic = true
+ignore-init-method = true
+fail-under = 18
