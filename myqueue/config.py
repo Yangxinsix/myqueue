@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, Set
+from typing import Dict, Any, Set, List, Tuple
 
 config: Dict[str, Any] = {}
 
@@ -58,8 +58,8 @@ def main():
     name = guess_scheduler()
     scheduler = get_scheduler(name)
     nodelist = scheduler.get_config()
-    nodelist.sort(key=lambda ncm: (-ncm[0], str2number(ncm[2])))
-    nodelist2 = []
+    nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
+    nodelist2: List[Tuple[str, int, str]] = []
     done: Set[int] = set()
     for name, cores, memory in nodelist:
         if cores not in done:
@@ -67,7 +67,7 @@ def main():
             done.add(cores)
         else:
             nodelist2.append((name, cores, memory))
-    cfg = {'scheduler': scheduler.name}
+    cfg: Dict[str, Any] = {'scheduler': scheduler.name}
     if nodelist2:
         cfg['nodes'] = [(name, {'cores': cores, 'memory': memory})
                         for name, cores, memory in nodelist2]
