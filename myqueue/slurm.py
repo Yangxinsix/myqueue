@@ -158,7 +158,7 @@ class SLURM(Scheduler):
     def get_config(self) -> List[Tuple[str, int, str]]:
         cmd = ['sinfo',
                '--noheader',
-               '--format="%c %m %P"']
+               '--format=%c %m %P']
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         nodes = []
         for line in p.stdout.decode().splitlines():

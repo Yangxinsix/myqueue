@@ -37,7 +37,8 @@ def guess_scheduler() -> str:
                           'qsub': 'pbs'}
     commands = []
     for command in scheduler_commands:
-        if subprocess.run(['which', command]).returncode == 0:
+        if subprocess.run(['which', command],
+                          stdout=subprocess.DEVNULL).returncode == 0:
             commands.append(command)
     if commands:
         assert len(commands) == 1
@@ -47,7 +48,7 @@ def guess_scheduler() -> str:
     return scheduler
 
 
-def main():
+def main(name=None):
     from .scheduler import get_scheduler
     from .utils import str2number
 
@@ -55,7 +56,7 @@ def main():
     if not folder.is_dir():
         folder.mkdir()
 
-    name = guess_scheduler()
+    name = name or guess_scheduler()
     scheduler = get_scheduler(name)
     nodelist = scheduler.get_config()
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
@@ -63,7 +64,7 @@ def main():
     done: Set[int] = set()
     for name, cores, memory in nodelist:
         if cores not in done:
-            nodelist2[:0] = [(name, cores, memory)]
+            nodelist2.insert(len(done), (name, cores, memory))
             done.add(cores)
         else:
             nodelist2.append((name, cores, memory))
@@ -72,7 +73,7 @@ def main():
         cfg['nodes'] = [(name, {'cores': cores, 'memory': memory})
                         for name, cores, memory in nodelist2]
 
-    text = f'config = {cfg!r}'
+    text = f'config = {cfg!r}\n'
     text = text.replace('= {', '= {\n    ')
     text = text.replace(", 'nodes'", ",\n    'nodes'")
     text = text.replace('(', '\n        (')
@@ -85,4 +86,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    name = sys.argv[1]
+    main(name)
