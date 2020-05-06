@@ -2,7 +2,7 @@ import os
 import subprocess
 import warnings
 from math import ceil
-from typing import Set
+from typing import Set, List, Tuple
 
 from .task import Task
 from .config import config
@@ -153,3 +153,16 @@ class SLURM(Scheduler):
                 assert mem == 0
                 mem = int(line[:-1]) * 1000
         return mem
+
+    def get_config(self) -> List[Tuple[str, int, str]]:
+        cmd = ['sinfo',
+               '--noheader',
+               '--format="%c %m %P"']
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        nodes = []
+        for line in p.stdout.decode().splitlines():
+            cores, mem, name = line.split()
+            nodes.append((name.rstrip('*'),
+                          int(cores),
+                          mem.rstrip('+') + 'M'))
+        return nodes
