@@ -64,7 +64,7 @@ class SLURM(Scheduler):
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
 
-        env = [('MPLBACKEND', 'Agg')]
+        env = []
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
@@ -139,3 +139,18 @@ class SLURM(Scheduler):
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
         return queued
+
+    def maxrss(self, id: int) -> int:
+        cmd = ['sacct',
+               '-j', str(id),
+               '-n',
+               '--units=K',
+               '-o', 'MaxRSS']
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        mem = 0
+        for line in p.stdout.splitlines():
+            line = line.strip()
+            if line.endswith(b'K'):
+                assert mem == 0
+                mem = int(line[:-1]) * 1000
+        return mem

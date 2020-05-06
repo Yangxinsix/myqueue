@@ -447,7 +447,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                         states.add(state)
                         break
                 else:
-                    raise MQError('Unknown state: ' + s)
+                    raise MQError(
+                        'Unknown state: ' + s +
+                        '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
 
         ids: Optional[Set[int]] = None
         if args.id:
