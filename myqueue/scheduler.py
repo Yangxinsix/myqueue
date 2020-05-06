@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Set
+from typing import Set, List, Tuple
 from myqueue.task import Task
 
 
@@ -36,6 +36,9 @@ class Scheduler:
 
     def maxrss(self, id: int) -> int:
         return 0
+
+    def get_config(self) -> List[Tuple[str, int, str]]:
+        raise NotImplementedError
 
 
 def get_scheduler(name: str) -> Scheduler:

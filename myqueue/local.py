@@ -3,7 +3,7 @@ import pickle
 import socket
 from functools import partial
 from pathlib import Path
-from typing import Any, Set, Tuple
+from typing import Any, Set, Tuple, List
 
 from .config import config, initialize_config
 from .scheduler import Scheduler
@@ -44,6 +44,9 @@ class LocalScheduler(Scheduler):
         if status != 'ok':
             raise LocalSchedulerError(status)
         return args
+
+    def get_config(self) -> List[Tuple[str, int, str]]:
+        return []
 
 
 class Server:
