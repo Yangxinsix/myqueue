@@ -7,4 +7,4 @@ tests:
     - coverage report -i --fail-under=77
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -c pyproject.toml myqueue
+    - interrogate -v -m -i -f 18 myqueue
