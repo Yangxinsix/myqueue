@@ -1,5 +1,5 @@
 import subprocess
-from typing import Set
+from typing import Set, List, Tuple, Dict
 
 from .task import Task
 from .config import config
@@ -22,7 +22,8 @@ class LSF(Scheduler):
                 '-W', f'{hours:02}:{minutes:02}',
                 '-n', str(task.resources.cores),
                 '-o', f'{name}.%J.out',
-                '-e', f'{name}.%J.err']
+                '-e', f'{name}.%J.err',
+                '-R', f'select[model == {nodename}]']
 
         mem = nodedct['memory']
         gbytes = int(str2number(mem) / 1_000_000_000 / nodedct['cores'])
@@ -97,3 +98,25 @@ class LSF(Scheduler):
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
+
+    def get_config(self) -> List[Tuple[str, int, str]]:
+        from collections import defaultdict
+        from .utils import str2number
+
+        cmd = ['nodestat',
+               '-F']
+        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        cores: Dict[str, int] = {}
+        memory: Dict[str, List[str]] = defaultdict(list)
+        for line in p.stdout.decode().splitlines():
+            id, state, procs, load, name, mem, unit, *_ = line.split()
+            if state == 'State':
+                continue  # skip header
+            if state == 'Down':
+                continue
+            cores[name] = int(procs.split(':')[1])
+            memory[name].append(mem + unit)
+        nodes = [
+            (name, cores[name], max(memory[name], key=str2number))
+            for name in cores]
+        return nodes
