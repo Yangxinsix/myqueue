@@ -27,15 +27,16 @@ Here is an example configuration file:
 The configuration file uses Python syntax to define a dictionary called
 ``config``.  The dictionary can have the following key-value pairs:
 
-===================  ======================  ========
-Key                  Description
-===================  ======================  ========
-``scheduler``        :ref:`scheduler`        required
-``nodes``            :ref:`nodes`            required
-``mpiexec``          :ref:`mpiexec`          optional
-``parallel_python``  :ref:`parallel_python`  optional
-``extra_args``       :ref:`extra_args`       optional
-===================  ======================  ========
+=====================  ======================  ========
+Key                    Description
+=====================  ======================  ========
+``scheduler``          :ref:`scheduler`        required
+``nodes``              :ref:`nodes`            required
+``mpiexec``            :ref:`mpiexec`          optional
+``parallel_python``    :ref:`parallel_python`  optional
+``extra_args``         :ref:`extra_args`       optional
+``maximum_diskspace``  :ref:`max_disk`         optional
+=====================  ======================  ========
 
 See details below.
 
@@ -47,9 +48,16 @@ Name of scheduler
 
 The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'`` or
 ``'local'``.  The *local* scheduler can be used for testing on a system without
-SLURM/LSF/PBS.  Start the local scheduler with::
+SLURM/LSF/PBS.  Start the local scheduler with:
+
+.. highlight:: bash
+
+::
 
     $ python3 -m myqueue.local
+
+
+.. highlight:: python
 
 
 .. _nodes:
@@ -128,8 +136,12 @@ scripts in parallel then you must specify which one you want to use::
         'parallel_python': 'your-python',
         ...}
 
-Use ``'asap-python'`` for ASAP_.  For MPI4PY_,
-you don't need an MPI-enabled interpreter.
+Use ``'asap-python'`` for ASAP_ and ``'gpaw python'`` for GPAW_.
+For MPI4PY_, you don't need an MPI-enabled interpreter.
+
+.. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
+.. _ASAP: https://wiki.fysik.dtu.dk/asap
+.. _GPAW: https://wiki.fysik.dtu.dk/gpaw
 
 
 .. _extra_args:
@@ -137,13 +149,37 @@ you don't need an MPI-enabled interpreter.
 Extra arguments for submit command
 ==================================
 
-::
+Add extra arguments to the ``sbatch``, ``qsub`` or ``bsub`` command.
+Example::
 
     config = {
         ...,
         'extra_args': ['arg1', 'arg2', ...],
         ...}
 
+would give ``<submit command> ... arg1 arg2``.
 
-.. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
-.. _ASAP: https://wiki.fysik.dtu.dk/asap
+
+.. _max_disk:
+
+Maximum disk space
+==================
+
+Some tasks may use a lot of disk-space while running.  In order to limit the
+number of such task running at the same time, you can mark them in your workflow
+script like this::
+
+    task(..., diskspace=10)
+
+and set a global maximum (note that the units are arbitrary)::
+
+    config = {
+        ...,
+        'maximum_diskspace': 200,
+        ...}
+
+This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued`` state.
+If you submit more that 20 tasks then some of them will be put in the ``hold``
+state.  As tasks finish successfully (``done`` state), tasks will be moved from
+``hold`` to ``queued``.  Tasks that fail will be counted as still running, so you
+will have to ``mq rm`` those and also remember to remove big files left behind.

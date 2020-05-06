@@ -32,7 +32,7 @@ class Task:
     restart: int
         How many times to restart task.
     diskspace: float
-        Diskspace used.
+        Disk-space used.  See :ref:`max_disk`.
     folder: Path
         Folder where task should run.
     creates: list of str
@@ -399,7 +399,7 @@ def task(cmd: str,
     restart: int
         How many times to restart task.
     diskspace: float
-        Diskspace used.
+        Diskspace used.  See :ref:`max_disk`.
     creates: list of str
         Name of files created by task.
 

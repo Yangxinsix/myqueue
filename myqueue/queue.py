@@ -562,7 +562,8 @@ class Queue(Lock):
         maxmem = config.get('maximum_diskspace', float('inf'))
         mem = 0
         for task in self.tasks:
-            if task.state in {'queued', 'running'}:
+            if task.state in {'queued', 'running',
+                              'FAILED', 'TIMEOUT', 'MEMORY'}:
                 mem += task.diskspace
 
         if mem > maxmem:
