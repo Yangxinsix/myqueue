@@ -151,8 +151,7 @@ class SLURM(Scheduler):
         for line in p.stdout.splitlines():
             line = line.strip()
             if line.endswith(b'K'):
-                assert mem == 0
-                mem = int(line[:-1]) * 1000
+                mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
     def get_config(self) -> List[Tuple[str, int, str]]:
