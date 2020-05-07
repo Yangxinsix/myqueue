@@ -613,6 +613,8 @@ def colored(state: str) -> str:
         return '\033[91m' + state + '\033[0m'
     if state.startswith('done'):
         return '\033[92m' + state + '\033[0m'
+    if state.startswith('running'):
+        return '\033[93m' + state + '\033[0m'
     return state
 
 
