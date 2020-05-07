@@ -6,6 +6,7 @@ from .utils import chdir
 
 
 def workflow(args, folders: List[Path]) -> List[Task]:
+    """Collect tasks from workflow script(s) and folders."""
     alltasks: List[Task] = []
 
     if args.pattern:
@@ -34,6 +35,7 @@ def workflow(args, folders: List[Path]) -> List[Task]:
 
 
 def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
+    """Compile create_tasks() function from worflow Python script."""
     script = path.read_text()
     code = compile(script, str(path), 'exec')
     namespace: Dict[str, Any] = {}
@@ -45,6 +47,7 @@ def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
 def get_tasks_from_folder(folder: Path,
                           create_tasks: Callable[[], List[Task]]
                           ) -> List[Task]:
+    """Collect tasks from folder."""
     tasks = []
     with chdir(folder):
         newtasks = create_tasks()

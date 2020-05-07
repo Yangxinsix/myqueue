@@ -25,6 +25,7 @@ class Command:
 
 
 def is_module(mod: str) -> bool:
+    """Check if mod is a Python module."""
     try:
         m = find_spec(mod)
         return m is not None
@@ -36,6 +37,7 @@ def command(cmd: str,
             args: List[str] = [],
             type: str = None,
             name: str = '') -> Command:
+    """Create command object."""
     cmd, _, args2 = cmd.partition(' ')
     if args2:
         args = args2.split() + args
@@ -163,6 +165,7 @@ class PythonFunction(Command):
 
 
 def convert(x: str) -> Union[bool, int, float, str]:
+    """Convert str to bool, int, float or str."""
     if x == 'True':
         return True
     if x == 'False':

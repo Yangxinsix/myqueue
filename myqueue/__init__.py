@@ -1,3 +1,7 @@
+"""Top level module definitions.
+
+The version number and the submit() function is defined here.
+"""
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
