@@ -82,7 +82,8 @@ def main(name=None):
     cfgfile = folder / 'config.py'
     if cfgfile.is_file():
         cfgfile.rename(cfgfile.with_name('config.py.old'))
-    cfgfile.write_text(text)
+    # cfgfile.write_text(text)
+    print(text)
 
 
 if __name__ == '__main__':

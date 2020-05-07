@@ -117,6 +117,6 @@ class LSF(Scheduler):
             cores[name] = int(procs.split(':')[1])
             memory[name].append(mem + unit)
         nodes = [
-            (name, cores[name], max(memory[name], key=str2number))
+            (name, cores[name], min(memory[name], key=str2number))
             for name in cores]
         return nodes
