@@ -1,4 +1,6 @@
 from pathlib import Path
+import subprocess
+
 from ..queue import Queue
 from ..task import task
 
@@ -42,3 +44,24 @@ def test_backends(mq):
         config['scheduler'] = 'test'
         del config['nodes']
         del config['mpiexec']
+
+
+class Result:
+    def __init__(self, stdout):
+        self.stdout = stdout
+
+
+def run(commands, stdout):
+    if commands[0] == 'sinfo':
+        return Result(b'8 256000+ xeon8*\n')
+    return Result(b'id state 8:8 load xeon8 128 G\n')
+
+
+def test_autoconfig(monkeypatch):
+    from ..slurm import SLURM
+    from ..lsf import LSF
+    monkeypatch.setattr(subprocess, 'run', run)
+    nodes = SLURM().get_config()
+    assert nodes == [('xeon8', 8, '256000M')]
+    nodes = LSF().get_config()
+    assert nodes == [('xeon8', 8, '128G')]
