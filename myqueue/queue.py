@@ -255,7 +255,8 @@ class Queue(Lock):
                             if oldtask:
                                 self.tasks.remove(oldtask)
 
-            pprint(submitted, 0, 'ifnr')
+            if self.verbosity > 1:
+                pprint(submitted, 0, 'ifnr')
             if submitted:
                 if self.dry_run:
                     print(plural(len(submitted), 'task'), 'to submit')
