@@ -164,6 +164,12 @@ def test_misc(mq):
     mq('-V')
     mq('completion')
     mq('ls no_such_folder', error=1)
+    mq('')
+
+
+def test_sync_kick(mq):
+    mq('sync')
+    mq('kick')
 
 
 def test_slash(mq):

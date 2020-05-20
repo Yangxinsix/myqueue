@@ -1,6 +1,5 @@
 from typing import List, Dict, Any, Union
 from pathlib import Path
-from importlib.util import find_spec
 
 
 class Command:
@@ -22,15 +21,6 @@ class Command:
     @property
     def fname(self):
         return self.name.replace('/', '\\')  # filename can't contain slashes
-
-
-def is_module(mod: str) -> bool:
-    """Check if mod is a Python module."""
-    try:
-        m = find_spec(mod)
-        return m is not None
-    except (AttributeError, ImportError, ValueError):
-        return False
 
 
 def command(cmd: str,

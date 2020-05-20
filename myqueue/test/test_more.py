@@ -67,3 +67,15 @@ def test_autoconfig(monkeypatch):
     assert nodes == [('xeon8', 8, '256000M')]
     nodes = LSF().get_config()
     assert nodes == [('xeon8', 8, '128G')]
+
+
+def test_commands():
+    from ..commands import convert, command, ShellScript
+    assert convert('True') is True
+    assert convert('False') is False
+    assert convert('3.14') == 3.14
+    assert convert('42') == 42
+    cmd = command('./script.sh 1 2')
+    assert isinstance(cmd, ShellScript)
+    assert cmd.todict()['args'] == ['1', '2']
+    print(cmd)

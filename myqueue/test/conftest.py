@@ -34,7 +34,7 @@ class MQ:
 
     def __call__(self, cmd: str, error: int = 0) -> None:
         args = shlex.split(cmd)
-        if args[0][0] != '-' and args[0] != 'help':
+        if args and args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
         print(f'$ mq {cmd}')
         for i, arg in enumerate(args):

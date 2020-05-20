@@ -288,7 +288,7 @@ def _main(arguments: List[str] = None) -> int:
               help='Show task from this folder.  Defaults to current folder.')
 
     args = parser.parse_args(
-        fix_option_order(arguments or sys.argv[1:],
+        fix_option_order(arguments if arguments is not None else sys.argv[1:],
                          short_options,
                          long_options))
 
