@@ -255,8 +255,8 @@ class Queue(Lock):
                             if oldtask:
                                 self.tasks.remove(oldtask)
 
-            if self.verbosity > 1:
-                pprint(submitted, 0, 'ifnr')
+            pprint(submitted, 0, 'ifnr',
+                   maxlines=10 if self.verbosity < 2 else 99999999999999)
             if submitted:
                 if self.dry_run:
                     print(plural(len(submitted), 'task'), 'to submit')
@@ -622,7 +622,8 @@ def colored(state: str) -> str:
 def pprint(tasks: List[Task],
            verbosity: int = 1,
            columns: str = 'ifnraste',
-           short: bool = False) -> None:
+           short: bool = False,
+           maxlines: int = 9999999999) -> None:
 
     if verbosity < 0:
         return
@@ -644,6 +645,13 @@ def pprint(tasks: List[Task],
         lines = []
         lengths = [0] * len(columns)
 
+    if len(tasks) > maxlines:
+        cut1 = maxlines // 2
+        cut2 = maxlines - cut1 - 2
+        tasks = tasks[:cut1] + tasks[-cut2:]
+    else:
+        cut1 = None
+
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
@@ -656,6 +664,9 @@ def pprint(tasks: List[Task],
         words = [words[i] for i in indices]
         lines.append(words)
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
+
+    if cut1 is not None:
+        lines[cut1:cut1] = [['...'], ['...']]
 
     try:
         N = os.get_terminal_size().columns
