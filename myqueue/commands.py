@@ -1,8 +1,16 @@
+"""Definitions of commands.
+
+There is a Command base class and five concrete classes:
+ShellCommand, ShellScript, PythonScript, PythonModule and
+PythonFunction.  Use the factory function command() to create
+command objects.
+"""
 from typing import List, Dict, Any, Union
 from pathlib import Path
 
 
 class Command:
+    """Base class."""
     def __init__(self, name: str, args: List[str]):
         self.args = args
         if args:

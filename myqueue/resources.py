@@ -1,7 +1,16 @@
+"""Resource class to handle resource requirements: time, cores, processes."""
+
 from typing import List, Dict, Tuple, Any, Union
 
 
 def seconds_to_short_time_string(n: float) -> str:
+    """Convert seconds to time string.
+
+    >>> seconds_to_short_time_string(42)
+    '42s'
+    >>> seconds_to_short_time_string(7200)
+    '2h'
+    """
     n = int(n)
     for s, t in [('d', 24 * 3600),
                  ('h', 3600),
