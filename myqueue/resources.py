@@ -34,6 +34,7 @@ Node = Tuple[str, Dict[str, Any]]
 
 
 class Resources:
+    """Resource description."""
     def __init__(self,
                  cores: int = 1,
                  nodename: str = '',
@@ -51,6 +52,13 @@ class Resources:
 
     @staticmethod
     def from_string(s: str) -> 'Resources':
+        """Create Resource object from string.
+
+        >>> Resources.from_string('16:1:xeon8:2h')
+        Resources(cores=16, processes=1, tmax=7200, nodename='xeon8')
+        >>> Resources.from_string('16:1m')
+        Resources(cores=16, tmax=60)
+        """
         cores, s = s.split(':', 1)
         nodename = ''
         processes = 0
@@ -73,7 +81,13 @@ class Resources:
             s += ':' + str(self.processes)
         return s + ':' + seconds_to_short_time_string(self.tmax)
 
+    def __repr__(self) -> str:
+        args = ', '.join(f'{key}={value!r}'
+                         for key, value in self.todict().items())
+        return f'Resources({args})'
+
     def todict(self) -> Dict[str, Union[int, str]]:
+        """Convert to dict."""
         dct: Dict[str, Union[int, str]] = {'cores': self.cores}
         if self.processes != self.cores:
             dct['processes'] = self.processes
@@ -83,12 +97,22 @@ class Resources:
             dct['nodename'] = self.nodename
         return dct
 
-    def double(self,
+    def bigger(self,
                state: str,
                nodelist: List[Node],
                maxtmax: int = 2 * 24 * 3600) -> None:
+        """Create new Resource object with larger tmax or more cores.
+
+        >>> nodes = [('node1', {'cores': 8})]
+        >>> r = Resources(tmax=100, cores=8)
+        >>> r.bigger('TIMEOUT', nodes)
+        Resources(cores=8, tmax=200)
+        >>> r.bigger('MEMORY', nodes)
+        Resources(cores=16, tmax=100)
+        """
+        new = Resources(**self.todict())
         if state == 'TIMEOUT':
-            self.tmax = int(min(self.tmax * 2, maxtmax))
+            new.tmax = int(min(self.tmax * 2, maxtmax))
         elif state == 'MEMORY':
             coreslist = sorted({dct['cores'] for name, dct in nodelist})
             nnodes = 1
@@ -102,12 +126,21 @@ class Resources:
                     continue
                 break
             if self.processes == self.cores:
-                self.processes = cores
-            self.cores = cores
+                new.processes = cores
+            new.cores = cores
         else:
             raise ValueError
+        return new
 
     def select(self, nodelist: List[Node]) -> Tuple[int, str, Dict[str, Any]]:
+        """Select appropriate node.
+
+        >>> nodes = [('node1', {'cores': 16}),
+        ...          ('node2', {'cores': 8})]
+        >>> r = Resources(cores=24)
+        >>> r.select(nodes)
+        (3, 'node2', {'cores': 8})
+        """
         if self.nodename:
             for name, dct in nodelist:
                 if name == self.nodename:

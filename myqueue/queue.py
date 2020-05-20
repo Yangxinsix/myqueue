@@ -540,7 +540,7 @@ class Queue(Lock):
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 nodes = config.get('nodes') or [('', {'cores': 1})]
                 if not self.dry_run:
-                    task.resources.double(task.state, nodes)
+                    task.resources = task.resources.bigger(task.state, nodes)
                     task.restart -= 1
                 tasks.append(task)
         if tasks:
