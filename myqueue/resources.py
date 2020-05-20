@@ -137,9 +137,16 @@ class Resources:
 
         >>> nodes = [('node1', {'cores': 16}),
         ...          ('node2', {'cores': 8})]
-        >>> r = Resources(cores=24)
-        >>> r.select(nodes)
+        >>> Resources(cores=24).select(nodes)
         (3, 'node2', {'cores': 8})
+        >>> Resources(cores=32).select(nodes)
+        (2, 'node1', {'cores': 16})
+        >>> Resources(cores=32, nodename='node2').select(nodes)
+        (4, 'node2', {'cores': 8})
+        >>> Resources(cores=32, nodename='node3').select(nodes)
+        Traceback (most recent call last):
+            ...
+        ValueError: No such node: node3
         """
         if self.nodename:
             for name, dct in nodelist:
