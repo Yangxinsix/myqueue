@@ -9,11 +9,18 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 20.5.0
+==============
+
 * Using pytest_ for testing.
 * Simple *local* queue for use without a real scheduler.
 * New ``extra_args`` configuration parameter (:ref:`extra_args`).
   Replaces, now deprecated, ``features`` and ``reservation`` parameters.
 * Use ``python3 -m myqueue.config`` to auto-configure your system.
+* Memory usage is now logged.
 
 .. _pytest: https://docs.pytest.org/en/latest/
 
