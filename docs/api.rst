@@ -53,11 +53,16 @@ API
 .. autoclass:: myqueue.commands.PythonFunction
 .. module:: myqueue.resources
 .. autoclass:: myqueue.resources.Resources
+   :members:
 .. module:: myqueue.queue
 .. autoclass:: myqueue.queue.Queue
+   :members:
 .. module:: myqueue.slurm
 .. autoclass:: myqueue.slurm.SLURM
+   :members:
 .. module:: myqueue.lsf
 .. autoclass:: myqueue.lsf.LSF
+   :members:
 .. module:: myqueue.pbs
 .. autoclass:: myqueue.pbs.PBS
+   :members:
