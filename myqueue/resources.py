@@ -86,7 +86,7 @@ class Resources:
                          for key, value in self.todict().items())
         return f'Resources({args})'
 
-    def todict(self) -> Dict[str, Union[int, str]]:
+    def todict(self) -> Dict[str, Any]:
         """Convert to dict."""
         dct: Dict[str, Union[int, str]] = {'cores': self.cores}
         if self.processes != self.cores:
@@ -100,7 +100,7 @@ class Resources:
     def bigger(self,
                state: str,
                nodelist: List[Node],
-               maxtmax: int = 2 * 24 * 3600) -> None:
+               maxtmax: int = 2 * 24 * 3600) -> 'Resources':
         """Create new Resource object with larger tmax or more cores.
 
         >>> nodes = [('node1', {'cores': 8})]
