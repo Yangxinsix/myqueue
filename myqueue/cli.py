@@ -342,7 +342,7 @@ def _main(arguments: List[str] = None) -> int:
         if age > 60:
             print('Try removing the file and report this to the developers!')
     except MQError as x:
-        print(f'{x}\n')
+        print(*x.args)
         return 1
     except Exception as x:
         if args.traceback:

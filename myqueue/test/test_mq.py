@@ -160,7 +160,10 @@ def test_misc(mq):
         mq('init')
     mq('help')
     mq('ls -saA')
+    mq('ls -A')
     mq('-V')
+    mq('completion')
+    mq('ls no_such_folder', error=1)
 
 
 def test_slash(mq):

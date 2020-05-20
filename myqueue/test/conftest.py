@@ -32,7 +32,7 @@ class MQ:
         TestScheduler.current_scheduler = self.scheduler
         os.environ['MYQUEUE_TESTING'] = 'yes'
 
-    def __call__(self, cmd):
+    def __call__(self, cmd: str, error: int = 0) -> None:
         args = shlex.split(cmd)
         if args[0][0] != '-' and args[0] != 'help':
             args[1:1] = ['--traceback']
@@ -41,8 +41,8 @@ class MQ:
             if '*' in arg:
                 args[i:i + 1] = sorted([str(p) for p in Path().glob(arg)])
                 break
-        error = _main(args)
-        assert error == 0
+        err = _main(args)
+        assert err == error
 
     def states(self) -> str:
         return ''.join(task.state[0] for task in mqlist())

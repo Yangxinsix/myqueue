@@ -102,7 +102,7 @@ class Queue(Lock):
         task = Selection({id}).select(self.tasks)[0]
         print(json.dumps(task.todict(), indent='    '))
         if self.verbosity > 1:
-            path = task.folder / (task.name + '.err')
+            path = self.scheduler.error_file(task)
             try:
                 err = path.read_text()
             except FileNotFoundError:
@@ -624,7 +624,10 @@ def pprint(tasks: List[Task],
            columns: str = 'ifnraste',
            short: bool = False,
            maxlines: int = 9999999999) -> None:
+    """Pretty-print tasks.
 
+    Use short=True to get only a summary.
+    """
     if verbosity < 0:
         return
 
@@ -650,7 +653,7 @@ def pprint(tasks: List[Task],
         cut2 = maxlines - cut1 - 2
         tasks = tasks[:cut1] + tasks[-cut2:]
     else:
-        cut1 = None
+        cut1 = -1
 
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
@@ -665,7 +668,7 @@ def pprint(tasks: List[Task],
         lines.append(words)
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
-    if cut1 is not None:
+    if cut1 != -1:
         lines[cut1:cut1] = [['...'], ['...']]
 
     try:
