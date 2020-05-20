@@ -97,7 +97,7 @@ MyQueue has only one dependency: Python_ version 3.6 or later.
 
 Install MyQueue from PyPI_ with *pip*::
 
-    $ python3 -m pip install myqueue --user
+    $ python3 -m pip install myqueue
 
 Enable bash tab-completion for future terminal sessions like this::
 
