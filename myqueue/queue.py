@@ -258,10 +258,7 @@ class Queue(Lock):
                             oldtask = current.get(task.dname)
                             if oldtask:
                                 self.tasks.remove(oldtask)
-                        pb.tick()
-            else:
-                # No errors:
-                pb.finish()
+                        next(pb)
 
             pprint(submitted, 0, 'ifnr',
                    maxlines=10 if self.verbosity < 2 else 99999999999999)

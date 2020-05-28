@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable, List, Dict, Any
 
-from .progress import show_progress
+from .progress import progress_bar
 from .task import Task
 from .utils import chdir, plural
 
@@ -14,19 +14,24 @@ def workflow(args, folders: List[Path], verbosity: int = 1) -> List[Task]:
         paths = [path
                  for folder in folders
                  for path in folder.glob('**/*' + args.script)]
-        for path in show_progress(paths,
-                                  f'Scanning {len(paths)} scripts:',
-                                  verbosity):
+        pb = progress_bar(len(paths),
+                          f'Scanning {len(paths)} scripts:',
+                          verbosity)
+
+        for path in paths:
             create_tasks = compile_create_tasks_function(path)
             alltasks += get_tasks_from_folder(path.parent, create_tasks)
+            next(pb)
     else:
         assert args.script.endswith('.py'), args.script
         create_tasks = compile_create_tasks_function(Path(args.script))
         n_folders = plural(len(folders), 'folder')
-        for folder in show_progress(folders,
-                                    f'Scanning {n_folders}:',
-                                    verbosity):
+        pb = progress_bar(len(folders),
+                          f'Scanning {n_folders}:',
+                          verbosity)
+        for folder in folders:
             alltasks += get_tasks_from_folder(folder, create_tasks)
+            next(pb)
 
     if args.targets:
         names = args.targets.split(',')

@@ -1,90 +1,65 @@
-"""Progress indicator."""
+"""Progress-bar."""
 import sys
-from typing import Container, TypeVar, Generator
-
-Thing = TypeVar('Thing')
-
-
-def show_progress(things: Container[Thing],
-                  message: str = '',
-                  verbose: bool = True) -> Generator[Thing, None, None]:
-    """Wrap container in progress-barr.
-
-    >>> for i in show_progress([1, 2, 3, 4], 'Doing 4 things:'):
-    ...     pass
-    Doing 4 things: |----------| 100%
-    """
-    if verbose:
-        return ProgressBar(things, message)
-    return things
+from typing import Generator
 
 
 def progress_bar(length: int,
                  message: str = '',
-                 verbose: bool = True) -> Generator[Thing, None, None]:
+                 verbosity: int = 1) -> Generator[int, None, None]:
     """Progress-bar.
 
-    >>> pb = progress_bar(2, verbose=False)
-    >>> pb.tick()
-    >>> pb.tick()
-    >>> pb.finish()
+    Example::
+
+        pb = progress_bar(10, 'Text:')
+        for i in range(10):
+            ...
+            next(pb)
+
+    Output::
+
+        Text: |----------| 100.0%
     """
-    if verbose:
-        return ProgressBar(range(length), message)
-    return SilentProgressBar()
+    if verbosity == 0:
+        return iter(range(length))
+
+    if sys.stdout.isatty():
+        print(f'{message} |          |   0.0%', end='', flush=True)
+    else:
+        print(f'{message} ', end='', flush=True)
+
+    return _progress_bar(length, message)
 
 
-class SilentProgressBar:
-    def tick(self):
-        pass
+def _progress_bar(length: int,
+                  message: str = '') -> Generator[int, None, None]:
+    if not sys.stdout.isatty():
+        for n in range(length):
+            if n == length - 1:
+                print('|----------| 100.0%')
+            yield n
+        return
 
-    def finish(self):
-        pass
-
-
-class ProgressBar:
-    def __init__(self, things, message=''):
-        self.things = things
-        self.message = message
-        self.iter = None
-        if sys.stdout.isatty():
-            print(f'{message} |          |   0%', end='', flush=True)
-        else:
-            print(f'{message} ', end='', flush=True)
-
-    def __iter__(self):
-        if sys.stdout.isatty():
-            for n, thing in enumerate(self.things):
-                yield thing
-                p = int(round(100 * (n + 1) / len(self.things)))
-                bar = '-' * int(round(10 * (n + 1) / len(self.things)))
-                print(f'\r{self.message} |{bar:10}| {p:3}%',
-                      end='',
-                      flush=True)
+    for n in range(length):
+        p = 100 * (n + 1) / length
+        bar = '-' * int(round(10 * (n + 1) / length))
+        print(f'\r{message} |{bar:10}| {p:5.1f}%',
+              end='',
+              flush=True)
+        if n == length - 1:
             print()
-        else:
-            yield from self.things
-            print('|----------| 100%')
-
-    def tick(self):
-        if self.iter is None:
-            self.iter = iter(self)
-        next(self.iter)
-
-    def finish(self):
-        if self.iter is None:
-            return
-        try:
-            next(self.iter)
-        except StopIteration:
-            pass
+        yield n
 
 
 if __name__ == '__main__':
     from time import sleep
-    for _ in show_progress(range(500), 'Test 1:'):
-        sleep(0.002)
-    pb = progress_bar(500, 'Test 2:')
+    pb = progress_bar(500, 'Test 1:')
     for _ in range(500):
-        pb.tick()
-    pb.finish()
+        sleep(0.002)
+        next(pb)
+    pb = progress_bar(500, 'Test 2:', 0)
+    for _ in range(500):
+        next(pb)
+    pb = progress_bar(5, 'Test 3:')
+    for _ in range(5):
+        sleep(2.5)
+        next(pb)
