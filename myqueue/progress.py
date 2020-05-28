@@ -1,11 +1,11 @@
 """Progress-bar."""
 import sys
-from typing import Generator
+from typing import Iterator
 
 
 def progress_bar(length: int,
                  message: str = '',
-                 verbosity: int = 1) -> Generator[int, None, None]:
+                 verbosity: int = 1) -> Iterator[int]:
     """Progress-bar.
 
     Example::
@@ -31,7 +31,7 @@ def progress_bar(length: int,
 
 
 def _progress_bar(length: int,
-                  message: str = '') -> Generator[int, None, None]:
+                  message: str = '') -> Iterator[int]:
     if not sys.stdout.isatty():
         for n in range(length):
             if n == length - 1:
