@@ -40,10 +40,10 @@ Our :ref:`workflow script` will create two tasks using the
 We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
-    total 12
-    -rw-r--r-- 1 jensj jensj 190 Jan 27 07:48 check.py
-    -rw-r--r-- 1 jensj jensj 387 Jan 27 07:48 factor.py
-    -rw-r--r-- 1 jensj jensj 166 Jan 27 07:48 workflow.py
+    totalt 12
+    -rw-rw-r-- 1 jensj jensj 190 maj 28 12:28 check.py
+    -rw-rw-r-- 1 jensj jensj 387 maj 28 12:28 factor.py
+    -rw-rw-r-- 1 jensj jensj 166 maj 28 12:28 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -60,10 +60,13 @@ Create some folders::
 and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
+    Scanning 1 folder: |----------| 100.0%
     ./1001/ prime.factor 1:10m*
     ./1001/ prime.check  1:10m(1)*
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
+    Scanning 1 folder: |----------| 100.0%
+    Submitting 2 tasks: |----------| 100.0%
     1 ./1001/ prime.factor 1:10m*
     2 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
@@ -79,7 +82,9 @@ and now in all subfolders::
     -- ------- ------------ ------ ---- ----- ---- -----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
+    Scanning 6 folders: |----------| 100.0%
     2 tasks already done
+    Submitting 10 tasks: |----------| 100.0%
     3  ./100007/ prime.factor 1:10m*
     4  ./100007/ prime.check  1:10m(1)*
     5  ./36791/  prime.factor 1:10m*
@@ -98,8 +103,8 @@ and now in all subfolders::
     $ mq ls
     id folder    name         res.    age state time error
     -- --------- ------------ ------ ---- ----- ---- -----
-    1  ./1001/   prime.factor 1:10m* 0:05 done  0:00
-    2  ./1001/   prime.check  1:10m* 0:05 done  0:00
+    1  ./1001/   prime.factor 1:10m* 0:04 done  0:00
+    2  ./1001/   prime.check  1:10m* 0:04 done  0:00
     3  ./100007/ prime.factor 1:10m* 0:02 done  0:00
     4  ./100007/ prime.check  1:10m* 0:02 done  0:00
     5  ./36791/  prime.factor 1:10m* 0:02 done  0:00
@@ -117,13 +122,13 @@ Note that a ``prime.check.done`` file is created to mark that the
 ``prime.check`` task has been completed::
 
     $ ls -l 1001/
-    total 4
-    -rw-r--r-- 1 jensj jensj 24 Jan 27 07:48 factors.json
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.err
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.out
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.done
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.err
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.out
+    totalt 4
+    -rw-rw-r-- 1 jensj jensj 24 maj 28 12:28 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 prime.check.done
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 prime.factor.1.out
 
 There is no ``prime.factor.done`` file because ``factors.json`` serves that
 purpose.
@@ -132,7 +137,9 @@ Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
+    Scanning 7 folders: |----------| 100.0%
     12 tasks already done
+    Submitting 2 tasks: |----------| 100.0%
     13 ./42/ prime.factor 1:10m*
     14 ./42/ prime.check  1:10m(1)*
     2 tasks submitted

@@ -1,25 +1,37 @@
 from pathlib import Path
 from typing import Callable, List, Dict, Any
 
+from .progress import progress_bar
 from .task import Task
-from .utils import chdir
+from .utils import chdir, plural
 
 
-def workflow(args, folders: List[Path]) -> List[Task]:
+def workflow(args, folders: List[Path], verbosity: int = 1) -> List[Task]:
     """Collect tasks from workflow script(s) and folders."""
     alltasks: List[Task] = []
 
     if args.pattern:
-        for folder in folders:
-            for path in folder.glob('**/*' + args.script):
-                create_tasks = compile_create_tasks_function(path)
+        paths = [path
+                 for folder in folders
+                 for path in folder.glob('**/*' + args.script)]
+        pb = progress_bar(len(paths),
+                          f'Scanning {len(paths)} scripts:',
+                          verbosity)
 
-                alltasks += get_tasks_from_folder(path.parent, create_tasks)
+        for path in paths:
+            create_tasks = compile_create_tasks_function(path)
+            alltasks += get_tasks_from_folder(path.parent, create_tasks)
+            next(pb)
     else:
         assert args.script.endswith('.py'), args.script
         create_tasks = compile_create_tasks_function(Path(args.script))
+        n_folders = plural(len(folders), 'folder')
+        pb = progress_bar(len(folders),
+                          f'Scanning {n_folders}:',
+                          verbosity)
         for folder in folders:
             alltasks += get_tasks_from_folder(folder, create_tasks)
+            next(pb)
 
     if args.targets:
         names = args.targets.split(',')

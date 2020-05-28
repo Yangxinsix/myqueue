@@ -16,6 +16,7 @@ from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
 from .config import config
+from .progress import progress_bar
 from .scheduler import get_scheduler, Scheduler
 from .resources import Resources
 from .run import run_tasks
@@ -233,6 +234,9 @@ class Queue(Lock):
             for task in todo:
                 task.activation_script = activation_scripts.get(task.folder)
 
+            pb = progress_bar(len(todo),
+                              f'Submitting {len(todo)} tasks:',
+                              self.verbosity and len(todo) > 1)
             submitted = []
             ex = None
             while todo:
@@ -254,6 +258,7 @@ class Queue(Lock):
                             oldtask = current.get(task.dname)
                             if oldtask:
                                 self.tasks.remove(oldtask)
+                        next(pb)
 
             pprint(submitted, 0, 'ifnr',
                    maxlines=10 if self.verbosity < 2 else 99999999999999)
