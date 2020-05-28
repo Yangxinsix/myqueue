@@ -554,7 +554,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.modify(selection, state)
 
         elif args.command == 'workflow':
-            tasks = workflow(args, folders)
+            tasks = workflow(args, folders, verbosity)
             queue.submit(tasks, args.force, args.max_tasks)
 
         elif args.command == 'sync':
