@@ -187,6 +187,7 @@ Examples
 
     $ mkdir f1 f2
     $ mq submit "shell:echo hello" f1/ f2/
+    Submitting 2 tasks: |----------| 100%
     2 ./f1/ shell:echo+hello 1:10m
     3 ./f2/ shell:echo+hello 1:10m
     2 tasks submitted
@@ -203,9 +204,9 @@ You can see the status of your jobs with::
     $ mq list
     id folder name             res.   age state  time error
     -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
-    1  ./     time@sleep+2     1:1m  0:03 done   0:02
-    2  ./f1/  shell:echo+hello 1:10m 0:01 done   0:00
-    3  ./f2/  shell:echo+hello 1:10m 0:01 done   0:00
+    1  ./     time@sleep+2     1:1m  0:02 done   0:02
+    2  ./f1/  shell:echo+hello 1:10m 0:00 done   0:00
+    3  ./f2/  shell:echo+hello 1:10m 0:00 done   0:00
     4  ./     script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
     done: 3, FAILED: 1, total: 4
@@ -214,18 +215,18 @@ Remove the failed and done jobs from the list with
 (notice the dot meaning the current folder)::
 
     $ mq remove -s Fd -r .
-    1 ./    time@sleep+2     1:1m  0:04 done   0:02
-    2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
-    3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
+    1 ./    time@sleep+2     1:1m  0:02 done   0:02
+    2 ./f1/ shell:echo+hello 1:10m 0:00 done   0:00
+    3 ./f2/ shell:echo+hello 1:10m 0:00 done   0:00
     4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     4 tasks removed
 
 The output files from a task will look like this::
 
     $ ls -l f2
-    total 4
-    -rw-r--r-- 1 jensj jensj 0 Jan 27 07:27 shell:echo.3.err
-    -rw-r--r-- 1 jensj jensj 6 Jan 27 07:27 shell:echo.3.out
+    totalt 4
+    -rw-rw-r-- 1 jensj jensj 0 maj 28 12:28 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 maj 28 12:28 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 

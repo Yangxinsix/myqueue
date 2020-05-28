@@ -33,10 +33,10 @@ The ``1:10m`` means that 1 core and 10 minutes was reserved for the task.
 There is now an output file and an empty error file in the folder::
 
     $ ls -l
-    total 8
-    -rw-r--r-- 1 jensj jensj 22 Jan 27 07:27 hello.py
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:27 hello.py.1.err
-    -rw-r--r-- 1 jensj jensj 13 Jan 27 07:27 hello.py.1.out
+    totalt 8
+    -rw-rw-r-- 1 jensj jensj 22 maj 28 12:28 hello.py
+    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 hello.py.1.err
+    -rw-rw-r-- 1 jensj jensj 13 maj 28 12:28 hello.py.1.out
     $ cat hello.py.1.out
     Hello world!
 
@@ -74,9 +74,9 @@ To see the status of both the ``proj1`` and ``proj2`` folders, do this::
     $ mq ls
     id folder   name           res.   age state  time error
     -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
-    1  ./proj1/ hello.py       1:10m 0:03 done   0:00
-    2  ./proj2/ math@sin+3.14  1:10s 0:01 done   0:00
-    3  ./proj2/ math@sin+hello 1:10m 0:01 FAILED 0:00 TypeError: must be real number, not str
+    1  ./proj1/ hello.py       1:10m 0:00 done   0:00
+    2  ./proj2/ math@sin+3.14  1:10s 0:00 done   0:00
+    3  ./proj2/ math@sin+hello 1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
     -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
     done: 2, FAILED: 1, total: 3
 
@@ -85,7 +85,7 @@ See status of the ``proj1`` folder only::
     $ mq ls proj1
     id folder   name     res.   age state time error
     -- -------- -------- ----- ---- ----- ---- -----
-    1  ./proj1/ hello.py 1:10m 0:03 done  0:00
+    1  ./proj1/ hello.py 1:10m 0:00 done  0:00
     -- -------- -------- ----- ---- ----- ---- -----
     done: 1, total: 1
 
@@ -93,8 +93,8 @@ Once you have seen that your tasks have finished, you will typically remove
 them so that only queued and failed tasks are left::
 
     $ mq rm -s d proj*
-    1 ./proj1/ hello.py      1:10m 0:04 done 0:00
-    2 ./proj2/ math@sin+3.14 1:10s 0:02 done 0:00
+    1 ./proj1/ hello.py      1:10m 0:00 done 0:00
+    2 ./proj2/ math@sin+3.14 1:10s 0:00 done 0:00
     2 tasks removed
 
 .. tip::
