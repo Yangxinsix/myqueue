@@ -187,7 +187,7 @@ Examples
 
     $ mkdir f1 f2
     $ mq submit "shell:echo hello" f1/ f2/
-    Submitting 2 tasks: |----------| 100.0%
+    Submitting 2 tasks: |--------------------| 100.0%
     2 ./f1/ shell:echo+hello 1:10m
     3 ./f2/ shell:echo+hello 1:10m
     2 tasks submitted

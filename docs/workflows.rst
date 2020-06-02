@@ -60,13 +60,13 @@ Create some folders::
 and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
-    Scanning 1 folder: |----------| 100.0%
+    Scanning 1 folder: |--------------------| 100.0%
     ./1001/ prime.factor 1:10m*
     ./1001/ prime.check  1:10m(1)*
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
-    Scanning 1 folder: |----------| 100.0%
-    Submitting 2 tasks: |----------| 100.0%
+    Scanning 1 folder: |--------------------| 100.0%
+    Submitting 2 tasks: |--------------------| 100.0%
     1 ./1001/ prime.factor 1:10m*
     2 ./1001/ prime.check  1:10m(1)*
     2 tasks submitted
@@ -82,9 +82,9 @@ and now in all subfolders::
     -- ------- ------------ ------ ---- ----- ---- -----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
-    Scanning 6 folders: |----------| 100.0%
+    Scanning 6 folders: |--------------------| 100.0%
     2 tasks already done
-    Submitting 10 tasks: |----------| 100.0%
+    Submitting 10 tasks: |--------------------| 100.0%
     3  ./100007/ prime.factor 1:10m*
     4  ./100007/ prime.check  1:10m(1)*
     5  ./36791/  prime.factor 1:10m*
@@ -137,9 +137,9 @@ Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
-    Scanning 7 folders: |----------| 100.0%
+    Scanning 7 folders: |--------------------| 100.0%
     12 tasks already done
-    Submitting 2 tasks: |----------| 100.0%
+    Submitting 2 tasks: |--------------------| 100.0%
     13 ./42/ prime.factor 1:10m*
     14 ./42/ prime.check  1:10m(1)*
     2 tasks submitted

@@ -17,13 +17,13 @@ def progress_bar(length: int,
 
     Output::
 
-        Text: |----------| 100.0%
+        Text: |--------------------| 100.0%
     """
     if verbosity == 0:
         return iter(range(length))
 
     if sys.stdout.isatty():
-        print(f'{message} |          |   0.0%', end='', flush=True)
+        print(f'{message} |                    |   0.0%', end='', flush=True)
     else:
         print(f'{message} ', end='', flush=True)
 
@@ -35,14 +35,14 @@ def _progress_bar(length: int,
     if not sys.stdout.isatty():
         for n in range(length):
             if n == length - 1:
-                print('|----------| 100.0%')
+                print('|--------------------| 100.0%')
             yield n
         return
 
     for n in range(length):
         p = 100 * (n + 1) / length
-        bar = '-' * int(round(10 * (n + 1) / length))
-        print(f'\r{message} |{bar:10}| {p:5.1f}%',
+        bar = '-' * int(round(20 * (n + 1) / length))
+        print(f'\r{message} |{bar:20}| {p:5.1f}%',
               end='',
               flush=True)
         if n == length - 1:
