@@ -14,11 +14,13 @@ from typing import List, Dict, Any, Iterable
 
 
 def match(word: str, *suffixes: str) -> List[str]:
+    """Match files: "word*suffix"."""
     return [w for w in glob(word + '*')
             if any(w.endswith(suffix) for suffix in suffixes)]
 
 
 def read() -> Dict[str, Any]:
+    """Read queue as a dict."""
     from pathlib import Path
     import json
     from .config import find_home_folder
