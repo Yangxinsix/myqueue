@@ -21,7 +21,9 @@ def match(word: str, *suffixes: str) -> List[str]:
 def read() -> Dict[str, Any]:
     from pathlib import Path
     import json
-    path = Path.home() / '.myqueue/queue.json'
+    from .config import find_home_folder
+    home = find_home_folder(Path('.'))
+    path = home / '.myqueue/queue.json'
     try:
         dct: Dict[str, Any] = json.loads(path.read_text())
         return dct
