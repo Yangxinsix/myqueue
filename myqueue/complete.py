@@ -24,7 +24,7 @@ def read() -> Dict[str, Any]:
     from pathlib import Path
     import json
     from .config import find_home_folder
-    home = find_home_folder(Path('.'))
+    home = find_home_folder(Path('.').resolve())
     path = home / '.myqueue/queue.json'
     try:
         dct: Dict[str, Any] = json.loads(path.read_text())
