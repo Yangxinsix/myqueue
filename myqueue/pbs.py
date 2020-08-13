@@ -9,6 +9,8 @@ from .scheduler import Scheduler
 
 
 class PBS(Scheduler):
+    output_file_pattern = r'[a-zA-Z]+.*\.[eo]+[1-9]+[0-9]*'
+
     def submit(self,
                task: Task,
                dry_run: bool = False) -> None:

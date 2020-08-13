@@ -59,8 +59,9 @@ Example:
     $ mq info 12345
 """),
     ('workflow',
-     'Submit tasks from Python script.', """
-The script must define a create_tasks() function as shown here:
+     'Submit tasks from Python script or several scripts matching pattern.',
+     """
+The script(s) must define a create_tasks() function as shown here:
 
     $ cat flow.py
     from myqueue.task import task
@@ -218,7 +219,7 @@ def _main(arguments: List[str] = None) -> int:
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
-            a('-p', '--pattern', action='store_true',
+            a('-p', '--pattern',
               help='Use submit scripts matching "script" pattern in all '
               'subfolders.')
             a('folder',
@@ -229,8 +230,8 @@ def _main(arguments: List[str] = None) -> int:
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTMaA',
               help='Selection of states. First letters of "queued", "hold", '
-              '"running", "done", "FAILED", "CANCELED", "TIMEOUT" '
-              '"all" and "ALL".')
+              '"running", "done", "FAILED", "CANCELED", "TIMEOUT", '
+              '"MEMORY", "all" and "ALL".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
               '(one ID per line; extra stuff after the ID will be ignored).')
@@ -571,6 +572,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
 
 def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+    """Convert string to regex pattern.
+
+    Examples:
+
+    >>> regex('*-abc.py')
+    re.compile('\\*\\-abc\\.py')
+    >>> regex(None)
+    None
+    """
     if pattern:
         return re.compile(re.escape(pattern)
                           .replace('\\*', '.*')
