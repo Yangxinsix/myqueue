@@ -219,7 +219,7 @@ def _main(arguments: List[str] = None) -> int:
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
-            a('-p', '--pattern',
+            a('-p', '--pattern', action='store_true',
               help='Use submit scripts matching "script" pattern in all '
               'subfolders.')
             a('folder',
@@ -572,14 +572,14 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
 
 def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
-    """Convert string to regex pattern.
+    r"""Convert string to regex pattern.
 
     Examples:
 
     >>> regex('*-abc.py')
-    re.compile('\\*\\-abc\\.py')
-    >>> regex(None)
-    None
+    re.compile('.*\\-abc\\.py')
+    >>> regex(None) is None
+    True
     """
     if pattern:
         return re.compile(re.escape(pattern)
