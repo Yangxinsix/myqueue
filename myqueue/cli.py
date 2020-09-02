@@ -13,6 +13,7 @@ class MQError(Exception):
 
 
 def error(*args):
+    """Write error message to stderr in red."""
     if sys.stderr.isatty():
         print('\033[91m', end='', file=sys.stderr)
         print(*args, '\033[0m', file=sys.stderr)
