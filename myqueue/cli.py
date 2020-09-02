@@ -12,6 +12,15 @@ class MQError(Exception):
     """For nice (expected) CLI errors."""
 
 
+def error(*args):
+    """Write error message to stderr in red."""
+    if sys.stderr.isatty():
+        print('\033[91m', end='', file=sys.stderr)
+        print(*args, '\033[0m', file=sys.stderr)
+    else:
+        print(*args, file=sys.stderr)
+
+
 main_description = """\
 Frontend for SLURM/LSF/PBS.
 
@@ -339,20 +348,18 @@ def _main(arguments: List[str] = None) -> int:
     except TimeoutError as x:
         lockfile = x.args[0]
         age = time() - lockfile.stat().st_mtime
-        print(f'Locked {age:.0f} seconds ago:', lockfile)
+        error(f'Locked {age:.0f} seconds ago:', lockfile)
         if age > 60:
-            print('Try removing the file and report this to the developers!')
+            error('Try removing the file and report this to the developers!')
     except MQError as x:
-        print(*x.args)
+        error(*x.args)
         return 1
     except Exception as x:
         if args.traceback:
             raise
         else:
-            print(f'{x.__class__.__name__}: {x}',
-                  file=sys.stderr)
-            print(f'To get a full traceback, use: mq {args.command} ... -T',
-                  file=sys.stderr)
+            error(f'{x.__class__.__name__}: {x}',
+                  f'To get a full traceback, use: mq {args.command} ... -T')
             return 1
     return 0
 

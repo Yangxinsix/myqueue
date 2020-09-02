@@ -12,6 +12,13 @@ Next release
 * ...
 
 
+Version 20.9.0
+==============
+
+* Red error messages.
+* Progress-bar.
+
+
 Version 20.5.0
 ==============
 
