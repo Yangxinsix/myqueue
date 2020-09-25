@@ -9,14 +9,7 @@ Put this in your .bashrc::
 
 import os
 import sys
-from glob import glob
-from typing import List, Dict, Any, Iterable
-
-
-def match(word: str, *suffixes: str) -> List[str]:
-    """Match files: "word*suffix"."""
-    return [w for w in glob(word + '*')
-            if any(w.endswith(suffix) for suffix in suffixes)]
+from typing import Dict, Any, Iterable
 
 
 def read() -> Dict[str, Any]:
@@ -100,7 +93,7 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
         opts = ['-h', '--help', '-V', '--version']
         if word[:1] == '-':
             return opts
-        return list(commands.keys()) + opts
+        return list(commands) + list(aliases) + opts
 
     if word[:1] == '-':
         return commands[command]
