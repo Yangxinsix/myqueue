@@ -86,12 +86,15 @@ commands = {
          '--quiet', '-T', '--traceback']}
 # End of computer generated data
 
+aliases = {'rm': 'remove',
+           'ls': 'list'}
+
 
 def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     for w in line[:point - len(word)].strip().split()[1:]:
         if w[0].isalpha():
-            if w in commands:
-                command = w
+            if w in commands or w in aliases:
+                command = aliases.get(w, w)
                 break
     else:
         opts = ['-h', '--help', '-V', '--version']
@@ -123,10 +126,11 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     return []
 
 
-word, previous = sys.argv[2:]
-line = os.environ['COMP_LINE']
-point = int(os.environ['COMP_POINT'])
-words = complete(word, previous, line, point)
-for w in words:
-    if w.startswith(word):
-        print(w)
+if __name__ == '__main__':
+    word, previous = sys.argv[2:]
+    line = os.environ['COMP_LINE']
+    point = int(os.environ['COMP_POINT'])
+    words = complete(word, previous, line, point)
+    for w in words:
+        if w.startswith(word):
+            print(w)
