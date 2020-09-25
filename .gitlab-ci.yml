@@ -3,8 +3,8 @@ tests:
   script:
     - pip install flake8 mypy coverage pytest interrogate
     - pip install -e .
-    - coverage run -m pytest -v
-    - coverage report -i --fail-under=80
+    - coverage run --source=myqueue -m pytest -v
+    - coverage report -i --fail-under=78
     - mypy -p myqueue
     - flake8 myqueue
     - interrogate -v -m -i -f 29.1 myqueue -e myqueue/test
