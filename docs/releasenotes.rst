@@ -12,6 +12,12 @@ Next release
 * ...
 
 
+Version 20.9.1
+==============
+
+* Fix workflow+openmpi issue.
+
+
 Version 20.9.0
 ==============
 
