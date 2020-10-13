@@ -82,8 +82,9 @@ commands = {
          '--traceback', '-A', '--all'],
     'workflow':
         ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
-         '--pattern', '-z', '--dry-run', '-v', '--verbose', '-q',
-         '--quiet', '-T', '--traceback']}
+         '--pattern', '-a', '--arguments', '-z', '--dry-run',
+         '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback']}
 # End of computer generated data
 
 

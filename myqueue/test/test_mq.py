@@ -112,14 +112,16 @@ def test_workflow(mq):
 
 wf2 = """
 from myqueue.task import task
-def create_tasks():
+def create_tasks(name, n):
+    assert name == 'hello'
+    assert n == 5
     return [task('shell:echo+hi', diskspace=1) for _ in range(4)]
 """
 
 
 def test_workflow2(mq):
     Path('wf2.py').write_text(wf2)
-    mq('workflow wf2.py .')
+    mq('workflow wf2.py . -a name=hello,n=5')
     mq('kick')
     mq.wait()
     assert mq.states() == 'dddd'
