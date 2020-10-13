@@ -72,7 +72,7 @@ def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
     return kwargs
 
 
-def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
+def compile_create_tasks_function(path: Path) -> Callable[..., List[Task]]:
     """Compile create_tasks() function from worflow Python script."""
     script = path.read_text()
     code = compile(script, str(path), 'exec')
