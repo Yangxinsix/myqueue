@@ -1,5 +1,6 @@
+import ast
 from pathlib import Path
-from typing import Callable, List, Dict, Any
+from typing import Callable, List, Dict, Any, Union
 
 from .progress import progress_bar
 from .task import Task
@@ -25,6 +26,14 @@ def workflow(args, folders: List[Path], verbosity: int = 1) -> List[Task]:
     else:
         assert args.script.endswith('.py'), args.script
         create_tasks = compile_create_tasks_function(Path(args.script))
+
+        if args.arguments:
+            kwargs = str2kwargs(args.arguments)
+            old = create_tasks
+
+            def create_tasks():
+                return old(**kwargs)
+
         n_folders = plural(len(folders), 'folder')
         pb = progress_bar(len(folders),
                           f'Scanning {n_folders}:',
@@ -46,7 +55,24 @@ def workflow(args, folders: List[Path], verbosity: int = 1) -> List[Task]:
     return alltasks
 
 
-def compile_create_tasks_function(path: Path) -> Callable[[], List[Task]]:
+def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
+    """Convert str to dict.
+
+    >>> str2kwargs('name=hello,n=5')
+    {'name': 'hello', 'n': 5}
+    """
+    kwargs = {}
+    for arg in args.split(','):
+        key, value = arg.split('=')
+        try:
+            v = ast.literal_eval(value)
+        except (SyntaxError, ValueError):
+            v = value
+        kwargs[key] = v
+    return kwargs
+
+
+def compile_create_tasks_function(path: Path) -> Callable[..., List[Task]]:
     """Compile create_tasks() function from worflow Python script."""
     script = path.read_text()
     code = compile(script, str(path), 'exec')

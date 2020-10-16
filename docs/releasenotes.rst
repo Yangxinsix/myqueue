@@ -9,7 +9,8 @@ Release notes
 Next release
 ============
 
-* ...
+* New ``mq workflow ... --arguments "key=val,..."`` option.  See
+  :ref:`workflow`.
 
 
 Version 20.9.1

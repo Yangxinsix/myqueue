@@ -270,8 +270,8 @@ optional arguments:
 Workflow: Submit tasks from Python script or several scripts matching pattern
 -----------------------------------------------------------------------------
 
-usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p] [-z]
-                   [-v] [-q] [-T]
+usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
+                   [-a key1=val1,key2=val2,...] [-z] [-v] [-q] [-T]
                    script [folder [folder ...]]
 
 Submit tasks from Python script or several scripts matching pattern.
@@ -300,6 +300,10 @@ optional arguments:
                         tasks will be submitted.
   -p, --pattern         Use submit scripts matching "script" pattern in all
                         subfolders.
+  -a key1=val1,key2=val2,..., --arguments key1=val1,key2=val2,...
+                        Pass arguments to create_tasks() function. Example:
+                        "-a name=hello,n=5" will call
+                        create_tasks(name='hello', n=5).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
