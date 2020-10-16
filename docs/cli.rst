@@ -271,7 +271,7 @@ Workflow: Submit tasks from Python script or several scripts matching pattern
 -----------------------------------------------------------------------------
 
 usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
-                   [-a key1=val1,key2=val2,...] [-z] [-v] [-q] [-T]
+                   [-a ARGUMENTS] [-z] [-v] [-q] [-T]
                    script [folder [folder ...]]
 
 Submit tasks from Python script or several scripts matching pattern.
