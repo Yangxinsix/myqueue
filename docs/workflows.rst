@@ -160,8 +160,8 @@ Turns out, there were two prime numbers::
     8069/PRIME
 
 
-Handling very many tasks
-------------------------
+Handling many tasks
+-------------------
 
 In the case where you have a workflow script with many tasks combined with
 many folders, it can happen that ``mq workflow ... */`` will try to submit

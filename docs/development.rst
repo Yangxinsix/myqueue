@@ -8,7 +8,7 @@ Code, merge requests and issues can be found here:
 
     https://gitlab.com/myqueue/myqueue/
 
-Contributions and suggestions for improvements are very welcome.
+Contributions and suggestions for improvements are welcome.
 
 
 Getting help
