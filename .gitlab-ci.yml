@@ -7,4 +7,4 @@ tests:
     - coverage report -i --fail-under=79
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 35.0 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 35.2 myqueue -e myqueue/test

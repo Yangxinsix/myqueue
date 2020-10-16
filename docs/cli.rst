@@ -300,7 +300,7 @@ optional arguments:
                         tasks will be submitted.
   -p, --pattern         Use submit scripts matching "script" pattern in all
                         subfolders.
-  -a key1=val1,key2=val2,..., --arguments key1=val1,key2=val2,...
+  -a ARGUMENTS, --arguments ARGUMENTS
                         Pass arguments to create_tasks() function. Example:
                         "-a name=hello,n=5" will call
                         create_tasks(name='hello', n=5).

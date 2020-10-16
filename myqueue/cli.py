@@ -235,7 +235,7 @@ def _main(arguments: List[str] = None) -> int:
               nargs='*', default=['.'],
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
-            a('-a', '--arguments', metavar='key1=val1,key2=val2,...',
+            a('-a', '--arguments',
               help='Pass arguments to create_tasks() function.  Example: '
               '"-a name=hello,n=5" will call '
               "create_tasks(name='hello', n=5).")
