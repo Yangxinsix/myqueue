@@ -303,7 +303,7 @@ optional arguments:
   -a key1=val1,key2=val2,..., --arguments key1=val1,key2=val2,...
                         Pass arguments to create_tasks() function. Example:
                         "-a name=hello,n=5" will call
-                        create4_tasks(name='hello', n=5).
+                        create_tasks(name='hello', n=5).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
