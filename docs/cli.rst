@@ -27,7 +27,7 @@ Sub-commands
     * - :ref:`info <info>`
       - Show detailed information about task
     * - :ref:`workflow <workflow>`
-      - Submit tasks from Python script
+      - Submit tasks from Python script or several scripts matching pattern
     * - :ref:`run <run>`
       - Run task(s) on local computer
     * - :ref:`kick <kick>`
@@ -88,7 +88,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -184,7 +184,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -224,7 +224,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -267,16 +267,16 @@ optional arguments:
 
 .. _workflow:
 
-Workflow: Submit tasks from Python script
------------------------------------------
+Workflow: Submit tasks from Python script or several scripts matching pattern
+-----------------------------------------------------------------------------
 
 usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p] [-z]
                    [-v] [-q] [-T]
                    script [folder [folder ...]]
 
-Submit tasks from Python script.
+Submit tasks from Python script or several scripts matching pattern.
 
-The script must define a create_tasks() function as shown here::
+The script(s) must define a create_tasks() function as shown here::
 
     $ cat flow.py
     from myqueue.task import task
@@ -385,7 +385,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).

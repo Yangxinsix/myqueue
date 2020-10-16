@@ -12,6 +12,15 @@ class MQError(Exception):
     """For nice (expected) CLI errors."""
 
 
+def error(*args):
+    """Write error message to stderr in red."""
+    if sys.stderr.isatty():
+        print('\033[91m', end='', file=sys.stderr)
+        print(*args, '\033[0m', file=sys.stderr)
+    else:
+        print(*args, file=sys.stderr)
+
+
 main_description = """\
 Frontend for SLURM/LSF/PBS.
 
@@ -59,8 +68,9 @@ Example:
     $ mq info 12345
 """),
     ('workflow',
-     'Submit tasks from Python script.', """
-The script must define a create_tasks() function as shown here:
+     'Submit tasks from Python script or several scripts matching pattern.',
+     """
+The script(s) must define a create_tasks() function as shown here:
 
     $ cat flow.py
     from myqueue.task import task
@@ -229,8 +239,8 @@ def _main(arguments: List[str] = None) -> int:
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTMaA',
               help='Selection of states. First letters of "queued", "hold", '
-              '"running", "done", "FAILED", "CANCELED", "TIMEOUT" '
-              '"all" and "ALL".')
+              '"running", "done", "FAILED", "CANCELED", "TIMEOUT", '
+              '"MEMORY", "all" and "ALL".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
               '(one ID per line; extra stuff after the ID will be ignored).')
@@ -338,20 +348,18 @@ def _main(arguments: List[str] = None) -> int:
     except TimeoutError as x:
         lockfile = x.args[0]
         age = time() - lockfile.stat().st_mtime
-        print(f'Locked {age:.0f} seconds ago:', lockfile)
+        error(f'Locked {age:.0f} seconds ago:', lockfile)
         if age > 60:
-            print('Try removing the file and report this to the developers!')
+            error('Try removing the file and report this to the developers!')
     except MQError as x:
-        print(*x.args)
+        error(*x.args)
         return 1
     except Exception as x:
         if args.traceback:
             raise
         else:
-            print(f'{x.__class__.__name__}: {x}',
-                  file=sys.stderr)
-            print(f'To get a full traceback, use: mq {args.command} ... -T',
-                  file=sys.stderr)
+            error(f'{x.__class__.__name__}: {x}',
+                  f'To get a full traceback, use: mq {args.command} ... -T')
             return 1
     return 0
 
@@ -571,6 +579,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
 
 def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+    r"""Convert string to regex pattern.
+
+    Examples:
+
+    >>> regex('*-abc.py')
+    re.compile('.*\\-abc\\.py')
+    >>> regex(None) is None
+    True
+    """
     if pattern:
         return re.compile(re.escape(pattern)
                           .replace('\\*', '.*')

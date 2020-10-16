@@ -707,5 +707,5 @@ def pprint(tasks: List[Task],
 
     if verbosity:
         count['total'] = len(tasks)
-        print(', '.join(f'{state}: {n}'
+        print(', '.join(f'{colored(state) if use_color else state}: {n}'
                         for state, n in count.items()))

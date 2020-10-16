@@ -12,6 +12,19 @@ Next release
 * ...
 
 
+Version 20.9.1
+==============
+
+* Fix workflow+openmpi issue.
+
+
+Version 20.9.0
+==============
+
+* Red error messages.
+* Progress-bar.
+
+
 Version 20.5.0
 ==============
 

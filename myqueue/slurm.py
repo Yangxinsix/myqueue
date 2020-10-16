@@ -109,10 +109,12 @@ class SLURM(Scheduler):
             print(script)
             return
 
+        # Use a clean set of environment variables without any MPI stuff:
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE,
+                             env=os.environ)
         out, err = p.communicate(script.encode())
 
         if p.returncode != 0:
