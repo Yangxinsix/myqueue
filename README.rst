@@ -123,7 +123,7 @@ Help, support and feedback
 ==========================
 
 If you need help, want to report a bug or suggest a new feature then you are
-very welcome to get in touch via MyQueue's `issue tracker`_
+welcome to get in touch via MyQueue's `issue tracker`_
 or the *#myqueue* stream on Zulip_.
 
 .. _issue tracker: https://gitlab.com/myqueue/myqueue/issues/

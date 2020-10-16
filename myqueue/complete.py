@@ -9,14 +9,7 @@ Put this in your .bashrc::
 
 import os
 import sys
-from glob import glob
-from typing import List, Dict, Any, Iterable
-
-
-def match(word: str, *suffixes: str) -> List[str]:
-    """Match files: "word*suffix"."""
-    return [w for w in glob(word + '*')
-            if any(w.endswith(suffix) for suffix in suffixes)]
+from typing import Dict, Any, Iterable
 
 
 def read() -> Dict[str, Any]:
@@ -87,18 +80,21 @@ commands = {
          '--traceback']}
 # End of computer generated data
 
+aliases = {'rm': 'remove',
+           'ls': 'list'}
+
 
 def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     for w in line[:point - len(word)].strip().split()[1:]:
         if w[0].isalpha():
-            if w in commands:
-                command = w
+            if w in commands or w in aliases:
+                command = aliases.get(w, w)
                 break
     else:
         opts = ['-h', '--help', '-V', '--version']
         if word[:1] == '-':
             return opts
-        return list(commands.keys()) + opts
+        return list(commands) + list(aliases) + opts
 
     if word[:1] == '-':
         return commands[command]
@@ -124,10 +120,11 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     return []
 
 
-word, previous = sys.argv[2:]
-line = os.environ['COMP_LINE']
-point = int(os.environ['COMP_POINT'])
-words = complete(word, previous, line, point)
-for w in words:
-    if w.startswith(word):
-        print(w)
+if __name__ == '__main__':
+    word, previous = sys.argv[2:]
+    line = os.environ['COMP_LINE']
+    point = int(os.environ['COMP_POINT'])
+    words = complete(word, previous, line, point)
+    for w in words:
+        if w.startswith(word):
+            print(w)

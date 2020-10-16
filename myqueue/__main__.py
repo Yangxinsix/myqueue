@@ -1,3 +1,4 @@
 """Entry point for command line tool."""
-from myqueue.cli import main
-main()
+if __name__ == '__main__':
+    from myqueue.cli import main
+    main()
