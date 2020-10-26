@@ -642,8 +642,9 @@ def pprint(tasks: List[Task],
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
-    titles = ['id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error']
-    c2i = {title[0]: i for i, title in enumerate(titles)}
+    titles = ['id', 'folder', 'name', 'args',
+              'res.', 'age', 'state', 'time', 'error']
+    c2i = {c: i for i, c in enumerate('ifnxraste')}
     indices = [c2i[c] for c in columns]
 
     if verbosity:
@@ -663,7 +664,7 @@ def pprint(tasks: List[Task],
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
-        _, folder, _, _, _, state, _, _ = words
+        _, folder, _, _, _, _, state, _, _ = words
         count[state] += 1
         if folder.startswith(cwd):
             words[1] = './' + folder[len(cwd):]

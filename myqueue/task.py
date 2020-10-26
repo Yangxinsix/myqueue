@@ -99,18 +99,27 @@ class Task:
         age = t - self.tqueued
         dt = self.running_time(t)
 
+        things = []
+        if self.restart:
+            things.append(f'x{self.restart}')
         if self.deps:
-            deps = f'({len(self.deps)})'
-        else:
-            deps = ''
+            things.append(f'd{len(self.deps)}')
+        if self.cmd.args:
+            things.append(f'a{len(self.cmd.args)}')
+        if self.diskspace:
+            things.append('D')
+        if self.workflow:
+            things.append('W')
+
+        name = self.cmd.short_name
+        if things:
+            name += '(' + ','.join(things) + ')'
 
         return [str(self.id),
                 str(self.folder) + '/',
-                self.cmd.name,
-                str(self.resources) + deps +
-                ('*' if self.workflow else '') +
-                (f'R{self.restart}' if self.restart else '') +
-                ('D' if self.diskspace else ''),
+                name,
+                ' '.join(self.cmd.args),
+                str(self.resources),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -132,6 +141,8 @@ class Task:
             return self.folder
         if column == 'n':
             return self.name
+        if column == 'x':
+            return len(self.cmd.args)
         if column == 'r':
             return self.resources.cores * self.resources.tmax
         if column == 'a':
@@ -143,7 +154,7 @@ class Task:
         if column == 'e':
             return self.error
         raise ValueError(f'Unknown column: {column}!  '
-                         'Mus be one of i, f, n, r, a, s, t or e')
+                         'Must be one of i, f, n, r, x, a, s, t or e')
 
     def todict(self, root: Path = None) -> Dict[str, Any]:
         folder = self.folder

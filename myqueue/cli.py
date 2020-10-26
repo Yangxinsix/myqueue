@@ -36,6 +36,7 @@ More help can be found here: https://myqueue.readthedocs.io/.
     ('list',
      'List tasks in queue.', """
 Only tasks in the chosen folder and its subfolders are shown.
+Columns are (i) id, () ...
 
 Examples:
 
@@ -256,11 +257,12 @@ def _main(arguments: List[str] = None) -> int:
               '(* and ? can be used).')
 
         if cmd == 'list':
-            a('-c', '--columns', metavar='ifnraste', default='ifnraste',
+            a('-c', '--columns', metavar='ifnxraste', default='ifnraste',
               help='Select columns to show.')
             a('-S', '--sort', metavar='c',
               help='Sort rows using column c, where c must be one of '
-              'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
+              'i, f, n, x, r, a, s, t or e.  '
+              'Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
             a('-L', '--use-log-file', action='store_true',

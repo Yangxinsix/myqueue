@@ -2,17 +2,17 @@
 A quick start
 =============
 
-.. This file contains computer generated output.  Do not touch!
+.. This file contains computer generated output.  Do not touch.
 
 .. highlight:: bash
 
 .. mq: cd /tmp; rm -r .myqueue proj1 proj2
 
-Let's create a simple "Hello world!" Python script::
+Let's create a simple "Hello world" Python script::
 
     $ mkdir proj1
     $ cd proj1
-    $ echo 'print("Hello world!")' > hello.py
+    $ echo 'print("Hello world")' > hello.py
 
 and :ref:`submit <submit>` it::
 
@@ -38,7 +38,7 @@ There is now an output file and an empty error file in the folder::
     -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 hello.py.1.err
     -rw-rw-r-- 1 jensj jensj 13 maj 28 12:28 hello.py.1.out
     $ cat hello.py.1.out
-    Hello world!
+    Hello world
 
 Now we run some calculations in another folder::
 
