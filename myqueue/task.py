@@ -172,12 +172,13 @@ class Task:
               write_header: bool = False) -> None:
         if write_header:
             print('# id,folder,cmd,resources,state,restart,workflow,'
-                  'diskspace,deps,creates,tqueued,trunning,tstop,error',
+                  'diskspace,deps,creates,tqueued,trunning,tstop,error,momory',
                   file=fd)
         t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
                       for t in [self.tqueued, self.trunning, self.tstop])
         deps = ','.join(str(dep) for dep in self.deps)
         creates = ','.join(self.creates)
+        error = self.error.replace('"', '""')
         print(f'{self.id},'
               f'"{self.folder}",'
               f'"{self.cmd.name}",'
@@ -189,7 +190,7 @@ class Task:
               f'"{deps}",'
               f'"{creates}",'
               f'{t1},{t2},{t3},'
-              f'"{self.error}",'
+              f'"{error}",'
               f'{self.memory_usage}',
               file=fd)
 
@@ -197,7 +198,10 @@ class Task:
     def fromcsv(row: List[str]) -> 'Task':
         (id, folder, name, resources, state, restart, workflow, diskspace,
          deps, creates, t1, t2, t3, error) = row[:14]
-        memory_usage = 0 if len(row) == 14 else int(row[14])
+        try:
+            memory_usage = 0 if len(row) == 14 else int(row[14])
+        except ValueError:  # read old corrupted log.csv files
+            memory_usage = 0
         return Task(command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
