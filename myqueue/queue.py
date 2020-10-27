@@ -226,7 +226,7 @@ class Queue(Lock):
             task.tqueued = t
 
         if self.dry_run and self.verbosity < 2:
-            pprint(todo, 0, 'fnr')
+            pprint(todo, 0, 'fnaIr')
             print(plural(len(todo), 'task'), 'to submit')
         else:
             activation_scripts = find_activation_scripts([task.folder
@@ -260,7 +260,7 @@ class Queue(Lock):
                                 self.tasks.remove(oldtask)
                         next(pb)
 
-            pprint(submitted, 0, 'ifnr',
+            pprint(submitted, 0, 'ifnaIr',
                    maxlines=10 if self.verbosity < 2 else 99999999999999)
             if submitted:
                 if self.dry_run:
@@ -626,7 +626,7 @@ def colored(state: str) -> str:
 
 def pprint(tasks: List[Task],
            verbosity: int = 1,
-           columns: str = 'ifnraste',
+           columns: str = 'ifnaIrAste',
            short: bool = False,
            maxlines: int = 9999999999) -> None:
     """Pretty-print tasks.

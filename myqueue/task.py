@@ -149,7 +149,7 @@ class Task:
         if column == 'e':
             return self.error
         raise ValueError(f'Unknown column: {column}!  '
-                         'Must be one of i, f, n, A, r, a, s, t or e')
+                         'Must be one of i, f, n, a, I, r, A, s, t or e')
 
     def todict(self, root: Path = None) -> Dict[str, Any]:
         folder = self.folder
@@ -458,6 +458,15 @@ def task(cmd: str,
 
 
 def seconds_to_time_string(n: float) -> str:
+    """Convert number of seconds to string.
+
+    >>> seconds_to_time_string(10)
+    '0:10'
+    >>> seconds_to_time_string(3601)
+    '1:00:01'
+    >>> seconds_to_time_string(3601)
+    '1:11:11:11'
+    """
     n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)

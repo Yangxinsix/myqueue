@@ -67,13 +67,20 @@ optional arguments:
 List (ls): List tasks in queue
 ------------------------------
 
-usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
-               [-S c] [-C] [-L] [--not-recursive] [-v] [-q] [-T] [-A]
+usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
+               [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
+               [-T] [-A]
                [folder]
 
 List tasks in queue.
 
 Only tasks in the chosen folder and its subfolders are shown.
+
+Columns::
+
+    i: id
+    f: folder
+    n: name
 
 Examples::
 
@@ -97,10 +104,12 @@ optional arguments:
   -e ERROR, --error ERROR
                         Select only tasks with error message matching "ERROR"
                         (* and ? can be used).
-  -c ifnraste, --columns ifnraste
-                        Select columns to show.
+  -c ifnaIrAste, --columns ifnaIrAste
+                        Select columns to show. Use "-c a-" to remove the "a"
+                        column.
   -S c, --sort c        Sort rows using column c, where c must be one of i, f,
-                        n, r, a, s, t or e. Use "-S c-" for a descending sort.
+                        n, a, r, A, s, t or e. Use "-S c-" for a descending
+                        sort.
   -C, --count           Just show the number of tasks.
   -L, --use-log-file    List tasks from logfile (~/.myqueue/log.csv).
   --not-recursive       Do not list subfolders.
