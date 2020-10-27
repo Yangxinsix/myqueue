@@ -642,9 +642,9 @@ def pprint(tasks: List[Task],
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
-    titles = ['id', 'folder', 'name', 'args',
+    titles = ['id', 'folder', 'name', 'args', 'info',
               'res.', 'age', 'state', 'time', 'error']
-    c2i = {c: i for i, c in enumerate('ifnxraste')}
+    c2i = {c: i for i, c in enumerate('ifnAxraste')}
     indices = [c2i[c] for c in columns]
 
     if verbosity:
@@ -657,14 +657,15 @@ def pprint(tasks: List[Task],
     if len(tasks) > maxlines:
         cut1 = maxlines // 2
         cut2 = maxlines - cut1 - 2
+        skipped = len(tasks) - cut1 - cut2
         tasks = tasks[:cut1] + tasks[-cut2:]
     else:
-        cut1 = -1
+        skipped = 0
 
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
-        _, folder, _, _, _, _, state, _, _ = words
+        _, folder, _, _, _, _, _, state, _, _ = words
         count[state] += 1
         if folder.startswith(cwd):
             words[1] = './' + folder[len(cwd):]
@@ -674,8 +675,10 @@ def pprint(tasks: List[Task],
         lines.append(words)
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
-    if cut1 != -1:
-        lines[cut1:cut1] = [['...'], ['...']]
+    # remove empty columns ...
+
+    if skipped:
+        lines[cut1:cut1] = [[f'... ({skipped} tasks not shown)']]
 
     try:
         N = os.get_terminal_size().columns

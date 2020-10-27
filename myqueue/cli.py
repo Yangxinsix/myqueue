@@ -257,7 +257,7 @@ def _main(arguments: List[str] = None) -> int:
               '(* and ? can be used).')
 
         if cmd == 'list':
-            a('-c', '--columns', metavar='ifnxraste', default='ifnraste',
+            a('-c', '--columns', metavar='ifnxraste', default='ifnxraste',
               help='Select columns to show.')
             a('-S', '--sort', metavar='c',
               help='Sort rows using column c, where c must be one of '
