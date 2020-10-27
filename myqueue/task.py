@@ -464,8 +464,8 @@ def seconds_to_time_string(n: float) -> str:
     '0:10'
     >>> seconds_to_time_string(3601)
     '1:00:01'
-    >>> seconds_to_time_string(3601)
-    '1:11:11:11'
+    >>> seconds_to_time_string(24 * 3600)
+    '1:00:00:00'
     """
     n = int(n)
     d, n = divmod(n, 24 * 3600)

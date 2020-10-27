@@ -23,20 +23,20 @@ and :ref:`submit <submit>` it::
 The :ref:`list <list>` command shows that the job is done::
 
     $ mq ls
-    id folder name     res.   age state time error
-    -- ------ -------- ----- ---- ----- ---- -----
+    id folder name     res.   age state time
+    -- ------ -------- ----- ---- ----- ----
     1  ./     hello.py 1:10m 0:00 done  0:00
-    -- ------ -------- ----- ---- ----- ---- -----
+    -- ------ -------- ----- ---- ----- ----
     done: 1, total: 1
 
 The ``1:10m`` means that 1 core and 10 minutes was reserved for the task.
 There is now an output file and an empty error file in the folder::
 
     $ ls -l
-    totalt 8
-    -rw-rw-r-- 1 jensj jensj 22 maj 28 12:28 hello.py
-    -rw-rw-r-- 1 jensj jensj  0 maj 28 12:28 hello.py.1.err
-    -rw-rw-r-- 1 jensj jensj 13 maj 28 12:28 hello.py.1.out
+    total 8
+    -rw-rw-r-- 1 jensj jensj 21 Oct 27 15:26 hello.py
+    -rw-rw-r-- 1 jensj jensj  0 Oct 27 15:26 hello.py.1.err
+    -rw-rw-r-- 1 jensj jensj 12 Oct 27 15:26 hello.py.1.out
     $ cat hello.py.1.out
     Hello world
 
@@ -46,7 +46,7 @@ Now we run some calculations in another folder::
     $ mkdir proj2
     $ cd proj2
     $ mq submit -R 1:10s "math@sin 3.14"
-    2 ./ math@sin+3.14 1:10s
+    2 ./ math@sin 3.14 +1 1:10s
     1 task submitted
 
 This will call the :func:`~math.sin` function from the Python :mod:`math`
@@ -54,47 +54,47 @@ module with an argument of ``3.14`` and we ask for 10 seconds on 1 core.
 Let's also submit a task that will fail::
 
     $ mq submit "math@sin hello"
-    3 ./ math@sin+hello 1:10m
+    3 ./ math@sin hello +1 1:10m
     1 task submitted
 
 The :ref:`list <list>` command shows the status of the two tasks in the
 current folder::
 
     $ mq ls
-    id folder name           res.   age state  time error
-    -- ------ -------------- ----- ---- ------ ---- ---------------------------------------
-    2  ./     math@sin+3.14  1:10s 0:00 done   0:00
-    3  ./     math@sin+hello 1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
-    -- ------ -------------- ----- ---- ------ ---- ---------------------------------------
+    id folder name     args  info res.   age state  time error
+    -- ------ -------- ----- ---- ----- ---- ------ ---- ---------------------------------------
+    2  ./     math@sin 3.14  +1   1:10s 0:00 done   0:00
+    3  ./     math@sin hello +1   1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
+    -- ------ -------- ----- ---- ----- ---- ------ ---- ---------------------------------------
     done: 1, FAILED: 1, total: 2
 
 To see the status of both the ``proj1`` and ``proj2`` folders, do this::
 
     $ cd ..
     $ mq ls
-    id folder   name           res.   age state  time error
-    -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
-    1  ./proj1/ hello.py       1:10m 0:00 done   0:00
-    2  ./proj2/ math@sin+3.14  1:10s 0:00 done   0:00
-    3  ./proj2/ math@sin+hello 1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
-    -- -------- -------------- ----- ---- ------ ---- ---------------------------------------
+    id folder   name     args  info res.   age state  time error
+    -- -------- -------- ----- ---- ----- ---- ------ ---- ---------------------------------------
+    1  ./proj1/ hello.py            1:10m 0:00 done   0:00
+    2  ./proj2/ math@sin 3.14  +1   1:10s 0:00 done   0:00
+    3  ./proj2/ math@sin hello +1   1:10m 0:00 FAILED 0:00 TypeError: must be real number, not str
+    -- -------- -------- ----- ---- ----- ---- ------ ---- ---------------------------------------
     done: 2, FAILED: 1, total: 3
 
 See status of the ``proj1`` folder only::
 
     $ mq ls proj1
-    id folder   name     res.   age state time error
-    -- -------- -------- ----- ---- ----- ---- -----
+    id folder   name     res.   age state time
+    -- -------- -------- ----- ---- ----- ----
     1  ./proj1/ hello.py 1:10m 0:00 done  0:00
-    -- -------- -------- ----- ---- ----- ---- -----
+    -- -------- -------- ----- ---- ----- ----
     done: 1, total: 1
 
 Once you have seen that your tasks have finished, you will typically remove
 them so that only queued and failed tasks are left::
 
     $ mq rm -s d proj*
-    1 ./proj1/ hello.py      1:10m 0:00 done 0:00
-    2 ./proj2/ math@sin+3.14 1:10s 0:00 done 0:00
+    1 ./proj1/ hello.py         1:10m 0:00 done 0:00
+    2 ./proj2/ math@sin 3.14 +1 1:10s 0:00 done 0:00
     2 tasks removed
 
 .. tip::
