@@ -80,7 +80,14 @@ Columns::
 
     i: id
     f: folder
-    n: name
+    n: name of task
+    a: arguments
+    I: info: "+<nargs>,*<repeats>,d<ndeps>"
+    r: resources
+    A: age
+    s: state
+    t: time
+    e: error message
 
 Examples::
 
