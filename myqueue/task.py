@@ -99,18 +99,22 @@ class Task:
         age = t - self.tqueued
         dt = self.running_time(t)
 
+        info = []
+        if self.restart:
+            info.append(f'*{self.restart}')
         if self.deps:
-            deps = f'({len(self.deps)})'
-        else:
-            deps = ''
+            info.append(f'd{len(self.deps)}')
+        if self.cmd.args:
+            info.append(f'+{len(self.cmd.args)}')
+        if self.diskspace:
+            info.append('D')
 
         return [str(self.id),
                 str(self.folder) + '/',
-                self.cmd.name,
-                str(self.resources) + deps +
-                ('*' if self.workflow else '') +
-                (f'R{self.restart}' if self.restart else '') +
-                ('D' if self.diskspace else ''),
+                self.cmd.short_name,
+                ' '.join(self.cmd.args),
+                ','.join(info),
+                str(self.resources),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -132,6 +136,8 @@ class Task:
             return self.folder
         if column == 'n':
             return self.name
+        if column == 'A':
+            return len(self.cmd.args)
         if column == 'r':
             return self.resources.cores * self.resources.tmax
         if column == 'a':
@@ -143,7 +149,7 @@ class Task:
         if column == 'e':
             return self.error
         raise ValueError(f'Unknown column: {column}!  '
-                         'Mus be one of i, f, n, r, a, s, t or e')
+                         'Must be one of i, f, n, a, I, r, A, s, t or e')
 
     def todict(self, root: Path = None) -> Dict[str, Any]:
         folder = self.folder
@@ -452,6 +458,15 @@ def task(cmd: str,
 
 
 def seconds_to_time_string(n: float) -> str:
+    """Convert number of seconds to string.
+
+    >>> seconds_to_time_string(10)
+    '0:10'
+    >>> seconds_to_time_string(3601)
+    '1:00:01'
+    >>> seconds_to_time_string(24 * 3600)
+    '1:00:00:00'
+    """
     n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)

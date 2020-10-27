@@ -226,7 +226,7 @@ class Queue(Lock):
             task.tqueued = t
 
         if self.dry_run and self.verbosity < 2:
-            pprint(todo, 0, 'fnr')
+            pprint(todo, 0, 'fnaIr')
             print(plural(len(todo), 'task'), 'to submit')
         else:
             activation_scripts = find_activation_scripts([task.folder
@@ -260,7 +260,7 @@ class Queue(Lock):
                                 self.tasks.remove(oldtask)
                         next(pb)
 
-            pprint(submitted, 0, 'ifnr',
+            pprint(submitted, 0, 'ifnaIr',
                    maxlines=10 if self.verbosity < 2 else 99999999999999)
             if submitted:
                 if self.dry_run:
@@ -626,7 +626,7 @@ def colored(state: str) -> str:
 
 def pprint(tasks: List[Task],
            verbosity: int = 1,
-           columns: str = 'ifnraste',
+           columns: str = 'ifnaIrAste',
            short: bool = False,
            maxlines: int = 9999999999) -> None:
     """Pretty-print tasks.
@@ -642,28 +642,29 @@ def pprint(tasks: List[Task],
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
-    titles = ['id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error']
-    c2i = {title[0]: i for i, title in enumerate(titles)}
-    indices = [c2i[c] for c in columns]
+    if columns.endswith('-'):
+        columns = ''.join(c for c in 'ifnaIrAste' if c not in columns[:-1])
 
-    if verbosity:
-        lines = [[titles[i] for i in indices]]
-        lengths = [len(t) for t in lines[0]]
-    else:
-        lines = []
-        lengths = [0] * len(columns)
+    titles = ['id', 'folder', 'name', 'args', 'info',
+              'res.', 'age', 'state', 'time', 'error']
+    c2i = {c: i for i, c in enumerate('ifnaIrAste')}
+    indices = [c2i[c] for c in columns]
 
     if len(tasks) > maxlines:
         cut1 = maxlines // 2
         cut2 = maxlines - cut1 - 2
+        skipped = len(tasks) - cut1 - cut2
         tasks = tasks[:cut1] + tasks[-cut2:]
     else:
-        cut1 = -1
+        skipped = 0
+
+    lines = []
+    lengths = [0] * len(columns)
 
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
-        _, folder, _, _, _, state, _, _ = words
+        _, folder, _, _, _, _, _, state, _, _ = words
         count[state] += 1
         if folder.startswith(cwd):
             words[1] = './' + folder[len(cwd):]
@@ -673,8 +674,19 @@ def pprint(tasks: List[Task],
         lines.append(words)
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
-    if cut1 != -1:
-        lines[cut1:cut1] = [['...'], ['...']]
+    # remove empty columns ...
+    lines = [[word for word, length in zip(words, lengths) if length]
+             for words in lines]
+    columns = ''.join(c for c, length in zip(columns, lengths) if length)
+    lengths = [length for length in lengths if length]
+
+    if skipped:
+        lines[cut1:cut1] = [[f'... ({skipped} tasks not shown)']]
+
+    if verbosity:
+        lines[:0] = [[titles[c2i[c]] for c in columns]]
+        lengths = [max(length, len(title))
+                   for length, title in zip(lengths, lines[0])]
 
     try:
         N = os.get_terminal_size().columns
@@ -696,7 +708,7 @@ def pprint(tasks: List[Task],
             for word, c, L in zip(words, columns, lengths):
                 if c == 'e':
                     word = word[:cut]
-                elif c in 'at':
+                elif c in 'At':
                     word = word.rjust(L)
                 else:
                     word = word.ljust(L)

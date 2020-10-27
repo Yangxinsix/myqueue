@@ -37,6 +37,19 @@ More help can be found here: https://myqueue.readthedocs.io/.
      'List tasks in queue.', """
 Only tasks in the chosen folder and its subfolders are shown.
 
+Columns:
+
+    i: id
+    f: folder
+    n: name of task
+    a: arguments
+    I: info: "+<nargs>,*<repeats>,d<ndeps>"
+    r: resources
+    A: age
+    s: state
+    t: time
+    e: error message
+
 Examples:
 
     $ mq list -s rq  # show running and queued jobs
@@ -256,11 +269,13 @@ def _main(arguments: List[str] = None) -> int:
               '(* and ? can be used).')
 
         if cmd == 'list':
-            a('-c', '--columns', metavar='ifnraste', default='ifnraste',
-              help='Select columns to show.')
+            a('-c', '--columns', metavar='ifnaIrAste', default='ifnaIrAste',
+              help='Select columns to show.  Use "-c a-" to remove the '
+              '"a" column.')
             a('-S', '--sort', metavar='c',
               help='Sort rows using column c, where c must be one of '
-              'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
+              'i, f, n, a, r, A, s, t or e.  '
+              'Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
             a('-L', '--use-log-file', action='store_true',
