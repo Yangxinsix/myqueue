@@ -642,17 +642,13 @@ def pprint(tasks: List[Task],
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
+    if columns.endswith('-'):
+        columns = ''.join(c for c in 'ifnaIrAste' if c not in columns[:-1])
+
     titles = ['id', 'folder', 'name', 'args', 'info',
               'res.', 'age', 'state', 'time', 'error']
-    c2i = {c: i for i, c in enumerate('ifnAxraste')}
+    c2i = {c: i for i, c in enumerate('ifnaIrAste')}
     indices = [c2i[c] for c in columns]
-
-    if verbosity:
-        lines = [[titles[i] for i in indices]]
-        lengths = [len(t) for t in lines[0]]
-    else:
-        lines = []
-        lengths = [0] * len(columns)
 
     if len(tasks) > maxlines:
         cut1 = maxlines // 2
@@ -661,6 +657,9 @@ def pprint(tasks: List[Task],
         tasks = tasks[:cut1] + tasks[-cut2:]
     else:
         skipped = 0
+
+    lines = []
+    lengths = [0] * len(columns)
 
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
@@ -676,9 +675,18 @@ def pprint(tasks: List[Task],
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
     # remove empty columns ...
+    lines = [[word for word, length in zip(words, lengths) if length]
+             for words in lines]
+    columns = ''.join(c for c, length in zip(columns, lengths) if length)
+    lengths = [length for length in lengths if length]
 
     if skipped:
         lines[cut1:cut1] = [[f'... ({skipped} tasks not shown)']]
+
+    if verbosity:
+        lines[:0] = [[titles[c2i[c]] for c in columns]]
+        lengths = [max(length, len(title))
+                   for length, title in zip(lengths, lines[0])]
 
     try:
         N = os.get_terminal_size().columns
@@ -700,7 +708,7 @@ def pprint(tasks: List[Task],
             for word, c, L in zip(words, columns, lengths):
                 if c == 'e':
                     word = word[:cut]
-                elif c in 'at':
+                elif c in 'At':
                     word = word.rjust(L)
                 else:
                     word = word.ljust(L)
