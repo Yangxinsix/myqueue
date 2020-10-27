@@ -11,6 +11,8 @@ Next release
 
 * New ``mq workflow ... --arguments "key=val,..."`` option.  See
   :ref:`workflow`.
+* Two new columns in :ref:`list output <list>`: *arguments* and *info*.
+  Can be hidden with: ``mq ls -c aI-``.
 
 
 Version 20.9.1
