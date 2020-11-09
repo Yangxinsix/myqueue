@@ -13,6 +13,7 @@ Next release
   :ref:`workflow`.
 * Two new columns in :ref:`list output <list>`: *arguments* and *info*.
   Can be hidden with: ``mq ls -c aI-``.
+* Deprecated ``venv/activate`` script.  Use ``venv/bin/activate`` instead.
 
 
 Version 20.9.1
