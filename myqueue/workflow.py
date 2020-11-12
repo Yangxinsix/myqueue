@@ -11,7 +11,7 @@ DEFAULT_VERBOSITY = 1
 
 
 def workflow_from_function(
-        workflow_function: str,
+        workflow_function: Callable[..., List[Task]],
         folders: List[Path],
         verbosity: int = DEFAULT_VERBOSITY,
 ):
