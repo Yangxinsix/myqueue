@@ -7,50 +7,98 @@ from .task import Task
 from .utils import chdir, plural
 
 
-def workflow(args, folders: List[Path], verbosity: int = 1) -> List[Task]:
-    """Collect tasks from workflow script(s) and folders."""
+DEFAULT_VERBOSITY = 1
+
+
+def workflow_from_py_script(
+        script: str,
+        folders: List[str],
+        arguments: Dict[str, Any] = {},
+        verbosity: int = DEFAULT_VERBOSITY,
+):
+    """Collect tasks from workflow defined in python script."""
     alltasks: List[Task] = []
+    create_tasks = compile_create_tasks_function(Path(script))
 
+    if arguments:
+        kwargs = str2kwargs(arguments)
+        old = create_tasks
+
+        def create_tasks():
+            return old(**kwargs)
+
+    n_folders = plural(len(folders), 'folder')
+    pb = progress_bar(len(folders),
+                      f'Scanning {n_folders}:',
+                      verbosity)
+    for folder in folders:
+        alltasks += get_tasks_from_folder(folder, create_tasks)
+        next(pb)
+
+    return alltasks
+
+
+def workflow_from_pattern(
+        script: str,
+        folders: List[str],
+        verbosity: int = DEFAULT_VERBOSITY,
+):
+    """Generate tasks from workflows defined by '**/*{script}'."""
+    alltasks: List[Task] = []
+    paths = [path
+             for folder in folders
+             for path in folder.glob('**/*' + script)]
+    pb = progress_bar(len(paths),
+                      f'Scanning {len(paths)} scripts:',
+                      verbosity)
+
+    for path in paths:
+        create_tasks = compile_create_tasks_function(path)
+        alltasks += get_tasks_from_folder(path.parent, create_tasks)
+        next(pb)
+    return alltasks
+
+
+def filter_tasks(tasks: List[Task], names: List[str]):
+    """Filter tasks that are not in names or in dependencies of names."""
+    include = set()
+    map = {task.dname: task for task in tasks}
+    for task in tasks:
+        if task.cmd.name in names:
+            for t in task.ideps(map):
+                include.add(task)
+    filteredtasks = list(include)
+    return filteredtasks
+
+
+def workflow(args,
+             folders: List[Path],
+             verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+    """Collect tasks from workflow script(s) and folders."""
     if args.pattern:
-        paths = [path
-                 for folder in folders
-                 for path in folder.glob('**/*' + args.script)]
-        pb = progress_bar(len(paths),
-                          f'Scanning {len(paths)} scripts:',
-                          verbosity)
-
-        for path in paths:
-            create_tasks = compile_create_tasks_function(path)
-            alltasks += get_tasks_from_folder(path.parent, create_tasks)
-            next(pb)
+        alltasks = workflow_from_pattern(
+            script=args.script,
+            folders=folders,
+            verbosity=verbosity,
+        )
     else:
         assert args.script.endswith('.py'), args.script
-        create_tasks = compile_create_tasks_function(Path(args.script))
 
         if args.arguments:
             kwargs = str2kwargs(args.arguments)
-            old = create_tasks
+        else:
+            kwargs = {}
 
-            def create_tasks():
-                return old(**kwargs)
-
-        n_folders = plural(len(folders), 'folder')
-        pb = progress_bar(len(folders),
-                          f'Scanning {n_folders}:',
-                          verbosity)
-        for folder in folders:
-            alltasks += get_tasks_from_folder(folder, create_tasks)
-            next(pb)
+        alltasks = workflow_from_py_script(
+            script=args.script,
+            folders=folders,
+            arguments=kwargs,
+            verbosity=verbosity,
+        )
 
     if args.targets:
         names = args.targets.split(',')
-        include = set()
-        map = {task.dname: task for task in alltasks}
-        for task in alltasks:
-            if task.cmd.name in names:
-                for t in task.ideps(map):
-                    include.add(task)
-        alltasks = list(include)
+        alltasks = filter_tasks(tasks=alltasks, names=names)
 
     return alltasks
 
