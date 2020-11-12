@@ -10,29 +10,20 @@ from .utils import chdir, plural
 DEFAULT_VERBOSITY = 1
 
 
-def workflow_from_py_script(
-        script: str,
-        folders: List[str],
-        arguments: Dict[str, Any] = {},
+def workflow_from_function(
+        workflow_function: str,
+        folders: List[Path],
         verbosity: int = DEFAULT_VERBOSITY,
 ):
     """Collect tasks from workflow defined in python script."""
     alltasks: List[Task] = []
-    create_tasks = compile_create_tasks_function(Path(script))
-
-    if arguments:
-        kwargs = str2kwargs(arguments)
-        old = create_tasks
-
-        def create_tasks():
-            return old(**kwargs)
 
     n_folders = plural(len(folders), 'folder')
     pb = progress_bar(len(folders),
                       f'Scanning {n_folders}:',
                       verbosity)
     for folder in folders:
-        alltasks += get_tasks_from_folder(folder, create_tasks)
+        alltasks += get_tasks_from_folder(folder, workflow_function)
         next(pb)
 
     return alltasks
@@ -40,7 +31,7 @@ def workflow_from_py_script(
 
 def workflow_from_pattern(
         script: str,
-        folders: List[str],
+        folders: List[Path],
         verbosity: int = DEFAULT_VERBOSITY,
 ):
     """Generate tasks from workflows defined by '**/*{script}'."""
@@ -83,16 +74,18 @@ def workflow(args,
         )
     else:
         assert args.script.endswith('.py'), args.script
+        create_tasks = compile_create_tasks_function(Path(args.script))
 
         if args.arguments:
             kwargs = str2kwargs(args.arguments)
-        else:
-            kwargs = {}
+            old = create_tasks
 
-        alltasks = workflow_from_py_script(
-            script=args.script,
+            def create_tasks():
+                return old(**kwargs)
+
+        alltasks = workflow_from_function(
+            workflow_function=create_tasks,
             folders=folders,
-            arguments=kwargs,
             verbosity=verbosity,
         )
 
