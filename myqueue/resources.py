@@ -45,7 +45,7 @@ class Resources:
         self.tmax = tmax or 600  # seconds
 
         if processes == 0:
-            self.processes = cores
+            self.processes = self.cores
         else:
             self.processes = processes
 
