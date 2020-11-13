@@ -5,8 +5,10 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 from pathlib import Path
+
+from .resources import Resources
 
 
 class Command:
@@ -30,11 +32,15 @@ class Command:
     def fname(self):
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
+    def read_resources(self) -> Optional[Resources]:
+        """Look for "# MQ: resources=..." comments in script."""
+        return None
 
-def command(cmd: str,
-            args: List[str] = [],
-            type: str = None,
-            name: str = '') -> Command:
+
+def create_command(cmd: str,
+                   args: List[str] = [],
+                   type: str = None,
+                   name: str = '') -> Command:
     """Create command object."""
     cmd, _, args2 = cmd.partition(' ')
     if args2:
@@ -106,6 +112,12 @@ class ShellScript(Command):
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
+    def read_resources(self) -> Optional[Resources]:
+        for line in Path(self.cmd).read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
+
 
 class PythonScript(Command):
     def __init__(self, script: str, args: List[str]):
@@ -124,6 +136,12 @@ class PythonScript(Command):
         return {**self.dct,
                 'type': 'python-script',
                 'cmd': self.script}
+
+    def read_resources(self) -> Optional[Resources]:
+        for line in Path(self.script).read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
 
 
 class PythonModule(Command):

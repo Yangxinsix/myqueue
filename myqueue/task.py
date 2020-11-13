@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
 
-from .commands import command, Command
+from .commands import create_command, Command
 from .resources import Resources, T
 
 if TYPE_CHECKING:
@@ -208,7 +208,7 @@ class Task:
             memory_usage = 0 if len(row) == 14 else int(row[14])
         except ValueError:  # read old corrupted log.csv files
             memory_usage = 0
-        return Task(command(name),
+        return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
                     bool(workflow),
@@ -248,7 +248,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        return Task(cmd=command(**dct.pop('cmd')),
+        return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=folder,
                     deps=deps,
@@ -360,12 +360,13 @@ class Task:
 def task(cmd: str,
          resources: str = '',
          args: List[str] = [],
+         *,
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
-         cores: int = 1,
+         cores: int = 0,
          nodename: str = '',
          processes: int = 0,
-         tmax: str = '10m',
+         tmax: str = '',
          folder: str = '',
          workflow: bool = False,
          restart: int = 0,
@@ -442,12 +443,22 @@ def task(cmd: str,
             cmd = c
             resources = r
 
-    if resources:
-        res = Resources.from_string(resources)
-    else:
-        res = Resources(cores, nodename, processes, T(tmax))
+    command = create_command(cmd, args, name=name)
 
-    return Task(command(cmd, args, name=name),
+    res: Optional[Resources] = None
+
+    if cores == 0 and nodename == '' and processes == 0 and tmax == '':
+        if resources:
+            res = Resources.from_string(resources)
+        else:
+            res = command.read_resources()
+    else:
+        assert resources == ''
+
+    if res is None:
+        res = Resources(cores, nodename, processes, T(tmax or '10m'))
+
+    return Task(command,
                 res,
                 dpaths,
                 workflow,

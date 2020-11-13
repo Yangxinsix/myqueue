@@ -70,12 +70,21 @@ def test_autoconfig(monkeypatch):
 
 
 def test_commands():
-    from ..commands import convert, command, ShellScript
+    from ..commands import convert, create_command, ShellScript
     assert convert('True') is True
     assert convert('False') is False
     assert convert('3.14') == 3.14
     assert convert('42') == 42
-    cmd = command('./script.sh 1 2')
+    cmd = create_command('./script.sh 1 2')
     assert isinstance(cmd, ShellScript)
     assert cmd.todict()['args'] == ['1', '2']
     print(cmd)
+
+
+def test_resource_comments(tmp_path):
+    from ..task import task
+    script = tmp_path / 'script.py'
+    script.write_text('# Script\n# MQ: resources=2:1h\n')
+    t = task(str(script))
+    assert t.resources.cores == 2
+    assert t.resources.tmax == 3600
