@@ -132,7 +132,8 @@ A resource specification has the form::
 * ``tmax``: maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
   hours and days respectively)
 
-Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands take
+Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands
+as well as the :func:`myqueue.task.task` function, take
 an optional *resources* argument (``-R`` or ``--resources``).
 Default resources are a modest one core and 10 minutes.
 
@@ -142,6 +143,16 @@ Examples:
 * ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
 * ``24:1:30m`` 24 cores and 1 process for 30 minutes
   (useful for OpenMP tasks or tasks that do their own *mpiexec* call)
+
+Resources can also be specified via special comments in scripts:
+
+.. highlight:: python
+
+::
+
+    # MQ: resources=40:1d
+    from somewhere import run
+    run('something')
 
 
 .. _states:

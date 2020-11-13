@@ -33,6 +33,7 @@ class Command:
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
     def read_resources(self) -> Optional[Resources]:
+        """Look for "# MQ: resources=..." comments in script."""
         return None
 
 
@@ -110,6 +111,12 @@ class ShellScript(Command):
         return {**self.dct,
                 'type': 'shell-script',
                 'cmd': self.cmd}
+
+    def read_resources(self) -> Optional[Resources]:
+        for line in Path(self.cmd).read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
 
 
 class PythonScript(Command):
