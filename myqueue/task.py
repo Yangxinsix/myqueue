@@ -445,16 +445,18 @@ def task(cmd: str,
 
     command = create_command(cmd, args, name=name)
 
+    res: Optional[Resources] = None
+
     if cores == 0 and nodename == '' and processes == 0 and tmax == '':
         if resources:
             res = Resources.from_string(resources)
         else:
             res = command.read_resources()
-            if res is None:
-                res = Resources(cores, nodename, processes, T(tmax))
     else:
         assert resources == ''
-        res = Resources(cores, nodename, processes, T(tmax))
+
+    if res is None:
+        res = Resources(cores, nodename, processes, T(tmax or '10m'))
 
     return Task(command,
                 res,

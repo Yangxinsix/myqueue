@@ -130,10 +130,11 @@ class PythonScript(Command):
                 'type': 'python-script',
                 'cmd': self.script}
 
-    def read_resources(self) -> Resources:
+    def read_resources(self) -> Optional[Resources]:
         for line in Path(self.script).read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
+        return None
 
 
 class PythonModule(Command):
