@@ -36,14 +36,13 @@ Node = Tuple[str, Dict[str, Any]]
 class Resources:
     """Resource description."""
     def __init__(self,
-                 cores: int = 1,
+                 cores: int = 0,
                  nodename: str = '',
                  processes: int = 0,
-                 tmax: int = 600  # seconds
-                 ):
-        self.cores = cores
+                 tmax: int = 0):
+        self.cores = cores or 1
         self.nodename = nodename
-        self.tmax = tmax
+        self.tmax = tmax or 600  # seconds
 
         if processes == 0:
             self.processes = cores
