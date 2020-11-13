@@ -9,13 +9,20 @@ Release notes
 Next release
 ============
 
+...
+
+
+Version 20.11.0
+===============
+
 * New ``mq workflow ... --arguments "key=val,..."`` option.  See
   :ref:`workflow`.
 * Two new columns in :ref:`list output <list>`: *arguments* and *info*.
   Can be hidden with: ``mq ls -c aI-``.
 * Deprecated ``venv/activate`` script.  Use ``venv/bin/activate`` instead.
-* Resources can now be specified in the scripts as special comments:
-  ``# MQ: resources=24:2h``.
+* Resources can now be specified in the scripts as special comments::
+
+      # MQ: resources=24:2h
 
 
 Version 20.9.1
