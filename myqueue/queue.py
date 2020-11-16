@@ -145,11 +145,14 @@ class Queue(Lock):
             print(plural(len(done), 'task'), 'already done')
 
         tasks2 = []
+        failed_tasks = []
         for task in tasks:
             if task.workflow and task.has_failed():
                 if force:
                     task.remove_failed_file()
                     tasks2.append(task)
+                else:
+                    failed_tasks.append(task.dname)
             else:
                 tasks2.append(task)
         nfailed = len(tasks) - len(tasks2)
@@ -189,6 +192,10 @@ class Queue(Lock):
             task.dtasks = []
             for dep in task.deps:
                 # convert dep to Task:
+                if dep in failed_tasks:
+                    print(f'{task.name} has failed dependency: {dep}. '
+                          'Skipping.')
+                    break
                 tsk = current.get(dep)
                 if tsk is None:
                     for tsk in tasks:

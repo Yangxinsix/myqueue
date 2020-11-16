@@ -117,6 +117,14 @@ def test_workflow_running_only_with_targets(mq):
     assert mq.states() == 'dd'
 
 
+def test_workflow_with_failed_job(mq):
+    Path('wf.py').write_text(wf)
+    Path('shell:sleep+3.FAILED').write_text('')
+    mq('workflow wf.py .')
+    mq.wait()
+    assert mq.states() == ''
+
+
 wf2 = """
 from myqueue.task import task
 def create_tasks(name, n):
