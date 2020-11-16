@@ -193,8 +193,8 @@ class Queue(Lock):
             for dep in task.deps:
                 # convert dep to Task:
                 if dep in failed_tasks:
-                    print(f'{task.name} has failed dependency: {dep}. '
-                          'Skipping.')
+                    print(f'Skipping {task.dname}. '
+                          'Reason: Failed dependency={dep}.')
                     break
                 tsk = current.get(dep)
                 if tsk is None:
