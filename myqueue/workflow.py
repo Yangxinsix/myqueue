@@ -57,7 +57,7 @@ def filter_tasks(tasks: List[Task], names: List[str]):
     for task in tasks:
         if task.cmd.name in names:
             for t in task.ideps(map):
-                include.add(task)
+                include.add(t)
     filteredtasks = list(include)
     return filteredtasks
 
