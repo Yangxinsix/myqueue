@@ -195,9 +195,10 @@ class Queue(Lock):
                         if dep == tsk.dname:
                             break
                     else:
-                        if dep not in done:
-                            print(f'Missing dependency for {task.name}:', dep)
-                            break
+                        assert dep in done, (
+                            f'Missing dependency for {task.name}:', dep
+                        )
+
                         tsk = None
                 elif tsk.state == 'done':
                     tsk = None

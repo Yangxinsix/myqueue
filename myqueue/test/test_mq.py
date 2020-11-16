@@ -110,6 +110,13 @@ def test_workflow(mq):
     assert mq.states() == ''
 
 
+def test_workflow_running_only_with_targets(mq):
+    Path('wf.py').write_text(wf)
+    mq('workflow wf.py . -t shell:touch+hello')
+    mq.wait()
+    assert mq.states() == 'dd'
+
+
 wf2 = """
 from myqueue.task import task
 def create_tasks(name, n):
