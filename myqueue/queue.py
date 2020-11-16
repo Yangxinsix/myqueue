@@ -26,12 +26,6 @@ from .utils import Lock, plural
 from .virtenv import find_activation_scripts
 
 
-class MissingDependency(Exception):
-    """Exception raised when a task to be submitted is missing a dependency."""
-
-    pass
-
-
 class Queue(Lock):
     """Object for interacting with the scheduler."""
     def __init__(self,
@@ -201,11 +195,10 @@ class Queue(Lock):
                         if dep == tsk.dname:
                             break
                     else:
-                        if dep not in done:
-                            raise MissingDependency(
-                                f'Missing dependency for {task.name}:',
-                                dep
-                            )
+                        assert dep in done, (
+                            f'Missing dependency for {task.name}:', dep
+                        )
+
                         tsk = None
                 elif tsk.state == 'done':
                     tsk = None
