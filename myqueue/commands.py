@@ -32,7 +32,7 @@ class Command:
     def fname(self):
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
-    def read_resources(self) -> Optional[Resources]:
+    def read_resources(self, path) -> Optional[Resources]:
         """Look for "# MQ: resources=..." comments in script."""
         return None
 
@@ -112,7 +112,7 @@ class ShellScript(Command):
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
-    def read_resources(self) -> Optional[Resources]:
+    def read_resources(self, path) -> Optional[Resources]:
         for line in Path(self.cmd).read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
@@ -137,8 +137,11 @@ class PythonScript(Command):
                 'type': 'python-script',
                 'cmd': self.script}
 
-    def read_resources(self) -> Optional[Resources]:
-        for line in Path(self.script).read_text().splitlines():
+    def read_resources(self, path) -> Optional[Resources]:
+        script = Path(self.script)
+        if not script.is_absolute():
+            script = path / script
+        for line in script.read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
         return None
