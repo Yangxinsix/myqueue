@@ -13,8 +13,7 @@ DEFAULT_VERBOSITY = 1
 def workflow_from_function(
         workflow_function: Callable[..., List[Task]],
         folders: List[Path],
-        verbosity: int = DEFAULT_VERBOSITY,
-):
+        verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow defined in python script."""
     alltasks: List[Task] = []
 
@@ -32,8 +31,7 @@ def workflow_from_function(
 def workflow_from_pattern(
         script: str,
         folders: List[Path],
-        verbosity: int = DEFAULT_VERBOSITY,
-):
+        verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Generate tasks from workflows defined by '**/*{script}'."""
     alltasks: List[Task] = []
     paths = [path
@@ -50,7 +48,7 @@ def workflow_from_pattern(
     return alltasks
 
 
-def filter_tasks(tasks: List[Task], names: List[str]):
+def filter_tasks(tasks: List[Task], names: List[str]) -> List[Task]:
     """Filter tasks that are not in names or in dependencies of names."""
     include = set()
     map = {task.dname: task for task in tasks}
@@ -70,8 +68,7 @@ def workflow(args,
         alltasks = workflow_from_pattern(
             script=args.script,
             folders=folders,
-            verbosity=verbosity,
-        )
+            verbosity=verbosity)
     else:
         assert args.script.endswith('.py'), args.script
         create_tasks = compile_create_tasks_function(Path(args.script))
@@ -86,8 +83,7 @@ def workflow(args,
         alltasks = workflow_from_function(
             workflow_function=create_tasks,
             folders=folders,
-            verbosity=verbosity,
-        )
+            verbosity=verbosity)
 
     if args.targets:
         names = args.targets.split(',')

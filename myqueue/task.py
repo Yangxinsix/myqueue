@@ -451,7 +451,7 @@ def task(cmd: str,
         if resources:
             res = Resources.from_string(resources)
         else:
-            res = command.read_resources()
+            res = command.read_resources(path)
     else:
         assert resources == ''
 
