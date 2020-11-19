@@ -12,6 +12,12 @@ Next release
 ...
 
 
+Version 20.11.1
+===============
+
+* Fix "workflow target" bug and ``MQ:`` comments bug.
+
+
 Version 20.11.0
 ===============
 
