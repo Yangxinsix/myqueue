@@ -53,29 +53,21 @@ def create_command(cmd: str,
 
     if type is None:
         if cmd.startswith('shell:'):
-            type = 'shell-command'
+            cls = ShellCommand
         elif cmd.endswith('.py'):
-            type = 'python-script'
+            cls = PythonScript
+        elif '.py@' in cmd:
+            cls = PythonFunctionInScript
         elif '@' in cmd:
-            type = 'python-function'
+            cls = PythonFunction
         elif path:
-            type = 'shell-script'
+            cls = ShellScript
         else:
-            type = 'python-module'
-
-    command: Command
-    if type == 'shell-command':
-        command = ShellCommand(cmd, args)
-    elif type == 'shell-script':
-        command = ShellScript(cmd, args)
-    elif type == 'python-script':
-        command = PythonScript(cmd, args)
-    elif type == 'python-module':
-        command = PythonModule(cmd, args)
-    elif type == 'python-function':
-        command = PythonFunction(cmd, args)
+            cls = PythonModule
     else:
-        raise ValueError
+        cls = globals()[type.title().replace('-', '')]
+
+    command = cls(cmd, args)
 
     if name:
         command.set_non_standard_name(name)
@@ -181,6 +173,30 @@ class PythonFunction(Command):
         return {**self.dct,
                 'type': 'python-function',
                 'cmd': self.mod + '@' + self.func}
+
+
+class PythonFunctionInScript(Command):
+    def __init__(self, cmd: str, args: List[str]):
+        script, func = cmd.rsplit('@', 1)
+        path = Path(script)
+        Command.__init__(self, path.name, args)
+        if '/' in script:
+            self.script = str(path.absolute())
+        else:
+            self.script = script
+        self.short_name = path.name
+
+    def __str__(self) -> str:
+        args = ', '.join(repr(convert(arg)) for arg in self.args)
+        mod = self.mod
+        return (f'python3 -c "import runpy; '
+                f'mod = runpy({self.script!r}); '
+                f'mod.{self.func}({args})')
+
+    def todict(self) -> Dict[str, Any]:
+        return {**self.dct,
+                'type': 'python-function-in-script',
+                'cmd': self.script + '@' + self.func}
 
 
 def convert(x: str) -> Union[bool, int, float, str]:

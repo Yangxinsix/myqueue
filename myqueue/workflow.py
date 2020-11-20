@@ -115,7 +115,7 @@ def compile_create_tasks_function(path: Path) -> Callable[..., List[Task]]:
     code = compile(script, str(path), 'exec')
     namespace: Dict[str, Any] = {}
     exec(code, namespace)
-    create_tasks = namespace['create_tasks']
+    create_tasks = namespace.get('workflow', namespace['create_tasks'])
     return create_tasks
 
 
@@ -123,11 +123,58 @@ def get_tasks_from_folder(folder: Path,
                           create_tasks: Callable[[], List[Task]]
                           ) -> List[Task]:
     """Collect tasks from folder."""
-    tasks = []
     with chdir(folder):
         newtasks = create_tasks()
+    tasks = []
     for task in newtasks:
         if not task.skip():
             task.workflow = True
             tasks.append(task)
     return tasks
+
+
+def get_tasks_from_folder_new(folder: Path,
+                              workflow: Callable[[Callable], None]
+                              ) -> List[Task]:
+    """Collect tasks from folder."""
+    with chdir(folder):
+        run = Collector()
+        workflow(run)
+    tasks = []
+    for task in run.tasks:
+        if not task.skip():
+            task.workflow = True
+            tasks.append(task)
+    return tasks
+
+
+class Collector:
+    def __init__(self, target=None):
+        self.tasks
+        self.target = target
+
+    def __call__(self, func, *args, **kwargs):
+
+        mqkwargs = {}
+        for key in ['name', 'resources', 'tmax']:
+            if key in kwargs:
+                mqkwargs[key] = kwargs.pop(key)
+
+        name = mqkwargs.pop('name')
+        if name is None:
+            name = get_name(func, args, kwargs)
+
+        if self.target:
+            result = func(*args, **kwargs)
+            if self.target == name:
+                self.target = None
+                return result
+
+        assert name not in self.tasks
+
+        task = Task()
+        return Result(task)
+
+
+def get_name(func, args, kwargs):
+    return f'{func.__module__}.{func.__name__}'
