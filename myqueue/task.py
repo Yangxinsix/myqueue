@@ -358,9 +358,9 @@ class Task:
 
 
 def task(cmd: str,
-         resources: str = '',
          args: List[str] = [],
          *,
+         resources: str = '',
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 0,
@@ -382,6 +382,8 @@ def task(cmd: str,
     ----------
     cmd: str
         Command to be run.
+    args: list of str
+        Command-line arguments or function arguments.
     resources: str
         Resources::
 
@@ -389,8 +391,6 @@ def task(cmd: str,
 
         Examples: '48:1d', '32:1h', '8:xeon8:1:30m'.  Can not be used
         togeter with any of "cores", "nodename", "processes" and "tmax".
-    args: list of str
-        Command-line arguments or function arguments.
     name: str
         Name to use for task.  Default is <cmd>[+<arg1>[_<arg2>[_<arg3>]...]].
     deps: str, list of str, Task object  or list of Task objects

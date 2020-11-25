@@ -1,9 +1,10 @@
 import ast
+import runpy
 from pathlib import Path
 from typing import Callable, List, Dict, Any, Union
 
 from .progress import progress_bar
-from .task import Task
+from .task import Task, task as create_task
 from .utils import chdir, plural
 
 
@@ -172,9 +173,39 @@ class Collector:
 
         assert name not in self.tasks
 
-        task = Task()
+        args = list(args) + list(kwargs.values())
+        deps = set()
+        for arg in args:
+            if isinstance(arg, Result):
+                deps.add(arg.task)
+
+        task = create_task('workflow:script_path',
+                           args=[name],
+                           deps=list(deps),
+                           name=name,
+                           **mqkwargs)
+        self.tasks[name] = task
+
         return Result(task)
+
+
+class Result:
+    def __init__(self, task):
+        self.task = task
+
+    def __getitem__(self, key):
+        return self
+
+    def __getattr__(self, attr):
+        return self
 
 
 def get_name(func, args, kwargs):
     return f'{func.__module__}.{func.__name__}'
+
+
+def run(path, target: str) -> None:
+    module = runpy.run_path(path)
+    run = Collector(target)
+    module.workflow(run)
+    

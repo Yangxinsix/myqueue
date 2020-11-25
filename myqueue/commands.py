@@ -56,6 +56,8 @@ def create_command(cmd: str,
             cls = ShellCommand
         elif cmd.endswith('.py'):
             cls = PythonScript
+        elif cmd.startswith('workflow:'):
+            cls = WorkflowTask
         elif '.py@' in cmd:
             cls = PythonFunctionInScript
         elif '@' in cmd:
@@ -139,6 +141,34 @@ class PythonScript(Command):
         return None
 
 
+class WorkflowTask(Command):
+    def __init__(self, cmd: str, args: List[str]):
+        path = Path(script)
+        Command.__init__(self, path.name, args)
+        if '/' in script:
+            self.script = str(path.absolute())
+        else:
+            self.script = script
+        self.short_name = path.name
+
+    def __str__(self) -> str:
+        return 'python3 ' + ' '.join([self.script] + self.args)
+
+    def todict(self) -> Dict[str, Any]:
+        return {**self.dct,
+                'type': 'workflow-task',
+                'cmd': self.script}
+
+    def read_resources(self, path) -> Optional[Resources]:
+        script = Path(self.script)
+        if not script.is_absolute():
+            script = path / script
+        for line in script.read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
+
+
 class PythonModule(Command):
     def __init__(self, mod: str, args: List[str]):
         Command.__init__(self, mod, args)
@@ -188,7 +218,6 @@ class PythonFunctionInScript(Command):
 
     def __str__(self) -> str:
         args = ', '.join(repr(convert(arg)) for arg in self.args)
-        mod = self.mod
         return (f'python3 -c "import runpy; '
                 f'mod = runpy({self.script!r}); '
                 f'mod.{self.func}({args})')
