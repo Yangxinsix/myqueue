@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
+from warnings import warn
 
 from .commands import create_command, Command
 from .resources import Resources, T
@@ -438,10 +439,13 @@ def task(cmd: str,
                 dpaths.append(dep.dname)
 
     if '@' in cmd:
+        # Old way of specifying resources:
         c, r = cmd.rsplit('@', 1)
         if r[0].isdigit():
             cmd = c
             resources = r
+            warn(f'Please use resources={r!r} instead of deprecated '
+                 f'...@{r} syntax!')
 
     command = create_command(cmd, args, name=name)
 

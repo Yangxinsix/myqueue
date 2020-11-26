@@ -142,31 +142,18 @@ class PythonScript(Command):
 
 
 class WorkflowTask(Command):
-    def __init__(self, cmd: str, args: List[str]):
-        path = Path(script)
-        Command.__init__(self, path.name, args)
-        if '/' in script:
-            self.script = str(path.absolute())
-        else:
-            self.script = script
-        self.short_name = path.name
+    def __init__(self, script: Path, name: str):
+        self.script = script
+        Command.__init__(self, name)
+        self.short_name = name
 
     def __str__(self) -> str:
-        return 'python3 ' + ' '.join([self.script] + self.args)
+        return f'python3 -m myqueue.workflow {self.script} {self.name}'
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'workflow-task',
-                'cmd': self.script}
-
-    def read_resources(self, path) -> Optional[Resources]:
-        script = Path(self.script)
-        if not script.is_absolute():
-            script = path / script
-        for line in script.read_text().splitlines():
-            if line.startswith('# MQ: resources='):
-                return Resources.from_string(line.split('=', 1)[1])
-        return None
+                '': self.script}
 
 
 class PythonModule(Command):
