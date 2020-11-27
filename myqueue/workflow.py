@@ -1,52 +1,104 @@
 import ast
 import runpy
 from pathlib import Path
+from functools import partial
 from typing import Callable, List, Dict, Any, Union
 
 from .progress import progress_bar
-from .task import Task, task as create_task
+from .task import Task
 from .utils import chdir, plural
-
+from myqueue.commands import create_command, WorkflowTask
+from myqueue.resources import Resources
 
 DEFAULT_VERBOSITY = 1
 
 
-def workflow_from_function(
-        workflow_function: Callable[..., List[Task]],
+def workflow(args,
+             folders: List[Path],
+             verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+    """Collect tasks from workflow script(s) and folders."""
+    if args.arguments:
+        kwargs = str2kwargs(args.arguments)
+    else:
+        kwargs = {}
+
+    if args.pattern:
+        pattern = args.script
+        tasks = workflow_from_scripts(pattern,
+                                      kwargs,
+                                      folders,
+                                      verbosity=verbosity)
+    else:
+        tasks = workflow_from_script(args.script,
+                                     kwargs,
+                                     folders,
+                                     verbosity=verbosity)
+
+    if args.targets:
+        names = args.targets.split(',')
+        tasks = filter_tasks(tasks, names)
+
+    tasks = [task for task in tasks if not task.skip()]
+
+    for task in tasks:
+        task.workflow = True
+
+    return tasks
+
+
+def get_workflow_function(path, kwargs):
+    module = runpy.run_path(path)
+    try:
+        func = module['workflow']
+    except AttributeError:
+        func = module['create_tasks']
+    if kwargs:
+        name = func.__name__
+        func = partial(func, **kwargs)
+        func.__name__ = name
+    func.path = path
+    return func
+
+
+def workflow_from_scripts(
+        pattern: str,
+        kwargs: Dict[str, Any],
         folders: List[Path],
         verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+    """Generate tasks from workflows defined by '**/*{script}'."""
+    tasks: List[Task] = []
+    paths = [path
+             for folder in folders
+             for path in folder.glob('**/*' + pattern)]
+    pb = progress_bar(len(paths),
+                      f'Scanning {len(paths)} scripts:',
+                      verbosity)
+
+    for path in paths:
+        func = get_workflow_function(path, kwargs)
+        tasks += get_tasks_from_folder(path.parent, func)
+        next(pb)
+    return tasks
+
+
+def workflow_from_script(script,
+                         kwargs,
+                         folders: List[Path],
+                         verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow defined in python script."""
-    alltasks: List[Task] = []
+    func = get_workflow_function(script, kwargs)
+
+    tasks: List[Task] = []
 
     n_folders = plural(len(folders), 'folder')
     pb = progress_bar(len(folders),
                       f'Scanning {n_folders}:',
                       verbosity)
     for folder in folders:
-        alltasks += get_tasks_from_folder(folder, workflow_function)
+        tasks += get_tasks_from_folder(folder, func)
         next(pb)
 
-    return alltasks
-
-
-def workflow_from_pattern(
-        script: str,
-        folders: List[Path],
-        verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
-    """Generate tasks from workflows defined by '**/*{script}'."""
-    alltasks: List[Task] = []
-    paths = [path
-             for folder in folders
-             for path in folder.glob('**/*' + script)]
-    pb = progress_bar(len(paths),
-                      f'Scanning {len(paths)} scripts:',
-                      verbosity)
-
-    for path in paths:
-        create_tasks = compile_create_tasks_function(path)
-        alltasks += get_tasks_from_folder(path.parent, create_tasks)
-        next(pb)
-    return alltasks
+    return tasks
 
 
 def filter_tasks(tasks: List[Task], names: List[str]) -> List[Task]:
@@ -59,38 +111,6 @@ def filter_tasks(tasks: List[Task], names: List[str]) -> List[Task]:
                 include.add(t)
     filteredtasks = list(include)
     return filteredtasks
-
-
-def workflow(args,
-             folders: List[Path],
-             verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
-    """Collect tasks from workflow script(s) and folders."""
-    if args.pattern:
-        alltasks = workflow_from_pattern(
-            script=args.script,
-            folders=folders,
-            verbosity=verbosity)
-    else:
-        assert args.script.endswith('.py'), args.script
-        create_tasks = compile_create_tasks_function(Path(args.script))
-
-        if args.arguments:
-            kwargs = str2kwargs(args.arguments)
-            old = create_tasks
-
-            def create_tasks():
-                return old(**kwargs)
-
-        alltasks = workflow_from_function(
-            workflow_function=create_tasks,
-            folders=folders,
-            verbosity=verbosity)
-
-    if args.targets:
-        names = args.targets.split(',')
-        alltasks = filter_tasks(tasks=alltasks, names=names)
-
-    return alltasks
 
 
 def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
@@ -110,83 +130,93 @@ def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
     return kwargs
 
 
-def compile_create_tasks_function(path: Path) -> Callable[..., List[Task]]:
-    """Compile create_tasks() function from worflow Python script."""
-    script = path.read_text()
-    code = compile(script, str(path), 'exec')
-    namespace: Dict[str, Any] = {}
-    exec(code, namespace)
-    create_tasks = namespace.get('workflow', namespace['create_tasks'])
-    return create_tasks
-
-
 def get_tasks_from_folder(folder: Path,
-                          create_tasks: Callable[[], List[Task]]
-                          ) -> List[Task]:
+                          func: Callable) -> List[Task]:
     """Collect tasks from folder."""
     with chdir(folder):
-        newtasks = create_tasks()
-    tasks = []
-    for task in newtasks:
-        if not task.skip():
-            task.workflow = True
-            tasks.append(task)
+        if func.__name__ == 'create_tasks':
+            tasks = func()
+        else:
+            script = func.path
+            tasks = collect_tasks_from_workflow_function(folder, script, func)
+
     return tasks
 
 
-def get_tasks_from_folder_new(folder: Path,
-                              workflow: Callable[[Callable], None]
-                              ) -> List[Task]:
-    """Collect tasks from folder."""
-    with chdir(folder):
-        run = Collector()
-        workflow(run)
-    tasks = []
-    for task in run.tasks:
-        if not task.skip():
-            task.workflow = True
-            tasks.append(task)
-    return tasks
+class StopWorkflow(Exception):
+    ''
 
 
-class Collector:
-    def __init__(self, target=None):
-        self.tasks
-        self.target = target
+def collect_tasks_from_workflow_function(folder,
+                                         script,
+                                         func: Callable[[Callable], None]
+                                         ) -> List[Task]:
 
-    def __call__(self, func, *args, **kwargs):
+    tasks = {}
+    collect = partial(run, folder, script, tasks)
+    try:
+        func(collect)
+    except StopWorkflow:
+        pass
+    print(run.tasks)
+    return list(run.tasks.values())
 
-        mqkwargs = {}
-        for key in ['name', 'resources', 'tmax']:
-            if key in kwargs:
-                mqkwargs[key] = kwargs.pop(key)
 
-        name = mqkwargs.pop('name')
+def run(folder,
+        script,
+        tasks,
+        cmd,
+        *args,
+        kwargs={},
+        name=None,
+        block=False,
+        done=False,
+        resources=None,
+        cores=0,
+        nodename='',
+        processes=0,
+        tmax='',
+        restart=0,
+        diskspace=0,
+        creates=[],
+        deps=None,
+        **kws):
+
+    if block and not done:
+        raise StopWorkflow
+
+    kws.update(kwargs)
+
+    dependencies = set()
+    for arg in list(args) + list(kws.values()) + (deps or []):
+        if isinstance(arg, Result):
+            dependencies.add(arg.task)
+
+    if isinstance(cmd, str):
+        command = create_command(cmd, args, name=name)
+        name = command.name
+    else:
         if name is None:
-            name = get_name(func, args, kwargs)
+            name = get_name(cmd, args, kwargs)
+        command = WorkflowTask(script, name)
 
-        if self.target:
-            result = func(*args, **kwargs)
-            if self.target == name:
-                self.target = None
-                return result
+    res = Resources.from_args_and_command(
+        cores, nodename, processes, tmax,
+        resources, command, folder)
 
-        assert name not in self.tasks
+    task = Task(command,
+                deps=list(dependencies),
+                resources=res,
+                workflow=True,
+                restart=restart,
+                diskspace=diskspace,
+                folder=folder,
+                creates=creates)
 
-        args = list(args) + list(kwargs.values())
-        deps = set()
-        for arg in args:
-            if isinstance(arg, Result):
-                deps.add(arg.task)
+    assert name not in tasks
+    tasks[name] = task
 
-        task = create_task('workflow:script_path',
-                           args=[name],
-                           deps=list(deps),
-                           name=name,
-                           **mqkwargs)
-        self.tasks[name] = task
-
-        return Result(task)
+    return Result(task)
 
 
 class Result:
@@ -202,10 +232,3 @@ class Result:
 
 def get_name(func, args, kwargs):
     return f'{func.__module__}.{func.__name__}'
-
-
-def run(path, target: str) -> None:
-    module = runpy.run_path(path)
-    run = Collector(target)
-    module.workflow(run)
-    

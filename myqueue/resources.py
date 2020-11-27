@@ -72,6 +72,20 @@ class Resources:
                 nodename = x
         return Resources(int(cores), nodename, processes, tmax)
 
+    @staticmethod
+    def from_args_and_command(cores, nodename, processes, tmax,
+                              resources, command, path):
+        if cores == 0 and nodename == '' and processes == 0 and tmax == '':
+            if resources:
+                return Resources.from_string(resources)
+            res = command.read_resources(path)
+            if res is not None:
+                return res
+        else:
+            assert resources == ''
+
+        return Resources(cores, nodename, processes, T(tmax or '10m'))
+
     def __str__(self) -> str:
         s = str(self.cores)
         if self.nodename:
