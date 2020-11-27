@@ -38,6 +38,9 @@ class Task:
     creates: list of str
         Name of files created by task.
     """
+
+    tasks = None
+
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
@@ -355,6 +358,10 @@ class Task:
                 tsk.state = 'CANCELED'
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
+
+    def __call__(self, *args, **kwargs):
+        if Task.tasks is None:
+            return self.run(*args, **kwargs)
 
 
 def task(cmd: str,
