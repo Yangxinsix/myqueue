@@ -119,10 +119,21 @@ def test_workflow_running_only_with_targets(mq):
 
 def test_workflow_with_failed_job(mq):
     Path('wf.py').write_text(wf)
-    Path('shell:sleep+3.FAILED').write_text('')
+    failed = Path('shell:sleep+3.FAILED')
+    failed.write_text('')
     mq('workflow wf.py .')
     mq.wait()
     assert mq.states() == ''
+
+    mq('workflow wf.py . --force --dry-run')
+    mq.wait()
+    assert mq.states() == ''
+    assert failed.is_file()
+
+    mq('workflow wf.py . --force')
+    mq.wait()
+    assert mq.states() == 'dd'
+    assert not failed.is_file()
 
 
 wf2 = """
