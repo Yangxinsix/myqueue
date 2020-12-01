@@ -12,6 +12,12 @@ Next release
 ...
 
 
+Version 20.11.2
+===============
+
+* Bugfix: Don't remove FAILED-files in dry-run mode.
+
+
 Version 20.11.1
 ===============
 
