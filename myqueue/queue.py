@@ -149,7 +149,8 @@ class Queue(Lock):
         for task in tasks:
             if task.workflow and task.has_failed():
                 if force:
-                    task.remove_failed_file()
+                    if not self.dry_run:
+                        task.remove_failed_file()
                     tasks2.append(task)
                 else:
                     failed_tasks.append(task.dname)
