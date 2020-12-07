@@ -2,6 +2,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from types import ModuleType
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
 from warnings import warn
 
@@ -365,9 +366,48 @@ class Task:
             return self.run(*args, **kwargs)
 
 
+def run(function: Callable = None,
+        *,
+        script: str = None,
+        module: Union[str, ModuleType] = None,
+        shell_command: str = None,
+        **kwargs):
+    task = create_task(
+        function,
+        script=script,
+        module=module,
+        shell_command=shell_command,
+        **kwargs)
+    if task.tasks is None:
+        return task.run()
+    task.tasks.append(task)
+    if task.block and not task.is_done():
+        raise StopCollectingTasks
+    return task
+
+
+class WrappedTask:
+    def __init__(self, task):
+        self.task = task
+
+    def __call__(self, *args, **kwargs):
+    if task.tasks is None:
+        return task.run()
+    task.tasks.append(task)
+    if task.block and not task.is_done():
+        raise StopCollectingTasks
+    return task
+
+
+def wrap(function, **kwargs):
+    task = create_task(function, **kwargs)
+    return WrappedTask(task)
+
+
 def task(cmd: str,
          args: List[str] = [],
          *,
+         block: bool = False,
          resources: str = '',
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
