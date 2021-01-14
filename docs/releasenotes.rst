@@ -12,6 +12,12 @@ Next release
 ...
 
 
+Version 20.11.3
+===============
+
+* Bugfix: LSF-backend fixes.
+
+
 Version 20.11.2
 ===============
 
