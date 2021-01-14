@@ -39,8 +39,9 @@ class LSF(Scheduler):
                               for t in task.dtasks)
             bsub += ['-w', f'"{ids}"']
 
-        cmd = str(task.cmd)
         bsub += ['-R', f'span[hosts={nodes}]']
+
+        cmd = str(task.cmd)
         if task.resources.processes > 1:
             cmd = ('mpiexec ' +
                    cmd.replace('python3',
