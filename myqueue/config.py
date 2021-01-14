@@ -41,7 +41,10 @@ def guess_scheduler() -> str:
                           stdout=subprocess.DEVNULL).returncode == 0:
             commands.append(command)
     if commands:
-        assert len(commands) == 1
+        if len(commands) > 1:
+            raise ValueError('Please specify a scheduler: ' +
+                             ', '.join(scheduler_commands[cmd]
+                                       for cmd in commands))
         scheduler = scheduler_commands[commands[0]]
     else:
         scheduler = 'local'
@@ -79,10 +82,12 @@ def main(name=None):
     text = text.replace('(', '\n        (')
     text = '# generated with python3 -m myqueue.config\n' + text
 
-    cfgfile = folder / 'config.py'
-    if cfgfile.is_file():
-        cfgfile.rename(cfgfile.with_name('config.py.old'))
-    # cfgfile.write_text(text)
+    if 0:
+        cfgfile = folder / 'config.py'
+        if cfgfile.is_file():
+            cfgfile.rename(cfgfile.with_name('config.py.old'))
+        cfgfile.write_text(text)
+
     print(text)
 
 

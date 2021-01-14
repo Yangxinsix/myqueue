@@ -21,8 +21,8 @@ class LSF(Scheduler):
                 '-J', name,
                 '-W', f'{hours:02}:{minutes:02}',
                 '-n', str(task.resources.cores),
-                '-o', f'{name}.%J.out',
-                '-e', f'{name}.%J.err',
+                '-o', f'{task.folder}/{name}.%J.out',
+                '-e', f'{task.folder}/{name}.%J.err',
                 '-R', f'select[model == {nodename}]']
 
         mem = nodedct['memory']
@@ -39,9 +39,10 @@ class LSF(Scheduler):
                               for t in task.dtasks)
             bsub += ['-w', f'"{ids}"']
 
+        bsub += ['-R', f'span[hosts={nodes}]']
+
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            bsub += ['-R', f'span[hosts={nodes}]']
             cmd = ('mpiexec ' +
                    cmd.replace('python3',
                                config.get('parallel_python', 'python3')))
