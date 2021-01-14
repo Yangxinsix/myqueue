@@ -40,6 +40,7 @@ def guess_scheduler() -> str:
         if subprocess.run(['which', command],
                           stdout=subprocess.DEVNULL).returncode == 0:
             commands.append(command)
+    print(commands)
     if commands:
         assert len(commands) == 1
         scheduler = scheduler_commands[commands[0]]
@@ -80,8 +81,8 @@ def main(name=None):
     text = '# generated with python3 -m myqueue.config\n' + text
 
     cfgfile = folder / 'config.py'
-    if cfgfile.is_file():
-        cfgfile.rename(cfgfile.with_name('config.py.old'))
+    # if cfgfile.is_file():
+    #     cfgfile.rename(cfgfile.with_name('config.py.old'))
     # cfgfile.write_text(text)
     print(text)
 
