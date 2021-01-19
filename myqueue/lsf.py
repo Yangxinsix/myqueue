@@ -37,9 +37,10 @@ class LSF(Scheduler):
         if task.dtasks:
             ids = ' && '.join(f'done({t.id})'
                               for t in task.dtasks)
-            bsub += ['-w', f'"{ids}"']
+            bsub += ['-w', f"{ids}"]
 
-        bsub += ['-R', f'span[hosts={nodes}]']
+        # bsub += ['-R', f'span[hosts={nodes}]']
+        bsub += ['-R', 'span[hosts=1]']
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
@@ -66,6 +67,8 @@ class LSF(Scheduler):
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
+        # print(' \\\n    '.join(bsub))
+        # print(script)
         if dry_run:
             print(' \\\n    '.join(bsub))
             print(script)
@@ -100,12 +103,11 @@ class LSF(Scheduler):
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> List[Tuple[str, int, str]]:
         from collections import defaultdict
         from .utils import str2number
 
-        cmd = ['nodestat',
-               '-F']
+        cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         cores: Dict[str, int] = {}
         memory: Dict[str, List[str]] = defaultdict(list)

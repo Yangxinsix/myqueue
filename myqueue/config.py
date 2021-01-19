@@ -51,17 +51,31 @@ def guess_scheduler() -> str:
     return scheduler
 
 
-def main(name=None):
+def main(argv: List[str] = None) -> None:
+    import argparse
     from .scheduler import get_scheduler
     from .utils import str2number
+
+    parser = argparse.ArgumentParser(
+        prog='python3 -m myqueue.config',
+        description='Create config.py file.')
+    add = parser.add_argument
+    add('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
+        help='Name of scheduler.')
+    add('-q', '--queue-name', default='',
+        help='Name of queue.')
+    add('-i', '--in-place', action='store_true',
+        help='Overwrite ~/.myqueue/config.py file.')
+
+    args = parser.parse_args(argv)
 
     folder = Path.home() / '.myqueue'
     if not folder.is_dir():
         folder.mkdir()
 
-    name = name or guess_scheduler()
+    name = args.scheduler or guess_scheduler()
     scheduler = get_scheduler(name)
-    nodelist = scheduler.get_config()
+    nodelist = scheduler.get_config(args.queue_name)
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
     nodelist2: List[Tuple[str, int, str]] = []
     done: Set[int] = set()
@@ -82,16 +96,14 @@ def main(name=None):
     text = text.replace('(', '\n        (')
     text = '# generated with python3 -m myqueue.config\n' + text
 
-    if 0:
+    if args.in_place:
         cfgfile = folder / 'config.py'
         if cfgfile.is_file():
             cfgfile.rename(cfgfile.with_name('config.py.old'))
         cfgfile.write_text(text)
-
-    print(text)
+    else:
+        print(text)
 
 
 if __name__ == '__main__':
-    import sys
-    name = sys.argv[1]
-    main(name)
+    main()

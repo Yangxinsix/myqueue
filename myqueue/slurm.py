@@ -156,7 +156,7 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> List[Tuple[str, int, str]]:
         cmd = ['sinfo',
                '--noheader',
                '--format=%c %m %P']
