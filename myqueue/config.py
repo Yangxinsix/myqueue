@@ -31,6 +31,7 @@ def find_home_folder(start: Path) -> Path:
 
 
 def guess_scheduler() -> str:
+    """Try different scheduler commands to guess the correct scheduler."""
     import subprocess
     scheduler_commands = {'sbatch': 'slurm',
                           'bsub': 'lsf',
@@ -52,6 +53,10 @@ def guess_scheduler() -> str:
 
 
 def main(argv: List[str] = None) -> None:
+    """Simple auto-config tool.
+
+    Creates a config.py file.
+    """
     import argparse
     from .scheduler import get_scheduler
     from .utils import str2number

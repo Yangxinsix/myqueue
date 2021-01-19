@@ -9,7 +9,7 @@ Release notes
 Next release
 ============
 
-...
+* New helper-tool for :ref:`autodetect`.
 
 
 Version 20.11.3

@@ -104,6 +104,16 @@ example :ref:`resource <resources>` specifications:
     ``48:xeon16:12h``: 3 :math:`\times` *xeon16*
 
 
+.. _autodetect:
+
+Automatic detection of node types
+---------------------------------
+
+MyQueue has a command-line tool for automatically creating a ``config.py``
+file.  Usage::
+
+    $ python3 -m myqueue.config [-h] [-q QUEUE_NAME] [-i] [{slurm,pbs,lsf}]
+
 .. _source code: https://gitlab.com/myqueue/myqueue/blob/master/myqueue/slurm.py
 
 .. _mpiexec:
@@ -166,8 +176,8 @@ Maximum disk space
 ==================
 
 Some tasks may use a lot of disk-space while running.  In order to limit the
-number of such task running at the same time, you can mark them in your workflow
-script like this::
+number of such task running at the same time, you can mark them in your
+workflow script like this::
 
     task(..., diskspace=10)
 
@@ -178,8 +188,9 @@ and set a global maximum (note that the units are arbitrary)::
         'maximum_diskspace': 200,
         ...}
 
-This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued`` state.
-If you submit more that 20 tasks then some of them will be put in the ``hold``
-state.  As tasks finish successfully (``done`` state), tasks will be moved from
-``hold`` to ``queued``.  Tasks that fail will be counted as still running, so you
-will have to ``mq rm`` those and also remember to remove big files left behind.
+This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued``
+state. If you submit more that 20 tasks then some of them will be put in the
+``hold`` state.  As tasks finish successfully (``done`` state), tasks will be
+moved from ``hold`` to ``queued``.  Tasks that fail will be counted as still
+running, so you will have to ``mq rm`` those and also remember to remove big
+files left behind.
