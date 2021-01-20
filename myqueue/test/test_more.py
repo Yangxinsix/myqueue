@@ -26,7 +26,7 @@ def test_logo():
 
 
 def test_backends(mq):
-    from ..config import config, guess_scheduler, main
+    from ..config import config, guess_scheduler, guess_configuration
     config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
                        ('abc8', {'cores': 8, 'memory': '8G'})]
     config['mpiexec'] = 'echo'
@@ -45,7 +45,7 @@ def test_backends(mq):
         del config['nodes']
         del config['mpiexec']
     guess_scheduler()
-    main([])
+    guess_configuration('local')
 
 
 class Result:
