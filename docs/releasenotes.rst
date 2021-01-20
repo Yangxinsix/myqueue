@@ -16,6 +16,7 @@ Version 21.1.0
 
 * New :ref:`config command <config>` for guessing your configuration.
   See :ref:`autoconfig`.
+* LSF-backend fixes.
 
 
 Version 20.11.3

@@ -132,7 +132,7 @@ afterwards will most likely be needed.
 
 Example:
 
-    $ mq config -q hpc lsf
+    $ mq config -Q hpc lsf
 """),
     ('daemon',
      'Interact with the background process.', """
