@@ -502,7 +502,7 @@ will most likely be needed.
 
 Example::
 
-    $ mq config -q hpc lsf
+    $ mq config -Q hpc lsf
 
 {local,slurm,pbs,lsf}:
      Name of scheduler. Will be guessed if not supplied.
