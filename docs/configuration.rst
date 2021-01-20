@@ -41,6 +41,21 @@ Key                    Description
 See details below.
 
 
+.. _autoconfig:
+
+Guessing your configuration
+===========================
+
+Try the following :ref:`command <config>`::
+
+    $ mq config
+    ...
+
+It will try to guess your configuration.  It can be a good starting point
+for a ``config.py`` file.  You may need to help ``mq config`` a bit by
+giving it the scheduler name and/or the queue name (try ``mq config -h``).
+
+
 .. _scheduler:
 
 Name of scheduler
@@ -103,16 +118,6 @@ example :ref:`resource <resources>` specifications:
 
     ``48:xeon16:12h``: 3 :math:`\times` *xeon16*
 
-
-.. _autodetect:
-
-Automatic detection of node types
----------------------------------
-
-MyQueue has a command-line tool for automatically creating a ``config.py``
-file.  Usage::
-
-    $ python3 -m myqueue.config [-h] [-q QUEUE_NAME] [-i] [{slurm,pbs,lsf}]
 
 .. _source code: https://gitlab.com/myqueue/myqueue/blob/master/myqueue/slurm.py
 

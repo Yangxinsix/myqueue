@@ -52,35 +52,23 @@ def guess_scheduler() -> str:
     return scheduler
 
 
-def main(argv: List[str] = None) -> None:
+def guess_configuration(scheduler_name: str = '',
+                        queue_name: str = '',
+                        in_place: bool = False) -> None:
     """Simple auto-config tool.
 
     Creates a config.py file.
     """
-    import argparse
     from .scheduler import get_scheduler
     from .utils import str2number
-
-    parser = argparse.ArgumentParser(
-        prog='python3 -m myqueue.config',
-        description='Create config.py file.')
-    add = parser.add_argument
-    add('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
-        help='Name of scheduler.')
-    add('-q', '--queue-name', default='',
-        help='Name of queue.')
-    add('-i', '--in-place', action='store_true',
-        help='Overwrite ~/.myqueue/config.py file.')
-
-    args = parser.parse_args(argv)
 
     folder = Path.home() / '.myqueue'
     if not folder.is_dir():
         folder.mkdir()
 
-    name = args.scheduler or guess_scheduler()
+    name = scheduler_name or guess_scheduler()
     scheduler = get_scheduler(name)
-    nodelist = scheduler.get_config(args.queue_name)
+    nodelist = scheduler.get_config(queue_name)
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
     nodelist2: List[Tuple[str, int, str]] = []
     done: Set[int] = set()
@@ -99,16 +87,12 @@ def main(argv: List[str] = None) -> None:
     text = text.replace('= {', '= {\n    ')
     text = text.replace(", 'nodes'", ",\n    'nodes'")
     text = text.replace('(', '\n        (')
-    text = '# generated with python3 -m myqueue.config\n' + text
+    text = '# generated with mq config\n' + text
 
-    if args.in_place:
+    if in_place:
         cfgfile = folder / 'config.py'
         if cfgfile.is_file():
             cfgfile.rename(cfgfile.with_name('config.py.old'))
         cfgfile.write_text(text)
     else:
         print(text)
-
-
-if __name__ == '__main__':
-    main()

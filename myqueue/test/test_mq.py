@@ -205,3 +205,7 @@ def test_slash(mq):
     mq('submit "shell:echo a/c" -w')
     mq.wait()
     assert mq.states() == 'dd'
+
+
+def test_config(mq):
+    mq('config local')
