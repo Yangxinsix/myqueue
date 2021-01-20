@@ -125,6 +125,15 @@ Do this:
 
     $ mq completion >> ~/.bashrc
 """),
+    ('config',
+     'Create config.py file.', """
+This tool will try to guess your configuration.  Some hand editing
+afterwards will most likely be needed.
+
+Example:
+
+    $ mq config -q hpc lsf
+"""),
     ('daemon',
      'Interact with the background process.', """
 Manage daemon for restarting, holding and releasing tasks.
@@ -214,6 +223,14 @@ def _main(arguments: List[str] = None) -> int:
               nargs='*', default=['.'],
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
+
+        elif cmd == 'config':
+            a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'],
+              help='Name of scheduler.')
+            a('-Q', '--queue-name', default='',
+              help='Name of queue.')
+            a('--in-place', action='store_true',
+              help='Overwrite ~/.myqueue/config.py file.')
 
         if cmd in ['submit', 'workflow']:
             a('-f', '--force', action='store_true',
@@ -348,6 +365,11 @@ def _main(arguments: List[str] = None) -> int:
     if args.command == 'daemon':
         from .daemon import perform_action
         return perform_action(args.action)
+
+    if args.command == 'config':
+        from .config import guess_configuration
+        guess_configuration(args.scheduler, args.queue_name, args.in_place)
+        return 0
 
     if args.command == 'completion':
         py = sys.executable
