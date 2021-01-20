@@ -30,6 +30,9 @@ def read() -> Dict[str, Any]:
 commands = {
     'completion':
         ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
+    'config':
+        ['-Q', '--queue-name', '--in-place', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'daemon':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],

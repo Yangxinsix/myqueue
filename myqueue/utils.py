@@ -198,7 +198,7 @@ def update_completion(test=False) -> None:
                 if not line:
                     break
                 if not line.startswith('                '):
-                    cmd, help = line.strip().split(' ', 1)
+                    cmd, _, help = line.strip().partition(' ')
                     L.append(f'{cmd}:\n    {help.strip()}')
                 else:
                     L[-1] += ' ' + line.strip()
