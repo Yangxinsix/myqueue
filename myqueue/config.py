@@ -87,7 +87,7 @@ def guess_configuration(scheduler_name: str = '',
     text = text.replace('= {', '= {\n    ')
     text = text.replace(", 'nodes'", ",\n    'nodes'")
     text = text.replace('(', '\n        (')
-    text = '# generated with python3 -m myqueue.config\n' + text
+    text = '# generated with mq config\n' + text
 
     if in_place:
         cfgfile = folder / 'config.py'

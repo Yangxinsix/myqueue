@@ -225,10 +225,10 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         elif cmd == 'config':
-            a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'],
-              help='Name of scheduler.')
+            a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
+              help='Name of scheduler.  Will be guessed if not supplied.')
             a('-Q', '--queue-name', default='',
-              help='Name of queue.')
+              help='Name of queue.  May be needed.')
             a('--in-place', action='store_true',
               help='Overwrite ~/.myqueue/config.py file.')
 
