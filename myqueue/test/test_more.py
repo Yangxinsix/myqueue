@@ -64,10 +64,10 @@ def test_autoconfig(monkeypatch):
     from ..lsf import LSF
 
     monkeypatch.setattr(subprocess, 'run', run)
-    nodes = SLURM().get_config()
+    nodes, _ = SLURM().get_config()
     assert nodes == [('xeon8', 8, '256000M')]
 
-    nodes = LSF().get_config()
+    nodes, _ = LSF().get_config()
     assert nodes == [('xeon8', 8, '128G')]
 
 

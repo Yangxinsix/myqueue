@@ -156,7 +156,8 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self, queue: str = '') -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
         cmd = ['sinfo',
                '--noheader',
                '--format=%c %m %P']
@@ -167,4 +168,4 @@ class SLURM(Scheduler):
             nodes.append((name.rstrip('*'),
                           int(cores),
                           mem.rstrip('+') + 'M'))
-        return nodes
+        return nodes, []

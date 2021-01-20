@@ -103,7 +103,8 @@ class LSF(Scheduler):
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self, queue: str = '') -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
         from collections import defaultdict
         from .utils import str2number
 
@@ -122,4 +123,8 @@ class LSF(Scheduler):
         nodes = [
             (name, cores[name], min(memory[name], key=str2number))
             for name in cores]
-        return nodes
+        if queue:
+            extra_args = ['-q', queue]
+        else:
+            extra_args = []
+        return nodes, extra_args

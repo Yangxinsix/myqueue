@@ -45,8 +45,9 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return args
 
-    def get_config(self, queue: str = '') -> List[Tuple[str, int, str]]:
-        return []
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
+        return [], []
 
 
 class Server:
