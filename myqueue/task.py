@@ -366,7 +366,7 @@ class Task:
             return self.run(*args, **kwargs)
 
 
-def run(function: Callable = None,
+def run(function: 'Callable' = None,
         *,
         script: str = None,
         module: Union[str, ModuleType] = None,
@@ -391,12 +391,12 @@ class WrappedTask:
         self.task = task
 
     def __call__(self, *args, **kwargs):
-    if task.tasks is None:
-        return task.run()
-    task.tasks.append(task)
-    if task.block and not task.is_done():
-        raise StopCollectingTasks
-    return task
+        if task.tasks is None:
+            return task.run()
+        task.tasks.append(task)
+        if task.block and not task.is_done():
+            raise StopCollectingTasks
+        return task
 
 
 def wrap(function, **kwargs):

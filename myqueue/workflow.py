@@ -1,5 +1,6 @@
 import ast
 import runpy
+import sys
 from pathlib import Path
 from functools import partial
 from typing import Callable, List, Dict, Any, Union
@@ -7,7 +8,7 @@ from typing import Callable, List, Dict, Any, Union
 from .progress import progress_bar
 from .task import Task
 from .utils import chdir, plural
-from myqueue.commands import create_command, WorkflowTask
+from myqueue.commands import WorkflowTask
 from myqueue.resources import Resources
 
 DEFAULT_VERBOSITY = 1
@@ -50,7 +51,7 @@ def get_workflow_function(path, kwargs):
     module = runpy.run_path(path)
     try:
         func = module['workflow']
-    except AttributeError:
+    except KeyError:
         func = module['create_tasks']
     if kwargs:
         name = func.__name__
@@ -137,86 +138,17 @@ def get_tasks_from_folder(folder: Path,
         if func.__name__ == 'create_tasks':
             tasks = func()
         else:
-            script = func.path
-            tasks = collect_tasks_from_workflow_function(folder, script, func)
+            tasks = collect(func, folder)
 
     return tasks
 
 
-class StopWorkflow(Exception):
+class StopCollecting(Exception):
     ''
 
 
-def collect_tasks_from_workflow_function(folder,
-                                         script,
-                                         func: Callable[[Callable], None]
-                                         ) -> List[Task]:
-
-    tasks = {}
-    collect = partial(run, folder, script, tasks)
-    try:
-        func(collect)
-    except StopWorkflow:
-        pass
-    print(run.tasks)
-    return list(run.tasks.values())
-
-
-def run(folder,
-        script,
-        tasks,
-        cmd,
-        *args,
-        kwargs={},
-        name=None,
-        block=False,
-        done=False,
-        resources=None,
-        cores=0,
-        nodename='',
-        processes=0,
-        tmax='',
-        restart=0,
-        diskspace=0,
-        creates=[],
-        deps=None,
-        **kws):
-
-    if block and not done:
-        raise StopWorkflow
-
-    kws.update(kwargs)
-
-    dependencies = set()
-    for arg in list(args) + list(kws.values()) + (deps or []):
-        if isinstance(arg, Result):
-            dependencies.add(arg.task)
-
-    if isinstance(cmd, str):
-        command = create_command(cmd, args, name=name)
-        name = command.name
-    else:
-        if name is None:
-            name = get_name(cmd, args, kwargs)
-        command = WorkflowTask(script, name)
-
-    res = Resources.from_args_and_command(
-        cores, nodename, processes, tmax,
-        resources, command, folder)
-
-    task = Task(command,
-                deps=list(dependencies),
-                resources=res,
-                workflow=True,
-                restart=restart,
-                diskspace=diskspace,
-                folder=folder,
-                creates=creates)
-
-    assert name not in tasks
-    tasks[name] = task
-
-    return Result(task)
+class StopRunning(Exception):
+    ''
 
 
 class Result:
@@ -229,6 +161,122 @@ class Result:
     def __getattr__(self, attr):
         return self
 
+    def __gt__(self, other):
+        raise StopCollecting
 
-def get_name(func, args, kwargs):
+    __lt__ = __gt__
+
+
+def get_name(func):
     return f'{func.__module__}.{func.__name__}'
+
+
+def nowrap(function, **kwargs):
+    return function
+
+
+class Cached:
+    def __init__(self, function, name):
+        self.function = function
+        self.path = Path(f'{name}.done')
+
+    def is_done(self, *args, **kwargs):
+        return self.path.is_file()
+
+    def __call__(self, *args, **kwargs):
+        if self.is_done():
+            return eval(self.path.read_text())
+        result = self.function(*args, **kwargs)
+        self.path.write_text(repr(result))
+        return result
+
+
+class Collector:
+    def __init__(self):
+        self.tasks = {}
+
+    def collect(self,
+                function,
+                *,
+                name=None,
+                deps=None,
+                **run_kwargs):
+        name = name or get_name(function)
+
+        if not hasattr(function, 'is_done'):
+            function = Cached(function, name)
+
+        def wrapper(*args, **kwargs):
+            if function.is_done(*args, **kwargs):
+                return function(*args, **kwargs)
+
+            dependencies = set()
+            for arg in list(args) + list(kwargs.values()) + (deps or []):
+                if isinstance(arg, Result):
+                    dependencies.add(arg.task[0])
+
+            task = (name, function, dependencies, run_kwargs)
+            assert name not in self.tasks
+            self.tasks[name] = task
+            return Result(task)
+
+        return wrapper
+
+
+def collect(workflow_function, folder):
+    collector = Collector()
+    try:
+        workflow_function(collector.collect)
+    except StopCollecting:
+        pass
+
+    tasks = []
+    for name, deps, kwargs in collector.tasks.values():
+        command = WorkflowTask(workflow_function.path, name)
+
+        restart = kwargs.pop('restart', 0)
+        diskspace = kwargs.pop('diskspace', 0)
+
+        res = Resources.from_args_and_command(
+            command=command,
+            folder=folder, **kwargs)
+
+        task = Task(command,
+                    deps=list(deps),
+                    resources=res,
+                    workflow=True,
+                    restart=restart,
+                    diskspace=diskspace,
+                    folder=folder)
+        tasks.append(task)
+    return tasks
+
+
+class Runner:
+    def __init__(self, name):
+        self.name = name
+
+    def wrap(self, function, name=None, **kwargs):
+        name = name or get_name(function)
+
+        if not hasattr(function, 'is_done'):
+            function = Cached(function, name)
+
+        def wrapper(*args, **kwargs):
+            if name == self.name:
+                function(*args, **kwargs)
+                raise StopRunning
+            if function.is_done(*args, **kwargs):
+                return function(*args, **kwargs)
+            return Result(None)
+
+        return wrapper
+
+
+if __name__ == '__main__':
+    script, name = sys.argv[1:]
+    workflow_function = get_workflow_function(Path(script))
+    try:
+        workflow_function(Runner(name).wrap)
+    except StopRunning:
+        pass
