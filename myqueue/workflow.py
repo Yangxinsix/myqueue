@@ -46,7 +46,11 @@ def workflow(args,
     return tasks
 
 
-def get_workflow_function(path: Path, kwargs={}):
+WorkflowFunction = Callable[Callable, None]
+
+
+def get_workflow_function(path: Path, kwargs={}) -> WorkflowFunction:
+    """Get workflow function from script."""
     module = runpy.run_path(str(path))  # type: ignore # bug in typeshed?
     try:
         func = module['workflow']
@@ -194,15 +198,18 @@ def run(function: Callable,
         *,
         name: str = '',
         **kwargs) -> Callable:
+    """Wrapper for just running the function."""
     return cached_function(function, name or get_name(function))
 
 
 class Cached:
+    """A caching function."""
     def __init__(self, function: Callable, name: str):
         self.function = function
         self.path = Path(f'{name}.done')
 
     def has(self, *args, **kwargs) -> bool:
+        """Check if function has been called."""
         return self.path.is_file()
 
     def __call__(self, *args, **kwargs):
@@ -214,12 +221,14 @@ class Cached:
 
 
 def cached_function(function: Callable, name: str) -> Cached:
+    """Wrap function if needed."""
     if hasattr(function, 'has'):
         return function  # type: ignore
     return Cached(function, name)
 
 
 class Collector:
+    """Wrapper for collecting tasks from workflow function."""
     def __init__(self):
         self.tasks: Dict[str, Tuple[Set[str], Dict[str, Any]]] = {}
 
@@ -253,6 +262,7 @@ class Collector:
 def collect(workflow_function: Callable,
             folder: Path,
             script: Path) -> List[Task]:
+    """Collecting tasks from workflow function."""
     collector = Collector()
     try:
         workflow_function(collector.collect)
@@ -284,6 +294,7 @@ def collect(workflow_function: Callable,
 
 
 class Runner:
+    """Wrapper for running specific task in workflow function."""
     def __init__(self, name: str):
         self.name = name
 
@@ -304,6 +315,7 @@ class Runner:
 
 
 def run_workflow_function(script: Path, name: str) -> None:
+    """Run specific task in workflow function."""
     workflow_function = get_workflow_function(script)
     try:
         workflow_function(Runner(name).wrap)
@@ -312,6 +324,7 @@ def run_workflow_function(script: Path, name: str) -> None:
 
 
 if __name__ == '__main__':
+    # Used by WorkflowTask
     import sys
     script, name = sys.argv[1:]
     run_workflow_function(Path(script), name)
