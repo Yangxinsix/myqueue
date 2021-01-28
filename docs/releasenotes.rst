@@ -11,6 +11,25 @@ Next release
 
 ...
 
+Version 21.1.0
+===============
+
+* New :ref:`config command <config>` for guessing your configuration.
+  See :ref:`autoconfig`.
+* LSF-backend fixes.
+
+
+Version 20.11.3
+===============
+
+* Bugfix: LSF-backend fixes.
+
+
+Version 20.11.2
+===============
+
+* Bugfix: Don't remove FAILED-files in dry-run mode.
+
 
 Version 20.11.1
 ===============

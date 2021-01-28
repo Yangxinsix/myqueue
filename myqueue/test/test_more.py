@@ -26,7 +26,7 @@ def test_logo():
 
 
 def test_backends(mq):
-    from ..config import config, guess_scheduler, main
+    from ..config import config, guess_scheduler, guess_configuration
     config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
                        ('abc8', {'cores': 8, 'memory': '8G'})]
     config['mpiexec'] = 'echo'
@@ -45,7 +45,7 @@ def test_backends(mq):
         del config['nodes']
         del config['mpiexec']
     guess_scheduler()
-    main('local')
+    guess_configuration('local')
 
 
 class Result:
@@ -62,10 +62,12 @@ def run(commands, stdout):
 def test_autoconfig(monkeypatch):
     from ..slurm import SLURM
     from ..lsf import LSF
+
     monkeypatch.setattr(subprocess, 'run', run)
-    nodes = SLURM().get_config()
+    nodes, _ = SLURM().get_config()
     assert nodes == [('xeon8', 8, '256000M')]
-    nodes = LSF().get_config()
+
+    nodes, _ = LSF().get_config()
     assert nodes == [('xeon8', 8, '128G')]
 
 

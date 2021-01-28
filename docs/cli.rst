@@ -40,6 +40,8 @@ Sub-commands
       - Make sure SLURM/LSF/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
+    * - :ref:`config <config>`
+      - Create config.py file
     * - :ref:`daemon <daemon>`
       - Interact with the background process
 
@@ -483,6 +485,37 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
+
+
+.. _config:
+
+Config: Create config.py file
+-----------------------------
+
+usage: mq config [-h] [-Q QUEUE_NAME] [--in-place] [-z] [-v] [-q] [-T]
+                 [{local,slurm,pbs,lsf}]
+
+Create config.py file.
+
+This tool will try to guess your configuration.  Some hand editing afterwards
+will most likely be needed.
+
+Example::
+
+    $ mq config -Q hpc lsf
+
+{local,slurm,pbs,lsf}:
+     Name of scheduler. Will be guessed if not supplied.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -Q QUEUE_NAME, --queue-name QUEUE_NAME
+                        Name of queue. May be needed.
+  --in-place            Overwrite ~/.myqueue/config.py file.
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
 
 
 .. _daemon:
