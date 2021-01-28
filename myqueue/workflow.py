@@ -287,7 +287,7 @@ class Runner:
     def __init__(self, name: str):
         self.name = name
 
-    def wrap(self, function, name=None, **kwargs):
+    def wrap(self, function: Callable, name: str = '', **kwargs):
         name = name or get_name(function)
 
         function = cached_function(function, name)

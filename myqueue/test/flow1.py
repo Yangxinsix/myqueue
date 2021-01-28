@@ -22,6 +22,8 @@ def workflow(wrap):
     if b > 2:
         wrap(print)(b)
 
+    return b
+
 
 if __name__ == '__main__':
     workflow(run)
