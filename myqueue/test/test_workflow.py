@@ -1,4 +1,4 @@
-# from pathlib import Path
+from pathlib import Path
 from myqueue.task import task
 # from myqueue.workflow import workflow_from_function
 
@@ -17,3 +17,19 @@ def xxxtest_basic_workflow():
                                      workflow=True).todict()
     """
     pass
+
+
+def test_flow1(mq):
+    script = Path(__file__).with_name('flow1.py')
+    mq(f'workflow {script}')
+    mq.wait()
+    assert mq.states() == 'dddd'
+    mq(f'workflow {script}')
+    mq.wait()
+    assert mq.states() == 'ddddd'
+
+
+def test_workflow_old(mq):
+    script = Path(__file__)
+    mq(f'workflow {script}')
+    
