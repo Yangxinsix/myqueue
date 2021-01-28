@@ -47,7 +47,7 @@ def workflow(args,
 
 
 def get_workflow_function(path: Path, kwargs={}):
-    module = runpy.run_path(str(path))
+    module = runpy.run_path(str(path))  # type: ignore # bug in typeshed?
     try:
         func = module['workflow']
     except KeyError:
