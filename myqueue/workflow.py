@@ -46,7 +46,7 @@ def workflow(args,
     return tasks
 
 
-WorkflowFunction = Callable[Callable, None]
+WorkflowFunction = Callable[[Callable], None]
 
 
 def get_workflow_function(path: Path, kwargs={}) -> WorkflowFunction:
