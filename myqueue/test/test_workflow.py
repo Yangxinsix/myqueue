@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from myqueue.task import task
 from myqueue.workflow import run
-from .flow1 import workflow
+from myqueue.test.flow1 import workflow
 # from myqueue.workflow import workflow_from_function
 
 

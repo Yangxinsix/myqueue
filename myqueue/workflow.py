@@ -290,14 +290,14 @@ class Runner:
     def wrap(self, function: Callable, name: str = '', **kwargs):
         name = name or get_name(function)
 
-        function = cached_function(function, name)
+        cfunction = cached_function(function, name)
 
         def wrapper(*args, **kwargs):
             if name == self.name:
-                function(*args, **kwargs)
+                cfunction(*args, **kwargs)
                 raise StopRunning
-            if function.has(*args, **kwargs):
-                return function(*args, **kwargs)
+            if cfunction.has(*args, **kwargs):
+                return cfunction(*args, **kwargs)
             return Result('')
 
         return wrapper
