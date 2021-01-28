@@ -1,5 +1,4 @@
-from typing import List
-from myqueue.workflow import nowrap
+from myqueue.workflow import run
 
 
 def f1(x: int) -> int:
@@ -7,7 +6,7 @@ def f1(x: int) -> int:
     return x + 1
 
 
-def f2(*X: List[int]) -> int:
+def f2(*X: int) -> int:
     print(X)
     return max(X)
 
@@ -18,11 +17,11 @@ def workflow(wrap):
         a = wrap(f1, cores=1, name=f'f1-{x}')(x)
         A.append(a)
 
-    a = wrap(f2, deps=A)(*A)
+    b = wrap(f2)(*A)
 
-    if a > 2:
-        wrap(print)(a)
+    if b > 2:
+        wrap(print)(b)
 
 
 if __name__ == '__main__':
-    workflow(nowrap)
+    workflow(run)

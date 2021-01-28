@@ -30,7 +30,7 @@ def workflow(args,
                                       folders,
                                       verbosity=verbosity)
     else:
-        tasks = workflow_from_script(args.script,
+        tasks = workflow_from_script(Path(args.script),
                                      kwargs,
                                      folders,
                                      verbosity=verbosity)
@@ -47,8 +47,8 @@ def workflow(args,
     return tasks
 
 
-def get_workflow_function(path, kwargs={}):
-    module = runpy.run_path(path)
+def get_workflow_function(path: Path, kwargs={}):
+    module = runpy.run_path(str(path))
     try:
         func = module['workflow']
     except KeyError:
@@ -57,7 +57,7 @@ def get_workflow_function(path, kwargs={}):
         name = func.__name__
         func = partial(func, **kwargs)
         func.__name__ = name
-    func.path = path.absosolute()
+    func.path = path.absolute()
     return func
 
 
@@ -82,7 +82,7 @@ def workflow_from_scripts(
     return tasks
 
 
-def workflow_from_script(script,
+def workflow_from_script(script: Path,
                          kwargs,
                          folders: List[Path],
                          verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
@@ -169,13 +169,13 @@ class Result:
 
 def get_name(func):
     mod = func.__module__
-    if mod == '<run_path>':
+    if mod in ['<run_path>', '__main__']:
         return func.__name__
     return f'{mod}.{func.__name__}'
 
 
-def run(function, **kwargs):
-    return cached_function(function)
+def run(function, *, name='', **kwargs):
+    return cached_function(function, name or get_name(function))
 
 
 def cached_function(function, name):

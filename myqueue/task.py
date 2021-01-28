@@ -2,7 +2,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from types import ModuleType
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
 from warnings import warn
 
@@ -361,48 +360,6 @@ class Task:
                 tsk.state = 'CANCELED'
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
-
-    def __call__(self, *args, **kwargs):
-        if Task.tasks is None:
-            return self.run(*args, **kwargs)
-
-
-def run(function: 'Callable' = None,
-        *,
-        script: str = None,
-        module: Union[str, ModuleType] = None,
-        shell_command: str = None,
-        **kwargs):
-    task = create_task(
-        function,
-        script=script,
-        module=module,
-        shell_command=shell_command,
-        **kwargs)
-    if task.tasks is None:
-        return task.run()
-    task.tasks.append(task)
-    if task.block and not task.is_done():
-        raise StopCollectingTasks
-    return task
-
-
-class WrappedTask:
-    def __init__(self, task):
-        self.task = task
-
-    def __call__(self, *args, **kwargs):
-        if task.tasks is None:
-            return task.run()
-        task.tasks.append(task)
-        if task.block and not task.is_done():
-            raise StopCollectingTasks
-        return task
-
-
-def wrap(function, **kwargs):
-    task = create_task(function, **kwargs)
-    return WrappedTask(task)
 
 
 def task(cmd: str,

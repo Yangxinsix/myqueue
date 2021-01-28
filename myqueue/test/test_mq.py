@@ -91,7 +91,7 @@ def create_tasks():
 
 
 def test_workflow(mq):
-    mq('submit shell:sleep+3@1:1m -w')
+    mq('submit shell:sleep+3 -R1:1m -w')
     time.sleep(2)
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . -t shell:touch+hello')

@@ -5,7 +5,7 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union, Optional, Type
 from pathlib import Path
 
 from .resources import Resources
@@ -51,6 +51,7 @@ def create_command(cmd: str,
         args = rest.split('_') + args
     cmd = path + sep + cmd
 
+    cls: Type[Command]
     if type is None:
         if cmd.startswith('shell:'):
             cls = ShellCommand
@@ -195,7 +196,7 @@ class PythonFunction(Command):
 
 class PythonFunctionInScript(Command):
     def __init__(self, cmd: str, args: List[str]):
-        script, func = cmd.rsplit('@', 1)
+        script, self.func = cmd.rsplit('@', 1)
         path = Path(script)
         Command.__init__(self, path.name, args)
         if '/' in script:
