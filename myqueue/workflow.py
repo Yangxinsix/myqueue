@@ -47,7 +47,7 @@ def workflow(args,
     return tasks
 
 
-def get_workflow_function(path, kwargs):
+def get_workflow_function(path, kwargs={}):
     module = runpy.run_path(path)
     try:
         func = module['workflow']
@@ -57,7 +57,7 @@ def get_workflow_function(path, kwargs):
         name = func.__name__
         func = partial(func, **kwargs)
         func.__name__ = name
-    func.path = path
+    func.path = path.absosolute()
     return func
 
 
@@ -168,11 +168,20 @@ class Result:
 
 
 def get_name(func):
-    return f'{func.__module__}.{func.__name__}'
+    mod = func.__module__
+    if mod == '<run_path>':
+        return func.__name__
+    return f'{mod}.{func.__name__}'
 
 
-def nowrap(function, **kwargs):
-    return function
+def run(function, **kwargs):
+    return cached_function(function)
+
+
+def cached_function(function, name):
+    if hasattr(function, 'is_done'):
+        return function
+    return Cached(function, name)
 
 
 class Cached:
@@ -203,8 +212,7 @@ class Collector:
                 **run_kwargs):
         name = name or get_name(function)
 
-        if not hasattr(function, 'is_done'):
-            function = Cached(function, name)
+        function = cached_function(function, name)
 
         def wrapper(*args, **kwargs):
             if function.is_done(*args, **kwargs):
@@ -215,7 +223,7 @@ class Collector:
                 if isinstance(arg, Result):
                     dependencies.add(arg.task[0])
 
-            task = (name, function, dependencies, run_kwargs)
+            task = (name, dependencies, run_kwargs)
             assert name not in self.tasks
             self.tasks[name] = task
             return Result(task)
@@ -232,23 +240,26 @@ def collect(workflow_function, folder):
 
     tasks = []
     for name, deps, kwargs in collector.tasks.values():
-        command = WorkflowTask(workflow_function.path, name)
+        command = WorkflowTask(f'{workflow_function.path}:{name}', [])
 
         restart = kwargs.pop('restart', 0)
         diskspace = kwargs.pop('diskspace', 0)
 
         res = Resources.from_args_and_command(
             command=command,
-            folder=folder, **kwargs)
+            path=folder, **kwargs)
 
         task = Task(command,
-                    deps=list(deps),
+                    deps=[folder / dep for dep in deps],
                     resources=res,
                     workflow=True,
                     restart=restart,
                     diskspace=diskspace,
-                    folder=folder)
+                    folder=folder,
+                    creates=[])
         tasks.append(task)
+        print(task, deps)
+
     return tasks
 
 
@@ -259,8 +270,7 @@ class Runner:
     def wrap(self, function, name=None, **kwargs):
         name = name or get_name(function)
 
-        if not hasattr(function, 'is_done'):
-            function = Cached(function, name)
+        function = cached_function(function, name)
 
         def wrapper(*args, **kwargs):
             if name == self.name:

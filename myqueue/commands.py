@@ -142,9 +142,10 @@ class PythonScript(Command):
 
 
 class WorkflowTask(Command):
-    def __init__(self, script: Path, name: str):
-        self.script = script
-        Command.__init__(self, name)
+    def __init__(self, cmd: str, args):
+        script, name = cmd.split(':')
+        self.script = Path(script)
+        Command.__init__(self, name, args)
         self.short_name = name
 
     def __str__(self) -> str:
@@ -153,7 +154,7 @@ class WorkflowTask(Command):
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'workflow-task',
-                '': self.script}
+                'cmd': f'{self.script}:{self.name}'}
 
 
 class PythonModule(Command):

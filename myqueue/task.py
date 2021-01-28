@@ -285,7 +285,8 @@ class Task:
     def write_done_file(self) -> None:
         if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
             p = self.folder / f'{self.cmd.fname}.done'
-            p.write_text('')
+            if not p.is_file():
+                p.write_text('')
 
     def write_failed_file(self) -> None:
         if self.workflow and self.folder.is_dir():

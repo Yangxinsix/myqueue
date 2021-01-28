@@ -73,8 +73,13 @@ class Resources:
         return Resources(int(cores), nodename, processes, tmax)
 
     @staticmethod
-    def from_args_and_command(cores, nodename, processes, tmax,
-                              resources, command, path):
+    def from_args_and_command(cores=0,
+                              nodename='',
+                              processes=0,
+                              tmax='',
+                              resources='',
+                              command=None,
+                              path=None):
         if cores == 0 and nodename == '' and processes == 0 and tmax == '':
             if resources:
                 return Resources.from_string(resources)
