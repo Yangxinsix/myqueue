@@ -361,6 +361,10 @@ class Task:
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
 
+    def run(self):
+        print(self.cmd)
+        self.result = 42
+
 
 def task(cmd: str,
          args: List[str] = [],

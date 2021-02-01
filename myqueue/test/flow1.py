@@ -1,4 +1,4 @@
-from myqueue.workflow import run
+from myqueue.workflow import run, wrap
 
 
 def f1(x: int) -> int:
@@ -11,13 +11,14 @@ def f2(*X: int) -> int:
     return max(X)
 
 
-def workflow(wrap):
+def workflow():
     A = []
     for x in range(3):
-        a = wrap(f1, cores=1, name=f'f1-{x}')(x)
-        A.append(a)
+        with run(function=f1, cores=1, name=f'f1-{x}', args=[x]) as a:
+            wrap(f1)(a.result)
+            A.append(a)
 
-    b = wrap(f2)(*A)
+    b = wrap(f2, tmax='1h')(*A)
 
     if b > 2:
         wrap(print)(b)
@@ -26,4 +27,4 @@ def workflow(wrap):
 
 
 if __name__ == '__main__':
-    workflow(run)
+    workflow()

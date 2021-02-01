@@ -143,7 +143,7 @@ class PythonScript(Command):
 
 
 class WorkflowTask(Command):
-    def __init__(self, cmd: str, args):
+    def __init__(self, cmd: str, args, function=None):
         script, name = cmd.split(':')
         self.script = Path(script)
         Command.__init__(self, name, args)
