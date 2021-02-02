@@ -1,27 +1,39 @@
-from myqueue.workflow import run, wrap
+from myqueue.workflow import run, wrap, resources
 
 
-def f1(x: int) -> int:
+def f(x: int) -> int:
     print(x)
     return x + 1
 
 
-def f2(*X: int) -> int:
-    print(X)
-    return max(X)
+def work():
+    A = []
+    for x in range(3):
+        y = f(x)
+        f(y + 1)
+        A.append(y)
+
+    b = max(*A)
+
+    if b > 2:
+        print(b)
+
+    return b
 
 
+@resources(tmax='1h')
 def workflow():
     A = []
     for x in range(3):
-        with run(function=f1, cores=1, name=f'f1-{x}', args=[x]) as a:
-            wrap(f1)(a.result)
-            A.append(a)
+        y = wrap(f, name=f'fa-{x}')(x)
+        run(function=f, name=f'fb-{x}', args=[y + 1])
+        A.append(y)
 
-    b = wrap(f2, tmax='1h')(*A)
+    b = wrap(max)(*A)
 
     if b > 2:
-        wrap(print)(b)
+        with resources(tmax='1s'):
+            wrap(print)(b)
 
     return b
 

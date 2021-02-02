@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
+UNSPECIFIED = 'asdfQAWEFASDF'
 
 
 class Task:
@@ -83,6 +84,7 @@ class Task:
         self.dtasks: List[Task] = []
         self.activation_script: Optional[Path] = None
         self._done: Optional[bool] = None
+        self.result = UNSPECIFIED
 
     @property
     def name(self) -> str:
@@ -362,14 +364,12 @@ class Task:
                 tsk.cancel_dependents(tasks, t)
 
     def run(self):
-        print(self.cmd)
-        self.result = 42
+        self.result = self.cmd.run()
 
 
 def task(cmd: str,
          args: List[str] = [],
          *,
-         block: bool = False,
          resources: str = '',
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',

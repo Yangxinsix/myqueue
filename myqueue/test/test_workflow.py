@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from myqueue.task import task
-from myqueue.workflow import run
 from myqueue.test.flow1 import workflow
 # from myqueue.workflow import workflow_from_function
 
@@ -26,23 +25,18 @@ def test_flow1(mq):
     script = Path(__file__).with_name('flow1.py')
     mq(f'workflow {script}')
     mq.wait()
-    assert mq.states() == 'dddd'
+    assert mq.states() == 'ddddddd'
     mq(f'workflow {script}')
     mq.wait()
-    assert mq.states() == 'ddddd'
+    assert mq.states() == 'dddddddd'
 
 
-def test_flow1_direct():
-    a = workflow(lambda func, **kwargs: func)
-    assert a == 3
-
-
-def test_flow1_direct_cached(tmp_path, capsys):
+def test_direct_cached_flow1(tmp_path, capsys):
     os.chdir(tmp_path)
-    a = workflow(run)
+    a = workflow()
     assert a == 3
-    assert capsys.readouterr().out == '0\n1\n2\n(1, 2, 3)\n3\n'
-    workflow(run)
+    assert capsys.readouterr().out == '\n'.join('0213243') + '\n'
+    workflow()
     assert capsys.readouterr().out == ''
 
 

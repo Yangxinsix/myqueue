@@ -2,10 +2,10 @@ import ast
 import runpy
 from pathlib import Path
 from functools import partial
-from typing import Callable, List, Dict, Any, Union
+from typing import Callable, List, Dict, Any, Union, Optional
 
 from .progress import progress_bar
-from .task import Task
+from .task import Task, UNSPECIFIED
 from .utils import chdir, plural
 from myqueue.commands import WorkflowTask
 from myqueue.resources import Resources
@@ -46,7 +46,7 @@ def workflow(args,
     return tasks
 
 
-WorkflowFunction = Callable[[Callable], None]
+WorkflowFunction = Callable[[], None]
 
 
 def get_workflow_function(path: Path, kwargs={}) -> WorkflowFunction:
@@ -154,36 +154,32 @@ class StopRunning(Exception):
     """The correct task has finished running: Stop workflow function."""
 
 
-class Result:
-    """Result object for a task - used for finding dependencies.
-
-    >>> result = Result('task1')
-    >>> x = result.data[42]
-    >>> x is result
-    True
-    >>> x < 10
-    Traceback (most recent call last):
-        ...
-    myqueue.workflow.StopCollecting
-    """
-    def __init__(self, task, dependencies):
+class RunHandle:
+    def __init__(self, task, runner):
         self.task = task
-        self.dependencies = dependencies
-        self._result = -42
+        self.runner = runner
+        self._result = UNSPECIFIED
 
     @property
     def result(self):
-        if self._result == -42:
-            return self
-        return self._result
+        result = self.task.result
+        if result is UNSPECIFIED:
+            return Result(self.task)
+        return result
 
     def __enter__(self):
-        self.dependencies.append(self.task)
+        self.runner.dependencies.append(self.task)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        task = self.dependencies.pop()
+        task = self.runner.dependencies.pop()
         assert task is self.task
+
+
+class Result:
+    """Result object for a task - used for finding dependencies."""
+    def __init__(self, task):
+        self.task = task
 
     def __getitem__(self, key) -> 'Result':
         return self
@@ -191,10 +187,13 @@ class Result:
     def __getattr__(self, attr) -> 'Result':
         return self
 
-    def __gt__(self, other):
+    def _stop(self, other):
         raise StopCollecting
 
-    __lt__ = __gt__
+    __lt__ = _stop
+    __gt__ = _stop
+
+    __add__ = __getitem__
 
 
 def get_name(func: Callable) -> str:
@@ -220,10 +219,10 @@ class Cached:
         """Check if function has been called."""
         return self.path.is_file()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self):
         if self.has():
             return eval(self.path.read_text())
-        result = self.function(*args, **kwargs)
+        result = self.function()
         self.path.write_text(repr(result))
         return result
 
@@ -238,10 +237,11 @@ def cached_function(function: Callable, name: str) -> Cached:
 class Runner:
     """Wrapper for collecting tasks from workflow function."""
     def __init__(self):
-        self.tasks: List[Task] = None
+        self.tasks: Optional[List[Task]] = None
         self.dependencies = []
+        self.kwargs = {}
         self.target = ''
-        self.script = None
+        self.workflow_script = None
 
     def run(self,
             *,
@@ -268,59 +268,92 @@ class Runner:
                            name,
                            args,
                            kwargs,
-                           deps,
+                           deps,#???
                            tmax,
                            cores,
-                           self.script,
+                           self.workflow_script,
                            Path(folder).absolute())
 
-        if task.name == self.target:
-            task.run()
-            raise StopRunning
+        if self.target:
+            if task.cmd.fname == self.target:
+                task.run()
+                raise StopRunning
         elif self.tasks is not None:
             self.tasks.append(task)
         else:
             task.run()
 
-        return Result(task, self.dependencies)
+        return RunHandle(task, self)
 
     def wrap(self, function, **run_kwargs):
         def wrapper(*args, **kwargs):
-            result = self.run(function=function,
+            handle = self.run(function=function,
                               args=args,
                               kwargs=kwargs,
                               **run_kwargs)
-            return result.task.result
+            return handle.result
         return wrapper
+
+    def parameters(self, **kwargs):
+        return Parameters(kwargs, self)
+
+
+class Parameters:
+    def __init__(self, kwargs, runner):
+        self.kwargs = kwargs
+        self.runner = runner
+
+    def __call__(self, workflow_function):
+        self.__enter__()
+        return workflow_function
+
+    def __enter__(self):
+        kwargs = self.runner.kwargs
+        self.runner.kwargs = {**kwargs, **self.kwargs}
+        self.kwargs = kwargs
+        return self.runner.kwargs
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.runner.kwargs = self.kwargs
 
 
 def create_task(function,
                 script,
                 name, args, kwargs, deps, tmax, cores,
                 workflow_script, folder):
+
+    workflow = True
+
     if function:
         name = name or get_name(function)
+        function = partial(function, *args, **kwargs)
         cfunction = cached_function(function, name)
         command = WorkflowTask(f'{workflow_script}:{name}', [], cfunction)
+        workflow = False
 
-    res = Resources.from_args_and_command(
-        command=command,
-        path=folder, **kwargs)
+    res = Resources.from_args_and_command(command=command,
+                                          path=folder,
+                                          **kwargs)#????
 
     task = Task(command,
                 deps=[folder / dep for dep in deps],
                 resources=res,
-                workflow=True,
+                workflow=workflow,
                 folder=folder,
                 creates=[],
                 restart=0,
                 diskspace=0)
+
+    if function and cfunction.has(*args, **kwargs):
+        task.result = cfunction()
+
     return task
 
 
 runner = Runner()
 run = runner.run
 wrap = runner.wrap
+resources = runner.parameters
 
 
 def collect(workflow_function: Callable,
@@ -328,6 +361,7 @@ def collect(workflow_function: Callable,
             script: Path) -> List[Task]:
     """Collecting tasks from workflow function."""
     runner.tasks = []
+    runner.workflow_script = script
     try:
         workflow_function()
     except StopCollecting:
@@ -347,10 +381,3 @@ def run_workflow_function(script: Path, name: str) -> None:
     except StopRunning:
         pass
     runner.target = ''
-
-
-if __name__ == '__main__':
-    # Used by WorkflowTask
-    import sys
-    script, name = sys.argv[1:]
-    run_workflow_function(Path(script), name)

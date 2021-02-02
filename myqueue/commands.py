@@ -20,6 +20,7 @@ class Command:
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
         self.short_name: str
+        self.function = None
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -35,6 +36,9 @@ class Command:
     def read_resources(self, path) -> Optional[Resources]:
         """Look for "# MQ: resources=..." comments in script."""
         return None
+
+    def run(self):
+        raise NotImplementedError
 
 
 def create_command(cmd: str,
@@ -147,10 +151,18 @@ class WorkflowTask(Command):
         script, name = cmd.split(':')
         self.script = Path(script)
         Command.__init__(self, name, args)
+        self.function = function
         self.short_name = name
 
     def __str__(self) -> str:
-        return f'python3 -m myqueue.workflow {self.script} {self.name}'
+        code = '; '.join(
+            ['from myqueue.hmm import x'
+             f'x({str(self.script)!r}, {self.name!r})'])
+        return f'python3 -c "{code}"'
+
+    def run(self):
+        assert self.function is not None
+        return self.function()
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
