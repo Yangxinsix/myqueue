@@ -118,8 +118,8 @@ and now in all subfolders::
     -- --------- ------------ ---- ---- ----- ----
     done: 12, total: 12
 
-Note that a ``prime.check.done`` file is created to mark that the
-``prime.check`` task has been completed::
+Note that ``prime.check.done`` and ``prime.factor.done`` files are created
+to mark that these tasks has been completed::
 
     $ ls -l 1001/
     totalt 4
@@ -130,9 +130,6 @@ Note that a ``prime.check.done`` file is created to mark that the
     -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.err
     -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.out
     -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.done
-
-There is no ``prime.factor.done`` file because ``factors.json`` serves that
-purpose.
 
 Now, add another number::
 
@@ -207,9 +204,9 @@ where ``task1.py`` and ``task2.py`` are Python scripts and ``postprocess`` is
 a Python function.  Calling the :func:`workflow` function directly will run
 the ``task1.py`` script, then the ``task2.py`` script and finally the
 ``postprocess`` function.  If instead, the :func:`workflow` function  is
-passed to the the ``mq workflow flow.py`` command, then the :func:`run` will
-not actually run the tasks, but instead collect them with dependencies and
-submit them.
+passed to the the ``mq workflow flow.py`` command, then the :func:`run`
+function will not actually run the tasks, but instead collect them with
+dependencies and submit them.
 
 Here is an alternative way to specify the dependencies of the ``postprocess``
 step::

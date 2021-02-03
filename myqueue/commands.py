@@ -156,8 +156,8 @@ class WorkflowTask(Command):
 
     def __str__(self) -> str:
         code = '; '.join(
-            ['from myqueue.hmm import x',
-             f'x({str(self.script)!r}, {self.name!r})'])
+            ['from myqueue.workflow import run_workflow_function',
+             f'run_workflow_function({str(self.script)!r}, {self.name!r})'])
         return f'python3 -c "{code}"'
 
     def run(self):

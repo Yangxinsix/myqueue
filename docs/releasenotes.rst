@@ -9,9 +9,9 @@ Release notes
 Next release
 ============
 
-* New way to specify workflows using :func:`myqueue.workflow.run`,
-  :func:`myqueue.workflow.wrap` and :func:`myqueue.workflow.resources`:
-  :ref:`workflow script`.
+* PRELIMINARY: New way to specify workflows using :func:`myqueue.workflow.run`,
+  :func:`myqueue.workflow.wrap` and :func:`myqueue.workflow.resources`.
+  See :ref:`workflow script`.
 
 
 Version 21.1.0

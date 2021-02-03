@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
-UNSPECIFIED = 'asdfQAWEFASDF'
+UNSPECIFIED = 'hydelifytskibadut'
 
 
 class Task:
@@ -40,8 +40,6 @@ class Task:
     creates: list of str
         Name of files created by task.
     """
-
-    tasks = None
 
     def __init__(self,
                  cmd: Command,

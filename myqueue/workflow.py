@@ -334,7 +334,7 @@ class Runner:
         These two are equivalent::
 
             result = run(function=func, args=args, kwargs=kwargs, ...).result
-            result = wrap(func, ...)(*args, **kwargs, ...)
+            result = wrap(func, ...)(*args, **kwargs)
 
         """
         def wrapper(*args, **kwargs):
@@ -428,9 +428,9 @@ def collect(workflow_function: Callable,
     return tasks
 
 
-def run_workflow_function(script: Path, name: str) -> None:
+def run_workflow_function(script: str, name: str) -> None:
     """Run specific task in workflow function."""
-    workflow_function = get_workflow_function(script)
+    workflow_function = get_workflow_function(Path(script))
     runner.target = name
     try:
         workflow_function()
