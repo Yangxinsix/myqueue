@@ -136,7 +136,7 @@ Submit: Submit task(s) to queue
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-f]
                  [--max-tasks MAX_TASKS] [-R RESOURCES] [-w] [-z] [-v] [-q]
                  [-T]
-                 task [folder [folder ...]]
+                 task [folder ...]
 
 Submit task(s) to queue.
 
@@ -180,7 +180,7 @@ Resubmit: Resubmit failed or timed-out tasks
 
 usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID] [-n NAME]
                    [-e ERROR] [-z] [-v] [-q] [-T] [-r]
-                   [folder [folder ...]]
+                   [folder ...]
 
 Resubmit failed or timed-out tasks.
 
@@ -225,7 +225,7 @@ Remove (rm): Remove or cancel task(s)
 
 usage: mq remove [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
-                 [folder [folder ...]]
+                 [folder ...]
 
 Remove or cancel task(s).
 
@@ -290,7 +290,7 @@ Workflow: Submit tasks from Python script or several scripts matching pattern
 
 usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
                    [-a ARGUMENTS] [-z] [-v] [-q] [-T]
-                   script [folder [folder ...]]
+                   script [folder ...]
 
 Submit tasks from Python script or several scripts matching pattern.
 
@@ -333,8 +333,7 @@ optional arguments:
 Run: Run task(s) on local computer
 ----------------------------------
 
-usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T]
-              task [folder [folder ...]]
+usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T] task [folder ...]
 
 Run task(s) on local computer.
 
@@ -391,7 +390,7 @@ Modify: Modify task(s)
 
 usage: mq modify [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
-                 newstate [folder [folder ...]]
+                 newstate [folder ...]
 
 Modify task(s).
 

@@ -1,14 +1,15 @@
 import ast
 import runpy
-from pathlib import Path
 from functools import partial
-from typing import Callable, List, Dict, Any, Union, Optional
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
+
+from myqueue.commands import Command, PythonModule, PythonScript, WorkflowTask
+from myqueue.resources import Resources
 
 from .progress import progress_bar
-from .task import Task, UNSPECIFIED
+from .task import UNSPECIFIED, Task
 from .utils import chdir, plural
-from myqueue.commands import WorkflowTask, PythonModule, Command
-from myqueue.resources import Resources
 
 DEFAULT_VERBOSITY = 1
 
@@ -373,7 +374,12 @@ def create_task(function: Callable = None,
                 restart: int = 0,
                 **resource_kwargs) -> Task:
     """Create a Task object."""
-    workflow = True
+    if sum((thing is not None
+            for thing in [function, module, script])) != 1:
+        1 / 0
+
+    workflow = True  # create a .done file XXX
+
     command: Command
 
     if function:
@@ -385,6 +391,9 @@ def create_task(function: Callable = None,
     elif module:
         assert not kwargs
         command = PythonModule(module, [str(arg) for arg in args])
+    elif script:
+        assert not kwargs
+        command = PythonScript(script, [str(arg) for arg in args])
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
