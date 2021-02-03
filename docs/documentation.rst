@@ -116,6 +116,15 @@ would run ``python3 script.py ABC 123`` and::
 would run ``python3 -c "import mymod; mymod.func('ABC', 123)``.
 
 
+.. _venv:
+
+Using a Python virtual environment
+==================================
+
+Tasks will activate a virtual environment if a ``venv/`` folder is found
+in one of the parent folders.  The activation script will be ``venv/activate``.
+
+
 .. _resources:
 
 Resources

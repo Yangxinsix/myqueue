@@ -32,9 +32,9 @@ Documentation
 -------------
 
 Whenever the output of *mq* changes, please update the examples in the
-ReST documentation files with::
+ReStructuredText documentation-files with::
 
-    $ mq test --update-source-code
+    $ pytest (... with update=True in test_rst.py ...)
 
 Whenever changes are made to the command-line tool, please update the
 documentation and tab-completion script with::

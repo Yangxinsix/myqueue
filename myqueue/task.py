@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
+from warnings import warn
 
 from .commands import create_command, Command
 from .resources import Resources, T
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 
 taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
+UNSPECIFIED = 'hydelifytskibadut'
 
 
 class Task:
@@ -38,6 +40,7 @@ class Task:
     creates: list of str
         Name of files created by task.
     """
+
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
@@ -79,6 +82,7 @@ class Task:
         self.dtasks: List[Task] = []
         self.activation_script: Optional[Path] = None
         self._done: Optional[bool] = None
+        self.result = UNSPECIFIED
 
     @property
     def name(self) -> str:
@@ -280,7 +284,8 @@ class Task:
     def write_done_file(self) -> None:
         if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
             p = self.folder / f'{self.cmd.fname}.done'
-            p.write_text('')
+            if not p.is_file():
+                p.write_text('')
 
     def write_failed_file(self) -> None:
         if self.workflow and self.folder.is_dir():
@@ -356,11 +361,14 @@ class Task:
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
 
+    def run(self):
+        self.result = self.cmd.run()
+
 
 def task(cmd: str,
-         resources: str = '',
          args: List[str] = [],
          *,
+         resources: str = '',
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 0,
@@ -382,6 +390,8 @@ def task(cmd: str,
     ----------
     cmd: str
         Command to be run.
+    args: list of str
+        Command-line arguments or function arguments.
     resources: str
         Resources::
 
@@ -389,8 +399,6 @@ def task(cmd: str,
 
         Examples: '48:1d', '32:1h', '8:xeon8:1:30m'.  Can not be used
         togeter with any of "cores", "nodename", "processes" and "tmax".
-    args: list of str
-        Command-line arguments or function arguments.
     name: str
         Name to use for task.  Default is <cmd>[+<arg1>[_<arg2>[_<arg3>]...]].
     deps: str, list of str, Task object  or list of Task objects
@@ -438,10 +446,13 @@ def task(cmd: str,
                 dpaths.append(dep.dname)
 
     if '@' in cmd:
+        # Old way of specifying resources:
         c, r = cmd.rsplit('@', 1)
         if r[0].isdigit():
             cmd = c
             resources = r
+            warn(f'Please use resources={r!r} instead of deprecated '
+                 f'...@{r} syntax!')
 
     command = create_command(cmd, args, name=name)
 

@@ -1,5 +1,5 @@
 tests:
-  image: python:3.8
+  image: python:3.9
   script:
     - pip install flake8 mypy coverage pytest interrogate
     - pip install -e .
@@ -7,4 +7,4 @@ tests:
     - coverage report -i --fail-under=80
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 37.7 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 40.8 myqueue -e myqueue/test

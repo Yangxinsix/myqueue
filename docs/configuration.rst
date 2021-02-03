@@ -46,6 +46,8 @@ See details below.
 Guessing your configuration
 ===========================
 
+.. highlight:: bash
+
 Try the following :ref:`command <config>`::
 
     $ mq config
@@ -61,13 +63,9 @@ giving it the scheduler name and/or the queue name (try ``mq config -h``).
 Name of scheduler
 =================
 
-The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'`` or
-``'local'``.  The *local* scheduler can be used for testing on a system without
-SLURM/LSF/PBS.  Start the local scheduler with:
-
-.. highlight:: bash
-
-::
+The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'``
+or ``'local'``.  The *local* scheduler can be used for testing on a system
+without SLURM/LSF/PBS.  Start the local scheduler with::
 
     $ python3 -m myqueue.local
 

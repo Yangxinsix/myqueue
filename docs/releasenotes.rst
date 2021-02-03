@@ -9,7 +9,10 @@ Release notes
 Next release
 ============
 
-...
+* PRELIMINARY: New way to specify workflows using :func:`myqueue.workflow.run`,
+  :func:`myqueue.workflow.wrap` and :func:`myqueue.workflow.resources`.
+  See :ref:`workflow script`.
+
 
 Version 21.1.0
 ===============
@@ -45,6 +48,7 @@ Version 20.11.0
 * Two new columns in :ref:`list output <list>`: *arguments* and *info*.
   Can be hidden with: ``mq ls -c aI-``.
 * Deprecated ``venv/activate`` script.  Use ``venv/bin/activate`` instead.
+  See :ref:`venv`.
 * Resources can now be specified in the scripts as special comments::
 
       # MQ: resources=24:2h
