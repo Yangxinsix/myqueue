@@ -119,7 +119,7 @@ and now in all subfolders::
     done: 12, total: 12
 
 Note that ``prime.check.done`` and ``prime.factor.done`` files are created
-to mark that these tasks has been completed::
+to mark that these tasks have been completed::
 
     $ ls -l 1001/
     totalt 4
