@@ -7,7 +7,7 @@ from typing import Callable, List, Dict, Any, Union, Optional
 from .progress import progress_bar
 from .task import Task, UNSPECIFIED
 from .utils import chdir, plural
-from myqueue.commands import WorkflowTask, PythonModule
+from myqueue.commands import WorkflowTask, PythonModule, Command
 from myqueue.resources import Resources
 
 DEFAULT_VERBOSITY = 1
@@ -242,7 +242,8 @@ class Runner:
         self.resource_kwargs = {'tmax': '10m',
                                 'cores': 1,
                                 'nodename': '',
-                                'processes': 0}
+                                'processes': 0,
+                                'restart': 0}
         self.target = ''
         self.workflow_script = None
 
@@ -259,13 +260,14 @@ class Runner:
             cores: int = None,
             nodename: str = None,
             processes: int = None,
-            repeats=None,
-            folder='.') -> Result:
+            restart: int = None,
+            folder='.') -> RunHandle:
 
         dependencies = self.extract_dependencies(args, kwargs, deps)
 
         resource_kwargs = {}
-        for value, (key, default) in zip([tmax, cores, nodename, processes],
+        values = [tmax, cores, nodename, processes, restart]
+        for value, (key, default) in zip(values,
                                          self.resource_kwargs.items()):
             resource_kwargs[key] = value if value is not None else default
 
@@ -317,19 +319,20 @@ class ResourceHandler:
     def __init__(self, kwargs, runner):
         self.kwargs = kwargs
         self.runner = runner
+        self.old_kwargs: Dict
 
     def __call__(self, workflow_function):
-        self.__enter__()
-        return workflow_function
+        def new():
+            with self:
+                return workflow_function()
+        return new
 
     def __enter__(self):
-        kwargs = self.runner.resource_kwargs
-        self.runner.resource_kwargs = {**kwargs, **self.kwargs}
-        self.kwargs = kwargs
-        return self.runner.resource_kwargs
+        self.old_kwargs = self.runner.resource_kwargs
+        self.runner.resource_kwargs = {**self.old_kwargs, **self.kwargs}
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.runner.resource_kwargs = self.kwargs
+        self.runner.resource_kwargs = self.old_kwargs
 
 
 def create_task(function,
@@ -337,9 +340,11 @@ def create_task(function,
                 module,
                 name, args, kwargs, deps,
                 workflow_script, folder,
+                restart,
                 **resource_kwargs):
 
     workflow = True
+    command: Command
 
     if function:
         name = name or get_name(function)
@@ -356,16 +361,17 @@ def create_task(function,
                                           **resource_kwargs)
 
     task = Task(command,
-                deps=[folder / dep for dep in deps],
+                deps=deps,
                 resources=res,
                 workflow=workflow,
                 folder=folder,
-                creates=[],
-                restart=0,
-                diskspace=0)
+                restart=restart,
+                diskspace=0,
+                creates=[])
 
     if function and cfunction.has(*args, **kwargs):
         task.result = cfunction()
+        task._done = True
 
     return task
 
