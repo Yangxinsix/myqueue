@@ -122,7 +122,8 @@ Using a Python virtual environment
 ==================================
 
 Tasks will activate a virtual environment if a ``venv/`` folder is found
-in one of the parent folders.  The activation script will be ``venv/activate``.
+in one of the parent folders.  The activation script will be
+``venv/bin/activate``.
 
 
 .. _resources:
