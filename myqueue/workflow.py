@@ -155,6 +155,7 @@ class StopRunning(Exception):
 
 
 class RunHandle:
+    """Result of calling run().  Can be used as a context manager."""
     def __init__(self, task, runner):
         self.task = task
         self.runner = runner
@@ -162,6 +163,7 @@ class RunHandle:
 
     @property
     def result(self):
+        """Result from Python-function tasks."""
         result = self.task.result
         if result is UNSPECIFIED:
             return Result(self.task)
@@ -181,19 +183,16 @@ class Result:
     def __init__(self, task):
         self.task = task
 
-    def __getitem__(self, key) -> 'Result':
-        return self
-
     def __getattr__(self, attr) -> 'Result':
         return self
 
-    def _stop(self, other):
+    def __lt__(self, other):
         raise StopCollecting
 
-    __lt__ = _stop
-    __gt__ = _stop
+    __gt__ = __lt__
 
-    __add__ = __getitem__
+    __getitem__ = __getattr__
+    __add__ = __getattr__
 
 
 def get_name(func: Callable) -> str:
@@ -234,88 +233,8 @@ def cached_function(function: Callable, name: str) -> Cached:
     return Cached(function, name)
 
 
-class Runner:
-    """Wrapper for collecting tasks from workflow function."""
-    def __init__(self):
-        self.tasks: Optional[List[Task]] = None
-        self.dependencies = []
-        self.resource_kwargs = {'tmax': '10m',
-                                'cores': 1,
-                                'nodename': '',
-                                'processes': 0,
-                                'restart': 0}
-        self.target = ''
-        self.workflow_script = None
-
-    def run(self,
-            *,
-            function: Union[Callable, Cached] = None,
-            script: str = None,
-            module: str = None,
-            name: str = '',
-            args=[],
-            kwargs={},
-            deps: List[RunHandle] = [],
-            tmax: str = None,
-            cores: int = None,
-            nodename: str = None,
-            processes: int = None,
-            restart: int = None,
-            folder='.') -> RunHandle:
-
-        dependencies = self.extract_dependencies(args, kwargs, deps)
-
-        resource_kwargs = {}
-        values = [tmax, cores, nodename, processes, restart]
-        for value, (key, default) in zip(values,
-                                         self.resource_kwargs.items()):
-            resource_kwargs[key] = value if value is not None else default
-
-        task = create_task(function,
-                           script,
-                           module,
-                           name,
-                           args,
-                           kwargs,
-                           dependencies,
-                           self.workflow_script,
-                           Path(folder).absolute(),
-                           **resource_kwargs)
-
-        if self.target:
-            if task.cmd.fname == self.target:
-                task.run()
-                raise StopRunning
-        elif self.tasks is not None:
-            self.tasks.append(task)
-        else:
-            task.run()
-
-        return RunHandle(task, self)
-
-    def extract_dependencies(self, args, kwargs, deps):
-        tasks = set(self.dependencies)
-        for handle in deps:
-            tasks.add(handle.task)
-        for thing in list(args) + list(kwargs.values()):
-            if isinstance(thing, Result):
-                tasks.add(thing.task)
-        return [task.dname for task in tasks]
-
-    def wrap(self, function, **run_kwargs):
-        def wrapper(*args, **kwargs):
-            handle = self.run(function=function,
-                              args=args,
-                              kwargs=kwargs,
-                              **run_kwargs)
-            return handle.result
-        return wrapper
-
-    def resources(self, **kwargs):
-        return ResourceHandler(kwargs, self)
-
-
 class ResourceHandler:
+    """Resource decorator and context manager."""
     def __init__(self, kwargs, runner):
         self.kwargs = kwargs
         self.runner = runner
@@ -335,14 +254,125 @@ class ResourceHandler:
         self.runner.resource_kwargs = self.old_kwargs
 
 
-def create_task(function,
-                script,
-                module,
-                name, args, kwargs, deps,
-                workflow_script, folder,
-                restart,
-                **resource_kwargs):
+class Runner:
+    """Wrapper for collecting tasks from workflow function."""
+    def __init__(self):
+        self.tasks: Optional[List[Task]] = None
+        self.dependencies: List[Task] = []
+        self.resource_kwargs = {'tmax': '10m',
+                                'cores': 1,
+                                'nodename': '',
+                                'processes': 0,
+                                'restart': 0}
+        self.target = ''
+        self.workflow_script: Optional[Path] = None
 
+    def run(self,
+            *,
+            function: Union[Callable, Cached] = None,
+            script: Union[Path, str] = None,
+            module: str = None,
+            name: str = '',
+            args=[],
+            kwargs={},
+            deps: List[RunHandle] = [],
+            tmax: str = None,
+            cores: int = None,
+            nodename: str = None,
+            processes: int = None,
+            restart: int = None,
+            folder: Union[Path, str] = '.') -> RunHandle:
+        """Run or submit a task.
+        """
+        dependencies = self.extract_dependencies(args, kwargs, deps)
+
+        resource_kwargs = {}
+        values = [tmax, cores, nodename, processes, restart]
+        for value, (key, default) in zip(values,
+                                         self.resource_kwargs.items()):
+            resource_kwargs[key] = value if value is not None else default
+
+        task = create_task(function,
+                           script,
+                           module,
+                           name,
+                           args,
+                           kwargs,
+                           dependencies,
+                           self.workflow_script,
+                           Path(folder).absolute(),
+                           resource_kwargs.pop('restart'),  # type: ignore
+                           **resource_kwargs)
+
+        if self.target:
+            if task.cmd.fname == self.target:
+                task.run()
+                raise StopRunning
+        elif self.tasks is not None:
+            self.tasks.append(task)
+        else:
+            task.run()
+
+        return RunHandle(task, self)
+
+    def extract_dependencies(self,
+                             args: List[Any],
+                             kwargs: Dict[str, Any],
+                             deps: List[RunHandle]) -> List[Path]:
+        """Find dependencies on other tasks."""
+        tasks = set(self.dependencies)
+        for handle in deps:
+            tasks.add(handle.task)
+        for thing in list(args) + list(kwargs.values()):
+            if isinstance(thing, Result):
+                tasks.add(thing.task)
+        return [task.dname for task in tasks]
+
+    def wrap(self, function: Callable, **run_kwargs) -> Callable:
+        """Wrap a function as a task.
+
+        These two are equivalent::
+
+            result = run(function=func, args=args, kwargs=kwargs, ...).result
+            result = wrap(func, ...)(*args, **kwargs, ...)
+
+        """
+        def wrapper(*args, **kwargs):
+            handle = self.run(function=function,
+                              args=args,
+                              kwargs=kwargs,
+                              **run_kwargs)
+            return handle.result
+        return wrapper
+
+    def resources(self,
+                  *,
+                  tmax: str = None,
+                  cores: int = None,
+                  nodename: str = None,
+                  processes: int = None,
+                  restart: int = None) -> ResourceHandler:
+        """Resource decorator and context manager."""
+        keys = ['tmax', 'cores', 'nodename', 'processes', 'restart']
+        values = [tmax, cores, nodename, processes, restart]
+        kwargs = {key: value
+                  for key, value in zip(keys, values)
+                  if value is not None}
+        return ResourceHandler(kwargs, self)
+
+
+def create_task(function: Callable = None,
+                script: Union[Path, str] = None,
+                module: str = None,
+                name: str = '',
+                args: List[Any] = [],
+                kwargs: Dict[str, Any] = {},
+                deps: List[Path] = [],
+                workflow_script: Path = None,
+                folder: Path = Path('.'),
+                restart: int = 0,
+                **resource_kwargs) -> Task:
+    """Create a Task object."""
     workflow = True
     command: Command
 

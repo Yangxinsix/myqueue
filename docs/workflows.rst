@@ -192,8 +192,8 @@ A workflow script must contain a function:
 
 .. highlight:: python
 
-It should return a list of :class:`myqueue.task.Task` objects created with the
-:func:`myqueue.task.task` helper function.  Here is an example::
+The :func:`workflow` function should call the :func:`myqueue.workflow.run`
+function for each task in the workflow.  Here is an example (``flow.py``)::
 
     from myqueue.workflow import run
     from somewhere import postprocess
@@ -203,9 +203,16 @@ It should return a list of :class:`myqueue.task.Task` objects created with the
         r2 = run(script='task2.py', cores=8, tmax='2h')
         run(function=postprocess, deps=[r1, r2])
 
-where ``<task-n>`` is the name of a task.  See :ref:`task examples` below.
+where ``task1.py`` and ``task2.py`` are Python scripts and ``postprocess`` is
+a Python function.  Calling the :func:`workflow` function directly will run
+the ``task1.py`` script, then the ``task2.py`` script and finally the
+``postprocess`` function.  If instead, the :func:`workflow` function  is
+passed to the the ``mq workflow flow.py`` command, then the :func:`run` will
+not actually run the tasks, but instead collect them with dependencies and
+submit them.
 
-::
+Here is an alternative way to specify the dependencies of the ``postprocess``
+step::
 
     def workflow():
         r1 = run(script='task1.py')
@@ -213,47 +220,37 @@ where ``<task-n>`` is the name of a task.  See :ref:`task examples` below.
         with r1, r2:
             run(function=postprocess)
 
-.. _task examples:
+.. autofunction:: myqueue.workflow.run
 
-Examples
---------
+
+Resources
+---------
 
 .. seealso::
 
-    :ref:`tasks` and :ref:`resources`.
+    :ref:`resources`.
 
-Two equivalent ways to set the resources::
+Three equivalent ways to set the resources::
 
-    task('prime.factor', resources='8:1h')
-    task('prime.factor', cores=8, tmax='1h')
+    def workflow():
+        run(..., cores=24)  # as an argument to run()
 
-Given these two tasks::
+    @resources(cores=24)  # with a decorator
+    def workflow():
+        run(...)
 
-    t1 = task('mod@f1')
-    t2 = task('mod@f2')
+    def workflow():
+        @resources(cores=24):  # via a context manager
+            run(...)
 
-here are three equivalent ways to set dependencies::
+.. autofunction:: myqueue.workflow.resources
 
-    t3 = task('mod@f3', deps=[t1, t2])
-    t3 = task('mod@f3', deps=['mod@f1', 'mod@f2'])
-    t3 = task('mod@f3', deps='mod@f1,mod@f2')
 
-Arguments in three equivalent ways::
+Functions
+---------
 
-    task('math@sin+3.14')
-    task('math@sin', args=[3.14])
-    task('math@sin', args=['3.14'])
+.. autofunction:: myqueue.workflow.wrap
 
-More than one argument::
-
-    task('math@gcd+42_117')
-    task('math@gcd', args=[42, 117]')
-
-same as:
-
->>> import math
->>> math.gcd(42, 117)
-3
 
 
 Old workflow script
