@@ -393,7 +393,7 @@ def create_task(function: Callable = None,
         command = PythonModule(module, [str(arg) for arg in args])
     elif script:
         assert not kwargs
-        command = PythonScript(script, [str(arg) for arg in args])
+        command = PythonScript(str(script), [str(arg) for arg in args])
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
