@@ -1,5 +1,4 @@
-from pathlib import Path
-from myqueue import run
+from myqueue.workflow import run
 from myqueue.task import task
 
 
@@ -9,5 +8,5 @@ def create_tasks():
 
 
 def workflow():
-    with run(module='prime.factor', done=Path('factors.json').is_file()):
+    with run(module='prime.factor'):
         run(module='prime.check')

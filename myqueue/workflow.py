@@ -7,7 +7,7 @@ from typing import Callable, List, Dict, Any, Union, Optional
 from .progress import progress_bar
 from .task import Task, UNSPECIFIED
 from .utils import chdir, plural
-from myqueue.commands import WorkflowTask
+from myqueue.commands import WorkflowTask, PythonModule
 from myqueue.resources import Resources
 
 DEFAULT_VERBOSITY = 1
@@ -239,7 +239,10 @@ class Runner:
     def __init__(self):
         self.tasks: Optional[List[Task]] = None
         self.dependencies = []
-        self.kwargs = {}
+        self.resource_kwargs = {'tmax': '10m',
+                                'cores': 1,
+                                'nodename': '',
+                                'processes': 0}
         self.target = ''
         self.workflow_script = None
 
@@ -247,32 +250,35 @@ class Runner:
             *,
             function: Union[Callable, Cached] = None,
             script: str = None,
+            module: str = None,
             name: str = '',
             args=[],
             kwargs={},
-            deps: List[Result] = [],
-            tmax='',
-            cores=1,
+            deps: List[RunHandle] = [],
+            tmax: str = None,
+            cores: int = None,
+            nodename: str = None,
+            processes: int = None,
+            repeats=None,
             folder='.') -> Result:
 
-        candidates = list(args) + list(kwargs.values()) + self.dependencies
-        if deps:
-            candidates += deps
-        dependencies = set()
-        for dep in candidates:
-            if isinstance(dep, Result):
-                dependencies.add(dep.task)
+        dependencies = self.extract_dependencies(args, kwargs, deps)
+
+        resource_kwargs = {}
+        for value, (key, default) in zip([tmax, cores, nodename, processes],
+                                         self.resource_kwargs.items()):
+            resource_kwargs[key] = value if value is not None else default
 
         task = create_task(function,
                            script,
+                           module,
                            name,
                            args,
                            kwargs,
-                           deps,#???
-                           tmax,
-                           cores,
+                           dependencies,
                            self.workflow_script,
-                           Path(folder).absolute())
+                           Path(folder).absolute(),
+                           **resource_kwargs)
 
         if self.target:
             if task.cmd.fname == self.target:
@@ -285,6 +291,15 @@ class Runner:
 
         return RunHandle(task, self)
 
+    def extract_dependencies(self, args, kwargs, deps):
+        tasks = set(self.dependencies)
+        for handle in deps:
+            tasks.add(handle.task)
+        for thing in list(args) + list(kwargs.values()):
+            if isinstance(thing, Result):
+                tasks.add(thing.task)
+        return [task.dname for task in tasks]
+
     def wrap(self, function, **run_kwargs):
         def wrapper(*args, **kwargs):
             handle = self.run(function=function,
@@ -294,11 +309,11 @@ class Runner:
             return handle.result
         return wrapper
 
-    def parameters(self, **kwargs):
-        return Parameters(kwargs, self)
+    def resources(self, **kwargs):
+        return ResourceHandler(kwargs, self)
 
 
-class Parameters:
+class ResourceHandler:
     def __init__(self, kwargs, runner):
         self.kwargs = kwargs
         self.runner = runner
@@ -308,19 +323,21 @@ class Parameters:
         return workflow_function
 
     def __enter__(self):
-        kwargs = self.runner.kwargs
-        self.runner.kwargs = {**kwargs, **self.kwargs}
+        kwargs = self.runner.resource_kwargs
+        self.runner.resource_kwargs = {**kwargs, **self.kwargs}
         self.kwargs = kwargs
-        return self.runner.kwargs
+        return self.runner.resource_kwargs
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.runner.kwargs = self.kwargs
+        self.runner.resource_kwargs = self.kwargs
 
 
 def create_task(function,
                 script,
-                name, args, kwargs, deps, tmax, cores,
-                workflow_script, folder):
+                module,
+                name, args, kwargs, deps,
+                workflow_script, folder,
+                **resource_kwargs):
 
     workflow = True
 
@@ -330,10 +347,13 @@ def create_task(function,
         cfunction = cached_function(function, name)
         command = WorkflowTask(f'{workflow_script}:{name}', [], cfunction)
         workflow = False
+    elif module:
+        assert not kwargs
+        command = PythonModule(module, [str(arg) for arg in args])
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
-                                          **kwargs)#????
+                                          **resource_kwargs)
 
     task = Task(command,
                 deps=[folder / dep for dep in deps],
@@ -353,7 +373,7 @@ def create_task(function,
 runner = Runner()
 run = runner.run
 wrap = runner.wrap
-resources = runner.parameters
+resources = runner.resources
 
 
 def collect(workflow_function: Callable,

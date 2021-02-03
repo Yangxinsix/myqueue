@@ -156,7 +156,7 @@ class WorkflowTask(Command):
 
     def __str__(self) -> str:
         code = '; '.join(
-            ['from myqueue.hmm import x'
+            ['from myqueue.hmm import x',
              f'x({str(self.script)!r}, {self.name!r})'])
         return f'python3 -c "{code}"'
 
@@ -178,6 +178,12 @@ class PythonModule(Command):
 
     def __str__(self) -> str:
         return ' '.join(['python3', '-m', self.mod] + self.args)
+
+    def run(self):
+        import sys
+        import importlib
+        sys.argv[1:] = self.args
+        importlib.import_module(self.mod)
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
