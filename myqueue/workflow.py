@@ -170,6 +170,10 @@ class RunHandle:
             return Result(self.task)
         return result
 
+    @property
+    def done(self):
+        return self.task.is_done()
+
     def __enter__(self):
         self.runner.dependencies.append(self.task)
         return self
@@ -408,9 +412,12 @@ def create_task(function: Callable = None,
                 diskspace=0,
                 creates=[])
 
-    if function and cfunction.has(*args, **kwargs):
-        task.result = cfunction()
-        task._done = True
+    if function:
+        if cfunction.has(*args, **kwargs):
+            task.result = cfunction()
+            task._done = True
+        else:
+            task._done = False
 
     return task
 

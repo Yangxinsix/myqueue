@@ -180,10 +180,8 @@ class PythonModule(Command):
         return ' '.join(['python3', '-m', self.mod] + self.args)
 
     def run(self):
-        import sys
-        import importlib
-        sys.argv[1:] = self.args
-        importlib.import_module(self.mod)
+        import subprocess
+        subprocess.run(str(self), shell=True)
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
