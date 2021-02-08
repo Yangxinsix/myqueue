@@ -30,3 +30,11 @@ def test_direct_cached_flow1(tmp_path, capsys):
 def test_workflow_old(mq):
     script = Path(__file__)
     mq(f'workflow {script}')
+
+
+def test_hello(mq):
+    Path('hello.sh').write_text('echo $@')
+    script = Path(__file__).with_name('hello.py')
+    mq(f'workflow {script}')
+    mq.wait()
+    assert mq.states() == 'dddddd'

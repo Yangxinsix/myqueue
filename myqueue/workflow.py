@@ -401,15 +401,15 @@ def create_task(function: Callable = None,
         command = PythonModule(module, [str(arg) for arg in args])
     elif script:
         assert not kwargs
-        script = str(script)
-        if script.endswith('.py'):
-            command = PythonScript(str(script), [str(arg) for arg in args])
+        path = folder / script
+        if path.suffix == '.py':
+            command = PythonScript(str(path), [str(arg) for arg in args])
         else:
-            command = ShellScript(str(script), [str(arg) for arg in args])
+            command = ShellScript(str(path), [str(arg) for arg in args])
     else:
         assert not kwargs
         assert isinstance(shell, str)
-        command = ShellCommand(shell, [str(arg) for arg in args])
+        command = ShellCommand('shell:' + shell, [str(arg) for arg in args])
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
