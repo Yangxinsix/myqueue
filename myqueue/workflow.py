@@ -4,7 +4,8 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from myqueue.commands import Command, PythonModule, PythonScript, WorkflowTask
+from myqueue.commands import (Command, PythonModule, PythonScript,
+                              ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
 
 from .progress import progress_bar
@@ -277,6 +278,7 @@ class Runner:
             function: Union[Callable, Cached] = None,
             script: Union[Path, str] = None,
             module: str = None,
+            shell: str = None,
             name: str = '',
             args=[],
             kwargs={},
@@ -300,6 +302,7 @@ class Runner:
         task = create_task(function,
                            script,
                            module,
+                           shell,
                            name,
                            args,
                            kwargs,
@@ -369,6 +372,7 @@ class Runner:
 def create_task(function: Callable = None,
                 script: Union[Path, str] = None,
                 module: str = None,
+                shell: str = None,
                 name: str = '',
                 args: List[Any] = [],
                 kwargs: Dict[str, Any] = {},
@@ -379,7 +383,7 @@ def create_task(function: Callable = None,
                 **resource_kwargs) -> Task:
     """Create a Task object."""
     if sum((thing is not None
-            for thing in [function, module, script])) != 1:
+            for thing in [function, module, script, shell])) != 1:
         1 / 0
 
     workflow = True  # create a .done file XXX
@@ -397,7 +401,15 @@ def create_task(function: Callable = None,
         command = PythonModule(module, [str(arg) for arg in args])
     elif script:
         assert not kwargs
-        command = PythonScript(str(script), [str(arg) for arg in args])
+        script = str(script)
+        if script.endswith('.py'):
+            command = PythonScript(str(script), [str(arg) for arg in args])
+        else:
+            command = ShellScript(str(script), [str(arg) for arg in args])
+    else:
+        assert not kwargs
+        assert isinstance(shell, str)
+        command = ShellCommand(shell, [str(arg) for arg in args])
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
