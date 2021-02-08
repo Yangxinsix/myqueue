@@ -164,7 +164,7 @@ class RunHandle:
         self._result = UNSPECIFIED
 
     @property
-    def result(self):
+    def result(self) -> 'Result':
         """Result from Python-function tasks."""
         result = self.task.result
         if result is UNSPECIFIED:
@@ -172,7 +172,8 @@ class RunHandle:
         return result
 
     @property
-    def done(self):
+    def done(self) -> bool:
+        """Has task been successfully finished?"""
         return self.task.is_done()
 
     def __enter__(self):
@@ -290,6 +291,36 @@ class Runner:
             restart: int = None,
             folder: Union[Path, str] = '.') -> RunHandle:
         """Run or submit a task.
+
+        The type of task is specifyed by one and only one of the arguments
+        `function`, `script`, `module` or `shell`.
+
+        Parameters
+        ----------
+        args: list of objects
+            Command-line arguments or function arguments.
+        name: str
+            Name to use for task.  Default is name of function, script, module
+            or shell command.
+        deps: list of run handle objects
+            Dependencies.
+        cores: int
+            Number of cores (default is 1).
+        nodename: str
+            Name of node.
+        processes: int
+            Number of processes to start (default is one for each core).
+        tmax: str
+            Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
+        folder: str
+            Folder where task should run (default is current folder).
+        restart: int
+            How many times to restart task.
+
+        Returns
+        -------
+        RunHandle
+            Object representing the run.
         """
         dependencies = self.extract_dependencies(args, kwargs, deps)
 

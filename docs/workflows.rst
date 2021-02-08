@@ -5,7 +5,7 @@ Workflows
 =========
 
 The :ref:`workflow <workflow>` subcommand combined with a :ref:`workflow
-script` can be used to run several similar tasks in several folders.  The
+script` can be used to run sequences of tasks in several folders.  The
 script describes the tasks, their requirements and dependencies.
 
 Example from real life:
@@ -29,7 +29,8 @@ the integer and check if the number was a prime number.
 .. literalinclude:: prime/check.py
 
 Our :ref:`workflow script` will create two tasks using the
-:func:`myqueue.task.task` function.
+:func:`myqueue.workflow.run` function and the :func:`myqueue.workflow.resources`
+decorator.
 
 :download:`prime/workflow.py`:
 
@@ -209,7 +210,7 @@ function will not actually run the tasks, but instead collect them with
 dependencies and submit them.
 
 Here is an alternative way to specify the dependencies of the ``postprocess``
-step::
+step (see more :ref:`below <dependencies>`)::
 
     def workflow():
         r1 = run(script='task1.py')
@@ -218,27 +219,32 @@ step::
             run(function=postprocess)
 
 .. autofunction:: myqueue.workflow.run
+.. autoclass:: myqueue.workflow.RunHandle
+    :members:
 
 
 Resources
 ---------
 
+Resources for a task are set using the keywords:
+``cores``, ``tmax``, ``processes``, ``nodename`` and ``repeats``.
+
 .. seealso::
 
     :ref:`resources`.
 
-Three equivalent ways to set the resources::
+Here are three equivalent ways to set the ``cores`` resource::
 
     def workflow():
         run(..., cores=24)  # as an argument to run()
 
+    def workflow():
+        with resources(cores=24):  # via a context manager
+            run(...)
+
     @resources(cores=24)  # with a decorator
     def workflow():
         run(...)
-
-    def workflow():
-        @resources(cores=24):  # via a context manager
-            run(...)
 
 .. autofunction:: myqueue.workflow.resources
 
@@ -246,12 +252,105 @@ Three equivalent ways to set the resources::
 Functions
 ---------
 
+A task that call a Python function will make sure the function caches its
+result. If the function ``f`` has an attribute ``has`` that is a callable
+that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
+to check if the function has been called with a given set of arguments.  If a
+function doesn't have a ``has`` attribute then MyQueue will wrap it in a
+function that does using the :class:`~myqueue.workflow.Cached`
+object.
+
+.. autoclass:: myqueue.workflow.Cached
+    :members:
+
+Helper wrapper for working with functions:
+
 .. autofunction:: myqueue.workflow.wrap
 
+.. _dependencies:
+
+Dependencies
+------------
+
+Suppose we have two tasks and we want ``<task-2>`` to start after ``<task-1>``.
+We can specify the dependency explicitely like this::
+
+    def workflow():
+        run1 = run(<task-1>)
+        run(<task-2>, deps=[run1])
+
+or like this using a context manager::
+
+    def workflow():
+        with run(<task-1>):
+            run(<task-2>)
+
+If our tasks are functions then MyQueue can figure out the dependencies
+without specifying them explicitly or using `with` statements.
+Say we have the following two functions::
+
+    def f1():
+        return 2 + 2
+
+    def f2(x):
+        print(x)
+
+and we want to call ``f2`` with the result of ``f1``.  Given this
+workflow script::
+
+    def workflow():
+        run1 = run(function=f1)
+        run(function=f2, args=[run1.result])
+
+MyQueue will know that the ``f2`` task depends on the ``f1`` task.
+Here is a shorter version using the :func:`~myqueue.workflow.wrap`
+function::
+
+    def workflow():
+        x = wrap(f1)()
+        wrap(f2)(x)
+
+
+Workflows with if-statements
+============================
+
+Some workflows may take different directions depending on the result of the
+first part of the workflow.  Continuing with out ``f1`` and ``f2`` functions,
+we may only want to call ``f2`` if the result of ``f1`` is lees than five::
+
+    def workflow():
+        run1 = run(function=f1)
+        if run1.result < 5:
+            run(function=f2, args=[run1.result])
+
+MyQueue will know that ``run1.result < 5`` can't be decided before the first
+task has been run and it will therfore only submit one task. Running ``mq
+workflow ...`` a second time after the first task has finished will submit
+the second task.  Here is an equivalent script using functions::
+
+    def workflow():
+        x = wrap(f1)()
+        if x < 5:
+            wrap(f2)(x)
+
+The :class:`~myqueue.workflow.RunHandle` object also has a ``done`` attribute
+that can be used to break up the workflow::
+
+    def workflow():
+        run1 = run(<task-1>)
+        if run1.done:
+            something = read_result_of_task1_from file()
+            if ... something ...:
+                run(<task-2>)
 
 
 Old workflow script
 ===================
+
+.. warning::
+
+    Please use a new-style :ref:`workflow script`!
+
 
 Old-style workflow scripts contain a function:
 
