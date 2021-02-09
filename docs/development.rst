@@ -14,8 +14,10 @@ Contributions and suggestions for improvements are welcome.
 Getting help
 ------------
 
-For discussions, questions and help, go to our `#myqueue` stream on
-https://camd.zulipchat.com/.
+For announcements, discussions, questions or help, go to our `#myqueue` room on
+Matrix_.
+
+.. _Matrix: https://matrix.to/#/#myqueue:matrix.org
 
 
 Testing

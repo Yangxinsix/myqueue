@@ -40,7 +40,7 @@ Quick links:
 * Documentation: https://myqueue.readthedocs.io/
 * Code: https://gitlab.com/myqueue/myqueue/
 * Issues: https://gitlab.com/myqueue/myqueue/issues/
-* Chat: https://camd.zulipchat.com/ (#myqueue stream)
+* Chat: https://matrix.to/#/#myqueue:matrix.org
 
 
 .. _SLURM: https://slurm.schedmd.com/
@@ -124,10 +124,10 @@ Help, support and feedback
 
 If you need help, want to report a bug or suggest a new feature then you are
 welcome to get in touch via MyQueue's `issue tracker`_
-or the *#myqueue* stream on Zulip_.
+or the *#myqueue* romm on Matrix_.
 
 .. _issue tracker: https://gitlab.com/myqueue/myqueue/issues/
-.. _Zulip: https://camd.zulipchat.com/
+.. _Matrix: https://matrix.to/#/#myqueue:matrix.org
 
 
 Contributing
