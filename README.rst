@@ -124,7 +124,7 @@ Help, support and feedback
 
 If you need help, want to report a bug or suggest a new feature then you are
 welcome to get in touch via MyQueue's `issue tracker`_
-or the *#myqueue* romm on Matrix_.
+or the *#myqueue* room on Matrix_.
 
 .. _issue tracker: https://gitlab.com/myqueue/myqueue/issues/
 .. _Matrix: https://matrix.to/#/#myqueue:matrix.org
