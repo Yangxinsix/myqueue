@@ -9,13 +9,19 @@ Release notes
 Next release
 ============
 
+...
+
+
+Version 21.2.0
+==============
+
 * PRELIMINARY: New way to specify workflows using :func:`myqueue.workflow.run`,
   :func:`myqueue.workflow.wrap` and :func:`myqueue.workflow.resources`.
   See :ref:`workflow script`.
 
 
 Version 21.1.0
-===============
+==============
 
 * New :ref:`config command <config>` for guessing your configuration.
   See :ref:`autoconfig`.
