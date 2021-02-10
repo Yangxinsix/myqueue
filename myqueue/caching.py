@@ -68,7 +68,7 @@ encode = Encoder().encode
 
 
 def object_hook(dct: Dict[str, Any]) -> Any:
-    """Convert ...
+    """Decode complex, datetime and ndarray representations.
 
     >>> object_hook({'__complex__': [1.0, 2.0]})
     (1+2j)
