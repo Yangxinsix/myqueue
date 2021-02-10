@@ -3,8 +3,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-import numpy as np
-
 
 class Cached:
     """A caching function."""
@@ -38,9 +36,9 @@ class Encoder(json.JSONEncoder):
             return {'__complex__': [obj.real, obj.imag]}
 
         if isinstance(obj, datetime):
-            return {'__dattime__': obj.isoformat()}
+            return {'__datetime__': obj.isoformat()}
 
-        if isinstance(obj, np.ndarray):
+        if hasattr(obj, '__array__'):
             if obj.dtype == complex:
                 dct = {'__ndarray__': obj.view(float).tolist(),
                        'dtype': 'complex'}
@@ -78,6 +76,7 @@ def object_hook(dct):
 
     data = dct.get('__ndarray__')
     if data is not None:
+        import numpy as np
         dtype = dct.get('dtype')
         if dtype == 'complex':
             array = np.array(data, dtype=float).view(complex)
