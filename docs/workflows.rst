@@ -205,7 +205,7 @@ where ``task1.py`` and ``task2.py`` are Python scripts and ``postprocess`` is
 a Python function.  Calling the :func:`workflow` function directly will run
 the ``task1.py`` script, then the ``task2.py`` script and finally the
 ``postprocess`` function.  If instead, the :func:`workflow` function  is
-passed to the the ``mq workflow flow.py`` command, then the :func:`run`
+passed to the ``mq workflow flow.py`` command, then the :func:`run`
 function will not actually run the tasks, but instead collect them with
 dependencies and submit them.
 
@@ -273,7 +273,7 @@ Dependencies
 ------------
 
 Suppose we have two tasks and we want ``<task-2>`` to start after ``<task-1>``.
-We can specify the dependency explicitely like this::
+We can specify the dependency explicitly like this::
 
     def workflow():
         run1 = run(<task-1>)

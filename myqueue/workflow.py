@@ -226,6 +226,7 @@ class Cached:
         return self.path.is_file()
 
     def __call__(self):
+        """Call function (if needed)."""
         if self.has():
             return eval(self.path.read_text())
         result = self.function()
@@ -297,6 +298,14 @@ class Runner:
 
         Parameters
         ----------
+        function:
+            A Python function.
+        script:
+            Shell-script or Python-script.
+        module:
+            Name of a Python module.
+        shell:
+            Shell command.  Must be found in $PATH.
         args: list of objects
             Command-line arguments or function arguments.
         name: str
@@ -370,6 +379,9 @@ class Runner:
     def wrap(self, function: Callable, **run_kwargs) -> Callable:
         """Wrap a function as a task.
 
+        Takes the same keyword arguments as `run`
+        (except module, script and shell).
+
         These two are equivalent::
 
             result = run(function=func, args=args, kwargs=kwargs, ...).result
@@ -391,13 +403,33 @@ class Runner:
                   nodename: str = None,
                   processes: int = None,
                   restart: int = None) -> ResourceHandler:
-        """Resource decorator and context manager."""
+        """Resource decorator and context manager.
+
+        Parameters
+        ----------
+        cores: int
+            Number of cores (default is 1).
+        nodename: str
+            Name of node.
+        processes: int
+            Number of processes to start (default is one for each core).
+        tmax: str
+            Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
+        restart: int
+            How many times to restart task.
+        """
         keys = ['tmax', 'cores', 'nodename', 'processes', 'restart']
         values = [tmax, cores, nodename, processes, restart]
         kwargs = {key: value
                   for key, value in zip(keys, values)
                   if value is not None}
         return ResourceHandler(kwargs, self)
+
+
+runner = Runner()
+run = runner.run
+wrap = runner.wrap
+resources = runner.resources
 
 
 def create_task(function: Callable = None,
@@ -463,12 +495,6 @@ def create_task(function: Callable = None,
             task._done = False
 
     return task
-
-
-runner = Runner()
-run = runner.run
-wrap = runner.wrap
-resources = runner.resources
 
 
 def collect(workflow_function: Callable,
