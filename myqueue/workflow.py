@@ -4,6 +4,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from myqueue.caching import Cached, cached_function
 from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
@@ -213,32 +214,6 @@ def get_name(func: Callable) -> str:
     if mod in ['<run_path>', '__main__']:
         return func.__name__
     return f'{mod}.{func.__name__}'
-
-
-class Cached:
-    """A caching function."""
-    def __init__(self, function: Callable, name: str):
-        self.function = function
-        self.path = Path(f'{name}.done')
-
-    def has(self, *args, **kwargs) -> bool:
-        """Check if function has been called."""
-        return self.path.is_file()
-
-    def __call__(self):
-        """Call function (if needed)."""
-        if self.has():
-            return eval(self.path.read_text())
-        result = self.function()
-        self.path.write_text(repr(result))
-        return result
-
-
-def cached_function(function: Callable, name: str) -> Cached:
-    """Wrap function if needed."""
-    if hasattr(function, 'has'):
-        return function  # type: ignore
-    return Cached(function, name)
 
 
 class ResourceHandler:
