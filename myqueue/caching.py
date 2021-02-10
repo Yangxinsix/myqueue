@@ -1,7 +1,8 @@
+"""Simple caching function implementation using JSON."""
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable, Dict
 
 
 class Cached:
@@ -31,6 +32,16 @@ def cached_function(function: Callable, name: str) -> Cached:
 
 
 class Encoder(json.JSONEncoder):
+    """Encode complex, datetime and ndarray objects.
+
+    >>> import numpy as np
+    >>> Encoder().encode(1+2j)
+    '{"__complex__": [1.0, 2.0]}'
+    >>> Encoder().encode(datetime(1969, 11, 11, 0, 0))
+    '{"__datetime__": "1969-11-11T00:00:00"}'
+    >>> Encoder().encode(np.array([1., 2.]))
+    '{"__ndarray__": [1.0, 2.0]}'
+    """
     def default(self, obj):
         if isinstance(obj, complex):
             return {'__complex__': [obj.real, obj.imag]}
@@ -56,12 +67,12 @@ class Encoder(json.JSONEncoder):
 encode = Encoder().encode
 
 
-def object_hook(dct):
+def object_hook(dct: Dict[str, Any]) -> Any:
     """Convert ...
 
     >>> object_hook({'__complex__': [1.0, 2.0]})
     (1+2j)
-    >>> object_hook({'__datetime__': '1969-11-11T00:00:00.0'})
+    >>> object_hook({'__datetime__': '1969-11-11T00:00:00'})
     datetime.datetime(1969, 11, 11, 0, 0)
     >>> object_hook({'__ndarray__': [1.0, 2.0]})
     array([1., 2.])
@@ -72,7 +83,7 @@ def object_hook(dct):
 
     data = dct.get('__datetime__')
     if data is not None:
-        return datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
+        return datetime.fromisoformat(data)
 
     data = dct.get('__ndarray__')
     if data is not None:
@@ -90,5 +101,6 @@ def object_hook(dct):
     return dct
 
 
-def decode(obj):
-    return json.loads(obj, object_hook=object_hook)
+def decode(text: str) -> Any:
+    """Convert JSON to object(s)."""
+    return json.loads(text, object_hook=object_hook)
