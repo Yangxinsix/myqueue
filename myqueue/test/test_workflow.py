@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from myqueue.task import task
 from myqueue.test.flow1 import workflow
+from myqueue.test.hello import workflow as hello
 
 
 def create_tasks():
@@ -38,3 +39,9 @@ def test_hello(mq):
     mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'dddddd'
+
+
+def test_direct_hello(tmp_path):
+    os.chdir(tmp_path)
+    Path('hello.sh').write_text('echo $@')
+    hello()

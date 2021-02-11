@@ -38,8 +38,8 @@ class Command:
         return None
 
     def run(self):
-        raise NotImplementedError
-
+        import subprocess
+        subprocess.run(str(self), shell=True, check=True)
 
 def create_command(cmd: str,
                    args: List[str] = [],
@@ -104,7 +104,7 @@ class ShellScript(Command):
         self.short_name = cmd
 
     def __str__(self) -> str:
-        return ' '.join(['.', self.cmd] + self.args)
+        return ' '.join(['sh', self.cmd] + self.args)
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
@@ -178,10 +178,6 @@ class PythonModule(Command):
 
     def __str__(self) -> str:
         return ' '.join(['python3', '-m', self.mod] + self.args)
-
-    def run(self):
-        import subprocess
-        subprocess.run(str(self), shell=True)
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,

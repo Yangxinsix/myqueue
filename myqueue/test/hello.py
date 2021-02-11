@@ -7,15 +7,22 @@ def run(**kwargs):
 
 @resources(tmax='1m')
 def workflow():
-    with run(shell='echo', ):
+    """Hello world."""
+    print(1)
+    with run(shell='echo'):
+        print(2)
         with run(module='myqueue.test.hello'):
             with resources(tmax='2m'):
+                print(3)
                 with run(function=print, name='p1'):
+                    print(4)
                     with run(script=__file__, tmax='3m'):
+                        print(5)
                         with run(script='hello.sh'):
+                            print(6)
                             wrap(print)('hello', 'world')
 
 
-def __init__(self):
+if __name__ == '__main__':
     import sys
     print(*sys.argv[1:])
