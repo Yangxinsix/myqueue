@@ -41,6 +41,7 @@ class Command:
         import subprocess
         subprocess.run(str(self), shell=True, check=True)
 
+
 def create_command(cmd: str,
                    args: List[str] = [],
                    type: str = None,
