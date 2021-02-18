@@ -204,8 +204,7 @@ class Queue(Lock):
                             break
                     else:
                         assert dep in done, (
-                            f'Missing dependency for {task.name}:', dep
-                        )
+                            f'Missing dependency for {task.name}:', dep)
 
                         tsk = None
                 elif tsk.state == 'done':

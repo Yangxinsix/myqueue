@@ -440,6 +440,7 @@ def create_task(function: Callable = None,
     elif script:
         assert not kwargs
         path = folder / script
+        assert path.isfile(), path
         if path.suffix == '.py':
             command = PythonScript(str(path), [str(arg) for arg in args])
         else:
