@@ -42,6 +42,7 @@ system administrator or database required.
     quickstart
     documentation
     howitworks
+    howto
     cli
     workflows
     api
