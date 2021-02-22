@@ -19,9 +19,11 @@ class LocalScheduler(Scheduler):
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
-        assert not dry_run
-        task.cmd.function = None
-        (id,) = self.send('submit', task)
+        if dry_run:
+            id = 1
+        else:
+            task.cmd.function = None
+            (id,) = self.send('submit', task)
         task.id = id
 
     def cancel(self, task: Task) -> None:
