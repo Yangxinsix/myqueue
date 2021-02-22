@@ -19,7 +19,9 @@ class TestScheduler(Scheduler):
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
-        assert not dry_run
+        if dry_run:
+            task.id = 1
+            return
         if task.dtasks:
             ids = {t.id for t in self.tasks}
             for t in task.dtasks:
