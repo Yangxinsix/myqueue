@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict
+from functools import lru_cache
 
 
 class Cached:
@@ -20,8 +21,30 @@ class Cached:
         if self.has():
             return decode(self.path.read_text())
         result = self.function()
-        self.path.write_text(encode(result))
+        if mpi_world().rank == 0:
+            self.path.write_text(encode(result))
         return result
+
+
+class MPIWorld:
+    """A no MPI implementation."""
+    rank = 0
+
+
+@lru_cache
+def mpi_world():
+    """Find world object."""
+    import sys
+    mod = sys.modules.get('mpi4py')
+    if mod:
+        return mod.MPI.COMM_WORLD
+    mod = sys.modules.get('_gpaw')
+    if hasattr(mod, 'Communicator'):
+        return mod.Communicator()
+    mod = sys.modules.get('_asap')
+    if hasattr(mod, 'Communicator'):
+        return mod.Communicator()
+    return MPIWorld()
 
 
 def cached_function(function: Callable, name: str) -> Cached:
