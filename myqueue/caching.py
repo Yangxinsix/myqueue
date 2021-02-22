@@ -27,23 +27,23 @@ class Cached:
 
 
 class MPIWorld:
-    """A no MPI implementation."""
-    rank = 0
+    """A no-MPI implementation."""
+    rank: int = 0
 
 
 @lru_cache
-def mpi_world():
-    """Find world object."""
+def mpi_world() -> MPIWorld:
+    """Find and return a world object with a rank attribute."""
     import sys
     mod = sys.modules.get('mpi4py')
     if mod:
-        return mod.MPI.COMM_WORLD
+        return mod.MPI.COMM_WORLD  # type: ignore
     mod = sys.modules.get('_gpaw')
     if hasattr(mod, 'Communicator'):
-        return mod.Communicator()
+        return mod.Communicator()  # type: ignore
     mod = sys.modules.get('_asap')
     if hasattr(mod, 'Communicator'):
-        return mod.Communicator()
+        return mod.Communicator()  # type: ignore
     return MPIWorld()
 
 
