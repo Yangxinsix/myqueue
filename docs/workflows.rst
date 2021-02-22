@@ -62,8 +62,9 @@ and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
     Scanning 1 folder: |--------------------| 100.0%
-    ./1001/ prime.factor    1:2s
-    ./1001/ prime.check  d1 1:2s
+    Submitting 2 tasks: |--------------------| 100.0%
+    1 ./1001/ prime.factor    1:2s
+    1 ./1001/ prime.check  d1 1:2s
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
     Scanning 1 folder: |--------------------| 100.0%
