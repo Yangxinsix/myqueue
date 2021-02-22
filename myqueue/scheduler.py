@@ -6,7 +6,7 @@ from myqueue.task import Task
 class Scheduler:
     name: str
 
-    def submit(self, task: Task, dry_run: bool) -> None:
+    def submit(self, task: Task, dry_run: bool, verbose: bool) -> None:
         pass
 
     def cancel(self, task: Task) -> None:

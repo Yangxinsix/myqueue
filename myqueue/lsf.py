@@ -10,7 +10,8 @@ from .utils import str2number
 class LSF(Scheduler):
     def submit(self,
                task: Task,
-               dry_run: bool = False) -> None:
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 

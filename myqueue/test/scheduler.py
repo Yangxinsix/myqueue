@@ -15,8 +15,13 @@ class TestScheduler(Scheduler):
         self.number = 0
         Scheduler.__init__(self)
 
-    def submit(self, task: Task, dry_run: bool = False) -> None:
-        assert not dry_run
+    def submit(self,
+               task: Task,
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
+        if dry_run:
+            task.id = 1
+            return
         if task.dtasks:
             ids = {t.id for t in self.tasks}
             for t in task.dtasks:
