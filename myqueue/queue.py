@@ -233,57 +233,56 @@ class Queue(Lock):
             task.state = 'queued'
             task.tqueued = t
 
-        if self.dry_run and self.verbosity < 2:
-            pprint(todo, 0, 'fnaIr')
-            print(plural(len(todo), 'task'), 'to submit')
-        else:
-            activation_scripts = find_activation_scripts([task.folder
-                                                          for task in todo])
-            for task in todo:
-                task.activation_script = activation_scripts.get(task.folder)
+        activation_scripts = find_activation_scripts([task.folder
+                                                      for task in todo])
+        for task in todo:
+            task.activation_script = activation_scripts.get(task.folder)
 
-            pb = progress_bar(len(todo),
-                              f'Submitting {len(todo)} tasks:',
-                              self.verbosity and len(todo) > 1)
-            submitted = []
-            ex = None
+        pb = progress_bar(len(todo),
+                          f'Submitting {len(todo)} tasks:',
+                          self.verbosity and len(todo) > 1)
+        submitted = []
+        ex = None
+        try:
             while todo:
                 task = todo.pop(0)
                 if not all(t.id != 0 for t in task.dtasks):
                     # dependency has not been submitted yet
                     todo.append(task)
+
+                    # Check used while figuring out #22 (infinite loop)
+                    assert not all(any(t.id == 0 for t in task.dtasks)
+                                   for task in todo)
                 else:
-                    try:
-                        self.scheduler.submit(
-                            task,
-                            self.dry_run)
-                    except Exception as x:
-                        ex = x
-                        break
-                    else:
-                        submitted.append(task)
-                        if task.workflow:
-                            oldtask = current.get(task.dname)
-                            if oldtask:
-                                self.tasks.remove(oldtask)
-                        next(pb)
+                    self.scheduler.submit(
+                        task,
+                        self.dry_run,
+                        self.verbosity >= 2)
+                    submitted.append(task)
+                    if task.workflow:
+                        oldtask = current.get(task.dname)
+                        if oldtask:
+                            self.tasks.remove(oldtask)
+                    next(pb)
+        except Exception as x:
+            ex = x
 
-            pprint(submitted, 0, 'ifnaIr',
-                   maxlines=10 if self.verbosity < 2 else 99999999999999)
-            if submitted:
-                if self.dry_run:
-                    print(plural(len(submitted), 'task'), 'to submit')
-                else:
-                    print(plural(len(submitted), 'task'), 'submitted')
+        pprint(submitted, 0, 'ifnaIr',
+               maxlines=10 if self.verbosity < 2 else 99999999999999)
+        if submitted:
+            if self.dry_run:
+                print(plural(len(submitted), 'task'), 'to submit')
+            else:
+                print(plural(len(submitted), 'task'), 'submitted')
 
-            self.tasks += submitted
-            self.changed.update(submitted)
+        self.tasks += submitted
+        self.changed.update(submitted)
 
-            if ex:
-                print(f'ERROR!  Could not submit {task}')
-                if todo:
-                    print('Skipped', plural(len(todo), 'task'))
-                raise ex
+        if ex:
+            print(f'ERROR!  Could not submit {task}')
+            if todo:
+                print('Skipped', plural(len(todo), 'task'))
+            raise ex
 
     def run(self,
             tasks: List[Task]) -> None:

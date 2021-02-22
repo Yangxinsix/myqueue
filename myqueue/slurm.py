@@ -22,7 +22,8 @@ def mpi_implementation() -> str:
 class SLURM(Scheduler):
     def submit(self,
                task: Task,
-               dry_run: bool = False) -> None:
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -105,8 +106,10 @@ class SLURM(Scheduler):
             '(touch $mq-2; exit 1)\n')
 
         if dry_run:
-            print(' \\\n    '.join(sbatch))
-            print(script)
+            if verbose:
+                print(' \\\n    '.join(sbatch))
+                print(script)
+            task.id = 1
             return
 
         # Use a clean set of environment variables without any MPI stuff:
@@ -120,8 +123,7 @@ class SLURM(Scheduler):
         if p.returncode != 0:
             raise RuntimeError(err)
 
-        id = int(out.split()[-1])
-        task.id = id
+        task.id = int(out.split()[-1])
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])
