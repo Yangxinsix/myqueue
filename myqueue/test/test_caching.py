@@ -7,6 +7,7 @@ from math import inf
 objects = [
     [27, 1.4, {'a': 7, 'b': [1, 2]}, inf, -inf],
     1 + 2j,
+    None,
     datetime.now(),
     np.zeros((0, 3), complex),
     np.zeros((3, 0), complex),
