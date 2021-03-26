@@ -154,13 +154,16 @@ class Resources:
         """Select appropriate node.
 
         >>> nodes = [('node1', {'cores': 16}),
-        ...          ('node2', {'cores': 8})]
+        ...          ('node2', {'cores': 8}),
+        ...          ('fatnode2', {'cores': 8})]
         >>> Resources(cores=24).select(nodes)
         (3, 'node2', {'cores': 8})
         >>> Resources(cores=32).select(nodes)
         (2, 'node1', {'cores': 16})
-        >>> Resources(cores=32, nodename='node2').select(nodes)
-        (4, 'node2', {'cores': 8})
+        >>> Resources(cores=32, nodename='fatnode2').select(nodes)
+        (4, 'fatnode2', {'cores': 8})
+        >>> Resources(cores=1).select(nodes)
+        (1, 'node2', {'cores': 8})
         >>> Resources(cores=32, nodename='node3').select(nodes)
         Traceback (most recent call last):
             ...
@@ -170,15 +173,15 @@ class Resources:
             for name, dct in nodelist:
                 if name == self.nodename:
                     break
-            else:
+            else:  # no break
                 raise ValueError(f'No such node: {self.nodename}')
         else:
             for name, dct in nodelist:
                 if self.cores % dct['cores'] == 0:
                     break
-            else:
-                _, name, dct = min((dct['cores'], name, dct)
-                                   for name, dct in nodelist)
+            else:  # no break
+                node = min(nodelist, key=lambda node: node[1]['cores'])
+                name, dct = node
 
         nodes, rest = divmod(self.cores, dct['cores'])
         if rest:

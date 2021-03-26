@@ -420,8 +420,8 @@ def create_task(function: Callable = None,
                 restart: int = 0,
                 **resource_kwargs) -> Task:
     """Create a Task object."""
-    if sum((thing is not None
-            for thing in [function, module, script, shell])) != 1:
+    if sum(arg is not None
+           for arg in [function, module, script, shell]) != 1:
         1 / 0
 
     workflow = True  # create a .done file XXX
