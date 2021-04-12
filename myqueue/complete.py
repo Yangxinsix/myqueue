@@ -115,7 +115,8 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
         return {str(task['id']) for task in dct['tasks']}
 
     if command == 'help':
-        return [cmd for cmd in commands if cmd != 'help']
+        return [cmd for cmd in (list(commands) + list(aliases))
+                if cmd != 'help']
 
     if command == 'daemon':
         return ['start', 'stop', 'status']
@@ -123,11 +124,14 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     return []
 
 
-if __name__ == '__main__':
-    word, previous = sys.argv[2:]
-    line = os.environ['COMP_LINE']
-    point = int(os.environ['COMP_POINT'])
+def main(environ: Dict[str, str], word: str, previous: str) -> None:
+    line = environ['COMP_LINE']
+    point = int(environ['COMP_POINT'])
     words = complete(word, previous, line, point)
     for w in words:
         if w.startswith(word):
             print(w)
+
+
+if __name__ == '__main__':
+    main(os.environ, *sys.argv[2:])

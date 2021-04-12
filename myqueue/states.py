@@ -4,8 +4,16 @@ from enum import Enum
 class State(Enum):
     """Task-state enum.
 
+    >>> State.queued == State.queued
+    True
     >>> State.queued == 'queued'
     True
+    >>> State.queued == 'queue'
+    Traceback (most recent call last):
+      ...
+    TypeError: Unknown state: queue
+    >>> State.queued == 117
+    False
     >>> State.done in {'queued', 'running'}
     False
     """
@@ -26,7 +34,7 @@ class State(Enum):
         if isinstance(other, str):
             if other in State.__members__:
                 return self.name == other
-            raise TypeError
+            raise TypeError(f'Unknown state: {other}')
         return NotImplemented
 
     def __hash__(self) -> int:
