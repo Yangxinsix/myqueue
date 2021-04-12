@@ -9,7 +9,68 @@ Release notes
 Next release
 ============
 
-* ...
+...
+
+
+Version 21.2.0
+==============
+
+* PRELIMINARY: New way to specify workflows using :func:`myqueue.workflow.run`,
+  :func:`myqueue.workflow.wrap` and :func:`myqueue.workflow.resources`.
+  See :ref:`workflow script`.
+
+
+Version 21.1.0
+==============
+
+* New :ref:`config command <config>` for guessing your configuration.
+  See :ref:`autoconfig`.
+* LSF-backend fixes.
+
+
+Version 20.11.3
+===============
+
+* Bugfix: LSF-backend fixes.
+
+
+Version 20.11.2
+===============
+
+* Bugfix: Don't remove FAILED-files in dry-run mode.
+
+
+Version 20.11.1
+===============
+
+* Fix "workflow target" bug and ``MQ:`` comments bug.
+
+
+Version 20.11.0
+===============
+
+* New ``mq workflow ... --arguments "key=val,..."`` option.  See
+  :ref:`workflow`.
+* Two new columns in :ref:`list output <list>`: *arguments* and *info*.
+  Can be hidden with: ``mq ls -c aI-``.
+* Deprecated ``venv/activate`` script.  Use ``venv/bin/activate`` instead.
+  See :ref:`venv`.
+* Resources can now be specified in the scripts as special comments::
+
+      # MQ: resources=24:2h
+
+
+Version 20.9.1
+==============
+
+* Fix workflow+openmpi issue.
+
+
+Version 20.9.0
+==============
+
+* Red error messages.
+* Progress-bar.
 
 
 Version 20.5.0

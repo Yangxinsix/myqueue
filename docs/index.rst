@@ -22,6 +22,7 @@ system administrator or database required.
     * Powerful :ref:`list <list>` command for monitoring
 
     * Can be used together with Python :mod:`venv`\ 's
+      (see :ref:`venv`)
 
     * Folder-based :ref:`Workflows`
 
@@ -41,6 +42,7 @@ system administrator or database required.
     quickstart
     documentation
     howitworks
+    howto
     cli
     workflows
     api

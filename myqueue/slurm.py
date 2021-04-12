@@ -22,7 +22,8 @@ def mpi_implementation() -> str:
 class SLURM(Scheduler):
     def submit(self,
                task: Task,
-               dry_run: bool = False) -> None:
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -105,21 +106,24 @@ class SLURM(Scheduler):
             '(touch $mq-2; exit 1)\n')
 
         if dry_run:
-            print(' \\\n    '.join(sbatch))
-            print(script)
+            if verbose:
+                print(' \\\n    '.join(sbatch))
+                print(script)
+            task.id = 1
             return
 
+        # Use a clean set of environment variables without any MPI stuff:
         p = subprocess.Popen(sbatch,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE,
+                             env=os.environ)
         out, err = p.communicate(script.encode())
 
         if p.returncode != 0:
             raise RuntimeError(err)
 
-        id = int(out.split()[-1])
-        task.id = id
+        task.id = int(out.split()[-1])
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])
@@ -154,7 +158,8 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
         cmd = ['sinfo',
                '--noheader',
                '--format=%c %m %P']
@@ -165,4 +170,4 @@ class SLURM(Scheduler):
             nodes.append((name.rstrip('*'),
                           int(cores),
                           mem.rstrip('+') + 'M'))
-        return nodes
+        return nodes, []

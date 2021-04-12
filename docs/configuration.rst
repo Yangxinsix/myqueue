@@ -41,18 +41,31 @@ Key                    Description
 See details below.
 
 
+.. _autoconfig:
+
+Guessing your configuration
+===========================
+
+.. highlight:: bash
+
+Try the following :ref:`command <config>`::
+
+    $ mq config
+    ...
+
+It will try to guess your configuration.  It can be a good starting point
+for a ``config.py`` file.  You may need to help ``mq config`` a bit by
+giving it the scheduler name and/or the queue name (try ``mq config -h``).
+
+
 .. _scheduler:
 
 Name of scheduler
 =================
 
-The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'`` or
-``'local'``.  The *local* scheduler can be used for testing on a system without
-SLURM/LSF/PBS.  Start the local scheduler with:
-
-.. highlight:: bash
-
-::
+The type of scheduler you are using must be ``'slurm'``, ``'pbs'``, ``'lsf'``
+or ``'local'``.  The *local* scheduler can be used for testing on a system
+without SLURM/LSF/PBS.  Start the local scheduler with::
 
     $ python3 -m myqueue.local
 
@@ -166,8 +179,8 @@ Maximum disk space
 ==================
 
 Some tasks may use a lot of disk-space while running.  In order to limit the
-number of such task running at the same time, you can mark them in your workflow
-script like this::
+number of such task running at the same time, you can mark them in your
+workflow script like this::
 
     task(..., diskspace=10)
 
@@ -178,8 +191,9 @@ and set a global maximum (note that the units are arbitrary)::
         'maximum_diskspace': 200,
         ...}
 
-This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued`` state.
-If you submit more that 20 tasks then some of them will be put in the ``hold``
-state.  As tasks finish successfully (``done`` state), tasks will be moved from
-``hold`` to ``queued``.  Tasks that fail will be counted as still running, so you
-will have to ``mq rm`` those and also remember to remove big files left behind.
+This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued``
+state. If you submit more that 20 tasks then some of them will be put in the
+``hold`` state.  As tasks finish successfully (``done`` state), tasks will be
+moved from ``hold`` to ``queued``.  Tasks that fail will be counted as still
+running, so you will have to ``mq rm`` those and also remember to remove big
+files left behind.

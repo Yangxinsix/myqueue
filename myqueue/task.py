@@ -3,8 +3,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
+from warnings import warn
 
-from .commands import command, Command
+from .commands import create_command, Command
 from .resources import Resources, T
 
 if TYPE_CHECKING:
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 
 taskstates = ['queued', 'hold', 'running', 'done',
               'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
+UNSPECIFIED = 'hydelifytskibadut'
 
 
 class Task:
@@ -38,6 +40,7 @@ class Task:
     creates: list of str
         Name of files created by task.
     """
+
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
@@ -79,6 +82,7 @@ class Task:
         self.dtasks: List[Task] = []
         self.activation_script: Optional[Path] = None
         self._done: Optional[bool] = None
+        self.result = UNSPECIFIED
 
     @property
     def name(self) -> str:
@@ -99,18 +103,22 @@ class Task:
         age = t - self.tqueued
         dt = self.running_time(t)
 
+        info = []
+        if self.restart:
+            info.append(f'*{self.restart}')
         if self.deps:
-            deps = f'({len(self.deps)})'
-        else:
-            deps = ''
+            info.append(f'd{len(self.deps)}')
+        if self.cmd.args:
+            info.append(f'+{len(self.cmd.args)}')
+        if self.diskspace:
+            info.append('D')
 
         return [str(self.id),
                 str(self.folder) + '/',
-                self.cmd.name,
-                str(self.resources) + deps +
-                ('*' if self.workflow else '') +
-                (f'R{self.restart}' if self.restart else '') +
-                ('D' if self.diskspace else ''),
+                self.cmd.short_name,
+                ' '.join(self.cmd.args),
+                ','.join(info),
+                str(self.resources),
                 seconds_to_time_string(age),
                 self.state,
                 seconds_to_time_string(dt),
@@ -132,6 +140,8 @@ class Task:
             return self.folder
         if column == 'n':
             return self.name
+        if column == 'A':
+            return len(self.cmd.args)
         if column == 'r':
             return self.resources.cores * self.resources.tmax
         if column == 'a':
@@ -143,7 +153,7 @@ class Task:
         if column == 'e':
             return self.error
         raise ValueError(f'Unknown column: {column}!  '
-                         'Mus be one of i, f, n, r, a, s, t or e')
+                         'Must be one of i, f, n, a, I, r, A, s, t or e')
 
     def todict(self, root: Path = None) -> Dict[str, Any]:
         folder = self.folder
@@ -172,12 +182,13 @@ class Task:
               write_header: bool = False) -> None:
         if write_header:
             print('# id,folder,cmd,resources,state,restart,workflow,'
-                  'diskspace,deps,creates,tqueued,trunning,tstop,error',
+                  'diskspace,deps,creates,tqueued,trunning,tstop,error,momory',
                   file=fd)
         t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
                       for t in [self.tqueued, self.trunning, self.tstop])
         deps = ','.join(str(dep) for dep in self.deps)
         creates = ','.join(self.creates)
+        error = self.error.replace('"', '""')
         print(f'{self.id},'
               f'"{self.folder}",'
               f'"{self.cmd.name}",'
@@ -189,7 +200,7 @@ class Task:
               f'"{deps}",'
               f'"{creates}",'
               f'{t1},{t2},{t3},'
-              f'"{self.error}",'
+              f'"{error}",'
               f'{self.memory_usage}',
               file=fd)
 
@@ -197,8 +208,11 @@ class Task:
     def fromcsv(row: List[str]) -> 'Task':
         (id, folder, name, resources, state, restart, workflow, diskspace,
          deps, creates, t1, t2, t3, error) = row[:14]
-        memory_usage = 0 if len(row) == 14 else int(row[14])
-        return Task(command(name),
+        try:
+            memory_usage = 0 if len(row) == 14 else int(row[14])
+        except ValueError:  # read old corrupted log.csv files
+            memory_usage = 0
+        return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
                     bool(workflow),
@@ -238,7 +252,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        return Task(cmd=command(**dct.pop('cmd')),
+        return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     folder=folder,
                     deps=deps,
@@ -255,7 +269,7 @@ class Task:
                     if not any(self.folder.glob(pattern)):
                         self._done = False
                         break
-                else:
+                else:  # no break
                     self._done = True
             else:
                 self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
@@ -270,7 +284,8 @@ class Task:
     def write_done_file(self) -> None:
         if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
             p = self.folder / f'{self.cmd.fname}.done'
-            p.write_text('')
+            if not p.is_file():
+                p.write_text('')
 
     def write_failed_file(self) -> None:
         if self.workflow and self.folder.is_dir():
@@ -346,16 +361,20 @@ class Task:
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
 
+    def run(self):
+        self.result = self.cmd.run()
+
 
 def task(cmd: str,
-         resources: str = '',
          args: List[str] = [],
+         *,
+         resources: str = '',
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
-         cores: int = 1,
+         cores: int = 0,
          nodename: str = '',
          processes: int = 0,
-         tmax: str = '10m',
+         tmax: str = '',
          folder: str = '',
          workflow: bool = False,
          restart: int = 0,
@@ -371,6 +390,8 @@ def task(cmd: str,
     ----------
     cmd: str
         Command to be run.
+    args: list of str
+        Command-line arguments or function arguments.
     resources: str
         Resources::
 
@@ -378,8 +399,6 @@ def task(cmd: str,
 
         Examples: '48:1d', '32:1h', '8:xeon8:1:30m'.  Can not be used
         togeter with any of "cores", "nodename", "processes" and "tmax".
-    args: list of str
-        Command-line arguments or function arguments.
     name: str
         Name to use for task.  Default is <cmd>[+<arg1>[_<arg2>[_<arg3>]...]].
     deps: str, list of str, Task object  or list of Task objects
@@ -427,17 +446,30 @@ def task(cmd: str,
                 dpaths.append(dep.dname)
 
     if '@' in cmd:
+        # Old way of specifying resources:
         c, r = cmd.rsplit('@', 1)
         if r[0].isdigit():
             cmd = c
             resources = r
+            warn(f'Please use resources={r!r} instead of deprecated '
+                 f'...@{r} syntax!')
 
-    if resources:
-        res = Resources.from_string(resources)
+    command = create_command(cmd, args, name=name)
+
+    res: Optional[Resources] = None
+
+    if cores == 0 and nodename == '' and processes == 0 and tmax == '':
+        if resources:
+            res = Resources.from_string(resources)
+        else:
+            res = command.read_resources(path)
     else:
-        res = Resources(cores, nodename, processes, T(tmax))
+        assert resources == ''
 
-    return Task(command(cmd, args, name=name),
+    if res is None:
+        res = Resources(cores, nodename, processes, T(tmax or '10m'))
+
+    return Task(command,
                 res,
                 dpaths,
                 workflow,
@@ -448,6 +480,15 @@ def task(cmd: str,
 
 
 def seconds_to_time_string(n: float) -> str:
+    """Convert number of seconds to string.
+
+    >>> seconds_to_time_string(10)
+    '0:10'
+    >>> seconds_to_time_string(3601)
+    '1:00:01'
+    >>> seconds_to_time_string(24 * 3600)
+    '1:00:00:00'
+    """
     n = int(n)
     d, n = divmod(n, 24 * 3600)
     h, n = divmod(n, 3600)

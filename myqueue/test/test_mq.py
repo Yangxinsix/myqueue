@@ -91,7 +91,7 @@ def create_tasks():
 
 
 def test_workflow(mq):
-    mq('submit shell:sleep+3@1:1m -w')
+    mq('submit shell:sleep+3 -R1:1m -w')
     time.sleep(2)
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . -t shell:touch+hello')
@@ -110,16 +110,44 @@ def test_workflow(mq):
     assert mq.states() == ''
 
 
+def test_workflow_running_only_with_targets(mq):
+    Path('wf.py').write_text(wf)
+    mq('workflow wf.py . -t shell:touch+hello')
+    mq.wait()
+    assert mq.states() == 'dd'
+
+
+def test_workflow_with_failed_job(mq):
+    Path('wf.py').write_text(wf)
+    failed = Path('shell:sleep+3.FAILED')
+    failed.write_text('')
+    mq('workflow wf.py .')
+    mq.wait()
+    assert mq.states() == ''
+
+    mq('workflow wf.py . --force --dry-run')
+    mq.wait()
+    assert mq.states() == ''
+    assert failed.is_file()
+
+    mq('workflow wf.py . --force')
+    mq.wait()
+    assert mq.states() == 'dd'
+    assert not failed.is_file()
+
+
 wf2 = """
 from myqueue.task import task
-def create_tasks():
+def create_tasks(name, n):
+    assert name == 'hello'
+    assert n == 5
     return [task('shell:echo+hi', diskspace=1) for _ in range(4)]
 """
 
 
 def test_workflow2(mq):
     Path('wf2.py').write_text(wf2)
-    mq('workflow wf2.py .')
+    mq('workflow wf2.py . -a name=hello,n=5')
     mq('kick')
     mq.wait()
     assert mq.states() == 'dddd'
@@ -177,3 +205,7 @@ def test_slash(mq):
     mq('submit "shell:echo a/c" -w')
     mq.wait()
     assert mq.states() == 'dd'
+
+
+def test_config(mq):
+    mq('config local')

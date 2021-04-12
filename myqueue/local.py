@@ -15,9 +15,15 @@ class LocalSchedulerError(Exception):
 
 
 class LocalScheduler(Scheduler):
-    def submit(self, task: Task, dry_run: bool = False) -> None:
-        assert not dry_run
-        (id,) = self.send('submit', task)
+    def submit(self,
+               task: Task,
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
+        if dry_run:
+            id = 1
+        else:
+            task.cmd.function = None
+            (id,) = self.send('submit', task)
         task.id = id
 
     def cancel(self, task: Task) -> None:
@@ -45,8 +51,9 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return args
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
-        return []
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
+        return [], []
 
 
 class Server:

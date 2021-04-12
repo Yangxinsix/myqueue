@@ -26,7 +26,7 @@ def test_logo():
 
 
 def test_backends(mq):
-    from ..config import config, guess_scheduler, main
+    from ..config import config, guess_scheduler, guess_configuration
     config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
                        ('abc8', {'cores': 8, 'memory': '8G'})]
     config['mpiexec'] = 'echo'
@@ -45,7 +45,7 @@ def test_backends(mq):
         del config['nodes']
         del config['mpiexec']
     guess_scheduler()
-    main('local')
+    guess_configuration('local')
 
 
 class Result:
@@ -62,20 +62,31 @@ def run(commands, stdout):
 def test_autoconfig(monkeypatch):
     from ..slurm import SLURM
     from ..lsf import LSF
+
     monkeypatch.setattr(subprocess, 'run', run)
-    nodes = SLURM().get_config()
+    nodes, _ = SLURM().get_config()
     assert nodes == [('xeon8', 8, '256000M')]
-    nodes = LSF().get_config()
+
+    nodes, _ = LSF().get_config()
     assert nodes == [('xeon8', 8, '128G')]
 
 
 def test_commands():
-    from ..commands import convert, command, ShellScript
+    from ..commands import convert, create_command, ShellScript
     assert convert('True') is True
     assert convert('False') is False
     assert convert('3.14') == 3.14
     assert convert('42') == 42
-    cmd = command('./script.sh 1 2')
+    cmd = create_command('./script.sh 1 2')
     assert isinstance(cmd, ShellScript)
     assert cmd.todict()['args'] == ['1', '2']
     print(cmd)
+
+
+def test_resource_comments(tmp_path):
+    from ..task import task
+    script = tmp_path / 'script.py'
+    script.write_text('# Script\n# MQ: resources=2:1h\n')
+    t = task(str(script))
+    assert t.resources.cores == 2
+    assert t.resources.tmax == 3600

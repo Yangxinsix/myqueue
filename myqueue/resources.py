@@ -36,17 +36,16 @@ Node = Tuple[str, Dict[str, Any]]
 class Resources:
     """Resource description."""
     def __init__(self,
-                 cores: int = 1,
+                 cores: int = 0,
                  nodename: str = '',
                  processes: int = 0,
-                 tmax: int = 600  # seconds
-                 ):
-        self.cores = cores
+                 tmax: int = 0):
+        self.cores = cores or 1
         self.nodename = nodename
-        self.tmax = tmax
+        self.tmax = tmax or 600  # seconds
 
         if processes == 0:
-            self.processes = cores
+            self.processes = self.cores
         else:
             self.processes = processes
 
@@ -72,6 +71,25 @@ class Resources:
             else:
                 nodename = x
         return Resources(int(cores), nodename, processes, tmax)
+
+    @staticmethod
+    def from_args_and_command(cores=0,
+                              nodename='',
+                              processes=0,
+                              tmax='',
+                              resources='',
+                              command=None,
+                              path=None):
+        if cores == 0 and nodename == '' and processes == 0 and tmax == '':
+            if resources:
+                return Resources.from_string(resources)
+            res = command.read_resources(path)
+            if res is not None:
+                return res
+        else:
+            assert resources == ''
+
+        return Resources(cores, nodename, processes, T(tmax or '10m'))
 
     def __str__(self) -> str:
         s = str(self.cores)
@@ -136,13 +154,16 @@ class Resources:
         """Select appropriate node.
 
         >>> nodes = [('node1', {'cores': 16}),
-        ...          ('node2', {'cores': 8})]
+        ...          ('node2', {'cores': 8}),
+        ...          ('fatnode2', {'cores': 8})]
         >>> Resources(cores=24).select(nodes)
         (3, 'node2', {'cores': 8})
         >>> Resources(cores=32).select(nodes)
         (2, 'node1', {'cores': 16})
-        >>> Resources(cores=32, nodename='node2').select(nodes)
-        (4, 'node2', {'cores': 8})
+        >>> Resources(cores=32, nodename='fatnode2').select(nodes)
+        (4, 'fatnode2', {'cores': 8})
+        >>> Resources(cores=1).select(nodes)
+        (1, 'node2', {'cores': 8})
         >>> Resources(cores=32, nodename='node3').select(nodes)
         Traceback (most recent call last):
             ...
@@ -152,15 +173,15 @@ class Resources:
             for name, dct in nodelist:
                 if name == self.nodename:
                     break
-            else:
+            else:  # no break
                 raise ValueError(f'No such node: {self.nodename}')
         else:
             for name, dct in nodelist:
                 if self.cores % dct['cores'] == 0:
                     break
-            else:
-                _, name, dct = min((dct['cores'], name, dct)
-                                   for name, dct in nodelist)
+            else:  # no break
+                node = min(nodelist, key=lambda node: node[1]['cores'])
+                name, dct = node
 
         nodes, rest = divmod(self.cores, dct['cores'])
         if rest:

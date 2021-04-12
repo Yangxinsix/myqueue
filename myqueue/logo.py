@@ -1,3 +1,4 @@
+"""SVG-logo for MyQueue."""
 from typing import Union, List
 
 H = 200 - 15 - 3
@@ -20,6 +21,7 @@ mq: List[List[Union[str, int]]] = [
 
 
 def create():
+    """Create SVG-logo for MyQueue."""
     print('<svg width="164" height="164" xmlns="http://www.w3.org/2000/svg">')
     for i, a in enumerate(mq[::-1]):
         i = 5 - i

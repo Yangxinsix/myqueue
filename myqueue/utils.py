@@ -198,7 +198,7 @@ def update_completion(test=False) -> None:
                 if not line:
                     break
                 if not line.startswith('                '):
-                    cmd, help = line.strip().split(' ', 1)
+                    cmd, _, help = line.strip().partition(' ')
                     L.append(f'{cmd}:\n    {help.strip()}')
                 else:
                     L[-1] += ' ' + line.strip()
@@ -214,7 +214,12 @@ def update_completion(test=False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
+        if '\n'.join(lines[a + 1:]) != '\n'.join(newlines):
+            for L1, L2 in zip(lines[a + 1:], '\n'.join(newlines).splitlines()):
+                if L1 != L2:
+                    print(L1)
+                    print(L2)
+            assert False
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')

@@ -40,23 +40,48 @@ API
 ---
 
 .. autofunction:: myqueue.submit
+
+
+Tasks
+.....
+
 .. module:: myqueue.task
 .. autofunction:: myqueue.task.task
 .. autoclass:: myqueue.task.Task
    :members: submit
+
+
+Commands
+........
+
 .. module:: myqueue.commands
-.. autofunction:: myqueue.commands.command
+.. autofunction:: myqueue.commands.create_command
 .. autoclass:: myqueue.commands.ShellCommand
 .. autoclass:: myqueue.commands.ShellScript
 .. autoclass:: myqueue.commands.PythonScript
 .. autoclass:: myqueue.commands.PythonModule
 .. autoclass:: myqueue.commands.PythonFunction
+
+
+Resources
+.........
+
 .. module:: myqueue.resources
 .. autoclass:: myqueue.resources.Resources
    :members:
+
+
+Queue
+.....
+
 .. module:: myqueue.queue
 .. autoclass:: myqueue.queue.Queue
    :members:
+
+
+Schedulers
+..........
+
 .. module:: myqueue.slurm
 .. autoclass:: myqueue.slurm.SLURM
    :members:

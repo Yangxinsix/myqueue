@@ -125,7 +125,9 @@ def test_docs_workflows(mq, monkeypatch):
         (p / f.name).write_text(f.read_text())
     venv = Path('venv')
     venv.mkdir()
-    (venv / 'activate').write_text(
+    bin = venv / 'bin'
+    bin.mkdir()
+    (bin / 'activate').write_text(
         f'export PYTHONPATH={venv.parent.absolute()}\n')
     run_document(mq, docs / 'workflows.rst', test=True)
 

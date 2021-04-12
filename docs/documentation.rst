@@ -116,6 +116,16 @@ would run ``python3 script.py ABC 123`` and::
 would run ``python3 -c "import mymod; mymod.func('ABC', 123)``.
 
 
+.. _venv:
+
+Using a Python virtual environment
+==================================
+
+Tasks will activate a virtual environment if a ``venv/`` folder is found
+in one of the parent folders.  The activation script will be
+``venv/bin/activate``.
+
+
 .. _resources:
 
 Resources
@@ -132,7 +142,8 @@ A resource specification has the form::
 * ``tmax``: maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
   hours and days respectively)
 
-Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands take
+Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands
+as well as the :func:`myqueue.task.task` function, take
 an optional *resources* argument (``-R`` or ``--resources``).
 Default resources are a modest one core and 10 minutes.
 
@@ -142,6 +153,16 @@ Examples:
 * ``64:xeon:2d`` 64 cores and 64 processes on "xeon" nodes for 2 days
 * ``24:1:30m`` 24 cores and 1 process for 30 minutes
   (useful for OpenMP tasks or tasks that do their own *mpiexec* call)
+
+Resources can also be specified via special comments in scripts:
+
+.. highlight:: python
+
+::
+
+    # MQ: resources=40:1d
+    from somewhere import run
+    run('something')
 
 
 .. _states:
@@ -179,7 +200,7 @@ Examples
   function::
 
     $ mq submit "time@sleep 2" -R 1:1m
-    1 ./ time@sleep+2 1:1m
+    1 ./ time@sleep 2 +1 1:1m
     1 task submitted
 
 * Run the ``echo hello`` shell command in two folders
@@ -187,8 +208,9 @@ Examples
 
     $ mkdir f1 f2
     $ mq submit "shell:echo hello" f1/ f2/
-    2 ./f1/ shell:echo+hello 1:10m
-    3 ./f2/ shell:echo+hello 1:10m
+    Submitting 2 tasks: |--------------------| 100.0%
+    2 ./f1/ shell:echo hello +1 1:10m
+    3 ./f2/ shell:echo hello +1 1:10m
     2 tasks submitted
 
 * Run ``script.py`` on 8 cores for 10 hours::
@@ -201,45 +223,45 @@ Examples
 You can see the status of your jobs with::
 
     $ mq list
-    id folder name             res.   age state  time error
-    -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
-    1  ./     time@sleep+2     1:1m  0:03 done   0:02
-    2  ./f1/  shell:echo+hello 1:10m 0:01 done   0:00
-    3  ./f2/  shell:echo+hello 1:10m 0:01 done   0:00
-    4  ./     script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
-    -- ------ ---------------- ----- ---- ------ ---- -----------------------------------
+    id folder name       args  info res.   age state  time error
+    -- ------ ---------- ----- ---- ----- ---- ------ ---- -----------------------------------
+    1  ./     time@sleep 2     +1   1:1m  0:02 done   0:02
+    2  ./f1/  shell:echo hello +1   1:10m 0:00 done   0:00
+    3  ./f2/  shell:echo hello +1   1:10m 0:00 done   0:00
+    4  ./     script.py             8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
+    -- ------ ---------- ----- ---- ----- ---- ------ ---- -----------------------------------
     done: 3, FAILED: 1, total: 4
 
 Remove the failed and done jobs from the list with
 (notice the dot meaning the current folder)::
 
     $ mq remove -s Fd -r .
-    1 ./    time@sleep+2     1:1m  0:04 done   0:02
-    2 ./f1/ shell:echo+hello 1:10m 0:01 done   0:00
-    3 ./f2/ shell:echo+hello 1:10m 0:01 done   0:00
-    4 ./    script.py        8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
+    1 ./    time@sleep 2     +1 1:1m  0:02 done   0:02
+    2 ./f1/ shell:echo hello +1 1:10m 0:00 done   0:00
+    3 ./f2/ shell:echo hello +1 1:10m 0:00 done   0:00
+    4 ./    script.py           8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
     4 tasks removed
 
 The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-r--r-- 1 jensj jensj 0 Jan 27 07:27 shell:echo.3.err
-    -rw-r--r-- 1 jensj jensj 6 Jan 27 07:27 shell:echo.3.out
+    -rw-rw-r-- 1 jensj jensj 0 Oct 27 15:26 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 Oct 27 15:26 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 
 If a job fails or times out, then you can resubmit it with more resources::
 
     $ mq submit "shell:sleep 4" -R 1:2s
-    5 ./ shell:sleep+4 1:2s
+    5 ./ shell:sleep 4 +1 1:2s
     1 task submitted
     $ mq list
-    id folder name          res.  age state   time error
-    -- ------ ------------- ---- ---- ------- ---- -----
-    5  ./     shell:sleep+4 1:2s 0:02 TIMEOUT 0:02
-    -- ------ ------------- ---- ---- ------- ---- -----
+    id folder name        args info res.  age state   time
+    -- ------ ----------- ---- ---- ---- ---- ------- ----
+    5  ./     shell:sleep 4    +1   1:2s 0:02 TIMEOUT 0:02
+    -- ------ ----------- ---- ---- ---- ---- ------- ----
     TIMEOUT: 1, total: 1
     $ mq resubmit -i 5 -R 1:1m
-    6 ./ shell:sleep+4 1:1m
+    6 ./ shell:sleep 4 +1 1:1m
     1 task submitted

@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List, Dict
+import warnings
 
 
 def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
@@ -14,7 +15,10 @@ def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
 
             script = folder / 'venv/activate'
             if script.is_file():
+                warnings.warn('Please put your activate script in the '
+                              'venv/bin/ folder!')
                 found.append(folder)
+
                 break
 
             script = folder / 'venv/bin/activate'

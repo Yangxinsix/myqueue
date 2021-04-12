@@ -12,6 +12,15 @@ class MQError(Exception):
     """For nice (expected) CLI errors."""
 
 
+def error(*args):
+    """Write error message to stderr in red."""
+    if sys.stderr.isatty():
+        print('\033[91m', end='', file=sys.stderr)
+        print(*args, '\033[0m', file=sys.stderr)
+    else:
+        print(*args, file=sys.stderr)
+
+
 main_description = """\
 Frontend for SLURM/LSF/PBS.
 
@@ -27,6 +36,19 @@ More help can be found here: https://myqueue.readthedocs.io/.
     ('list',
      'List tasks in queue.', """
 Only tasks in the chosen folder and its subfolders are shown.
+
+Columns:
+
+    i: id
+    f: folder
+    n: name of task
+    a: arguments
+    I: info: "+<nargs>,*<repeats>,d<ndeps>"
+    r: resources
+    A: age
+    s: state
+    t: time
+    e: error message
 
 Examples:
 
@@ -59,8 +81,9 @@ Example:
     $ mq info 12345
 """),
     ('workflow',
-     'Submit tasks from Python script.', """
-The script must define a create_tasks() function as shown here:
+     'Submit tasks from Python script or several scripts matching pattern.',
+     """
+The script(s) must define a create_tasks() function as shown here:
 
     $ cat flow.py
     from myqueue.task import task
@@ -101,6 +124,15 @@ if its corresponding folder no longer exists.
 Do this:
 
     $ mq completion >> ~/.bashrc
+"""),
+    ('config',
+     'Create config.py file.', """
+This tool will try to guess your configuration.  Some hand editing
+afterwards will most likely be needed.
+
+Example:
+
+    $ mq config -Q hpc lsf
 """),
     ('daemon',
      'Interact with the background process.', """
@@ -192,6 +224,14 @@ def _main(arguments: List[str] = None) -> int:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
+        elif cmd == 'config':
+            a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
+              help='Name of scheduler.  Will be guessed if not supplied.')
+            a('-Q', '--queue-name', default='',
+              help='Name of queue.  May be needed.')
+            a('--in-place', action='store_true',
+              help='Overwrite ~/.myqueue/config.py file.')
+
         if cmd in ['submit', 'workflow']:
             a('-f', '--force', action='store_true',
               help='Submit also failed tasks.')
@@ -225,12 +265,16 @@ def _main(arguments: List[str] = None) -> int:
               nargs='*', default=['.'],
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
+            a('-a', '--arguments',
+              help='Pass arguments to create_tasks() function.  Example: '
+              '"-a name=hello,n=5" will call '
+              "create_tasks(name='hello', n=5).")
 
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTMaA',
               help='Selection of states. First letters of "queued", "hold", '
-              '"running", "done", "FAILED", "CANCELED", "TIMEOUT" '
-              '"all" and "ALL".')
+              '"running", "done", "FAILED", "CANCELED", "TIMEOUT", '
+              '"MEMORY", "all" and "ALL".')
             a('-i', '--id', help="Comma-separated list of task ID's. "
               'Use "-i -" for reading ID\'s from stdin '
               '(one ID per line; extra stuff after the ID will be ignored).')
@@ -242,11 +286,13 @@ def _main(arguments: List[str] = None) -> int:
               '(* and ? can be used).')
 
         if cmd == 'list':
-            a('-c', '--columns', metavar='ifnraste', default='ifnraste',
-              help='Select columns to show.')
+            a('-c', '--columns', metavar='ifnaIrAste', default='ifnaIrAste',
+              help='Select columns to show.  Use "-c a-" to remove the '
+              '"a" column.')
             a('-S', '--sort', metavar='c',
               help='Sort rows using column c, where c must be one of '
-              'i, f, n, r, a, s, t or e.  Use "-S c-" for a descending sort.')
+              'i, f, n, a, r, A, s, t or e.  '
+              'Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
             a('-L', '--use-log-file', action='store_true',
@@ -320,6 +366,11 @@ def _main(arguments: List[str] = None) -> int:
         from .daemon import perform_action
         return perform_action(args.action)
 
+    if args.command == 'config':
+        from .config import guess_configuration
+        guess_configuration(args.scheduler, args.queue_name, args.in_place)
+        return 0
+
     if args.command == 'completion':
         py = sys.executable
         filename = Path(__file__).with_name('complete.py')
@@ -338,20 +389,18 @@ def _main(arguments: List[str] = None) -> int:
     except TimeoutError as x:
         lockfile = x.args[0]
         age = time() - lockfile.stat().st_mtime
-        print(f'Locked {age:.0f} seconds ago:', lockfile)
+        error(f'Locked {age:.0f} seconds ago:', lockfile)
         if age > 60:
-            print('Try removing the file and report this to the developers!')
+            error('Try removing the file and report this to the developers!')
     except MQError as x:
-        print(*x.args)
+        error(*x.args)
         return 1
     except Exception as x:
         if args.traceback:
             raise
         else:
-            print(f'{x.__class__.__name__}: {x}',
-                  file=sys.stderr)
-            print(f'To get a full traceback, use: mq {args.command} ... -T',
-                  file=sys.stderr)
+            error(f'{x.__class__.__name__}: {x}',
+                  f'To get a full traceback, use: mq {args.command} ... -T')
             return 1
     return 0
 
@@ -554,7 +603,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.modify(selection, state)
 
         elif args.command == 'workflow':
-            tasks = workflow(args, folders)
+            tasks = workflow(args, folders, verbosity)
             queue.submit(tasks, args.force, args.max_tasks)
 
         elif args.command == 'sync':
@@ -571,6 +620,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
 
 def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+    r"""Convert string to regex pattern.
+
+    Examples:
+
+    >>> regex('*-abc.py')
+    re.compile('.*\\-abc\\.py')
+    >>> regex(None) is None
+    True
+    """
     if pattern:
         return re.compile(re.escape(pattern)
                           .replace('\\*', '.*')

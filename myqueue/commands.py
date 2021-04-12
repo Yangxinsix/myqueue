@@ -5,8 +5,10 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional, Type
 from pathlib import Path
+
+from .resources import Resources
 
 
 class Command:
@@ -18,6 +20,7 @@ class Command:
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
         self.short_name: str
+        self.function = None
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -30,11 +33,19 @@ class Command:
     def fname(self):
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
+    def read_resources(self, path) -> Optional[Resources]:
+        """Look for "# MQ: resources=..." comments in script."""
+        return None
 
-def command(cmd: str,
-            args: List[str] = [],
-            type: str = None,
-            name: str = '') -> Command:
+    def run(self):
+        import subprocess
+        subprocess.run(str(self), shell=True, check=True)
+
+
+def create_command(cmd: str,
+                   args: List[str] = [],
+                   type: str = None,
+                   name: str = '') -> Command:
     """Create command object."""
     cmd, _, args2 = cmd.partition(' ')
     if args2:
@@ -45,31 +56,26 @@ def command(cmd: str,
         args = rest.split('_') + args
     cmd = path + sep + cmd
 
+    cls: Type[Command]
     if type is None:
         if cmd.startswith('shell:'):
-            type = 'shell-command'
+            cls = ShellCommand
         elif cmd.endswith('.py'):
-            type = 'python-script'
+            cls = PythonScript
+        elif cmd.startswith('workflow:'):
+            cls = WorkflowTask
+        elif '.py@' in cmd:
+            cls = PythonFunctionInScript
         elif '@' in cmd:
-            type = 'python-function'
+            cls = PythonFunction
         elif path:
-            type = 'shell-script'
+            cls = ShellScript
         else:
-            type = 'python-module'
-
-    command: Command
-    if type == 'shell-command':
-        command = ShellCommand(cmd, args)
-    elif type == 'shell-script':
-        command = ShellScript(cmd, args)
-    elif type == 'python-script':
-        command = PythonScript(cmd, args)
-    elif type == 'python-module':
-        command = PythonModule(cmd, args)
-    elif type == 'python-function':
-        command = PythonFunction(cmd, args)
+            cls = PythonModule
     else:
-        raise ValueError
+        cls = globals()[type.title().replace('-', '')]
+
+    command = cls(cmd, args)
 
     if name:
         command.set_non_standard_name(name)
@@ -99,12 +105,18 @@ class ShellScript(Command):
         self.short_name = cmd
 
     def __str__(self) -> str:
-        return ' '.join(['.', self.cmd] + self.args)
+        return ' '.join(['sh', self.cmd] + self.args)
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
                 'type': 'shell-script',
                 'cmd': self.cmd}
+
+    def read_resources(self, path) -> Optional[Resources]:
+        for line in Path(self.cmd).read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
 
 
 class PythonScript(Command):
@@ -124,6 +136,39 @@ class PythonScript(Command):
         return {**self.dct,
                 'type': 'python-script',
                 'cmd': self.script}
+
+    def read_resources(self, path) -> Optional[Resources]:
+        script = Path(self.script)
+        if not script.is_absolute():
+            script = path / script
+        for line in script.read_text().splitlines():
+            if line.startswith('# MQ: resources='):
+                return Resources.from_string(line.split('=', 1)[1])
+        return None
+
+
+class WorkflowTask(Command):
+    def __init__(self, cmd: str, args, function=None):
+        script, name = cmd.split(':')
+        self.script = Path(script)
+        Command.__init__(self, name, args)
+        self.function = function
+        self.short_name = name
+
+    def __str__(self) -> str:
+        code = '; '.join(
+            ['from myqueue.workflow import run_workflow_function',
+             f'run_workflow_function({str(self.script)!r}, {self.name!r})'])
+        return f'python3 -c "{code}"'
+
+    def run(self):
+        assert self.function is not None
+        return self.function()
+
+    def todict(self) -> Dict[str, Any]:
+        return {**self.dct,
+                'type': 'workflow-task',
+                'cmd': f'{self.script}:{self.name}'}
 
 
 class PythonModule(Command):
@@ -160,6 +205,29 @@ class PythonFunction(Command):
         return {**self.dct,
                 'type': 'python-function',
                 'cmd': self.mod + '@' + self.func}
+
+
+class PythonFunctionInScript(Command):
+    def __init__(self, cmd: str, args: List[str]):
+        script, self.func = cmd.rsplit('@', 1)
+        path = Path(script)
+        Command.__init__(self, path.name, args)
+        if '/' in script:
+            self.script = str(path.absolute())
+        else:
+            self.script = script
+        self.short_name = path.name
+
+    def __str__(self) -> str:
+        args = ', '.join(repr(convert(arg)) for arg in self.args)
+        return (f'python3 -c "import runpy; '
+                f'mod = runpy({self.script!r}); '
+                f'mod.{self.func}({args})')
+
+    def todict(self) -> Dict[str, Any]:
+        return {**self.dct,
+                'type': 'python-function-in-script',
+                'cmd': self.script + '@' + self.func}
 
 
 def convert(x: str) -> Union[bool, int, float, str]:

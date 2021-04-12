@@ -26,6 +26,7 @@ class Selection:
 
         Use recursive=True to allow for tasks inside a folder.
         """
+
         self.ids = ids
         self.name = name
         self.states = states

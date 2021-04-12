@@ -31,6 +31,7 @@ def find_home_folder(start: Path) -> Path:
 
 
 def guess_scheduler() -> str:
+    """Try different scheduler commands to guess the correct scheduler."""
     import subprocess
     scheduler_commands = {'sbatch': 'slurm',
                           'bsub': 'lsf',
@@ -41,14 +42,23 @@ def guess_scheduler() -> str:
                           stdout=subprocess.DEVNULL).returncode == 0:
             commands.append(command)
     if commands:
-        assert len(commands) == 1
+        if len(commands) > 1:
+            raise ValueError('Please specify a scheduler: ' +
+                             ', '.join(scheduler_commands[cmd]
+                                       for cmd in commands))
         scheduler = scheduler_commands[commands[0]]
     else:
         scheduler = 'local'
     return scheduler
 
 
-def main(name=None):
+def guess_configuration(scheduler_name: str = '',
+                        queue_name: str = '',
+                        in_place: bool = False) -> None:
+    """Simple auto-config tool.
+
+    Creates a config.py file.
+    """
     from .scheduler import get_scheduler
     from .utils import str2number
 
@@ -56,9 +66,9 @@ def main(name=None):
     if not folder.is_dir():
         folder.mkdir()
 
-    name = name or guess_scheduler()
+    name = scheduler_name or guess_scheduler()
     scheduler = get_scheduler(name)
-    nodelist = scheduler.get_config()
+    nodelist, extra_args = scheduler.get_config(queue_name)
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
     nodelist2: List[Tuple[str, int, str]] = []
     done: Set[int] = set()
@@ -68,25 +78,26 @@ def main(name=None):
             done.add(cores)
         else:
             nodelist2.append((name, cores, memory))
+
     cfg: Dict[str, Any] = {'scheduler': scheduler.name}
+
     if nodelist2:
         cfg['nodes'] = [(name, {'cores': cores, 'memory': memory})
                         for name, cores, memory in nodelist2]
+    if extra_args:
+        cfg['extra_args'] = extra_args
 
     text = f'config = {cfg!r}\n'
     text = text.replace('= {', '= {\n    ')
     text = text.replace(", 'nodes'", ",\n    'nodes'")
+    text = text.replace(", 'extra_args'", ",\n    'extra_args'")
     text = text.replace('(', '\n        (')
-    text = '# generated with python3 -m myqueue.config\n' + text
+    text = '# generated with mq config\n' + text
 
-    cfgfile = folder / 'config.py'
-    if cfgfile.is_file():
-        cfgfile.rename(cfgfile.with_name('config.py.old'))
-    # cfgfile.write_text(text)
-    print(text)
-
-
-if __name__ == '__main__':
-    import sys
-    name = sys.argv[1]
-    main(name)
+    if in_place:
+        cfgfile = folder / 'config.py'
+        if cfgfile.is_file():
+            cfgfile.rename(cfgfile.with_name('config.py.old'))
+        cfgfile.write_text(text)
+    else:
+        print(text)

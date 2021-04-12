@@ -10,7 +10,8 @@ from .utils import str2number
 class LSF(Scheduler):
     def submit(self,
                task: Task,
-               dry_run: bool = False) -> None:
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
         nodelist = config['nodes']
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -21,8 +22,8 @@ class LSF(Scheduler):
                 '-J', name,
                 '-W', f'{hours:02}:{minutes:02}',
                 '-n', str(task.resources.cores),
-                '-o', f'{name}.%J.out',
-                '-e', f'{name}.%J.err',
+                '-o', f'{task.folder}/{name}.%J.out',
+                '-e', f'{task.folder}/{name}.%J.err',
                 '-R', f'select[model == {nodename}]']
 
         mem = nodedct['memory']
@@ -37,11 +38,13 @@ class LSF(Scheduler):
         if task.dtasks:
             ids = ' && '.join(f'done({t.id})'
                               for t in task.dtasks)
-            bsub += ['-w', f'"{ids}"']
+            bsub += ['-w', f"{ids}"]
+
+        # bsub += ['-R', f'span[hosts={nodes}]']
+        bsub += ['-R', 'span[hosts=1]']
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            bsub += ['-R', f'span[hosts={nodes}]']
             cmd = ('mpiexec ' +
                    cmd.replace('python3',
                                config.get('parallel_python', 'python3')))
@@ -65,6 +68,8 @@ class LSF(Scheduler):
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
+        # print(' \\\n    '.join(bsub))
+        # print(script)
         if dry_run:
             print(' \\\n    '.join(bsub))
             print(script)
@@ -99,12 +104,12 @@ class LSF(Scheduler):
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
         from collections import defaultdict
         from .utils import str2number
 
-        cmd = ['nodestat',
-               '-F']
+        cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         cores: Dict[str, int] = {}
         memory: Dict[str, List[str]] = defaultdict(list)
@@ -119,4 +124,8 @@ class LSF(Scheduler):
         nodes = [
             (name, cores[name], min(memory[name], key=str2number))
             for name in cores]
-        return nodes
+        if queue:
+            extra_args = ['-q', queue]
+        else:
+            extra_args = []
+        return nodes, extra_args

@@ -6,7 +6,7 @@ from myqueue.task import Task
 class Scheduler:
     name: str
 
-    def submit(self, task: Task, dry_run: bool) -> None:
+    def submit(self, task: Task, dry_run: bool, verbose: bool) -> None:
         pass
 
     def cancel(self, task: Task) -> None:
@@ -37,7 +37,8 @@ class Scheduler:
     def maxrss(self, id: int) -> int:
         return 0
 
-    def get_config(self) -> List[Tuple[str, int, str]]:
+    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
+                                                   List[str]]:
         raise NotImplementedError
 
 

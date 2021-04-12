@@ -27,7 +27,7 @@ Sub-commands
     * - :ref:`info <info>`
       - Show detailed information about task
     * - :ref:`workflow <workflow>`
-      - Submit tasks from Python script
+      - Submit tasks from Python script or several scripts matching pattern
     * - :ref:`run <run>`
       - Run task(s) on local computer
     * - :ref:`kick <kick>`
@@ -40,6 +40,8 @@ Sub-commands
       - Make sure SLURM/LSF/PBS and MyQueue are in sync
     * - :ref:`completion <completion>`
       - Set up tab-completion for Bash
+    * - :ref:`config <config>`
+      - Create config.py file
     * - :ref:`daemon <daemon>`
       - Interact with the background process
 
@@ -67,13 +69,27 @@ optional arguments:
 List (ls): List tasks in queue
 ------------------------------
 
-usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-c ifnraste]
-               [-S c] [-C] [-L] [--not-recursive] [-v] [-q] [-T] [-A]
+usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
+               [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
+               [-T] [-A]
                [folder]
 
 List tasks in queue.
 
 Only tasks in the chosen folder and its subfolders are shown.
+
+Columns::
+
+    i: id
+    f: folder
+    n: name of task
+    a: arguments
+    I: info: "+<nargs>,*<repeats>,d<ndeps>"
+    r: resources
+    A: age
+    s: state
+    t: time
+    e: error message
 
 Examples::
 
@@ -88,7 +104,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -97,10 +113,12 @@ optional arguments:
   -e ERROR, --error ERROR
                         Select only tasks with error message matching "ERROR"
                         (* and ? can be used).
-  -c ifnraste, --columns ifnraste
-                        Select columns to show.
+  -c ifnaIrAste, --columns ifnaIrAste
+                        Select columns to show. Use "-c a-" to remove the "a"
+                        column.
   -S c, --sort c        Sort rows using column c, where c must be one of i, f,
-                        n, r, a, s, t or e. Use "-S c-" for a descending sort.
+                        n, a, r, A, s, t or e. Use "-S c-" for a descending
+                        sort.
   -C, --count           Just show the number of tasks.
   -L, --use-log-file    List tasks from logfile (~/.myqueue/log.csv).
   --not-recursive       Do not list subfolders.
@@ -118,7 +136,7 @@ Submit: Submit task(s) to queue
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-f]
                  [--max-tasks MAX_TASKS] [-R RESOURCES] [-w] [-z] [-v] [-q]
                  [-T]
-                 task [folder [folder ...]]
+                 task [folder ...]
 
 Submit task(s) to queue.
 
@@ -162,7 +180,7 @@ Resubmit: Resubmit failed or timed-out tasks
 
 usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID] [-n NAME]
                    [-e ERROR] [-z] [-v] [-q] [-T] [-r]
-                   [folder [folder ...]]
+                   [folder ...]
 
 Resubmit failed or timed-out tasks.
 
@@ -184,7 +202,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -207,7 +225,7 @@ Remove (rm): Remove or cancel task(s)
 
 usage: mq remove [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
-                 [folder [folder ...]]
+                 [folder ...]
 
 Remove or cancel task(s).
 
@@ -224,7 +242,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -267,16 +285,16 @@ optional arguments:
 
 .. _workflow:
 
-Workflow: Submit tasks from Python script
------------------------------------------
+Workflow: Submit tasks from Python script or several scripts matching pattern
+-----------------------------------------------------------------------------
 
-usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p] [-z]
-                   [-v] [-q] [-T]
-                   script [folder [folder ...]]
+usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
+                   [-a ARGUMENTS] [-z] [-v] [-q] [-T]
+                   script [folder ...]
 
-Submit tasks from Python script.
+Submit tasks from Python script or several scripts matching pattern.
 
-The script must define a create_tasks() function as shown here::
+The script(s) must define a create_tasks() function as shown here::
 
     $ cat flow.py
     from myqueue.task import task
@@ -300,6 +318,10 @@ optional arguments:
                         tasks will be submitted.
   -p, --pattern         Use submit scripts matching "script" pattern in all
                         subfolders.
+  -a ARGUMENTS, --arguments ARGUMENTS
+                        Pass arguments to create_tasks() function. Example:
+                        "-a name=hello,n=5" will call
+                        create_tasks(name='hello', n=5).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -311,8 +333,7 @@ optional arguments:
 Run: Run task(s) on local computer
 ----------------------------------
 
-usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T]
-              task [folder [folder ...]]
+usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T] task [folder ...]
 
 Run task(s) on local computer.
 
@@ -369,7 +390,7 @@ Modify: Modify task(s)
 
 usage: mq modify [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
                  [-q] [-T] [-r]
-                 newstate [folder [folder ...]]
+                 newstate [folder ...]
 
 Modify task(s).
 
@@ -385,7 +406,7 @@ optional arguments:
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
-                        "TIMEOUT" "all" and "ALL".
+                        "TIMEOUT", "MEMORY", "all" and "ALL".
   -i ID, --id ID        Comma-separated list of task ID's. Use "-i -" for
                         reading ID's from stdin (one ID per line; extra stuff
                         after the ID will be ignored).
@@ -463,6 +484,37 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
+
+
+.. _config:
+
+Config: Create config.py file
+-----------------------------
+
+usage: mq config [-h] [-Q QUEUE_NAME] [--in-place] [-z] [-v] [-q] [-T]
+                 [{local,slurm,pbs,lsf}]
+
+Create config.py file.
+
+This tool will try to guess your configuration.  Some hand editing afterwards
+will most likely be needed.
+
+Example::
+
+    $ mq config -Q hpc lsf
+
+{local,slurm,pbs,lsf}:
+     Name of scheduler. Will be guessed if not supplied.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -Q QUEUE_NAME, --queue-name QUEUE_NAME
+                        Name of queue. May be needed.
+  --in-place            Overwrite ~/.myqueue/config.py file.
+  -z, --dry-run         Show what will happen without doing anything.
+  -v, --verbose         More output.
+  -q, --quiet           Less output.
+  -T, --traceback       Show full traceback.
 
 
 .. _daemon:

@@ -16,6 +16,7 @@ from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
 from .config import config
+from .progress import progress_bar
 from .scheduler import get_scheduler, Scheduler
 from .resources import Resources
 from .run import run_tasks
@@ -144,11 +145,15 @@ class Queue(Lock):
             print(plural(len(done), 'task'), 'already done')
 
         tasks2 = []
+        failed_tasks = []
         for task in tasks:
             if task.workflow and task.has_failed():
                 if force:
-                    task.remove_failed_file()
+                    if not self.dry_run:
+                        task.remove_failed_file()
                     tasks2.append(task)
+                else:
+                    failed_tasks.append(task.dname)
             else:
                 tasks2.append(task)
         nfailed = len(tasks) - len(tasks2)
@@ -188,15 +193,19 @@ class Queue(Lock):
             task.dtasks = []
             for dep in task.deps:
                 # convert dep to Task:
+                if dep in failed_tasks:
+                    print(f'Skipping {task.dname}. '
+                          f'Reason: Failed dependency={dep}.')
+                    break
                 tsk = current.get(dep)
                 if tsk is None:
                     for tsk in tasks:
                         if dep == tsk.dname:
                             break
                     else:
-                        if dep not in done:
-                            print(f'Missing dependency for {task.name}:', dep)
-                            break
+                        assert dep in done, (
+                            f'Missing dependency for {task.name}:', dep)
+
                         tsk = None
                 elif tsk.state == 'done':
                     tsk = None
@@ -224,53 +233,56 @@ class Queue(Lock):
             task.state = 'queued'
             task.tqueued = t
 
-        if self.dry_run and self.verbosity < 2:
-            pprint(todo, 0, 'fnr')
-            print(plural(len(todo), 'task'), 'to submit')
-        else:
-            activation_scripts = find_activation_scripts([task.folder
-                                                          for task in todo])
-            for task in todo:
-                task.activation_script = activation_scripts.get(task.folder)
+        activation_scripts = find_activation_scripts([task.folder
+                                                      for task in todo])
+        for task in todo:
+            task.activation_script = activation_scripts.get(task.folder)
 
-            submitted = []
-            ex = None
+        pb = progress_bar(len(todo),
+                          f'Submitting {len(todo)} tasks:',
+                          self.verbosity and len(todo) > 1)
+        submitted = []
+        ex = None
+        try:
             while todo:
                 task = todo.pop(0)
                 if not all(t.id != 0 for t in task.dtasks):
                     # dependency has not been submitted yet
                     todo.append(task)
+
+                    # Check used while figuring out #22 (infinite loop)
+                    assert not all(any(t.id == 0 for t in task.dtasks)
+                                   for task in todo)
                 else:
-                    try:
-                        self.scheduler.submit(
-                            task,
-                            self.dry_run)
-                    except Exception as x:
-                        ex = x
-                        break
-                    else:
-                        submitted.append(task)
-                        if task.workflow:
-                            oldtask = current.get(task.dname)
-                            if oldtask:
-                                self.tasks.remove(oldtask)
+                    self.scheduler.submit(
+                        task,
+                        self.dry_run,
+                        self.verbosity >= 2)
+                    submitted.append(task)
+                    if task.workflow:
+                        oldtask = current.get(task.dname)
+                        if oldtask:
+                            self.tasks.remove(oldtask)
+                    next(pb)
+        except Exception as x:
+            ex = x
 
-            pprint(submitted, 0, 'ifnr',
-                   maxlines=10 if self.verbosity < 2 else 99999999999999)
-            if submitted:
-                if self.dry_run:
-                    print(plural(len(submitted), 'task'), 'to submit')
-                else:
-                    print(plural(len(submitted), 'task'), 'submitted')
+        pprint(submitted, 0, 'ifnaIr',
+               maxlines=10 if self.verbosity < 2 else 99999999999999)
+        if submitted:
+            if self.dry_run:
+                print(plural(len(submitted), 'task'), 'to submit')
+            else:
+                print(plural(len(submitted), 'task'), 'submitted')
 
-            self.tasks += submitted
-            self.changed.update(submitted)
+        self.tasks += submitted
+        self.changed.update(submitted)
 
-            if ex:
-                print(f'ERROR!  Could not submit {task}')
-                if todo:
-                    print('Skipped', plural(len(todo), 'task'))
-                raise ex
+        if ex:
+            print(f'ERROR!  Could not submit {task}')
+            if todo:
+                print('Skipped', plural(len(todo), 'task'))
+            raise ex
 
     def run(self,
             tasks: List[Task]) -> None:
@@ -621,7 +633,7 @@ def colored(state: str) -> str:
 
 def pprint(tasks: List[Task],
            verbosity: int = 1,
-           columns: str = 'ifnraste',
+           columns: str = 'ifnaIrAste',
            short: bool = False,
            maxlines: int = 9999999999) -> None:
     """Pretty-print tasks.
@@ -637,28 +649,29 @@ def pprint(tasks: List[Task],
     home = str(Path.home()) + '/'
     cwd = str(Path.cwd()) + '/'
 
-    titles = ['id', 'folder', 'name', 'res.', 'age', 'state', 'time', 'error']
-    c2i = {title[0]: i for i, title in enumerate(titles)}
-    indices = [c2i[c] for c in columns]
+    if columns.endswith('-'):
+        columns = ''.join(c for c in 'ifnaIrAste' if c not in columns[:-1])
 
-    if verbosity:
-        lines = [[titles[i] for i in indices]]
-        lengths = [len(t) for t in lines[0]]
-    else:
-        lines = []
-        lengths = [0] * len(columns)
+    titles = ['id', 'folder', 'name', 'args', 'info',
+              'res.', 'age', 'state', 'time', 'error']
+    c2i = {c: i for i, c in enumerate('ifnaIrAste')}
+    indices = [c2i[c] for c in columns]
 
     if len(tasks) > maxlines:
         cut1 = maxlines // 2
         cut2 = maxlines - cut1 - 2
+        skipped = len(tasks) - cut1 - cut2
         tasks = tasks[:cut1] + tasks[-cut2:]
     else:
-        cut1 = -1
+        skipped = 0
+
+    lines = []
+    lengths = [0] * len(columns)
 
     count: Dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
-        _, folder, _, _, _, state, _, _ = words
+        _, folder, _, _, _, _, _, state, _, _ = words
         count[state] += 1
         if folder.startswith(cwd):
             words[1] = './' + folder[len(cwd):]
@@ -668,8 +681,19 @@ def pprint(tasks: List[Task],
         lines.append(words)
         lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
 
-    if cut1 != -1:
-        lines[cut1:cut1] = [['...'], ['...']]
+    # remove empty columns ...
+    lines = [[word for word, length in zip(words, lengths) if length]
+             for words in lines]
+    columns = ''.join(c for c, length in zip(columns, lengths) if length)
+    lengths = [length for length in lengths if length]
+
+    if skipped:
+        lines[cut1:cut1] = [[f'... ({skipped} tasks not shown)']]
+
+    if verbosity:
+        lines[:0] = [[titles[c2i[c]] for c in columns]]
+        lengths = [max(length, len(title))
+                   for length, title in zip(lengths, lines[0])]
 
     try:
         N = os.get_terminal_size().columns
@@ -691,7 +715,7 @@ def pprint(tasks: List[Task],
             for word, c, L in zip(words, columns, lengths):
                 if c == 'e':
                     word = word[:cut]
-                elif c in 'at':
+                elif c in 'At':
                     word = word.rjust(L)
                 else:
                     word = word.ljust(L)
@@ -702,5 +726,5 @@ def pprint(tasks: List[Task],
 
     if verbosity:
         count['total'] = len(tasks)
-        print(', '.join(f'{state}: {n}'
+        print(', '.join(f'{colored(state) if use_color else state}: {n}'
                         for state, n in count.items()))

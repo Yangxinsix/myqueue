@@ -5,7 +5,7 @@ Workflows
 =========
 
 The :ref:`workflow <workflow>` subcommand combined with a :ref:`workflow
-script` can be used to run several similar tasks in several folders.  The
+script` can be used to run sequences of tasks in several folders.  The
 script describes the tasks, their requirements and dependencies.
 
 Example from real life:
@@ -29,7 +29,8 @@ the integer and check if the number was a prime number.
 .. literalinclude:: prime/check.py
 
 Our :ref:`workflow script` will create two tasks using the
-:func:`myqueue.task.task` function.
+:func:`myqueue.workflow.run` function and the :func:`myqueue.workflow.resources`
+decorator.
 
 :download:`prime/workflow.py`:
 
@@ -40,10 +41,10 @@ Our :ref:`workflow script` will create two tasks using the
 We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
-    total 12
-    -rw-r--r-- 1 jensj jensj 190 Jan 27 07:48 check.py
-    -rw-r--r-- 1 jensj jensj 387 Jan 27 07:48 factor.py
-    -rw-r--r-- 1 jensj jensj 166 Jan 27 07:48 workflow.py
+    totalt 12
+    -rw-rw-r-- 1 jensj jensj 190 feb  3 14:07 check.py
+    -rw-rw-r-- 1 jensj jensj 387 feb  3 14:07 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 feb  3 14:07 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -60,81 +61,87 @@ Create some folders::
 and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
-    ./1001/ prime.factor 1:10m*
-    ./1001/ prime.check  1:10m(1)*
+    Scanning 1 folder: |--------------------| 100.0%
+    Submitting 2 tasks: |--------------------| 100.0%
+    1 ./1001/ prime.factor    1:2s
+    1 ./1001/ prime.check  d1 1:2s
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
-    1 ./1001/ prime.factor 1:10m*
-    2 ./1001/ prime.check  1:10m(1)*
+    Scanning 1 folder: |--------------------| 100.0%
+    Submitting 2 tasks: |--------------------| 100.0%
+    1 ./1001/ prime.factor    1:2s
+    2 ./1001/ prime.check  d1 1:2s
     2 tasks submitted
     $ sleep 2
 
 and now in all subfolders::
 
     $ mq ls
-    id folder  name         res.    age state time error
-    -- ------- ------------ ------ ---- ----- ---- -----
-    1  ./1001/ prime.factor 1:10m* 0:02 done  0:00
-    2  ./1001/ prime.check  1:10m* 0:02 done  0:00
-    -- ------- ------------ ------ ---- ----- ---- -----
+    id folder  name         res.  age state time
+    -- ------- ------------ ---- ---- ----- ----
+    1  ./1001/ prime.factor 1:2s 0:02 done  0:00
+    2  ./1001/ prime.check  1:2s 0:02 done  0:00
+    -- ------- ------------ ---- ---- ----- ----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
+    Scanning 6 folders: |--------------------| 100.0%
     2 tasks already done
-    3  ./100007/ prime.factor 1:10m*
-    4  ./100007/ prime.check  1:10m(1)*
-    5  ./36791/  prime.factor 1:10m*
-    6  ./36791/  prime.check  1:10m(1)*
-    7  ./8069/   prime.factor 1:10m*
-    8  ./8069/   prime.check  1:10m(1)*
-    9  ./98769/  prime.factor 1:10m*
-    10 ./98769/  prime.check  1:10m(1)*
-    11 ./99/     prime.factor 1:10m*
-    12 ./99/     prime.check  1:10m(1)*
+    Submitting 10 tasks: |--------------------| 100.0%
+    3  ./100007/ prime.factor    1:2s
+    4  ./100007/ prime.check  d1 1:2s
+    5  ./36791/  prime.factor    1:2s
+    6  ./36791/  prime.check  d1 1:2s
+    7  ./8069/   prime.factor    1:2s
+    8  ./8069/   prime.check  d1 1:2s
+    9  ./98769/  prime.factor    1:2s
+    10 ./98769/  prime.check  d1 1:2s
+    11 ./99/     prime.factor    1:2s
+    12 ./99/     prime.check  d1 1:2s
     10 tasks submitted
 
 ::
 
     $ sleep 2  # wait for tasks to finish
     $ mq ls
-    id folder    name         res.    age state time error
-    -- --------- ------------ ------ ---- ----- ---- -----
-    1  ./1001/   prime.factor 1:10m* 0:05 done  0:00
-    2  ./1001/   prime.check  1:10m* 0:05 done  0:00
-    3  ./100007/ prime.factor 1:10m* 0:02 done  0:00
-    4  ./100007/ prime.check  1:10m* 0:02 done  0:00
-    5  ./36791/  prime.factor 1:10m* 0:02 done  0:00
-    6  ./36791/  prime.check  1:10m* 0:02 done  0:00
-    7  ./8069/   prime.factor 1:10m* 0:02 done  0:00
-    8  ./8069/   prime.check  1:10m* 0:02 done  0:00
-    9  ./98769/  prime.factor 1:10m* 0:02 done  0:00
-    10 ./98769/  prime.check  1:10m* 0:02 done  0:00
-    11 ./99/     prime.factor 1:10m* 0:02 done  0:00
-    12 ./99/     prime.check  1:10m* 0:02 done  0:00
-    -- --------- ------------ ------ ---- ----- ---- -----
+    id folder    name         res.  age state time
+    -- --------- ------------ ---- ---- ----- ----
+    1  ./1001/   prime.factor 1:2s 0:04 done  0:00
+    2  ./1001/   prime.check  1:2s 0:04 done  0:00
+    3  ./100007/ prime.factor 1:2s 0:02 done  0:00
+    4  ./100007/ prime.check  1:2s 0:02 done  0:00
+    5  ./36791/  prime.factor 1:2s 0:02 done  0:00
+    6  ./36791/  prime.check  1:2s 0:02 done  0:00
+    7  ./8069/   prime.factor 1:2s 0:02 done  0:00
+    8  ./8069/   prime.check  1:2s 0:02 done  0:00
+    9  ./98769/  prime.factor 1:2s 0:02 done  0:00
+    10 ./98769/  prime.check  1:2s 0:02 done  0:00
+    11 ./99/     prime.factor 1:2s 0:02 done  0:00
+    12 ./99/     prime.check  1:2s 0:02 done  0:00
+    -- --------- ------------ ---- ---- ----- ----
     done: 12, total: 12
 
-Note that a ``prime.check.done`` file is created to mark that the
-``prime.check`` task has been completed::
+Note that ``prime.check.done`` and ``prime.factor.done`` files are created
+to mark that these tasks have been completed::
 
     $ ls -l 1001/
-    total 4
-    -rw-r--r-- 1 jensj jensj 24 Jan 27 07:48 factors.json
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.err
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.2.out
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.check.done
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.err
-    -rw-r--r-- 1 jensj jensj  0 Jan 27 07:48 prime.factor.1.out
-
-There is no ``prime.factor.done`` file because ``factors.json`` serves that
-purpose.
+    totalt 4
+    -rw-rw-r-- 1 jensj jensj 24 feb  3 14:07 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.done
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.out
+    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.done
 
 Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
+    Scanning 7 folders: |--------------------| 100.0%
     12 tasks already done
-    13 ./42/ prime.factor 1:10m*
-    14 ./42/ prime.check  1:10m(1)*
+    Submitting 2 tasks: |--------------------| 100.0%
+    13 ./42/ prime.factor    1:2s
+    14 ./42/ prime.check  d1 1:2s
     2 tasks submitted
 
 Turns out, there were two prime numbers::
@@ -151,24 +158,26 @@ Turns out, there were two prime numbers::
     $ ls */PRIME
     36791/PRIME
     8069/PRIME
+    $ mq rm -sd */ -q
 
 
-Handling very many tasks
-------------------------
+Handling many tasks
+-------------------
 
 In the case where you have a workflow script with many tasks combined with
 many folders, it can happen that ``mq workflow ... */`` will try to submit
 more tasks than allowed by the scheduler.  In that case, you will have to
 submit the tasks in batches::
 
-    $ mq workflow ../prime/workflow.py */ --max-tasks=4000
+    $ mq workflow ../prime/workflow.py */ --max-tasks=2000
+    Scanning 1500 folders: |--------------------| 100.0%
     ...
-    4000 tasks submitted
+    Submitting 2000 tasks: |--------------------| 100.0%
     $ # wait ten days ...
-    $ mq workflow ../prime/workflow.py */ --max-tasks=4000
-    4000 tasks already done
+    $ mq workflow ../prime/workflow.py */ --max-tasks=2000
     ...
-    3178 tasks submitted
+    2000 tasks already done
+    Submitting 1000 tasks: |--------------------| 100.0%
 
 
 .. _workflow script:
@@ -177,6 +186,174 @@ Workflow script
 ===============
 
 A workflow script must contain a function:
+
+.. function:: workflow() -> None
+
+.. highlight:: python
+
+The :func:`workflow` function should call the :func:`myqueue.workflow.run`
+function for each task in the workflow.  Here is an example (``flow.py``)::
+
+    from myqueue.workflow import run
+    from somewhere import postprocess
+
+    def workflow():
+        r1 = run(script='task1.py')
+        r2 = run(script='task2.py', cores=8, tmax='2h')
+        run(function=postprocess, deps=[r1, r2])
+
+where ``task1.py`` and ``task2.py`` are Python scripts and ``postprocess`` is
+a Python function.  Calling the :func:`workflow` function directly will run
+the ``task1.py`` script, then the ``task2.py`` script and finally the
+``postprocess`` function.  If instead, the :func:`workflow` function  is
+passed to the ``mq workflow flow.py`` command, then the :func:`run`
+function will not actually run the tasks, but instead collect them with
+dependencies and submit them.
+
+Here is an alternative way to specify the dependencies of the ``postprocess``
+step (see more :ref:`below <dependencies>`)::
+
+    def workflow():
+        r1 = run(script='task1.py')
+        r2 = run(script='task2.py', cores=8, tmax='2h')
+        with r1, r2:
+            run(function=postprocess)
+
+.. autofunction:: myqueue.workflow.run
+.. autoclass:: myqueue.workflow.RunHandle
+    :members:
+
+
+Resources
+---------
+
+Resources for a task are set using the keywords:
+``cores``, ``tmax``, ``processes``, ``nodename`` and ``repeats``.
+
+.. seealso::
+
+    :ref:`resources`.
+
+Here are three equivalent ways to set the ``cores`` resource::
+
+    def workflow():
+        run(..., cores=24)  # as an argument to run()
+
+    def workflow():
+        with resources(cores=24):  # via a context manager
+            run(...)
+
+    @resources(cores=24)  # with a decorator
+    def workflow():
+        run(...)
+
+.. autofunction:: myqueue.workflow.resources
+
+
+Functions
+---------
+
+A task that call a Python function will make sure the function caches its
+result. If the function ``f`` has an attribute ``has`` that is a callable
+that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
+to check if the function has been called with a given set of arguments.  If a
+function doesn't have a ``has`` attribute then MyQueue will wrap it in a
+function that does using the :class:`~myqueue.workflow.Cached`
+object.
+
+.. autoclass:: myqueue.workflow.Cached
+    :members:
+
+Helper wrapper for working with functions:
+
+.. autofunction:: myqueue.workflow.wrap
+
+.. _dependencies:
+
+Dependencies
+------------
+
+Suppose we have two tasks and we want ``<task-2>`` to start after ``<task-1>``.
+We can specify the dependency explicitly like this::
+
+    def workflow():
+        run1 = run(<task-1>)
+        run(<task-2>, deps=[run1])
+
+or like this using a context manager::
+
+    def workflow():
+        with run(<task-1>):
+            run(<task-2>)
+
+If our tasks are functions then MyQueue can figure out the dependencies
+without specifying them explicitly or using `with` statements.
+Say we have the following two functions::
+
+    def f1():
+        return 2 + 2
+
+    def f2(x):
+        print(x)
+
+and we want to call ``f2`` with the result of ``f1``.  Given this
+workflow script::
+
+    def workflow():
+        run1 = run(function=f1)
+        run(function=f2, args=[run1.result])
+
+MyQueue will know that the ``f2`` task depends on the ``f1`` task.
+Here is a shorter version using the :func:`~myqueue.workflow.wrap`
+function::
+
+    def workflow():
+        x = wrap(f1)()
+        wrap(f2)(x)
+
+
+Workflows with if-statements
+============================
+
+Some workflows may take different directions depending on the result of the
+first part of the workflow.  Continuing with out ``f1`` and ``f2`` functions,
+we may only want to call ``f2`` if the result of ``f1`` is lees than five::
+
+    def workflow():
+        run1 = run(function=f1)
+        if run1.result < 5:
+            run(function=f2, args=[run1.result])
+
+MyQueue will know that ``run1.result < 5`` can't be decided before the first
+task has been run and it will therfore only submit one task. Running ``mq
+workflow ...`` a second time after the first task has finished will submit
+the second task.  Here is an equivalent script using functions::
+
+    def workflow():
+        x = wrap(f1)()
+        if x < 5:
+            wrap(f2)(x)
+
+The :class:`~myqueue.workflow.RunHandle` object also has a ``done`` attribute
+that can be used to break up the workflow::
+
+    def workflow():
+        run1 = run(<task-1>)
+        if run1.done:
+            something = read_result_of_task1_from file()
+            if ... something ...:
+                run(<task-2>)
+
+
+Old workflow script
+===================
+
+.. warning::
+
+    Please use a new-style :ref:`workflow script`!
+
+
+Old-style workflow scripts contain a function:
 
 .. function:: create_tasks() -> List[myqueue.task.Task]
 
