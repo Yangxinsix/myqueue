@@ -569,7 +569,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                        args.count, args.use_log_file)
 
         elif args.command == 'remove':
-            print(selection)
             queue.remove(selection)
 
         elif args.command == 'resubmit':
