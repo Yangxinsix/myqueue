@@ -63,6 +63,14 @@ Commands
 .. autoclass:: myqueue.commands.PythonFunction
 
 
+States
+......
+
+.. module:: myqueue.states
+.. autoclass:: myqueue.queue.State
+   :members:
+
+
 Resources
 .........
 
