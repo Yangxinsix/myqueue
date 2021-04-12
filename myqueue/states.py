@@ -11,8 +11,17 @@ class State(Enum):
     MEMORY = 'M'
     CANCELED = 'C'
 
-    def azxdg__eq__(self, other):
-        return self.name == other
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, State):
+            return self.name == other.name
+        if isinstance(other, str):
+            if other in State.__members__:
+                return self.name == other
+            raise TypeError
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
 
 if __name__ == '__main__':
@@ -23,3 +32,5 @@ if __name__ == '__main__':
     assert q == q
     assert q in {'queued'}
     assert q not in {'done'}
+    assert q == 'asdfg'
+    assert q not in {'doneyy'}
