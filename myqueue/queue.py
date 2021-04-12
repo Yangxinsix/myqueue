@@ -15,15 +15,16 @@ from pathlib import Path
 from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
-from .config import config
-from .progress import progress_bar
-from .scheduler import get_scheduler, Scheduler
-from .resources import Resources
-from .run import run_tasks
-from .selection import Selection
-from .task import Task
-from .utils import Lock, plural
-from .virtenv import find_activation_scripts
+from myqueue.config import config
+from myqueue.progress import progress_bar
+from myqueue.scheduler import get_scheduler, Scheduler
+from myqueue.resources import Resources
+from myqueue.run import run_tasks
+from myqueue.selection import Selection
+from myqueue.task import Task
+from myqueue.utils import Lock, plural
+from myqueue.virtenv import find_activation_scripts
+from myqueue.states import State
 
 
 class Queue(Lock):
@@ -170,7 +171,7 @@ class Queue(Lock):
         current = {task.dname: task for task in self.tasks}
 
         tasks2 = []
-        inqueue: Dict[str, int] = defaultdict(int)
+        inqueue: Dict[State, int] = defaultdict(int)
         for task in tasks:
             if task.workflow and task.dname in current:
                 state = current[task.dname].state
@@ -230,7 +231,7 @@ class Queue(Lock):
         t = time.time()
         for task in todo:
             task.dtasks = [tsk for tsk in task.dtasks if not tsk.is_done()]
-            task.state = 'queued'
+            task.state = State.queued
             task.tqueued = t
 
         activation_scripts = find_activation_scripts([task.folder
@@ -348,7 +349,7 @@ class Queue(Lock):
                 print(plural(len(cancel), 'job'), 'to be canceled')
             else:
                 for task in cancel:
-                    task.state = 'CANCELED'
+                    task.state = State.CANCELED
                     self.changed.add(task)
                 print(plural(len(cancel), 'job'), 'canceled')
 
@@ -385,7 +386,7 @@ class Queue(Lock):
 
     def modify(self,
                selection: Selection,
-               newstate: str) -> None:
+               newstate: State) -> None:
         """Modify task(s)."""
         self._read()
         tasks = selection.select(self.tasks)
@@ -462,18 +463,18 @@ class Queue(Lock):
         files = []
         for path in paths:
             _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), state))
+            files.append((path.stat().st_ctime, int(id), int(state)))
             path.unlink()
-        states = {'0': 'running',
-                  '1': 'done',
-                  '2': 'FAILED',
-                  '3': 'TIMEOUT'}
+        states = {0: State.running,
+                  1: State.done,
+                  2: State.FAILED,
+                  3: State.TIMEOUT}
         for t, id, state in sorted(files):
             self.update(id, states[state], t)
 
     def update(self,
                id: int,
-               state: str,
+               state: State,
                t: float = 0.0) -> None:
 
         for task in self.tasks:
@@ -504,7 +505,7 @@ class Queue(Lock):
                 task.write_failed_file()
 
         else:
-            raise ValueError('Bad state: ' + state)
+            raise ValueError(f'Bad state: {state}')
 
         if state != 'running':
             mem = self.scheduler.maxrss(id)
@@ -520,17 +521,17 @@ class Queue(Lock):
                 delta = t - task.trunning - task.resources.tmax
                 if delta > 0:
                     if self.scheduler.has_timed_out(task) or delta > 1800:
-                        task.state = 'TIMEOUT'
+                        task.state = State.TIMEOUT
                         task.tstop = t
                         task.cancel_dependents(self.tasks, t)
                         self.changed.add(task)
 
-        bad = {task.dname for task in self.tasks if task.state.isupper()}
+        bad = {task.dname for task in self.tasks if task.state.is_bad()}
         for task in self.tasks:
             if task.state == 'queued':
                 for dep in task.deps:
                     if dep in bad:
-                        task.state = 'CANCELED'
+                        task.state = State.CANCELED
                         task.tstop = t
                         self.changed.add(task)
                         break
@@ -540,7 +541,7 @@ class Queue(Lock):
                 if not task.error:
                     oom = task.read_error(self.scheduler)
                     if oom:
-                        task.state = 'MEMORY'
+                        task.state = State.MEMORY
                         task.remove_failed_file()
                     self.changed.add(task)
 
@@ -584,7 +585,7 @@ class Queue(Lock):
                 if task.state == 'queued':
                     if task.diskspace > 0:
                         self.scheduler.hold(task)
-                        task.state = 'hold'
+                        task.state = State.hold
                         self.changed.add(task)
                         mem -= task.diskspace
                         if mem < maxmem:
@@ -593,7 +594,7 @@ class Queue(Lock):
             for task in self.tasks[::-1]:
                 if task.state == 'hold' and task.diskspace > 0:
                     self.scheduler.release_hold(task)
-                    task.state = 'queued'
+                    task.state = State.queued
                     self.changed.add(task)
                     mem += task.diskspace
                     if mem > maxmem:

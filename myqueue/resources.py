@@ -1,6 +1,7 @@
 """Resource class to handle resource requirements: time, cores, processes."""
 
 from typing import List, Dict, Tuple, Any, Union
+from myqueue.states import State
 
 
 def seconds_to_short_time_string(n: float) -> str:
@@ -116,16 +117,16 @@ class Resources:
         return dct
 
     def bigger(self,
-               state: str,
+               state: State,
                nodelist: List[Node],
                maxtmax: int = 2 * 24 * 3600) -> 'Resources':
         """Create new Resource object with larger tmax or more cores.
 
         >>> nodes = [('node1', {'cores': 8})]
         >>> r = Resources(tmax=100, cores=8)
-        >>> r.bigger('TIMEOUT', nodes)
+        >>> r.bigger(State.TIMEOUT, nodes)
         Resources(cores=8, tmax=200)
-        >>> r.bigger('MEMORY', nodes)
+        >>> r.bigger(State.MEMORY, nodes)
         Resources(cores=16, tmax=100)
         """
         new = Resources(**self.todict())

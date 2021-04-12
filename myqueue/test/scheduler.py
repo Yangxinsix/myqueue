@@ -4,6 +4,7 @@ from typing import Optional, List
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
+from myqueue.states import State
 
 
 class TestScheduler(Scheduler):
@@ -46,7 +47,7 @@ class TestScheduler(Scheduler):
                 break
         else:
             raise ValueError('No such task!')
-        j.state = 'hold'
+        j.state = State.hold
 
     def release_hold(self, task):
         assert task.state == 'hold', task
@@ -55,7 +56,7 @@ class TestScheduler(Scheduler):
                 break
         else:
             raise ValueError('No such task!')
-        j.state = 'queued'
+        j.state = State.queued
 
     def get_ids(self):
         return {task.id for task in self.tasks}
@@ -90,18 +91,18 @@ class TestScheduler(Scheduler):
                                     check=not True,
                                     timeout=tmax)
         except subprocess.TimeoutExpired:
-            state = 'TIMEOUT'
+            state = State.TIMEOUT
         else:
             if result.returncode == 0:
-                state = 'done'
+                state = State.done
             else:
-                state = 'FAILED'
+                state = State.FAILED
         self.update(task, state)
 
-    def update(self, task: Task, state: str) -> None:
-        n = {'done': 1,
-             'FAILED': 2,
-             'TIMEOUT': 3}[state]
+    def update(self, task: Task, state: State) -> None:
+        n = {State.done: 1,
+             State.FAILED: 2,
+             State.TIMEOUT: 3}[state]
 
         (self.folder / f'test-{task.id}-{n}').write_text('')
 
@@ -114,7 +115,7 @@ class TestScheduler(Scheduler):
                     tasks.append(j)
             self.tasks = tasks
         else:
-            task.state = 'CANCELED'
+            task.state = State.CANCELED
             task.cancel_dependents(self.tasks, 0)
             self.tasks = [task for task in self.tasks
                           if task.state != 'CANCELED']

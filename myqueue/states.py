@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class State(Enum):
+    UNDEFINED = '?'
     queued = 'q'
     hold = 'h'
     running = 'r'
@@ -22,6 +23,12 @@ class State(Enum):
 
     def __hash__(self) -> int:
         return hash(self.name)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def is_bad(self) -> bool:
+        return self.name.isupper()
 
 
 if __name__ == '__main__':

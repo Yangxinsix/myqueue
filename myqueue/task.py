@@ -2,17 +2,16 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Any, Dict, Union, Optional, Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 from warnings import warn
 
-from .commands import create_command, Command
-from .resources import Resources, T
+from myqueue.commands import Command, create_command
+from myqueue.resources import Resources, T
+from myqueue.states import State
 
 if TYPE_CHECKING:
     from .scheduler import Scheduler
 
-taskstates = ['queued', 'hold', 'running', 'done',
-              'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY']
 UNSPECIFIED = 'hydelifytskibadut'
 
 
@@ -50,7 +49,7 @@ class Task:
                  diskspace: int,
                  folder: Path,
                  creates: List[str],
-                 state: str = '',
+                 state: State = State.UNDEFINED,
                  id: int = 0,
                  error: str = '',
                  memory_usage: int = 0,
@@ -67,6 +66,7 @@ class Task:
         self.folder = folder
         self.creates = creates
 
+        assert isinstance(state, State), state
         self.state = state
         self.id = id
         self.error = error
@@ -120,7 +120,7 @@ class Task:
                 ','.join(info),
                 str(self.resources),
                 seconds_to_time_string(age),
-                self.state,
+                self.state.name,
                 seconds_to_time_string(dt),
                 self.error]
 
@@ -132,7 +132,7 @@ class Task:
         dct = self.todict()
         return f'Task({dct!r})'
 
-    def order(self, column: str) -> Union[int, str, Path, float]:
+    def order(self, column: str) -> Union[int, str, Path, float, State]:
         """ifnraste"""
         if column == 'i':
             return self.id
@@ -165,7 +165,7 @@ class Task:
             'id': self.id,
             'folder': str(folder),
             'cmd': self.cmd.todict(),
-            'state': self.state,
+            'state': self.state.name,
             'resources': self.resources.todict(),
             'restart': self.restart,
             'deps': [str(dep) for dep in deps],
@@ -220,7 +220,7 @@ class Task:
                     int(diskspace),
                     Path(folder),
                     creates.split(','),
-                    state,
+                    State[state],
                     int(id),
                     error,
                     memory_usage,
@@ -254,6 +254,7 @@ class Task:
 
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
+                    state=State[dct.pop('state')],
                     folder=folder,
                     deps=deps,
                     **dct)
@@ -357,7 +358,7 @@ class Task:
         """Cancel dependents."""
         for tsk in tasks:
             if self.dname in tsk.deps and self is not tsk:
-                tsk.state = 'CANCELED'
+                tsk.state = State.CANCELED
                 tsk.tstop = t
                 tsk.cancel_dependents(tasks, t)
 
