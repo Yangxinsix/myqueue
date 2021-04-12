@@ -2,6 +2,14 @@ from enum import Enum
 
 
 class State(Enum):
+    """Task-state enum.
+
+    >>> State.queued == 'queued'
+    True
+    >>> State.done in {'queued', 'running'}
+    False
+    """
+
     UNDEFINED = '?'
     queued = 'q'
     hold = 'h'
@@ -28,16 +36,9 @@ class State(Enum):
         return self.name
 
     def is_bad(self) -> bool:
+        """Return true for UNDEFINED, FAILED, TIMEOUT, MEMORY and CANCELED.
+
+        >>> State.running.is_bad()
+        False
+        """
         return self.name.isupper()
-
-
-if __name__ == '__main__':
-    q = State.queued
-    F = State.FAILED
-    assert q == 'queued'
-    assert q != F
-    assert q == q
-    assert q in {'queued'}
-    assert q not in {'done'}
-    assert q == 'asdfg'
-    assert q not in {'doneyy'}
