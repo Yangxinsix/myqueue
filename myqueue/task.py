@@ -269,7 +269,7 @@ class Task:
                     if not any(self.folder.glob(pattern)):
                         self._done = False
                         break
-                else:
+                else:  # no break
                     self._done = True
             else:
                 self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
