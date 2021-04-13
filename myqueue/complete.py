@@ -9,7 +9,7 @@ Put this in your .bashrc::
 
 import os
 import sys
-from typing import Dict, Any, Iterable
+from typing import Dict, Any, Iterable, Mapping
 
 
 def read() -> Dict[str, Any]:
@@ -124,7 +124,7 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
     return []
 
 
-def main(environ: Dict[str, str], word: str, previous: str) -> None:
+def main(environ: Mapping[str, str], word: str, previous: str) -> None:
     line = environ['COMP_LINE']
     point = int(environ['COMP_POINT'])
     words = complete(word, previous, line, point)
