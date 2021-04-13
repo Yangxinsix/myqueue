@@ -4,7 +4,7 @@ tests:
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install -e .
     - coverage run --source=myqueue -m pytest -v
-    - coverage report -i --fail-under=81
+    - coverage report -i --fail-under=82
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 43.2 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 43.1 myqueue -e myqueue/test
