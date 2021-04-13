@@ -406,14 +406,15 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from .config import config, initialize_config
-    from .resources import Resources
-    from .task import task, taskstates
-    from .queue import Queue
-    from .selection import Selection
-    from .utils import get_home_folders
-    from .workflow import workflow
-    from .daemon import start_daemon
+    from myqueue.config import config, initialize_config
+    from myqueue.resources import Resources
+    from myqueue.task import task
+    from myqueue.queue import Queue
+    from myqueue.selection import Selection
+    from myqueue.utils import get_home_folders
+    from myqueue.workflow import workflow
+    from myqueue.daemon import start_daemon
+    from myqueue.states import State
 
     if not is_test:
         start_daemon()
@@ -484,18 +485,22 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
-        states: Set[str] = set()
+        states: Set[State] = set()
         for s in args.states if args.states is not None else default:
             if s == 'a':
-                states.update(['queued', 'hold', 'running', 'done'])
+                states.update([State.queued,
+                               State.hold,
+                               State.running,
+                               State.done])
             elif s == 'A':
-                states.update(['FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY'])
+                states.update([State.FAILED,
+                               State.CANCELED,
+                               State.TIMEOUT,
+                               State.MEMORY])
             else:
-                for state in taskstates:
-                    if s == state[0]:
-                        states.add(state)
-                        break
-                else:
+                try:
+                    states.add(State(s))
+                except ValueError:
                     raise MQError(
                         'Unknown state: ' + s +
                         '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
@@ -595,11 +600,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.run(newtasks)
 
         elif args.command == 'modify':
-            for state in taskstates:
-                if state.startswith(args.newstate):
-                    break
-            else:
-                1 / 0
+            state = State(args.newstate)
             queue.modify(selection, state)
 
         elif args.command == 'workflow':

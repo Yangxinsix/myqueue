@@ -9,8 +9,9 @@ from myqueue.cli import _main
 from myqueue.config import initialize_config
 from myqueue.queue import Queue
 from myqueue.selection import Selection
-from myqueue.task import Task, taskstates
+from myqueue.task import Task
 from myqueue.test.scheduler import TestScheduler
+from myqueue.states import State
 
 
 @pytest.fixture(scope='function')
@@ -45,7 +46,7 @@ class MQ:
         assert err == error
 
     def states(self) -> str:
-        return ''.join(task.state[0] for task in mqlist())
+        return ''.join(task.state.value for task in mqlist())
 
     def wait(self) -> None:
         while True:
@@ -54,8 +55,8 @@ class MQ:
                 break
 
 
-def mqlist(states: Set[str] = None) -> List[Task]:
-    states = states or set(taskstates)
+def mqlist(states: Set[State] = None) -> List[Task]:
+    states = states if states is not None else set(State)
     with Queue(verbosity=0) as q:
         q._read()
         return Selection(states=states,

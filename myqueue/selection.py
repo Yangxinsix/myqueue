@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import List, Set, Pattern, Optional
 
-from .task import Task
+from myqueue.task import Task
+from myqueue.states import State
 
 
 class Selection:
@@ -10,7 +11,7 @@ class Selection:
     def __init__(self,
                  ids: Optional[Set[int]] = None,
                  name: Optional[Pattern[str]] = None,
-                 states: Set[str] = set(),
+                 states: Set[State] = set(),
                  folders: List[Path] = [],
                  recursive: bool = True,
                  error: Optional[Pattern[str]] = None):
