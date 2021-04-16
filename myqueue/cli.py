@@ -251,7 +251,11 @@ def _main(arguments: List[str] = None) -> int:
               'when done.')
 
         if cmd == 'modify':
-            a('newstate', help='New state (one of the letters: qhrdFCTM).')
+            a('-E', '--email', default='U', metavar='STATES',
+              help='Send email when state changes to on of the specified '
+              'states (one or more of the letters: rdFCTMA).')
+            a('-N', '--new-state', default='U',
+              help='New state (one of the letters: qhrdFCTM).')
 
         if cmd == 'workflow':
             a('script', help='Submit tasks from workflow script.')
@@ -485,25 +489,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
-        states: Set[State] = set()
-        for s in args.states if args.states is not None else default:
-            if s == 'a':
-                states.update([State.queued,
-                               State.hold,
-                               State.running,
-                               State.done])
-            elif s == 'A':
-                states.update([State.FAILED,
-                               State.CANCELED,
-                               State.TIMEOUT,
-                               State.MEMORY])
-            else:
-                try:
-                    states.add(State(s))
-                except ValueError:
-                    raise MQError(
-                        'Unknown state: ' + s +
-                        '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
+        states = State.str2states(args.states
+                                  if args.states is not None
+                                  else default)
 
         ids: Optional[Set[int]] = None
         if args.id:
@@ -601,7 +589,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'modify':
             state = State(args.newstate)
-            queue.modify(selection, state)
+            queue.modify(selection, state, State.str2states(args.email))
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders, verbosity)

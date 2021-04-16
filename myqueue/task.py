@@ -49,6 +49,7 @@ class Task:
                  diskspace: int,
                  folder: Path,
                  creates: List[str],
+                 notifications: str = '',
                  state: State = State.UNDEFINED,
                  id: int = 0,
                  error: str = '',
@@ -65,6 +66,7 @@ class Task:
         self.diskspace = diskspace
         self.folder = folder
         self.creates = creates
+        self.notifications = notifications
 
         assert isinstance(state, State), state
         self.state = state
@@ -112,6 +114,8 @@ class Task:
             info.append(f'+{len(self.cmd.args)}')
         if self.diskspace:
             info.append('D')
+        if self.notifications:
+            info.append(self.notifications)
 
         return [str(self.id),
                 str(self.folder) + '/',
@@ -172,6 +176,7 @@ class Task:
             'workflow': self.workflow,
             'diskspace': self.diskspace,
             'creates': self.creates,
+            'notifications': self.notifications,
             'tqueued': self.tqueued,
             'trunning': self.trunning,
             'tstop': self.tstop,
@@ -201,7 +206,8 @@ class Task:
               f'"{creates}",'
               f'{t1},{t2},{t3},'
               f'"{error}",'
-              f'{self.memory_usage}',
+              f'{self.memory_usage},'
+              f'"{self.notifications}"',
               file=fd)
 
     @staticmethod
@@ -212,6 +218,7 @@ class Task:
             memory_usage = 0 if len(row) == 14 else int(row[14])
         except ValueError:  # read old corrupted log.csv files
             memory_usage = 0
+        notifications = '' if len(row) < 16 else row[15]
         return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
@@ -220,6 +227,7 @@ class Task:
                     int(diskspace),
                     Path(folder),
                     creates.split(','),
+                    notifications,
                     State[state],
                     int(id),
                     error,
@@ -257,6 +265,7 @@ class Task:
                     state=State[dct.pop('state')],
                     folder=folder,
                     deps=deps,
+                    notifications.pop('notifications', ''),
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:

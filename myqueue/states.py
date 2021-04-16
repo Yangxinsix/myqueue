@@ -1,8 +1,23 @@
 from enum import Enum
+from typing import Set
 
 
 class State(Enum):
     """Task-state enum.
+
+    The following 9 states are defined:
+
+    >>> for state in State:
+    ...     state
+    <State.UNDEFINED: 'U'>
+    <State.queued: 'q'>
+    <State.hold: 'h'>
+    <State.running: 'r'>
+    <State.done: 'd'>
+    <State.FAILED: 'F'>
+    <State.TIMEOUT: 'T'>
+    <State.MEMORY: 'M'>
+    <State.CANCELED: 'C'>
 
     >>> State.queued == State.queued
     True
@@ -16,9 +31,10 @@ class State(Enum):
     False
     >>> State.done in {'queued', 'running'}
     False
+    >>> State.str2states('dA')
     """
 
-    UNDEFINED = '?'
+    UNDEFINED = 'U'
     queued = 'q'
     hold = 'h'
     running = 'r'
@@ -50,3 +66,28 @@ class State(Enum):
         False
         """
         return self.name.isupper()
+
+    @staticmethod
+    def str2states(s: str) -> Set['State']:
+        """"""
+        states: Set[State] = set()
+        for c in s:
+            if s == 'a':
+                states.update([State.queued,
+                               State.hold,
+                               State.running,
+                               State.done])
+            elif s == 'A':
+                states.update([State.FAILED,
+                               State.CANCELED,
+                               State.TIMEOUT,
+                               State.MEMORY])
+            else:
+                try:
+                    states.add(State(s))
+                except ValueError:
+                    raise ValueError(
+                        'Unknown state: ' + s +
+                        '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
+        return states
+    
