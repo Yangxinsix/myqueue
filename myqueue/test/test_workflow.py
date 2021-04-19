@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+
+import pytest
 from myqueue.task import task
 from myqueue.test.flow1 import workflow
 from myqueue.test.hello import workflow as hello
@@ -47,6 +49,7 @@ def test_direct_hello(tmp_path):
     hello()
 
 
+@pytest.mark.xfail
 def test_flow2(mq):
     script = Path(__file__).with_name('flow2.py')
     mq(f'workflow {script}')

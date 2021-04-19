@@ -8,23 +8,21 @@ File format versions:
 """
 import json
 import os
-import sys
 import time
 from collections import defaultdict
-from pathlib import Path
 from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
 from myqueue.config import config
-from myqueue.progress import progress_bar
 from myqueue.scheduler import get_scheduler, Scheduler
 from myqueue.resources import Resources
 from myqueue.run import run_tasks
 from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.utils import Lock, plural
-from myqueue.virtenv import find_activation_scripts
 from myqueue.states import State
+from myqueue.pretty import pprint
+from myqueue.submitting import submit_tasks
 
 
 class Queue(Lock):
@@ -132,141 +130,19 @@ class Queue(Lock):
             Ignore and remove name.FAILED files.
         """
 
-        # See https://xkcd.com/1421
-
-        tasks2 = []
-        done = set()
-        for task in tasks:
-            if task.workflow and task.is_done():
-                done.add(task.dname)
-            else:
-                tasks2.append(task)
-        tasks = tasks2
-        if done:
-            print(plural(len(done), 'task'), 'already done')
-
-        tasks2 = []
-        failed_tasks = []
-        for task in tasks:
-            if task.workflow and task.has_failed():
-                if force:
-                    if not self.dry_run:
-                        task.remove_failed_file()
-                    tasks2.append(task)
-                else:
-                    failed_tasks.append(task.dname)
-            else:
-                tasks2.append(task)
-        nfailed = len(tasks) - len(tasks2)
-        if nfailed:
-            print(plural(nfailed, 'task'),
-                  'already marked as FAILED '
-                  '("<task-name>.FAILED" file exists).')
-            print('Use --force to ignore and remove the .FAILED files.')
-        tasks = tasks2
-
         if read:
             self._read()
 
         current = {task.dname: task for task in self.tasks}
 
-        tasks2 = []
-        inqueue: Dict[State, int] = defaultdict(int)
-        for task in tasks:
-            if task.workflow and task.dname in current:
-                state = current[task.dname].state
-                if state in {'queued', 'hold', 'running'}:
-                    inqueue[state] += 1
-                else:
-                    tasks2.append(task)
-            else:
-                tasks2.append(task)
-        tasks = tasks2
+        submitted, skipped, ex = submit_tasks(
+            self.scheduler, tasks, current,
+            force, max_tasks,
+            self.verbosity, self.dry_run)
 
-        if inqueue:
-            print(plural(sum(inqueue.values()), 'task'),
-                  'already in the queue:')
-            print('\n'.join(f'    {state:8}: {n}'
-                            for state, n in inqueue.items()))
-
-        todo = []
-        for task in tasks:
-            task.dtasks = []
-            for dep in task.deps:
-                # convert dep to Task:
-                if dep in failed_tasks:
-                    print(f'Skipping {task.dname}. '
-                          f'Reason: Failed dependency={dep}.')
-                    break
-                tsk = current.get(dep)
-                if tsk is None:
-                    for tsk in tasks:
-                        if dep == tsk.dname:
-                            break
-                    else:
-                        assert dep in done, (
-                            f'Missing dependency for {task.name}:', dep)
-
-                        tsk = None
-                elif tsk.state == 'done':
-                    tsk = None
-                elif tsk.state not in {'queued', 'hold', 'running'}:
-                    print(f'Dependency for {task.name} ({tsk.name}) '
-                          f'in bad state: {tsk.state}')
-                    break
-
-                if tsk is not None:
-                    task.dtasks.append(tsk)
-            else:
-                task.deps = [t.dname for t in task.dtasks]
-                todo.append(task)
-
-        # All dependensies must have an id or be in the list of tasks
-        # about to be submitted
-        todo = [task for task in todo
-                if all(tsk.id or tsk in todo for tsk in task.dtasks)]
-
-        todo = todo[:max_tasks]
-
-        t = time.time()
-        for task in todo:
-            task.dtasks = [tsk for tsk in task.dtasks if not tsk.is_done()]
-            task.state = State.queued
-            task.tqueued = t
-
-        activation_scripts = find_activation_scripts([task.folder
-                                                      for task in todo])
-        for task in todo:
-            task.activation_script = activation_scripts.get(task.folder)
-
-        pb = progress_bar(len(todo),
-                          f'Submitting {len(todo)} tasks:',
-                          self.verbosity and len(todo) > 1)
-        submitted = []
-        ex = None
-        try:
-            while todo:
-                task = todo.pop(0)
-                if not all(t.id != 0 for t in task.dtasks):
-                    # dependency has not been submitted yet
-                    todo.append(task)
-
-                    # Check used while figuring out #22 (infinite loop)
-                    assert not all(any(t.id == 0 for t in task.dtasks)
-                                   for task in todo)
-                else:
-                    self.scheduler.submit(
-                        task,
-                        self.dry_run,
-                        self.verbosity >= 2)
-                    submitted.append(task)
-                    if task.workflow:
-                        oldtask = current.get(task.dname)
-                        if oldtask:
-                            self.tasks.remove(oldtask)
-                    next(pb)
-        except Exception as x:
-            ex = x
+        if ex:
+            nskipped = len(tasks) - len(submitted) - len(skipped)
+            print('Skipped', plural(nskipped, 'task'))
 
         pprint(submitted, 0, 'ifnaIr',
                maxlines=10 if self.verbosity < 2 else 99999999999999)
@@ -276,13 +152,16 @@ class Queue(Lock):
             else:
                 print(plural(len(submitted), 'task'), 'submitted')
 
+        for task in submitted:
+            if task.workflow:
+                oldtask = current.get(task.dname)
+                if oldtask:
+                    self.tasks.remove(oldtask)
+
         self.tasks += submitted
         self.changed.update(submitted)
 
         if ex:
-            print(f'ERROR!  Could not submit {task}')
-            if todo:
-                print('Skipped', plural(len(todo), 'task'))
             raise ex
 
     def run(self,
@@ -620,112 +499,3 @@ class Queue(Lock):
             for task in self.changed:
                 task.tocsv(fd, write_header)
                 write_header = False
-
-
-def colored(state: str) -> str:
-    if state.isupper():
-        return '\033[91m' + state + '\033[0m'
-    if state.startswith('done'):
-        return '\033[92m' + state + '\033[0m'
-    if state.startswith('running'):
-        return '\033[93m' + state + '\033[0m'
-    return state
-
-
-def pprint(tasks: List[Task],
-           verbosity: int = 1,
-           columns: str = 'ifnaIrAste',
-           short: bool = False,
-           maxlines: int = 9999999999) -> None:
-    """Pretty-print tasks.
-
-    Use short=True to get only a summary.
-    """
-    if verbosity < 0:
-        return
-
-    if not tasks:
-        return
-
-    home = str(Path.home()) + '/'
-    cwd = str(Path.cwd()) + '/'
-
-    if columns.endswith('-'):
-        columns = ''.join(c for c in 'ifnaIrAste' if c not in columns[:-1])
-
-    titles = ['id', 'folder', 'name', 'args', 'info',
-              'res.', 'age', 'state', 'time', 'error']
-    c2i = {c: i for i, c in enumerate('ifnaIrAste')}
-    indices = [c2i[c] for c in columns]
-
-    if len(tasks) > maxlines:
-        cut1 = maxlines // 2
-        cut2 = maxlines - cut1 - 2
-        skipped = len(tasks) - cut1 - cut2
-        tasks = tasks[:cut1] + tasks[-cut2:]
-    else:
-        skipped = 0
-
-    lines = []
-    lengths = [0] * len(columns)
-
-    count: Dict[str, int] = defaultdict(int)
-    for task in tasks:
-        words = task.words()
-        _, folder, _, _, _, _, _, state, _, _ = words
-        count[state] += 1
-        if folder.startswith(cwd):
-            words[1] = './' + folder[len(cwd):]
-        elif folder.startswith(home):
-            words[1] = '~/' + folder[len(home):]
-        words = [words[i] for i in indices]
-        lines.append(words)
-        lengths = [max(n, len(word)) for n, word in zip(lengths, words)]
-
-    # remove empty columns ...
-    lines = [[word for word, length in zip(words, lengths) if length]
-             for words in lines]
-    columns = ''.join(c for c, length in zip(columns, lengths) if length)
-    lengths = [length for length in lengths if length]
-
-    if skipped:
-        lines[cut1:cut1] = [[f'... ({skipped} tasks not shown)']]
-
-    if verbosity:
-        lines[:0] = [[titles[c2i[c]] for c in columns]]
-        lengths = [max(length, len(title))
-                   for length, title in zip(lengths, lines[0])]
-
-    try:
-        N = os.get_terminal_size().columns
-        cut = max(0, N - sum(L + 1 for L, c in zip(lengths, columns)
-                             if c != 'e'))
-    except OSError:
-        cut = 999999
-
-    if verbosity:
-        lines[1:1] = [['-' * L for L in lengths]]
-        lines.append(lines[1])
-
-    use_color = (sys.stdout.isatty() and
-                 os.environ.get('MYQUEUE_TESTING') != 'yes')
-
-    if not short:
-        for words in lines:
-            words2 = []
-            for word, c, L in zip(words, columns, lengths):
-                if c == 'e':
-                    word = word[:cut]
-                elif c in 'At':
-                    word = word.rjust(L)
-                else:
-                    word = word.ljust(L)
-                    if c == 's' and use_color:
-                        word = colored(word)
-                words2.append(word)
-            print(' '.join(words2))
-
-    if verbosity:
-        count['total'] = len(tasks)
-        print(', '.join(f'{colored(state) if use_color else state}: {n}'
-                        for state, n in count.items()))
