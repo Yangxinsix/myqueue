@@ -1,22 +1,27 @@
 import time
-from typing import Dict, List, Tuple
 from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Sequence
+from graphlib import TopologicalSorter
 
 from myqueue.progress import progress_bar
+from myqueue.scheduler import Scheduler
+from myqueue.task import Task
 from myqueue.utils import plural
 from myqueue.virtenv import find_activation_scripts
+
 from .states import State
-from myqueue.task import Task
-from myqueue.scheduler import Scheduler
 
 
 def submit_tasks(scheduler: Scheduler,
-                 tasks: List[Task],
-                 current: Dict[str, State],
+                 tasks: Sequence[Task],
+                 current: Dict[Path, Task],
                  force: bool,
                  max_tasks: int,
                  verbosity: int,
-                 dry_run: bool) -> Tuple[List[Task], List[Task], Exception]:
+                 dry_run: bool) -> Tuple[List[Task],
+                                         List[Task],
+                                         Optional[Exception]]:
     # See https://xkcd.com/1421
 
     tasks2 = []
@@ -119,6 +124,15 @@ def submit_tasks(scheduler: Scheduler,
     for task in todo:
         task.activation_script = activation_scripts.get(task.folder)
 
+    sorter = TopologicalSorter({task: task.dtasks for task in todo})
+    sorter.prepare()
+    todo = []
+    while sorter.is_active():
+        for task in sorter.get_ready():
+            if not any(dep.id == 0 for dep in task.dtasks):
+                todo.append(task)
+                sorter.done(task)
+
     pb = progress_bar(len(todo),
                       f'Submitting {len(todo)} tasks:',
                       verbosity and len(todo) > 1)
@@ -127,20 +141,12 @@ def submit_tasks(scheduler: Scheduler,
     try:
         while todo:
             task = todo.pop(0)
-            if not all(t.id != 0 for t in task.dtasks):
-                # dependency has not been submitted yet
-                todo.append(task)
-
-                # Check used while figuring out #22 (infinite loop)
-                assert not all(any(t.id == 0 for t in task.dtasks)
-                               for task in todo)
-            else:
-                scheduler.submit(
-                    task,
-                    dry_run,
-                    verbosity >= 2)
-                submitted.append(task)
-                next(pb)
+            scheduler.submit(
+                task,
+                dry_run,
+                verbosity >= 2)
+            submitted.append(task)
+            next(pb)
     except Exception as x:
         ex = x
 
