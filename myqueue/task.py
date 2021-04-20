@@ -354,13 +354,18 @@ class Task:
         with Queue(verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
+    def find_dependents(self, tasks: List['Task']):
+        """Yield dependents."""
+        for task in tasks:
+            if self.dname in task.deps and self is not task:
+                yield task
+                yield from task.find_dependents(tasks)
+
     def cancel_dependents(self, tasks: List['Task'], t: float = 0.0) -> None:
         """Cancel dependents."""
-        for tsk in tasks:
-            if self.dname in tsk.deps and self is not tsk:
-                tsk.state = State.CANCELED
-                tsk.tstop = t
-                tsk.cancel_dependents(tasks, t)
+        for task in self.find_dependents(tasks):
+            task.state = State.CANCELED
+            task.tstop = t
 
     def run(self):
         self.result = self.cmd.run()

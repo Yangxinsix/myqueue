@@ -62,6 +62,7 @@ def submit_tasks(scheduler: Scheduler,
             state = current[task.dname].state
             if state in {'queued', 'hold', 'running'}:
                 inqueue[state] += 1
+                task.state = state
             else:
                 tasks2.append(task)
         else:
@@ -74,37 +75,39 @@ def submit_tasks(scheduler: Scheduler,
         print('\n'.join(f'    {state:8}: {n}'
                         for state, n in inqueue.items()))
 
+    remove = set()
+    for task in tasks:
+        for dep in task.deps:
+            if dep in failed_tasks:
+                print(f'Skipping {task.dname}. '
+                      f'Reason: Failed dependency={dep}.')
+                remove.add(task)
+                remove.update(task.find_dependents())
+                break
+    tasks = [task for task in tasks if task not in remove]
+
     todo = []
     for task in tasks:
         task.dtasks = []
         for dep in task.deps:
             # convert dep to Task:
-            if dep in failed_tasks:
-                print(f'Skipping {task.dname}. '
-                      f'Reason: Failed dependency={dep}.')
-                break
             tsk = current.get(dep)
-            if tsk is None:
+            if tsk is None or tsk.state.is_bad():
                 for tsk in tasks:
                     if dep == tsk.dname:
                         break
                 else:
                     assert dep in done, (
                         f'Missing dependency for {task.name}:', dep)
-
                     tsk = None
             elif tsk.state == 'done':
                 tsk = None
-            elif tsk.state not in {'queued', 'hold', 'running'}:
-                print(f'Dependency for {task.name} ({tsk.name}) '
-                      f'in bad state: {tsk.state}')
-                break
 
             if tsk is not None:
                 task.dtasks.append(tsk)
-        else:
-            task.deps = [t.dname for t in task.dtasks]
-            todo.append(task)
+
+        task.deps = [t.dname for t in task.dtasks]
+        todo.append(task)
 
     # All dependensies must have an id or be in the list of tasks
     # about to be submitted
@@ -124,12 +127,15 @@ def submit_tasks(scheduler: Scheduler,
     for task in todo:
         task.activation_script = activation_scripts.get(task.folder)
 
-    sorter = TopologicalSorter({task: task.dtasks for task in todo})
+    sorter = TopologicalSorter({task: [dep for dep in task.dtasks
+                                       if dep in todo]
+                                for task in todo})
+
     sorter.prepare()
     todo = []
     while sorter.is_active():
         for task in sorter.get_ready():
-            if not any(dep.id == 0 for dep in task.dtasks):
+            if 1:  # not any(dep.state.is_bad() for dep in task.dtasks):
                 todo.append(task)
                 sorter.done(task)
 

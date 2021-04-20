@@ -64,7 +64,9 @@ def test_timeout2(mq):
     mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
     mq(f'submit "shell:echo hello" -d shell:sleep+{t}')
     mq.wait()
+    mq('ls')
     mq('kick')
+    mq('ls')
     mq.wait()
     if mq.states() != 'dd':
         mq('kick')
