@@ -31,6 +31,8 @@ class Task:
         Dependencies.
     restart: int
         How many times to restart task.
+    workflow: bool
+        Task is part of a workflow.
     diskspace: float
         Disk-space used.  See :ref:`max_disk`.
     folder: Path
@@ -400,6 +402,8 @@ def task(cmd: str,
         Number of processes to start (default is one for each core).
     tmax: str
         Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
+    workflow: bool
+        Task is part of a workflow.
     folder: str
         Folder where task should run (default is current folder).
     restart: int
