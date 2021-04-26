@@ -247,8 +247,7 @@ def _main(arguments: List[str] = None) -> int:
 
         if cmd in ['resubmit', 'submit', 'run']:
             a('-w', '--workflow', action='store_true',
-              help='Write <task-name>.done or <task-name>.FAILED file '
-              'when done.')
+              help='Write <task-name>.state file when task has finished.')
 
         if cmd == 'modify':
             a('newstate', help='New state (one of the letters: qhrdFCTM).')

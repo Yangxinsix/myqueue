@@ -86,7 +86,7 @@ def submit_tasks(scheduler: Scheduler,
 
     count.pop(State.undefined, None)
     if count:
-        print(', '.join(f'{state}: {n}') for state, n in count.items())
+        print(', '.join(f'{state}: {n}' for state, n in count.items()))
     if any(state.is_bad() for state in count) and not force:
         print('Use --force to ignore failed tasks.')
 
