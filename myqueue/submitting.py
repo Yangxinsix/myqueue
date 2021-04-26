@@ -3,9 +3,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Sequence
 try:
-    from graphlib import TopologicalSorter
+    import graphlib
 except ImportError:
-    from graphlib_backport import TopologicalSorter
+    import graphlib_backport as graphlib  # type: ignore
 
 from myqueue.progress import progress_bar
 from myqueue.scheduler import Scheduler
@@ -104,7 +104,7 @@ def submit_tasks(scheduler: Scheduler,
         print('Skipping', plural(n, 'task'), '(bad dependency)')
 
     submit = [task
-              for task in TopologicalSorter(
+              for task in graphlib.TopologicalSorter(
                   {task: task.dtasks for task in submit}).static_order()
               if task.state == State.undefined]
 

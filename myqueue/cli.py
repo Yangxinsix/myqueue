@@ -593,6 +593,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         elif args.command == 'run':
             newtasks = [task(args.task,
                              name=args.name,
+                             workflow=args.workflow,
                              folder=str(folder))
                         for folder in folders]
             queue.run(newtasks)
