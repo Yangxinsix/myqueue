@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 from warnings import warn
 
-from myqueue.commands import Command, create_command
+from myqueue.commands import Command, create_command, WorkflowTask
 from myqueue.resources import Resources, T
 from myqueue.states import State
 
@@ -29,8 +29,6 @@ class Task:
         and maximum time.
     deps: list of Path objects
         Dependencies.
-    workflow: bool
-        Task is part of a workflow.
     restart: int
         How many times to restart task.
     diskspace: float
@@ -45,12 +43,10 @@ class Task:
                  cmd: Command,
                  resources: Resources,
                  deps: List[Path],
-                 workflow: bool,
                  restart: int,
                  diskspace: int,
                  folder: Path,
-                 creates: List[str],
-                 state: State = State.UNDEFINED,
+                 state: State = State.undefined,
                  id: int = 0,
                  error: str = '',
                  memory_usage: int = 0,
@@ -61,11 +57,9 @@ class Task:
         self.cmd = cmd
         self.resources = resources
         self.deps = deps
-        self.workflow = workflow
         self.restart = restart
         self.diskspace = diskspace
         self.folder = folder
-        self.creates = creates
 
         assert isinstance(state, State), state
         self.state = state
@@ -170,9 +164,7 @@ class Task:
             'resources': self.resources.todict(),
             'restart': self.restart,
             'deps': [str(dep) for dep in deps],
-            'workflow': self.workflow,
             'diskspace': self.diskspace,
-            'creates': self.creates,
             'tqueued': self.tqueued,
             'trunning': self.trunning,
             'tstop': self.tstop,
@@ -188,7 +180,6 @@ class Task:
         t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
                       for t in [self.tqueued, self.trunning, self.tstop])
         deps = ','.join(str(dep) for dep in self.deps)
-        creates = ','.join(self.creates)
         error = self.error.replace('"', '""')
         print(f'{self.id},'
               f'"{self.folder}",'
@@ -196,10 +187,10 @@ class Task:
               f'{self.resources},'
               f'{self.state},'
               f'{self.restart},'
-              f'{int(self.workflow)},'
+              '0,'
               f'{self.diskspace},'
               f'"{deps}",'
-              f'"{creates}",'
+              '"",'
               f'{t1},{t2},{t3},'
               f'"{error}",'
               f'{self.memory_usage}',
@@ -216,11 +207,9 @@ class Task:
         return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
-                    bool(workflow),
                     int(restart),
                     int(diskspace),
                     Path(folder),
-                    creates.split(','),
                     State[state],
                     int(id),
                     error,
@@ -240,9 +229,9 @@ class Task:
         if 'diskspace' not in dct:
             dct['diskspace'] = 0
 
-        # Backwards compatibility with version 3:
-        if 'creates' not in dct:
-            dct['creates'] = []
+        # Backwards compatibility:
+        dct.pop('workflow', None)
+        dct.pop('creates', None)
 
         f = dct.pop('folder')
         if f.startswith('/'):
@@ -265,45 +254,25 @@ class Task:
                                          folder in self.folder.parents)
 
     def read_state_file(self):
-        if self.has_failed():
+        if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
             return State.FAILED
-        if self.is_done():
+        if (self.folder / f'{self.cmd.fname}.done').is_file():
             return State.done
         state_file = self.folder / f'{self.cmd.fname}.state'
         try:
             return json.loads(state_file.read_text())['state']
         except (FileNotFoundError, KeyError):
-            return State.UNDEFINED
+            return State.undefined
 
     def write_state_file(self):
+        if self.state == State.done and isinstance(self.cmd, WorkflowTask):
+            return
         if not self.folder.is_dir():
             return
         state_file = self.folder / f'{self.cmd.fname}.state'
         state_file.write_text('{"state": {self.state.name!r}}\n')
 
-    def is_done(self) -> bool:
-        if self._done is None:
-            self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
-        return self._done
-
-    def has_failed(self) -> bool:
-        return (self.folder / f'{self.cmd.fname}.FAILED').is_file()
-
-    def skip(self) -> bool:
-        return (self.folder / f'{self.cmd.fname}.SKIP').is_file()
-
-    def write_done_file(self) -> None:
-        if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
-            p = self.folder / f'{self.cmd.fname}.done'
-            if not p.is_file():
-                p.write_text('')
-
-    def write_failed_file(self) -> None:
-        if self.workflow and self.folder.is_dir():
-            p = self.folder / f'{self.cmd.fname}.FAILED'
-            p.write_text('')
-
-    def remove_failed_file(self) -> None:
+    def _remove_failed_file(self) -> None:
         p = self.folder / f'{self.cmd.fname}.FAILED'
         if p.is_file():
             p.unlink()

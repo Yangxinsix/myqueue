@@ -433,7 +433,6 @@ def create_task(function: Callable = None,
         function = partial(function, *args, **kwargs)
         cfunction = cached_function(function, name)
         command = WorkflowTask(f'{workflow_script}:{name}', [], cfunction)
-        workflow = False
     elif module:
         assert not kwargs
         command = PythonModule(module, [str(arg) for arg in args])
@@ -457,11 +456,9 @@ def create_task(function: Callable = None,
     task = Task(command,
                 deps=deps,
                 resources=res,
-                workflow=workflow,
                 folder=folder,
                 restart=restart,
-                diskspace=0,
-                creates=[])
+                diskspace=0)
 
     if function:
         if cfunction.has(*args, **kwargs):

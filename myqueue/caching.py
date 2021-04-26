@@ -10,7 +10,7 @@ class Cached:
     """A caching function."""
     def __init__(self, function: Callable, name: str):
         self.function = function
-        self.path = Path(f'{name}.done')
+        self.path = Path(f'{name}.state')
 
     def has(self, *args, **kwargs) -> bool:
         """Check if function has been called."""
@@ -19,7 +19,10 @@ class Cached:
     def __call__(self):
         """Call function (if needed)."""
         if self.has():
-            return decode(self.path.read_text())
+            data = decode(self.path.read_text())
+            if data['state'] == 'done':
+                return data['result']
+            raise RuntimeError(data['state'])
         result = self.function()
         if mpi_world().rank == 0:
             self.path.write_text(encode(result))

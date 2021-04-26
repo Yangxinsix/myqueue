@@ -15,6 +15,7 @@ def test_api(mq):
     from myqueue.task import task
     submit(task('myqueue.test@oom 1'))
     submit(task('myqueue.test@timeout_once', tmax='1s'))
+    mq.wait()
     submit(task('myqueue.test@timeout_once'))
     mq.wait()
     assert mq.states() == 'MTd'

@@ -121,6 +121,7 @@ class Queue(Lock):
                tasks: Sequence[Task],
                force: bool = False,
                max_tasks: int = 1_000_000_000,
+               workflow: bool = False,
                read: bool = True) -> None:
         """Submit tasks to queue.
 
@@ -133,7 +134,10 @@ class Queue(Lock):
         if read:
             self._read()
 
-        current = {task.dname: task for task in self.tasks}
+        if workflow:
+            current = {task.dname: task for task in self.tasks}
+        else:
+            current = {}
 
         submitted, skipped, ex = submit_tasks(
             self.scheduler, tasks, current,
@@ -371,7 +375,7 @@ class Queue(Lock):
             for tsk in self.tasks:
                 if task.dname in tsk.deps:
                     tsk.deps.remove(task.dname)
-            task.write_done_file()
+            task.write_state_file()
             task.tstop = t
 
         elif state == 'running':
@@ -380,8 +384,7 @@ class Queue(Lock):
         elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
             task.cancel_dependents(self.tasks, t)
             task.tstop = t
-            if state == 'FAILED':
-                task.write_failed_file()
+            task.write_state_file()
 
         else:
             raise ValueError(f'Bad state: {state}')

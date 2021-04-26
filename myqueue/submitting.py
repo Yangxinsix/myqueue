@@ -66,7 +66,7 @@ def submit_tasks(scheduler: Scheduler,
 
     print(new)
 
-    count = defaultdict(int)
+    count: Dict[State, int] = defaultdict(int)
     submit = []
     for task in tasks:
         if task.dname in current:
@@ -76,12 +76,12 @@ def submit_tasks(scheduler: Scheduler,
 
         count[task.state] += 1
 
-        if task.state != 'UNDEFINED' or force:
+        if task.state == State.undefined or force:
             submit.append(task)
 
     print(count)
 
-    count.pop(State.UNDEFINED, None)
+    count.pop(State.undefined, None)
     if count:
         print('State    number of tasks')
         for state, n in sorted(count.items()):

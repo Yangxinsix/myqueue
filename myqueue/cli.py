@@ -585,11 +585,11 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                              name=args.name,
                              folder=str(folder),
                              deps=args.dependencies,
-                             workflow=args.workflow,
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.force, args.max_tasks)
+            queue.submit(newtasks, args.force, args.max_tasks,
+                         args.workflow)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
@@ -605,7 +605,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders, verbosity)
-            queue.submit(tasks, args.force, args.max_tasks)
+            queue.submit(tasks, args.force, args.max_tasks, workflow=True)
 
         elif args.command == 'sync':
             queue.sync()
