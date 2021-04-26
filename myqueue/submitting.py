@@ -14,14 +14,18 @@ from myqueue.virtenv import find_activation_scripts
 from myqueue.utils import plural
 from .states import State
 
-TaskID = Path
+TaskName = Path
 
 
 class DependencyError(Exception):
     """Bad dependency."""
 
 
-def find_dependency(dname, current, new, force=False):
+def find_dependency(dname: TaskName,
+                    current: Dict[TaskName, Task],
+                    new: Dict[TaskName, Task],
+                    force: bool = False) -> Task:
+    """Convert dependency name to task."""
     if dname in current:
         task = current[dname]
         if task.state.is_bad():
@@ -36,13 +40,15 @@ def find_dependency(dname, current, new, force=False):
     return task
 
 
-def mark(task, children):
+def mark_children(task: Task, children: Dict[Task, List[Task]]) -> None:
+    """Mark children of task as FAILED."""
     for child in children[task]:
         child.state = State.FAILED
-        mark(child, children)
+        mark_children(child, children)
 
 
-def remove_bad_tasks(tasks):
+def remove_bad_tasks(tasks: List[Task]) -> List[Task]:
+    """Create list without bad dependencies."""
     children = defaultdict(list)
     for task in tasks:
         for dep in task.dtasks:
@@ -50,7 +56,7 @@ def remove_bad_tasks(tasks):
 
     for task in list(children):
         if task.state.is_bad():
-            mark(task, children)
+            mark_children(task, children)
 
     return [task for task in tasks if not task.state.is_bad()]
 
@@ -64,6 +70,7 @@ def submit_tasks(scheduler: Scheduler,
                  dry_run: bool) -> Tuple[List[Task],
                                          List[Task],
                                          Optional[Exception]]:
+    """Submit tasks."""
 
     new = {task.dname: task for task in tasks}
 
