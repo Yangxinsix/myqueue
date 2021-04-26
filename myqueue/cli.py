@@ -83,13 +83,13 @@ Example:
     ('workflow',
      'Submit tasks from Python script or several scripts matching pattern.',
      """
-The script(s) must define a create_tasks() function as shown here:
+The script(s) must define a workflow() function as shown here:
 
     $ cat flow.py
-    from myqueue.task import task
-    def create_tasks():
-        return [task('task1'),
-                task('task2', deps='task1')]
+    from myqueue.workflow import run
+    def workflow():
+        with run(<task1>):
+            run(<task2>)
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 """),
     ('run',
@@ -265,9 +265,9 @@ def _main(arguments: List[str] = None) -> int:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
             a('-a', '--arguments',
-              help='Pass arguments to create_tasks() function.  Example: '
+              help='Pass arguments to workflow() function.  Example: '
               '"-a name=hello,n=5" will call '
-              "create_tasks(name='hello', n=5).")
+              "workflow(name='hello', n=5).")
 
         if cmd in ['list', 'remove', 'resubmit', 'modify']:
             a('-s', '--states', metavar='qhrdFCTMaA',
