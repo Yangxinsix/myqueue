@@ -41,11 +41,6 @@ def workflow(args,
         names = args.targets.split(',')
         tasks = filter_tasks(tasks, names)
 
-    tasks = [task for task in tasks if not task.skip()]
-
-    for task in tasks:
-        task.workflow = True
-
     return tasks
 
 
@@ -143,6 +138,8 @@ def get_tasks_from_folder(folder: Path,
     with chdir(folder):
         if func.__name__ == 'create_tasks':
             tasks = func()
+            for task in tasks:
+                task.workflow = True
         else:
             tasks = collect(func, folder, script)
 
@@ -424,8 +421,6 @@ def create_task(function: Callable = None,
            for arg in [function, module, script, shell]) != 1:
         1 / 0
 
-    workflow = True  # create a .done file XXX
-
     command: Command
 
     if function:
@@ -458,6 +453,7 @@ def create_task(function: Callable = None,
                 resources=res,
                 folder=folder,
                 restart=restart,
+                workflow=True,
                 diskspace=0)
 
     if function:

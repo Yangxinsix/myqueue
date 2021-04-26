@@ -121,7 +121,6 @@ class Queue(Lock):
                tasks: Sequence[Task],
                force: bool = False,
                max_tasks: int = 1_000_000_000,
-               workflow: bool = False,
                read: bool = True) -> None:
         """Submit tasks to queue.
 
@@ -134,10 +133,7 @@ class Queue(Lock):
         if read:
             self._read()
 
-        if workflow:
-            current = {task.dname: task for task in self.tasks}
-        else:
-            current = {}
+        current = {task.dname: task for task in self.tasks}
 
         submitted, skipped, ex = submit_tasks(
             self.scheduler, tasks, current,
@@ -289,7 +285,8 @@ class Queue(Lock):
                 if self.dry_run:
                     print('FAILED ->', newstate, task)
                 else:
-                    task.remove_failed_file()
+                    task.state = newstate
+                    task.write_state_file()
             else:
                 raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
             print(f'{task.state} -> {newstate}: {task}')
@@ -305,16 +302,14 @@ class Queue(Lock):
         for task in selection.select(self.tasks):
             if task.state not in {'queued', 'hold', 'running'}:
                 self.tasks.remove(task)
-            if task.state == 'FAILED':
-                task.remove_failed_file()
+            task.remove_state_file()
             self.changed.add(task)
             task = Task(task.cmd,
                         deps=task.deps,
                         resources=resources or task.resources,
                         folder=task.folder,
-                        workflow=task.workflow,
                         restart=task.restart,
-                        creates=task.creates,
+                        workflow=task.workflow,
                         diskspace=0)
             tasks.append(task)
         self.submit(tasks, read=False)
@@ -424,7 +419,7 @@ class Queue(Lock):
                     oom = task.read_error(self.scheduler)
                     if oom:
                         task.state = State.MEMORY
-                        task.remove_failed_file()
+                        task.write_state_file()
                     self.changed.add(task)
 
     def kick(self) -> int:
@@ -448,6 +443,7 @@ class Queue(Lock):
                     self.tasks.remove(task)
                     task.error = ''
                     task.id = 0
+                    task.state = State.undefined
                 self.submit(tasks, read=False)
 
         self.hold_or_release()

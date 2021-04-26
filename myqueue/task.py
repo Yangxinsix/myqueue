@@ -44,6 +44,7 @@ class Task:
                  resources: Resources,
                  deps: List[Path],
                  restart: int,
+                 workflow: bool,
                  diskspace: int,
                  folder: Path,
                  state: State = State.undefined,
@@ -58,6 +59,7 @@ class Task:
         self.resources = resources
         self.deps = deps
         self.restart = restart
+        self.workflow = workflow
         self.diskspace = diskspace
         self.folder = folder
 
@@ -163,6 +165,7 @@ class Task:
             'state': self.state.name,
             'resources': self.resources.todict(),
             'restart': self.restart,
+            'workflow': self.workflow,
             'deps': [str(dep) for dep in deps],
             'diskspace': self.diskspace,
             'tqueued': self.tqueued,
@@ -187,7 +190,7 @@ class Task:
               f'{self.resources},'
               f'{self.state},'
               f'{self.restart},'
-              '0,'
+              f'{int(self.workflow)},'
               f'{self.diskspace},'
               f'"{deps}",'
               '"",'
@@ -208,6 +211,7 @@ class Task:
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
                     int(restart),
+                    bool(workflow),
                     int(diskspace),
                     Path(folder),
                     State[state],
@@ -230,7 +234,6 @@ class Task:
             dct['diskspace'] = 0
 
         # Backwards compatibility:
-        dct.pop('workflow', None)
         dct.pop('creates', None)
 
         f = dct.pop('folder')
@@ -253,27 +256,29 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def read_state_file(self):
+    def read_state_file(self) -> State:
         if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
             return State.FAILED
         if (self.folder / f'{self.cmd.fname}.done').is_file():
             return State.done
         state_file = self.folder / f'{self.cmd.fname}.state'
         try:
-            return json.loads(state_file.read_text())['state']
+            return State[json.loads(state_file.read_text())['state']]
         except (FileNotFoundError, KeyError):
             return State.undefined
 
     def write_state_file(self):
+        if not self.workflow:
+            return
         if self.state == State.done and isinstance(self.cmd, WorkflowTask):
             return
         if not self.folder.is_dir():
             return
         state_file = self.folder / f'{self.cmd.fname}.state'
-        state_file.write_text('{"state": {self.state.name!r}}\n')
+        state_file.write_text(f'{{"state": "{self.state}"}}\n')
 
-    def _remove_failed_file(self) -> None:
-        p = self.folder / f'{self.cmd.fname}.FAILED'
+    def remove_state_file(self) -> None:
+        p = self.folder / f'{self.cmd.fname}.state'
         if p.is_file():
             p.unlink()
 
@@ -354,6 +359,7 @@ def task(cmd: str,
          args: List[str] = [],
          *,
          resources: str = '',
+         workflow: bool = False,
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 0,
@@ -361,10 +367,8 @@ def task(cmd: str,
          processes: int = 0,
          tmax: str = '',
          folder: str = '',
-         workflow: bool = False,
          restart: int = 0,
-         diskspace: float = 0.0,
-         creates: List[str] = []) -> Task:
+         diskspace: float = 0.0) -> Task:
     """Create a Task object.
 
     ::
@@ -398,14 +402,10 @@ def task(cmd: str,
         Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
     folder: str
         Folder where task should run (default is current folder).
-    workflow: bool
-        Task is part of a workflow.
     restart: int
         How many times to restart task.
     diskspace: float
         Diskspace used.  See :ref:`max_disk`.
-    creates: list of str
-        Name of files created by task.
 
     Returns
     -------
@@ -457,11 +457,10 @@ def task(cmd: str,
     return Task(command,
                 res,
                 dpaths,
-                workflow,
                 restart,
+                workflow,
                 int(diskspace),
-                path,
-                creates)
+                path)
 
 
 def seconds_to_time_string(n: float) -> str:

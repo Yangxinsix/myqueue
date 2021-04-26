@@ -7,6 +7,7 @@ from myqueue.test.hello import workflow as hello
 
 
 def create_tasks():
+    """Old style."""
     return [task('somepackage.somemodule')]
 
 
@@ -55,4 +56,7 @@ def test_flow2(mq):
     assert mq.states() == 'MCCC'
     mq('rm -sC .')
     mq(f'workflow {script}')
-    assert mq.states() == ''
+    assert mq.states() == 'M'
+    mq(f'workflow {script} --force')
+    mq.wait()
+    assert mq.states() == 'MCCC'

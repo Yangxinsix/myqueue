@@ -2,13 +2,16 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Sequence
-from graphlib import TopologicalSorter
+try:
+    from graphlib import TopologicalSorter
+except ImportError:
+    from graphlib_backport import TopologicalSorter
 
 from myqueue.progress import progress_bar
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
 from myqueue.virtenv import find_activation_scripts
-
+from myqueue.utils import plural
 from .states import State
 
 TaskID = Path
@@ -25,9 +28,9 @@ def find_dependency(dname, current, new, force=False):
             if force:
                 if dname not in new:
                     raise DependencyError()
-                task = new[dname].task
+                task = new[dname]
     elif dname in new:
-        task = new[dname].task
+        task = new[dname]
     else:
         raise DependencyError()
     return task
@@ -45,7 +48,7 @@ def remove_bad_tasks(tasks):
         for dep in task.dtasks:
             children[dep].append(task)
 
-    for task in tasks:
+    for task in list(children):
         if task.state.is_bad():
             mark(task, children)
 
@@ -64,44 +67,46 @@ def submit_tasks(scheduler: Scheduler,
 
     new = {task.dname: task for task in tasks}
 
-    print(new)
-
     count: Dict[State, int] = defaultdict(int)
     submit = []
     for task in tasks:
-        if task.dname in current:
-            task.state = current[task.dname].state
-        else:
-            task.state = task.read_state_file()
+        if task.workflow:
+            if task.dname in current:
+                task.state = current[task.dname].state
+            else:
+                task.state = task.read_state_file()
 
         count[task.state] += 1
 
-        if task.state == State.undefined or force:
+        if task.state == State.undefined:
             submit.append(task)
-
-    print(count)
+        elif task.state.is_bad() and force:
+            task.state = State.undefined
+            submit.append(task)
 
     count.pop(State.undefined, None)
     if count:
-        print('State    number of tasks')
-        for state, n in sorted(count.items()):
-            print(state, n)
-
+        print(', '.join(f'{state}: {n}') for state, n in count.items())
     if any(state.is_bad() for state in count) and not force:
-        print('Use --force to ignore and remove the .FAILED files.')
+        print('Use --force to ignore failed tasks.')
 
     for task in submit:
-        task.deps = []
+        task.dtasks = []
         for dname in task.deps:
             dep = find_dependency(dname, current, new, force)
             if dep.state != 'done':
-                task.deps.append(dep)
+                task.dtasks.append(dep)
 
+    n = len(submit)
     submit = remove_bad_tasks(submit)
+    n = n - len(submit)
+    if n > 0:
+        print('Skipping', plural(n, 'task'), '(bad dependency)')
 
-    print(submit)
-    submit = list(TopologicalSorter({task: task.dtasks
-                                     for task in submit}).static_order())
+    submit = [task
+              for task in TopologicalSorter(
+                  {task: task.dtasks for task in submit}).static_order()
+              if task.state == State.undefined]
 
     submit = submit[:max_tasks]
 
@@ -109,6 +114,7 @@ def submit_tasks(scheduler: Scheduler,
     for task in submit:
         task.state = State.queued
         task.tqueued = t
+        task.deps = [dep.dname for dep in task.dtasks]
 
     activation_scripts = find_activation_scripts([task.folder
                                                   for task in submit])
@@ -127,6 +133,8 @@ def submit_tasks(scheduler: Scheduler,
                 dry_run,
                 verbosity >= 2)
             submitted.append(task)
+            if not dry_run:
+                task.remove_state_file()
             next(pb)
     except Exception as x:
         ex = x

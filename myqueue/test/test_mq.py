@@ -87,7 +87,7 @@ wf = """
 from myqueue.task import task
 def create_tasks():
     t1 = task('shell:sleep+3')
-    t2 = task('shell:touch+hello', deps=[t1], creates=['hello'])
+    t2 = task('shell:touch+hello', deps=[t1])
     return [t1, t2]
 """
 
@@ -101,15 +101,16 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
-    hello = Path('hello')
-    hello.unlink()
-    mq('workflow wf.py .')
-    mq.wait()
-    assert hello.is_file()
     mq('rm -s d .')
     mq('workflow wf.py .')
     mq.wait()
     assert mq.states() == ''
+    hello = Path('shell:touch+hello.state')
+    hello.unlink()
+    mq('workflow wf.py .')
+    mq.wait()
+    assert mq.states() == 'd'
+    assert hello.is_file()
 
 
 def test_workflow_running_only_with_targets(mq):
@@ -121,8 +122,8 @@ def test_workflow_running_only_with_targets(mq):
 
 def test_workflow_with_failed_job(mq):
     Path('wf.py').write_text(wf)
-    failed = Path('shell:sleep+3.FAILED')
-    failed.write_text('')
+    failed = Path('shell:sleep+3.state')
+    failed.write_text('{"state": "FAILED"}\n')
     mq('workflow wf.py .')
     mq.wait()
     assert mq.states() == ''
@@ -130,12 +131,12 @@ def test_workflow_with_failed_job(mq):
     mq('workflow wf.py . --force --dry-run')
     mq.wait()
     assert mq.states() == ''
-    assert failed.is_file()
+    assert failed.read_text() == '{"state": "FAILED"}\n'
 
     mq('workflow wf.py . --force')
     mq.wait()
     assert mq.states() == 'dd'
-    assert not failed.is_file()
+    assert failed.read_text() == '{"state": "done"}\n'
 
 
 wf2 = """
