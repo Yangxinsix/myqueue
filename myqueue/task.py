@@ -259,6 +259,7 @@ class Task:
                                          folder in self.folder.parents)
 
     def read_state_file(self) -> State:
+        """Read state file."""
         if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
             return State.FAILED
         if (self.folder / f'{self.cmd.fname}.done').is_file():
@@ -269,10 +270,12 @@ class Task:
         except (FileNotFoundError, KeyError):
             return State.undefined
 
-    def write_state_file(self):
+    def write_state_file(self) -> None:
+        """Write state file for workflows."""
         if not self.workflow:
             return
         if self.state == State.done and isinstance(self.cmd, WorkflowTask):
+            # Already done when writing results of function call
             return
         if not self.folder.is_dir():
             return
@@ -280,6 +283,7 @@ class Task:
         state_file.write_text(f'{{"state": "{self.state}"}}\n')
 
     def remove_state_file(self) -> None:
+        """Remove state file if it is there."""
         p = self.folder / f'{self.cmd.fname}.state'
         if p.is_file():
             p.unlink()
@@ -340,7 +344,7 @@ class Task:
         with Queue(verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
-    def find_dependents(self, tasks: List['Task']):
+    def find_dependents(self, tasks: List['Task']) -> Iterator['Task']:
         """Yield dependents."""
         for task in tasks:
             if self.dname in task.deps and self is not task:
