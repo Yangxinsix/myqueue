@@ -165,8 +165,7 @@ optional arguments:
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -197,8 +196,7 @@ optional arguments:
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
@@ -351,8 +349,7 @@ folder:
 optional arguments:
   -h, --help            show this help message and exit
   -n NAME, --name NAME  Name used for task.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
