@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 from datetime import datetime
@@ -263,17 +264,26 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
+    def read_state_file(self):
+        if self.has_failed():
+            return State.FAILED
+        if self.is_done():
+            return State.done
+        state_file = self.folder / f'{self.cmd.fname}.state'
+        try:
+            return json.loads(state_file.read_text())['state']
+        except (FileNotFoundError, KeyError):
+            return State.UNDEFINED
+
+    def write_state_file(self):
+        if not self.folder.is_dir():
+            return
+        state_file = self.folder / f'{self.cmd.fname}.state'
+        state_file.write_text('{"state": {self.state.name!r}}\n')
+
     def is_done(self) -> bool:
         if self._done is None:
-            if self.creates:
-                for pattern in self.creates:
-                    if not any(self.folder.glob(pattern)):
-                        self._done = False
-                        break
-                else:  # no break
-                    self._done = True
-            else:
-                self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
+            self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
         return self._done
 
     def has_failed(self) -> bool:
