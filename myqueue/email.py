@@ -6,9 +6,9 @@ from collections import defaultdict
 from myqueue.task import Task
 
 
-def send_notification_email(tasks: List[Task],
-                            to: str,
-                            host: str = '') -> List[Tuple[Task, str]]:
+def send_notification(tasks: List[Task],
+                      to: str,
+                      host: str = '') -> List[Tuple[Task, str]]:
     notifications = []
     for task in tasks:
         character = task.status.value
@@ -28,7 +28,7 @@ def send_notification_email(tasks: List[Task],
                                           for name, c in count.items())
         body = '\n'.join(lines)
         fro = to
-        mail(subject, body, to, fro, host)
+        send_mail(subject, body, to, fro, host)
     return notifications
 
 
@@ -40,7 +40,11 @@ class TestSMTP:
         pass
 
 
-def mail(subject: str, body: str, to: str, fro: str, host: str = '') -> None:
+def send_mail(subject: str,
+              body: str,
+              to: str,
+              fro: str,
+              host: str = '') -> None:
     """Send an email.
 
     >>> mail('MyQueue: bla-bla',

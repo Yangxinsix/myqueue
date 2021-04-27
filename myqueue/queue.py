@@ -21,7 +21,7 @@ from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.utils import Lock, plural
 from myqueue.states import State
-from myqueue.email import send_email
+from myqueue.email import send_notification
 from myqueue.pretty import pprint
 from myqueue.submitting import submit_tasks
 
@@ -272,15 +272,16 @@ class Queue(Lock):
         self._read()
         tasks = selection.select(self.tasks)
 
-        if email != {State.UNDEFINED}:
+        if email != {State.undefined}:
             for task in tasks:
                 if self.dry_run:
                     print(task, email)
                 else:
-                    task.email = ''.join(state.value for state in email)
+                    task.notifications = ''.join(state.value
+                                                 for state in email)
                     self.changed.add(task)
 
-        if newstate != State.UNDEFINED:
+        if newstate != State.undefined:
             for task in tasks:
                 if task.state == 'hold' and newstate == 'queued':
                     if self.dry_run:
@@ -440,7 +441,9 @@ class Queue(Lock):
 
         ndct = config.get('notifications')
         if ndct:
-            notifications = send_email(self.tasks, ndct['email'], ndct['host'])
+            notifications = send_notification(self.tasks,
+                                              ndct['email'],
+                                              ndct['host'])
             self.changed.update(task for task, statename in notifications)
 
         tasks = []
