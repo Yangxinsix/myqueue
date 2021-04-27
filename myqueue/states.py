@@ -18,7 +18,7 @@ class State(Enum):
     False
     """
 
-    UNDEFINED = '?'
+    undefined = 'u'
     queued = 'q'
     hold = 'h'
     running = 'r'
@@ -44,7 +44,7 @@ class State(Enum):
         return self.name
 
     def is_bad(self) -> bool:
-        """Return true for UNDEFINED, FAILED, TIMEOUT, MEMORY and CANCELED.
+        """Return true for FAILED, TIMEOUT, MEMORY and CANCELED.
 
         >>> State.running.is_bad()
         False

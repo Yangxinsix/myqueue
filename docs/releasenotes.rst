@@ -9,7 +9,8 @@ Release notes
 Next release
 ============
 
-...
+* For workflow tasks, ``name.done`` and ``name.FAILED`` files have now been
+  replaced by a ``name.state`` file.
 
 
 Version 21.2.0
