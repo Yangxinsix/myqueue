@@ -16,7 +16,7 @@ Version 21.4.0
 ==============
 
 * For workflow tasks, ``name.done`` and ``name.FAILED`` files have now been
-  replaced by a ``name.state`` file.  MyQueue will still read the old file,
+  replaced by a ``name.state`` file.  MyQueue will still read the old files,
   but no longer write them.
 
 
