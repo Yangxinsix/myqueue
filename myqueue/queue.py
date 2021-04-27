@@ -141,8 +141,8 @@ class Queue(Lock):
             self.verbosity, self.dry_run)
 
         if ex:
-            nskipped = len(tasks) - len(submitted) - len(skipped)
-            print('Skipped', plural(nskipped, 'task'))
+            print()
+            print('Skipped', plural(len(skipped), 'task'))
 
         pprint(submitted, 0, 'ifnaIr',
                maxlines=10 if self.verbosity < 2 else 99999999999999)
