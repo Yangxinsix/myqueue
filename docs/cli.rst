@@ -165,8 +165,7 @@ optional arguments:
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -197,8 +196,7 @@ optional arguments:
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
                         16 cores, 1 process, half an hour.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
@@ -294,13 +292,13 @@ usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
 
 Submit tasks from Python script or several scripts matching pattern.
 
-The script(s) must define a create_tasks() function as shown here::
+The script(s) must define a workflow() function as shown here::
 
     $ cat flow.py
-    from myqueue.task import task
-    def create_tasks():
-        return [task('task1'),
-                task('task2', deps='task1')]
+    from myqueue.workflow import run
+    def workflow():
+        with run(<task1>):
+            run(<task2>)
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 
 script:
@@ -319,9 +317,8 @@ optional arguments:
   -p, --pattern         Use submit scripts matching "script" pattern in all
                         subfolders.
   -a ARGUMENTS, --arguments ARGUMENTS
-                        Pass arguments to create_tasks() function. Example:
-                        "-a name=hello,n=5" will call
-                        create_tasks(name='hello', n=5).
+                        Pass arguments to workflow() function. Example: "-a
+                        name=hello,n=5" will call workflow(name='hello', n=5).
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -351,8 +348,7 @@ folder:
 optional arguments:
   -h, --help            show this help message and exit
   -n NAME, --name NAME  Name used for task.
-  -w, --workflow        Write <task-name>.done or <task-name>.FAILED file when
-                        done.
+  -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.

@@ -42,9 +42,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     totalt 12
-    -rw-rw-r-- 1 jensj jensj 190 feb  3 14:07 check.py
-    -rw-rw-r-- 1 jensj jensj 387 feb  3 14:07 factor.py
-    -rw-rw-r-- 1 jensj jensj 164 feb  3 14:07 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 apr 26 21:55 check.py
+    -rw-rw-r-- 1 jensj jensj 387 apr 26 21:55 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 apr 26 21:55 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -85,17 +85,17 @@ and now in all subfolders::
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
     Scanning 6 folders: |--------------------| 100.0%
-    2 tasks already done
+    done: 2
     Submitting 10 tasks: |--------------------| 100.0%
     3  ./100007/ prime.factor    1:2s
-    4  ./100007/ prime.check  d1 1:2s
-    5  ./36791/  prime.factor    1:2s
-    6  ./36791/  prime.check  d1 1:2s
-    7  ./8069/   prime.factor    1:2s
-    8  ./8069/   prime.check  d1 1:2s
-    9  ./98769/  prime.factor    1:2s
-    10 ./98769/  prime.check  d1 1:2s
-    11 ./99/     prime.factor    1:2s
+    4  ./36791/  prime.factor    1:2s
+    5  ./8069/   prime.factor    1:2s
+    6  ./98769/  prime.factor    1:2s
+    7  ./99/     prime.factor    1:2s
+    8  ./100007/ prime.check  d1 1:2s
+    9  ./36791/  prime.check  d1 1:2s
+    10 ./8069/   prime.check  d1 1:2s
+    11 ./98769/  prime.check  d1 1:2s
     12 ./99/     prime.check  d1 1:2s
     10 tasks submitted
 
@@ -108,14 +108,14 @@ and now in all subfolders::
     1  ./1001/   prime.factor 1:2s 0:04 done  0:00
     2  ./1001/   prime.check  1:2s 0:04 done  0:00
     3  ./100007/ prime.factor 1:2s 0:02 done  0:00
-    4  ./100007/ prime.check  1:2s 0:02 done  0:00
-    5  ./36791/  prime.factor 1:2s 0:02 done  0:00
-    6  ./36791/  prime.check  1:2s 0:02 done  0:00
-    7  ./8069/   prime.factor 1:2s 0:02 done  0:00
-    8  ./8069/   prime.check  1:2s 0:02 done  0:00
-    9  ./98769/  prime.factor 1:2s 0:02 done  0:00
-    10 ./98769/  prime.check  1:2s 0:02 done  0:00
-    11 ./99/     prime.factor 1:2s 0:02 done  0:00
+    4  ./36791/  prime.factor 1:2s 0:02 done  0:00
+    5  ./8069/   prime.factor 1:2s 0:02 done  0:00
+    6  ./98769/  prime.factor 1:2s 0:02 done  0:00
+    7  ./99/     prime.factor 1:2s 0:02 done  0:00
+    8  ./100007/ prime.check  1:2s 0:02 done  0:00
+    9  ./36791/  prime.check  1:2s 0:02 done  0:00
+    10 ./8069/   prime.check  1:2s 0:02 done  0:00
+    11 ./98769/  prime.check  1:2s 0:02 done  0:00
     12 ./99/     prime.check  1:2s 0:02 done  0:00
     -- --------- ------------ ---- ---- ----- ----
     done: 12, total: 12
@@ -124,21 +124,21 @@ Note that ``prime.check.done`` and ``prime.factor.done`` files are created
 to mark that these tasks have been completed::
 
     $ ls -l 1001/
-    totalt 4
-    -rw-rw-r-- 1 jensj jensj 24 feb  3 14:07 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.2.err
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.check.done
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.err
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj  0 feb  3 14:07 prime.factor.done
+    totalt 12
+    -rw-rw-r-- 1 jensj jensj 24 apr 26 21:55 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj 18 apr 26 21:55 prime.check.state
+    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.factor.1.out
+    -rw-rw-r-- 1 jensj jensj 18 apr 26 21:55 prime.factor.state
 
 Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
     Scanning 7 folders: |--------------------| 100.0%
-    12 tasks already done
+    done: 12
     Submitting 2 tasks: |--------------------| 100.0%
     13 ./42/ prime.factor    1:2s
     14 ./42/ prime.check  d1 1:2s
@@ -171,13 +171,14 @@ submit the tasks in batches::
 
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
     Scanning 1500 folders: |--------------------| 100.0%
-    ...
     Submitting 2000 tasks: |--------------------| 100.0%
+    ...
     $ # wait ten days ...
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    ...
-    2000 tasks already done
+    Scanning 1500 folders: |--------------------| 100.0%
+    done: 2000
     Submitting 1000 tasks: |--------------------| 100.0%
+    ...
 
 
 .. _workflow script:

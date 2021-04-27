@@ -147,7 +147,7 @@ def update_completion(test=False) -> None:
 
     Run this when ever options are changed::
 
-        python3 -m myqueue.utils
+        python3.9 -m myqueue.utils
 
     """
 
@@ -286,5 +286,19 @@ def update_completion(test=False) -> None:
         filename.write_text('\n'.join(lines) + '\n')
 
 
+def convert_done_files() -> None:
+    """Convert old done-files to new-style state files."""
+    for path in Path().glob('**/*.done'):
+        print(path)
+        text = path.read_text()
+        if text:
+            out = f'{{"state": "done",\n "result": {text}}}\n'
+        else:
+            out = '{"state": "done"}\n'
+        path.with_suffix('.state').write_text(out)
+        os.unlink(path)
+
+
 if __name__ == '__main__':
+    os.environ['COLUMNS'] = '80'
     update_completion()

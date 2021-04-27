@@ -3,10 +3,11 @@ import os
 import re
 import sys
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 from typing import List, Tuple
 from unittest import SkipTest
 
+import pytest
 
 user = os.environ.get('USER', 'root')
 docs = Path(__file__).parent / '../../docs'
@@ -117,6 +118,7 @@ def compare(t1, t2):
     return 1
 
 
+@pytest.mark.docs
 def test_docs_workflows(mq, monkeypatch):
     monkeypatch.syspath_prepend('.')
     p = Path('prime')
@@ -132,9 +134,11 @@ def test_docs_workflows(mq, monkeypatch):
     run_document(mq, docs / 'workflows.rst', test=True)
 
 
+@pytest.mark.docs
 def test_docs_documentation(mq):
     run_document(mq, docs / 'documentation.rst', test=True)
 
 
+@pytest.mark.docs
 def test_docs_quickstart(mq):
     run_document(mq, docs / 'quickstart.rst', test=True)

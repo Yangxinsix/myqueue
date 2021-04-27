@@ -245,9 +245,9 @@ Remove the failed and done jobs from the list with
 The output files from a task will look like this::
 
     $ ls -l f2
-    total 4
-    -rw-rw-r-- 1 jensj jensj 0 Oct 27 15:26 shell:echo.3.err
-    -rw-rw-r-- 1 jensj jensj 6 Oct 27 15:26 shell:echo.3.out
+    totalt 4
+    -rw-rw-r-- 1 jensj jensj 0 apr 26 21:55 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 apr 26 21:55 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 

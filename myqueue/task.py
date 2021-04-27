@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 from datetime import datetime
@@ -5,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
 from warnings import warn
 
-from myqueue.commands import Command, create_command
+from myqueue.commands import Command, create_command, WorkflowTask
 from myqueue.resources import Resources, T
 from myqueue.states import State
 
@@ -28,10 +29,10 @@ class Task:
         and maximum time.
     deps: list of Path objects
         Dependencies.
-    workflow: bool
-        Task is part of a workflow.
     restart: int
         How many times to restart task.
+    workflow: bool
+        Task is part of a workflow.
     diskspace: float
         Disk-space used.  See :ref:`max_disk`.
     folder: Path
@@ -44,11 +45,10 @@ class Task:
                  cmd: Command,
                  resources: Resources,
                  deps: List[Path],
-                 workflow: bool,
                  restart: int,
+                 workflow: bool,
                  diskspace: int,
                  folder: Path,
-                 creates: List[str],
                  notifications: str = '',
                  state: State = State.UNDEFINED,
                  id: int = 0,
@@ -61,11 +61,10 @@ class Task:
         self.cmd = cmd
         self.resources = resources
         self.deps = deps
-        self.workflow = workflow
         self.restart = restart
+        self.workflow = workflow
         self.diskspace = diskspace
         self.folder = folder
-        self.creates = creates
         self.notifications = notifications
 
         assert isinstance(state, State), state
@@ -172,10 +171,9 @@ class Task:
             'state': self.state.name,
             'resources': self.resources.todict(),
             'restart': self.restart,
-            'deps': [str(dep) for dep in deps],
             'workflow': self.workflow,
+            'deps': [str(dep) for dep in deps],
             'diskspace': self.diskspace,
-            'creates': self.creates,
             'notifications': self.notifications,
             'tqueued': self.tqueued,
             'trunning': self.trunning,
@@ -192,7 +190,6 @@ class Task:
         t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
                       for t in [self.tqueued, self.trunning, self.tstop])
         deps = ','.join(str(dep) for dep in self.deps)
-        creates = ','.join(self.creates)
         error = self.error.replace('"', '""')
         print(f'{self.id},'
               f'"{self.folder}",'
@@ -203,7 +200,7 @@ class Task:
               f'{int(self.workflow)},'
               f'{self.diskspace},'
               f'"{deps}",'
-              f'"{creates}",'
+              '"",'
               f'{t1},{t2},{t3},'
               f'"{error}",'
               f'{self.memory_usage},'
@@ -222,11 +219,10 @@ class Task:
         return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
-                    bool(workflow),
                     int(restart),
+                    bool(workflow),
                     int(diskspace),
                     Path(folder),
-                    creates.split(','),
                     notifications,
                     State[state],
                     int(id),
@@ -247,9 +243,8 @@ class Task:
         if 'diskspace' not in dct:
             dct['diskspace'] = 0
 
-        # Backwards compatibility with version 3:
-        if 'creates' not in dct:
-            dct['creates'] = []
+        # Backwards compatibility:
+        dct.pop('creates', None)
 
         f = dct.pop('folder')
         if f.startswith('/'):
@@ -265,45 +260,40 @@ class Task:
                     state=State[dct.pop('state')],
                     folder=folder,
                     deps=deps,
-                    notifications.pop('notifications', ''),
+                    notifications=dct.pop('notifications', ''),
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def is_done(self) -> bool:
-        if self._done is None:
-            if self.creates:
-                for pattern in self.creates:
-                    if not any(self.folder.glob(pattern)):
-                        self._done = False
-                        break
-                else:  # no break
-                    self._done = True
-            else:
-                self._done = (self.folder / f'{self.cmd.fname}.done').is_file()
-        return self._done
+    def read_state_file(self) -> State:
+        """Read state file."""
+        if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
+            return State.FAILED
+        if (self.folder / f'{self.cmd.fname}.done').is_file():
+            return State.done
+        state_file = self.folder / f'{self.cmd.fname}.state'
+        try:
+            return State[json.loads(state_file.read_text())['state']]
+        except (FileNotFoundError, KeyError):
+            return State.undefined
 
-    def has_failed(self) -> bool:
-        return (self.folder / f'{self.cmd.fname}.FAILED').is_file()
+    def write_state_file(self) -> None:
+        """Write state file for workflows."""
+        if not self.workflow:
+            return
+        if self.state == State.done and isinstance(self.cmd, WorkflowTask):
+            # Already done when writing results of function call
+            return
+        if not self.folder.is_dir():
+            return
+        state_file = self.folder / f'{self.cmd.fname}.state'
+        state_file.write_text(f'{{"state": "{self.state}"}}\n')
 
-    def skip(self) -> bool:
-        return (self.folder / f'{self.cmd.fname}.SKIP').is_file()
-
-    def write_done_file(self) -> None:
-        if self.workflow and len(self.creates) == 0 and self.folder.is_dir():
-            p = self.folder / f'{self.cmd.fname}.done'
-            if not p.is_file():
-                p.write_text('')
-
-    def write_failed_file(self) -> None:
-        if self.workflow and self.folder.is_dir():
-            p = self.folder / f'{self.cmd.fname}.FAILED'
-            p.write_text('')
-
-    def remove_failed_file(self) -> None:
-        p = self.folder / f'{self.cmd.fname}.FAILED'
+    def remove_state_file(self) -> None:
+        """Remove state file if it is there."""
+        p = self.folder / f'{self.cmd.fname}.state'
         if p.is_file():
             p.unlink()
 
@@ -363,13 +353,18 @@ class Task:
         with Queue(verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
+    def find_dependents(self, tasks: List['Task']) -> Iterator['Task']:
+        """Yield dependents."""
+        for task in tasks:
+            if self.dname in task.deps and self is not task:
+                yield task
+                yield from task.find_dependents(tasks)
+
     def cancel_dependents(self, tasks: List['Task'], t: float = 0.0) -> None:
         """Cancel dependents."""
-        for tsk in tasks:
-            if self.dname in tsk.deps and self is not tsk:
-                tsk.state = State.CANCELED
-                tsk.tstop = t
-                tsk.cancel_dependents(tasks, t)
+        for task in self.find_dependents(tasks):
+            task.state = State.CANCELED
+            task.tstop = t
 
     def run(self):
         self.result = self.cmd.run()
@@ -379,6 +374,7 @@ def task(cmd: str,
          args: List[str] = [],
          *,
          resources: str = '',
+         workflow: bool = False,
          name: str = '',
          deps: Union[str, List[str], Task, List[Task]] = '',
          cores: int = 0,
@@ -386,10 +382,8 @@ def task(cmd: str,
          processes: int = 0,
          tmax: str = '',
          folder: str = '',
-         workflow: bool = False,
          restart: int = 0,
-         diskspace: float = 0.0,
-         creates: List[str] = []) -> Task:
+         diskspace: float = 0.0) -> Task:
     """Create a Task object.
 
     ::
@@ -421,16 +415,14 @@ def task(cmd: str,
         Number of processes to start (default is one for each core).
     tmax: str
         Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
-    folder: str
-        Folder where task should run (default is current folder).
     workflow: bool
         Task is part of a workflow.
+    folder: str
+        Folder where task should run (default is current folder).
     restart: int
         How many times to restart task.
     diskspace: float
         Diskspace used.  See :ref:`max_disk`.
-    creates: list of str
-        Name of files created by task.
 
     Returns
     -------
@@ -482,11 +474,10 @@ def task(cmd: str,
     return Task(command,
                 res,
                 dpaths,
-                workflow,
                 restart,
+                workflow,
                 int(diskspace),
-                path,
-                creates)
+                path)
 
 
 def seconds_to_time_string(n: float) -> str:

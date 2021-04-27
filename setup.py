@@ -16,6 +16,7 @@ setup(name='myqueue',
       url='https://myqueue.readthedocs.io/',
       packages=find_packages(),
       entry_points={'console_scripts': ['mq = myqueue.cli:main']},
+      install_requires=['graphlib-backport'],
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Console',
