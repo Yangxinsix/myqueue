@@ -287,4 +287,5 @@ def update_completion(test=False) -> None:
 
 
 if __name__ == '__main__':
+    os.environ['COLUMNS'] = '80'
     update_completion()
