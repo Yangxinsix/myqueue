@@ -398,7 +398,7 @@ folder:
 optional arguments:
   -h, --help            show this help message and exit
   -E STATES, --email STATES
-                        Send email when state changes to on of the specified
+                        Send email when state changes to one of the specified
                         states (one or more of the letters: rdFCTMA).
   -N NEW_STATE, --new-state NEW_STATE
                         New state (one of the letters: qhrdFCTM).
