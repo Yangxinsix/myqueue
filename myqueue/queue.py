@@ -323,6 +323,7 @@ class Queue(Lock):
                         folder=task.folder,
                         restart=task.restart,
                         workflow=task.workflow,
+                        creates=task.creates,
                         diskspace=0)
             tasks.append(task)
         self.submit(tasks, read=False)

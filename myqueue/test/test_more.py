@@ -1,10 +1,15 @@
-from pathlib import Path
+import sys
 import subprocess
+from pathlib import Path
+
+import pytest
 
 from ..queue import Queue
 from ..task import task
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9),
+                    reason="requires Python 3.9 or higher")
 def test_completion():
     from myqueue.utils import update_readme_and_completion
     update_readme_and_completion(test=True)
@@ -27,7 +32,7 @@ def test_logo():
 
 
 def test_backends(mq):
-    from ..config import config, guess_scheduler, guess_configuration
+    from ..config import config, guess_configuration, guess_scheduler
     config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
                        ('abc8', {'cores': 8, 'memory': '8G'})]
     config['mpiexec'] = 'echo'
@@ -61,8 +66,8 @@ def run(commands, stdout):
 
 
 def test_autoconfig(monkeypatch):
-    from ..slurm import SLURM
     from ..lsf import LSF
+    from ..slurm import SLURM
 
     monkeypatch.setattr(subprocess, 'run', run)
     nodes, _ = SLURM().get_config()
@@ -73,7 +78,7 @@ def test_autoconfig(monkeypatch):
 
 
 def test_commands():
-    from ..commands import convert, create_command, ShellScript
+    from ..commands import ShellScript, convert, create_command
     assert convert('True') is True
     assert convert('False') is False
     assert convert('3.14') == 3.14

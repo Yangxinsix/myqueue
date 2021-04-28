@@ -50,6 +50,7 @@ class Task:
                  diskspace: int,
                  folder: Path,
                  notifications: str = '',
+                 creates: List[str],
                  state: State = State.undefined,
                  id: int = 0,
                  error: str = '',
@@ -66,6 +67,7 @@ class Task:
         self.diskspace = diskspace
         self.folder = folder
         self.notifications = notifications
+        self.creates = creates
 
         assert isinstance(state, State), state
         self.state = state
@@ -175,6 +177,7 @@ class Task:
             'deps': [str(dep) for dep in deps],
             'diskspace': self.diskspace,
             'notifications': self.notifications,
+            'creates': self.creates,
             'tqueued': self.tqueued,
             'trunning': self.trunning,
             'tstop': self.tstop,
@@ -190,6 +193,7 @@ class Task:
         t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
                       for t in [self.tqueued, self.trunning, self.tstop])
         deps = ','.join(str(dep) for dep in self.deps)
+        creates = ','.join(self.creates)
         error = self.error.replace('"', '""')
         print(f'{self.id},'
               f'"{self.folder}",'
@@ -200,7 +204,7 @@ class Task:
               f'{int(self.workflow)},'
               f'{self.diskspace},'
               f'"{deps}",'
-              '"",'
+              f'"{creates}",'
               f'{t1},{t2},{t3},'
               f'"{error}",'
               f'{self.memory_usage},'
@@ -224,6 +228,7 @@ class Task:
                     int(diskspace),
                     Path(folder),
                     notifications,
+                    creates.split(','),
                     State[state],
                     int(id),
                     error,
@@ -244,7 +249,8 @@ class Task:
             dct['diskspace'] = 0
 
         # Backwards compatibility:
-        dct.pop('creates', None)
+        if 'creates' not in dct:
+            dct['creates'] = []
 
         f = dct.pop('folder')
         if f.startswith('/'):
@@ -271,6 +277,11 @@ class Task:
         """Read state file."""
         if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
             return State.FAILED
+        if self.creates:
+            for pattern in self.creates:
+                if not any(self.folder.glob(pattern)):
+                    return State.undefined
+            return State.done
         if (self.folder / f'{self.cmd.fname}.done').is_file():
             return State.done
         state_file = self.folder / f'{self.cmd.fname}.state'
@@ -290,6 +301,9 @@ class Task:
             return
         state_file = self.folder / f'{self.cmd.fname}.state'
         state_file.write_text(f'{{"state": "{self.state}"}}\n')
+
+    def is_done(self) -> bool:
+        return self.read_state_file() == State.done
 
     def remove_state_file(self) -> None:
         """Remove state file if it is there."""
@@ -383,7 +397,8 @@ def task(cmd: str,
          tmax: str = '',
          folder: str = '',
          restart: int = 0,
-         diskspace: float = 0.0) -> Task:
+         diskspace: float = 0.0,
+         creates: List[str] = []) -> Task:
     """Create a Task object.
 
     ::
@@ -423,6 +438,9 @@ def task(cmd: str,
         How many times to restart task.
     diskspace: float
         Diskspace used.  See :ref:`max_disk`.
+    creates: list of str
+        Name of files created by task
+        (can be both full filenames or patterns matching filenames).
 
     Returns
     -------
@@ -477,7 +495,8 @@ def task(cmd: str,
                 restart,
                 workflow,
                 int(diskspace),
-                path)
+                path,
+                creates)
 
 
 def seconds_to_time_string(n: float) -> str:
