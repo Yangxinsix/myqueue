@@ -39,7 +39,8 @@ def guess_scheduler() -> str:
     commands = []
     for command in scheduler_commands:
         if subprocess.run(['which', command],
-                          stdout=subprocess.DEVNULL).returncode == 0:
+                          stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL).returncode == 0:
             commands.append(command)
     if commands:
         if len(commands) > 1:
