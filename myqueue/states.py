@@ -94,4 +94,3 @@ class State(Enum):
                         'Unknown state: ' + s +
                         '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
         return states
-    
