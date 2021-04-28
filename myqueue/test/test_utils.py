@@ -10,4 +10,4 @@ def test_convert_done_files(tmp_path):
     t1 = (tmp_path / 't1.state').read_text()
     t2 = (tmp_path / 't2.state').read_text()
     assert t1 == '{"state": "done"}\n'
-    assert t2 == '{"state": "done", "result": [117]}\n'
+    assert t2 == '{"state": "done",\n "result": [117]}\n'

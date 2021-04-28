@@ -9,7 +9,7 @@ class State(Enum):
 
     >>> for state in State:
     ...     state
-    <State.UNDEFINED: 'U'>
+    <State.undefined: 'u'>
     <State.queued: 'q'>
     <State.hold: 'h'>
     <State.running: 'r'>
@@ -31,7 +31,6 @@ class State(Enum):
     False
     >>> State.done in {'queued', 'running'}
     False
-    >>> State.str2states('dA')
     """
 
     undefined = 'u'
@@ -69,22 +68,27 @@ class State(Enum):
 
     @staticmethod
     def str2states(s: str) -> Set['State']:
-        """"""
+        """Convert single character state string to set of State objects.
+
+        >>> names = [state.name for state in State.str2states('rdA')]
+        >>> sorted(names)
+        ['CANCELED', 'FAILED', 'MEMORY', 'TIMEOUT', 'done', 'running']
+        """
         states: Set[State] = set()
         for c in s:
-            if s == 'a':
+            if c == 'a':
                 states.update([State.queued,
                                State.hold,
                                State.running,
                                State.done])
-            elif s == 'A':
+            elif c == 'A':
                 states.update([State.FAILED,
                                State.CANCELED,
                                State.TIMEOUT,
                                State.MEMORY])
             else:
                 try:
-                    states.add(State(s))
+                    states.add(State(c))
                 except ValueError:
                     raise ValueError(
                         'Unknown state: ' + s +

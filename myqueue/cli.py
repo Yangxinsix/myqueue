@@ -250,7 +250,7 @@ def _main(arguments: List[str] = None) -> int:
               help='Write <task-name>.state file when task has finished.')
 
         if cmd == 'modify':
-            a('-E', '--email', default='U', metavar='STATES',
+            a('-E', '--email', default='u', metavar='STATES',
               help='Send email when state changes to on of the specified '
               'states (one or more of the letters: rdFCTMA).')
             a('-N', '--new-state', default='U',
@@ -587,7 +587,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.run(newtasks)
 
         elif args.command == 'modify':
-            state = State(args.newstate)
+            state = State(args.new_state)
             queue.modify(selection, state, State.str2states(args.email))
 
         elif args.command == 'workflow':

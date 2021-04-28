@@ -6,8 +6,8 @@ from ..task import task
 
 
 def test_completion():
-    from myqueue.utils import update_completion
-    update_completion(test=True)
+    from myqueue.utils import update_readme_and_completion
+    update_readme_and_completion(test=True)
 
 
 def test_api(mq):

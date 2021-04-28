@@ -39,10 +39,10 @@ def send_mail(subject: str,
               host: str = '') -> None:
     """Send an email.
 
-    >>> mail('MyQueue: bla-bla',
-    ...      'Hi!\\nHow are you?\\n',
-    ...      'you@myqueue.org',
-    ...      'me@myqueue.org')
+    >>> send_mail('MyQueue: bla-bla',
+    ...          'Hi!\\nHow are you?\\n',
+    ...          'you@myqueue.org',
+    ...          'me@myqueue.org')
     """
     msg = MIMEText(body)
     msg['Subject'] = subject

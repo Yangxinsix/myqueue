@@ -53,9 +53,10 @@ commands = {
          '--verbose', '-q', '--quiet', '-T', '--traceback', '-A',
          '--all'],
     'modify':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback', '-r', '--recursive'],
+        ['-E', '--email', '-N', '--new-state', '-s', '--states', '-i',
+         '--id', '-n', '--name', '-e', '--error', '-z',
+         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback', '-r', '--recursive'],
     'remove':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
          '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',

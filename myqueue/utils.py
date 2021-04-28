@@ -142,7 +142,7 @@ def get_home_folders(prune=True) -> List[Path]:
         return [Path.home()]
 
 
-def update_completion(test=False) -> None:
+def update_readme_and_completion(test=False) -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
@@ -300,5 +300,6 @@ def convert_done_files() -> None:
 
 
 if __name__ == '__main__':
+    assert sys.version_info >= (3, 9)
     os.environ['COLUMNS'] = '80'
-    update_completion()
+    update_readme_and_completion()
