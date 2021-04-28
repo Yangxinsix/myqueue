@@ -93,7 +93,7 @@ See more examples of use here:
 Installation
 ============
 
-MyQueue has only one dependency: Python_ version 3.6 or later.
+MyQueue has only one dependency: Python_ version 3.7 or later.
 
 Install MyQueue from PyPI_ with *pip*::
 
