@@ -22,12 +22,20 @@ def mq(tmpdir):
     os.chdir(dir)
 
 
+test_config = """\
+config = {
+    'scheduler': 'test',
+    'notifications': {
+        'email': 'me@myqueue.org',
+        'host': 'smtp.myqueue.org'}}
+"""
+
+
 class MQ:
     def __init__(self, dir):
         mqdir = dir / '.myqueue'
         mqdir.mkdir()
-        txt = "config = {'scheduler': 'test'}\n"
-        (mqdir / 'config.py').write_text(txt)
+        (mqdir / 'config.py').write_text(test_config)
         initialize_config(dir, force=True)
         self.scheduler = TestScheduler(dir)
         TestScheduler.current_scheduler = self.scheduler

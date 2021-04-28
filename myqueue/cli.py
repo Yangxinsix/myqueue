@@ -251,7 +251,7 @@ def _main(arguments: List[str] = None) -> int:
 
         if cmd == 'modify':
             a('-E', '--email', default='u', metavar='STATES',
-              help='Send email when state changes to on of the specified '
+              help='Send email when state changes to one of the specified '
               'states (one or more of the letters: rdFCTMA).')
             a('-N', '--new-state', default='U',
               help='New state (one of the letters: qhrdFCTM).')

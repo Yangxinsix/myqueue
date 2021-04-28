@@ -36,19 +36,20 @@ def send_mail(subject: str,
               body: str,
               to: str,
               fro: str,
-              host: str = '') -> None:
+              host: str) -> None:
     """Send an email.
 
     >>> send_mail('MyQueue: bla-bla',
     ...          'Hi!\\nHow are you?\\n',
     ...          'you@myqueue.org',
-    ...          'me@myqueue.org')
+    ...          'me@myqueue.org',
+    ...          'test.smtp.org')
     """
     msg = MIMEText(body)
     msg['Subject'] = subject
-    msg['From'] = to
+    msg['From'] = fro
     msg['To'] = to
     data = msg.as_string()
-    if host:
-        with smtplib.SMTP(host) as s:  # pragma: no cover
+    if host != 'test.smtp.org':
+        with smtplib.SMTP(host) as s:
             s.sendmail(msg['From'], [to], data)
