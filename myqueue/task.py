@@ -50,7 +50,7 @@ class Task:
                  diskspace: int,
                  folder: Path,
                  notifications: str = '',
-                 state: State = State.UNDEFINED,
+                 state: State = State.undefined,
                  id: int = 0,
                  error: str = '',
                  memory_usage: int = 0,

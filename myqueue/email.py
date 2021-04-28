@@ -1,6 +1,6 @@
 import smtplib
 from email.mime.text import MIMEText
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from collections import defaultdict
 
 from myqueue.task import Task
@@ -11,15 +11,15 @@ def send_notification(tasks: List[Task],
                       host: str = '') -> List[Tuple[Task, str]]:
     notifications = []
     for task in tasks:
-        character = task.status.value
-        if character in task.email:
-            if task.state.is_bad() and 'r' in task.email:
-                task.email = task.email.remove('r')
-                notifications.append((task, 'running'))
-            task.email = task.email.remove(character)
+        character = task.state.value
+        if character in 'dMTFC' and 'r' in task.notifications:
+            task.notifications = task.notifications.replace('r', '')
+            notifications.append((task, 'running'))
+        if character in task.notifications:
+            task.notifications = task.notifications.replace(character, '')
             notifications.append((task, task.state.name))
     if notifications:
-        count = defaultdict(int)
+        count: Dict[str, int] = defaultdict(int)
         lines = []
         for task, name in notifications:
             count[name] += 1
@@ -30,14 +30,6 @@ def send_notification(tasks: List[Task],
         fro = to
         send_mail(subject, body, to, fro, host)
     return notifications
-
-
-class TestSMTP:
-    def sendmail(self, fro: str, to: List[str], msg: str):
-        pass
-
-    def quit(self):
-        pass
 
 
 def send_mail(subject: str,
@@ -56,9 +48,7 @@ def send_mail(subject: str,
     msg['Subject'] = subject
     msg['From'] = to
     msg['To'] = to
+    data = msg.as_string()
     if host:
-        s = smtplib.SMTP(host)
-    else:
-        s = TestSMTP()
-    s.sendmail(msg['From'], [to], msg.as_string())
-    s.quit()
+        with smtplib.SMTP(host) as s:  # pragma: no cover
+            s.sendmail(msg['From'], [to], data)
