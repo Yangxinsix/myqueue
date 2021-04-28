@@ -7,4 +7,11 @@ tests:
     - coverage report -i --fail-under=82
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 44.7 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 46.0 myqueue -e myqueue/test
+
+oldtests:
+  image: python:3.7
+  script:
+    - pip install pytest numpy
+    - pip install -e .
+    - pytest

@@ -37,7 +37,7 @@ class MPIWorld:
     rank: int = 0
 
 
-@lru_cache
+@lru_cache()
 def mpi_world() -> MPIWorld:
     """Find and return a world object with a rank attribute."""
     import sys
