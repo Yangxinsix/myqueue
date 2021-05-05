@@ -12,6 +12,18 @@ Next release
 * ...
 
 
+Version 21.4.2
+==============
+
+* Make things work with Python 3.7.
+
+
+Version 21.4.1
+==============
+
+* Backwards compatibility fix.
+
+
 Version 21.4.0
 ==============
 
