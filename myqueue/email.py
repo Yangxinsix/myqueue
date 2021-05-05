@@ -1,7 +1,8 @@
 import smtplib
-from email.mime.text import MIMEText
-from typing import List, Tuple, Dict
+import sys
 from collections import defaultdict
+from email.mime.text import MIMEText
+from typing import Dict, List, Tuple
 
 from myqueue.task import Task
 
@@ -53,3 +54,10 @@ def send_mail(subject: str,
     if host != 'test.smtp.org':
         with smtplib.SMTP(host) as s:
             s.sendmail(msg['From'], [to], data)
+
+
+if __name__ == '__main__':
+    to, host = sys.argv[1:]
+    send_mail('Test email from myqueue',
+              'Testing ...\n',
+              to, to, host)
