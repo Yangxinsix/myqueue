@@ -1,15 +1,19 @@
 import smtplib
-import sys
+import stat
 from collections import defaultdict
 from email.mime.text import MIMEText
+from getpass import getpass
+from pathlib import Path
 from typing import Dict, List, Tuple
 
+from myqueue.config import config
 from myqueue.task import Task
 
 
 def send_notification(tasks: List[Task],
-                      to: str,
-                      host: str = '') -> List[Tuple[Task, str]]:
+                      email: str,
+                      host: str,
+                      username: str = None) -> List[Tuple[Task, str]]:
     notifications = []
     for task in tasks:
         character = task.state.value
@@ -28,8 +32,14 @@ def send_notification(tasks: List[Task],
         subject = 'MyQueue: ' + ', '.join(f'{c} {name}'
                                           for name, c in count.items())
         body = '\n'.join(lines)
-        fro = to
-        send_mail(subject, body, to, fro, host)
+        password_file = Path.home() / f'.myqueue/{host}'
+        password = read_password(password_file)
+        send_mail(subject, body,
+                  to=email,
+                  fro=email,
+                  host=host,
+                  username=username or email,
+                  password=password)
     return notifications
 
 
@@ -37,14 +47,18 @@ def send_mail(subject: str,
               body: str,
               to: str,
               fro: str,
-              host: str) -> None:
+              host: str,
+              username: str,
+              password: str) -> None:
     """Send an email.
 
     >>> send_mail('MyQueue: bla-bla',
     ...          'Hi!\\nHow are you?\\n',
     ...          'you@myqueue.org',
     ...          'me@myqueue.org',
-    ...          'test.smtp.org')
+    ...          'test.smtp.org',
+    ...          'me',
+    ...          '********')
     """
     msg = MIMEText(body)
     msg['Subject'] = subject
@@ -52,12 +66,41 @@ def send_mail(subject: str,
     msg['To'] = to
     data = msg.as_string()
     if host != 'test.smtp.org':
-        with smtplib.SMTP(host) as s:
+        with smtplib.SMTP_SSL(host, 465) as s:
+            s.login(username, password)
             s.sendmail(msg['From'], [to], data)
 
 
-if __name__ == '__main__':
-    to, host = sys.argv[1:]
-    send_mail('Test email from myqueue',
-              'Testing ...\n',
-              to, to, host)
+def read_password(password_file: Path) -> str:
+    assert password_file.stat().st_mode & (stat.S_IRGRP | stat.S_IROTH) == 0
+    password = password_file.read_text().splitlines()[0]
+    return password
+
+
+def configure_email():
+    ndct = config.get('notifications', {})
+    if 'email' not in ndct or 'host' not in ndct:
+        raise ValueError(
+            "Please add 'notifications': "
+            "{'email': ..., 'host': ..., 'username': ...} "
+            'to your ~/.myqueue/config.py '
+            '(username can be left out if it is the same as email).')
+
+    host = ndct['host']
+    password_file = Path.home() / f'.myqueue/{host}'
+    if password_file.is_file():
+        password = read_password(password_file)
+    else:
+        password = getpass()
+        padding = (len(password) % 80) * '.'
+        password_file.write(f'{password}\n{padding}\n')
+
+        if input('Would you like to send a test email? [yes] ') in {'', 'yes'}:
+            send_mail('Test email from myqueue',
+                      'Testing ...\n',
+                      ndct['email'],
+                      ndct['email'],
+                      host,
+                      ndct.get('username', ndct['email']),
+                      password)
+            print('Sent!')

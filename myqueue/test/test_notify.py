@@ -20,7 +20,7 @@ class SMTP:
 
 def test_notify(mq, monkeypatch):
     smtp = SMTP()
-    monkeypatch.setattr(smtplib, 'SMTP', smtp)
+    monkeypatch.setattr(smtplib, 'SMTP_SSL', smtp)
     mq('submit math@sin+3.13')
     mq('modify . -s q -E rdA')
     mq.wait()
