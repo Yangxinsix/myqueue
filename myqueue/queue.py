@@ -13,7 +13,7 @@ from collections import defaultdict
 from typing import Set, List, Dict, Optional, Sequence
 from types import TracebackType
 
-from myqueue.config import config
+from myqueue.config import Configuration
 from myqueue.scheduler import get_scheduler, Scheduler
 from myqueue.resources import Resources
 from myqueue.run import run_tasks
@@ -28,14 +28,16 @@ from myqueue.submitting import submit_tasks
 class Queue(Lock):
     """Object for interacting with the scheduler."""
     def __init__(self,
+                 config: Configuration,
                  verbosity: int = 1,
                  need_lock: bool = True,
                  dry_run: bool = False):
         self.verbosity = verbosity
         self.need_lock = need_lock
         self.dry_run = dry_run
+        self.config = config
 
-        self.folder = config['home'] / '.myqueue'
+        self.folder = config.home / '.myqueue'
         self.fname = self.folder / 'queue.json'
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'),
@@ -49,15 +51,7 @@ class Queue(Lock):
     def scheduler(self) -> Scheduler:
         """Scheduler object."""
         if self._scheduler is None:
-            schedulername = config.get('scheduler')
-            if schedulername is None:
-                home = config['home']
-                raise ValueError(
-                    'Please specify type of scheduler in your '
-                    f'{home}/.myqueue/config.py '
-                    "file (must be 'slurm', 'lfs', 'pbs' or 'test').  See "
-                    'https://myqueue.rtfd.io/en/latest/configuration.html')
-            self._scheduler = get_scheduler(schedulername)
+            self._scheduler = get_scheduler(self.config)
         return self._scheduler
 
     def __enter__(self) -> 'Queue':
@@ -429,7 +423,7 @@ class Queue(Lock):
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
-                nodes = config.get('nodes') or [('', {'cores': 1})]
+                nodes = self.config.nodes or [('', {'cores': 1})]
                 if not self.dry_run:
                     task.resources = task.resources.bigger(task.state, nodes)
                     task.restart -= 1
@@ -452,7 +446,7 @@ class Queue(Lock):
         return len(tasks)
 
     def hold_or_release(self) -> None:
-        maxmem = config.get('maximum_diskspace', float('inf'))
+        maxmem = self.config.maximum_diskspace
         mem = 0
         for task in self.tasks:
             if task.state in {'queued', 'running',

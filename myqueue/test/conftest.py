@@ -6,11 +6,9 @@ from typing import List, Set
 import pytest  # type: ignore
 
 from myqueue.cli import _main
-from myqueue.config import initialize_config
 from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.task import Task
-from myqueue.test.scheduler import TestScheduler
 from myqueue.states import State
 
 
@@ -28,9 +26,6 @@ class MQ:
         mqdir.mkdir()
         txt = "config = {'scheduler': 'test'}\n"
         (mqdir / 'config.py').write_text(txt)
-        initialize_config(dir, force=True)
-        self.scheduler = TestScheduler(dir)
-        TestScheduler.current_scheduler = self.scheduler
         os.environ['MYQUEUE_TESTING'] = 'yes'
 
     def __call__(self, cmd: str, error: int = 0) -> None:

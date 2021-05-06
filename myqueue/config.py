@@ -1,19 +1,40 @@
+from math import inf
 from pathlib import Path
-from typing import Dict, Any, Set, List, Tuple
-
-config: Dict[str, Any] = {}
+from typing import Any, Dict, List, Set, Tuple
 
 
-def initialize_config(start: Path, force: bool = False) -> None:
-    if not force and 'home' in config:
-        return
-    home = find_home_folder(start)
-    config['home'] = home
-    cfg = home / '.myqueue' / 'config.py'
-    if cfg.is_file():
-        namespace: Dict[str, Dict[str, Any]] = {}
-        exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
-        config.update(namespace['config'])
+class Configuration:
+    def __init__(self,
+                 scheduler: str,
+                 nodes: List[Tuple[str, Dict[str, Any]]] = None,
+                 parallel_python: str = 'python3',
+                 mpiexec: str = 'mpiexec',
+                 extra_args: List[str] = None,
+                 maximum_diskspace: float = inf,
+                 home: Path = None):
+        self.scheduler = scheduler
+        self.nodes = nodes or []
+        self.parallel_python = parallel_python
+        self.mpiexec = mpiexec
+        self.extra_args = extra_args or []
+        self.maximum_diskspace = maximum_diskspace
+        self.home = home or Path.cwd()
+
+    @classmethod
+    def read(start: Path) -> 'Configuration':
+        home = find_home_folder(start)
+        config_file = home / '.myqueue' / 'config.py'
+        dct: Dict[str, Dict[str, Any]] = {}
+        exec(compile(config_file.read_text(), str(config_file), 'exec'), dct)
+        cfg = dct['config']
+        if 'scheduler' not in cfg:
+            raise ValueError(
+                'Please specify type of scheduler in your '
+                f'{home}/.myqueue/config.py '
+                "file (must be 'slurm', 'lfs', 'pbs' or 'test').  See "
+                'https://myqueue.rtfd.io/en/latest/configuration.html')
+        config = Configuration(**cfg, home=home)
+        return config
 
 
 def find_home_folder(start: Path) -> Path:
