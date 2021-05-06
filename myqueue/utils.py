@@ -14,6 +14,7 @@ from unittest import SkipTest
 
 
 def mqhome() -> Path:
+    """Don't use "~/" when testing."""
     name = os.getenv('MYQUEUE_TESTING')
     if name:
         return Path(name)
@@ -136,6 +137,7 @@ def is_inside(path1: Path, path2: Path) -> bool:
 
 
 def get_home_folders(prune=True) -> List[Path]:
+    """Return known ".myqueue/" folders."""
     home = mqhome()
     path = home / '.myqueue' / 'folders.txt'
     if path.is_file():
@@ -307,7 +309,7 @@ def convert_done_files() -> None:
         os.unlink(path)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     assert sys.version_info >= (3, 9)
     os.environ['COLUMNS'] = '80'
     update_readme_and_completion()

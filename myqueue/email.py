@@ -15,6 +15,7 @@ def send_notification(tasks: List[Task],
                       email: str,
                       host: str,
                       username: str = None) -> List[Tuple[Task, str]]:
+    """Compose and send email."""
     notifications = []
     for task in tasks:
         character = task.state.value
@@ -73,12 +74,14 @@ def send_mail(subject: str,
 
 
 def read_password(password_file: Path) -> str:
+    """Read password from password file."""
     assert password_file.stat().st_mode & (stat.S_IRGRP | stat.S_IROTH) == 0
     password = password_file.read_text().splitlines()[0]
     return password
 
 
 def configure_email(config: Configuration) -> None:
+    """Check configuration and ask for password if it's not already known."""
     ndct = config.notifications
     if 'email' not in ndct or 'host' not in ndct:
         raise ValueError(
