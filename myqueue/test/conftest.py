@@ -1,17 +1,15 @@
 import os
 import shlex
 from pathlib import Path
-from typing import List, Set
+from typing import List
 
 import pytest  # type: ignore
 
 from myqueue.cli import _main
-from myqueue.config import initialize_config
+from myqueue.config import Configuration
 from myqueue.queue import Queue
-from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.test.scheduler import TestScheduler
-from myqueue.states import State
 
 
 @pytest.fixture(scope='function')
@@ -28,10 +26,10 @@ class MQ:
         mqdir.mkdir()
         txt = "config = {'scheduler': 'test'}\n"
         (mqdir / 'config.py').write_text(txt)
-        initialize_config(dir, force=True)
-        self.scheduler = TestScheduler(dir)
+        config = Configuration.read()
+        self.scheduler = TestScheduler(config)
         TestScheduler.current_scheduler = self.scheduler
-        os.environ['MYQUEUE_TESTING'] = 'yes'
+    os.environ['MYQUEUE_TESTING'] = 'yes'
 
     def __call__(self, cmd: str, error: int = 0) -> None:
         args = shlex.split(cmd)
@@ -46,7 +44,8 @@ class MQ:
         assert err == error
 
     def states(self) -> str:
-        return ''.join(task.state.value for task in mqlist())
+        return ''.join(task.state.value
+                       for task in mqlist(self.scheduler.config))
 
     def wait(self) -> None:
         while True:
@@ -55,9 +54,7 @@ class MQ:
                 break
 
 
-def mqlist(states: Set[State] = None) -> List[Task]:
-    states = states if states is not None else set(State)
-    with Queue(verbosity=0) as q:
+def mqlist(config) -> List[Task]:
+    with Queue(config, verbosity=0) as q:
         q._read()
-        return Selection(states=states,
-                         folders=[Path().absolute()]).select(q.tasks)
+        return q.tasks

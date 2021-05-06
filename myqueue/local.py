@@ -2,12 +2,11 @@ import asyncio
 import pickle
 import socket
 from functools import partial
-from pathlib import Path
 from typing import Any, Set, Tuple, List
 
-from .config import config, initialize_config
 from .scheduler import Scheduler
 from .task import Task
+from .config import Configuration
 
 
 class LocalSchedulerError(Exception):
@@ -61,7 +60,8 @@ class Server:
         self.next_id = 1
         self.processes = {}
         self.tasks = []
-        self.folder = config['home'] / '.myqueue'
+        self.config = Configuration.read()
+        self.folder = self.config.home / '.myqueue'
 
     async def main(self):
         server = await asyncio.start_server(
@@ -113,8 +113,7 @@ class Server:
             mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 '
             mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
-                                        config.get('parallel_python',
-                                                   'python3'))
+                                        self.config.parallel_python)
         cmd = f'{cmd} 2> {err} > {out}'
         proc = await asyncio.create_subprocess_shell(
             cmd, cwd=task.folder)
@@ -149,5 +148,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    initialize_config(Path.cwd())
     asyncio.run(Server().main())

@@ -1,19 +1,79 @@
+import subprocess
+import warnings
+from math import inf
 from pathlib import Path
-from typing import Dict, Any, Set, List, Tuple
-
-config: Dict[str, Any] = {}
+from typing import Any, Dict, List, Set, Tuple
 
 
-def initialize_config(start: Path, force: bool = False) -> None:
-    if not force and 'home' in config:
-        return
-    home = find_home_folder(start)
-    config['home'] = home
-    cfg = home / '.myqueue' / 'config.py'
-    if cfg.is_file():
-        namespace: Dict[str, Dict[str, Any]] = {}
-        exec(compile(cfg.read_text(), str(cfg), 'exec'), namespace)
-        config.update(namespace['config'])
+class Configuration:
+    def __init__(self,
+                 scheduler: str,
+                 nodes: List[Tuple[str, Dict[str, Any]]] = None,
+                 parallel_python: str = 'python3',
+                 mpiexec: str = 'mpiexec',
+                 extra_args: List[str] = None,
+                 maximum_diskspace: float = inf,
+                 mpi_implementation: str = None,
+                 home: Path = None):
+        """Configuration object.
+
+        """
+        self.scheduler = scheduler
+        self.nodes = nodes or []
+        self.parallel_python = parallel_python
+        self.mpiexec = mpiexec
+        self.extra_args = extra_args or []
+        self.maximum_diskspace = maximum_diskspace
+        self._mpi_implemenation = mpi_implementation
+        self.home = home or Path.cwd()
+
+    @property
+    def mpi_implementation(self) -> str:
+        """Guess MPI implementation: intel or openmpi.
+
+        The intel implementation uses::
+
+            mpiexec --env NAME VAL
+
+        instead of::
+
+            mpiexec -x NAME=VAL
+
+        """
+        if self._mpi_implemenation is None:
+            output = subprocess.check_output([self.mpiexec, '-V']).lower()
+            if b'intel' in output:
+                self._mpi_implemenation = 'intel'
+            else:
+                self._mpi_implemenation = 'openmpi'
+        return self._mpi_implemenation
+
+    @classmethod
+    def read(self, start: Path = None) -> 'Configuration':
+        """Find nearest .myqueue/config.py and read it."""
+        if start is None:
+            start = Path.cwd()
+        home = find_home_folder(start)
+        config_file = home / '.myqueue' / 'config.py'
+        dct: Dict[str, Dict[str, Any]] = {}
+        exec(compile(config_file.read_text(), str(config_file), 'exec'), dct)
+        cfg = dct['config']
+
+        if 'scheduler' not in cfg:
+            raise ValueError(
+                'Please specify type of scheduler in your '
+                f'{home}/.myqueue/config.py '
+                "file (must be 'slurm', 'lfs', 'pbs' or 'test').  See "
+                'https://myqueue.rtfd.io/en/latest/configuration.html')
+
+        if 'mpi' in cfg:
+            warnings.warn(
+                'The "mpi" keyword has been deprecated. '
+                'Please remove it or rename to "mpi_implementation"')
+            cfg['mpi_implementation'] = dct.pop('mpi')
+
+        config = Configuration(**cfg, home=home)
+        return config
 
 
 def find_home_folder(start: Path) -> Path:
@@ -68,7 +128,7 @@ def guess_configuration(scheduler_name: str = '',
         folder.mkdir()
 
     name = scheduler_name or guess_scheduler()
-    scheduler = get_scheduler(name)
+    scheduler = get_scheduler(Configuration(scheduler=name))
     nodelist, extra_args = scheduler.get_config(queue_name)
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
     nodelist2: List[Tuple[str, int, str]] = []

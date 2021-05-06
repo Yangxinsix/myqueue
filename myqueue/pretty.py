@@ -8,6 +8,7 @@ from myqueue.task import Task
 
 
 def colored(state: str) -> str:
+    """Yellow for running, red for bad, green for done."""
     if state.isupper():
         return '\033[91m' + state + '\033[0m'
     if state.startswith('done'):

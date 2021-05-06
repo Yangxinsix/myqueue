@@ -5,18 +5,8 @@ from math import ceil
 from typing import Set, List, Tuple
 
 from .task import Task
-from .config import config
 from .scheduler import Scheduler
 from .utils import str2number
-
-
-def mpi_implementation() -> str:
-    if 'mpi' in config:
-        return config['mpi']
-    mpiexec = config.get('mpiexec', 'mpiexec')
-    if b'intel' in subprocess.check_output([mpiexec, '-V']).lower():
-        return 'intel'
-    return 'openmpi'
 
 
 class SLURM(Scheduler):
@@ -24,7 +14,7 @@ class SLURM(Scheduler):
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
-        nodelist = config['nodes']
+        nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.short_name
@@ -46,8 +36,7 @@ class SLURM(Scheduler):
                 mbytes = int(mbytes * cores / nodedct['cores'])
             sbatch.append(f'--mem={mbytes}MB')
 
-        extra_args = (config.get('extra_args', []) +
-                      nodedct.get('extra_args', []))
+        extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
             sbatch += extra_args
 
@@ -70,8 +59,8 @@ class SLURM(Scheduler):
         cmd = str(task.cmd)
         if task.resources.processes > 1:
             env.append(('OMP_NUM_THREADS', '1'))
-            mpiexec = config.get('mpiexec', 'mpiexec')
-            if mpi_implementation() == 'intel':
+            mpiexec = self.config.mpiexec
+            if self.config.mpi_implementation == 'intel':
                 mpiexec += ' ' + ' '.join(f'--env {name} {val}'
                                           for name, val in env)
             else:
@@ -79,14 +68,12 @@ class SLURM(Scheduler):
                                           for name, val in env)
             if 'mpiargs' in nodedct:
                 mpiexec += ' ' + nodedct['mpiargs']
-            cmd = (mpiexec +
-                   ' ' +
-                   cmd.replace('python3',
-                               config.get('parallel_python', 'python3')))
+            cmd = mpiexec + ' ' + cmd.replace('python3',
+                                              self.config.parallel_python)
         else:
             cmd = ''.join(f'{name}={val} ' for name, val in env) + cmd
 
-        home = config['home']
+        home = self.config.home
 
         script = (
             '#!/bin/bash -l\n'
@@ -137,9 +124,6 @@ class SLURM(Scheduler):
     def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
-        host = config.get('host')
-        if host:
-            cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
         return queued

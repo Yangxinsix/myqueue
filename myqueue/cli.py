@@ -405,7 +405,7 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from myqueue.config import config, initialize_config
+    from myqueue.config import Configuration
     from myqueue.resources import Resources
     from myqueue.task import task
     from myqueue.queue import Queue
@@ -468,12 +468,12 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         # Find root folder:
         start = folders[0]
         try:
-            initialize_config(start)
+            config = Configuration.read(start)
         except ValueError:
             raise MQError(
                 f'The folder {start} is not inside a MyQueue tree.\n'
                 'You can create a tree with "cd <root-of-tree>; mq init".')
-        home = config['home']
+        home = config.home
         if verbosity > 1:
             print('Root:', home)
         for folder in folders[1:]:
@@ -531,9 +531,12 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         folders = get_home_folders()
         selection.folders = folders
         for folder in folders:
-            initialize_config(folder, force=True)
+            try:
+                config = Configuration.read(folder)
+            except FileNotFoundError:
+                continue
             print(f'{folder}:')
-            with Queue(verbosity, need_lock=False) as queue:
+            with Queue(config, verbosity, need_lock=False) as queue:
                 if args.sort:
                     reverse = args.sort.endswith('-')
                     column = args.sort.rstrip('-')
@@ -546,8 +549,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     if args.command in ['sync', 'kick'] and args.all:
         for folder in get_home_folders():
-            initialize_config(folder, force=True)
-            with Queue(verbosity, dry_run=args.dry_run) as queue:
+            config = Configuration.read(folder)
+            with Queue(config, verbosity, dry_run=args.dry_run) as queue:
                 if args.command == 'sync':
                     queue.sync()
                 else:
@@ -556,7 +559,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
-    with Queue(verbosity, need_lock, dry_run) as queue:
+    with Queue(config, verbosity, need_lock, dry_run) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
