@@ -15,6 +15,9 @@ class Configuration:
                  maximum_diskspace: float = inf,
                  mpi_implementation: str = None,
                  home: Path = None):
+        """Configuration object.
+
+        """
         self.scheduler = scheduler
         self.nodes = nodes or []
         self.parallel_python = parallel_python
@@ -26,6 +29,17 @@ class Configuration:
 
     @property
     def mpi_implementation(self) -> str:
+        """Guess MPI implementation: intel or openmpi.
+
+        The intel implementation uses::
+
+            mpiexec --env NAME VAL
+
+        instead of::
+
+            mpiexec -x NAME=VAL
+
+        """
         if self._mpi_implemenation is None:
             output = subprocess.check_output([self.mpiexec, '-V']).lower()
             if b'intel' in output:
@@ -36,6 +50,7 @@ class Configuration:
 
     @classmethod
     def read(self, start: Path = None) -> 'Configuration':
+        """Find nearest .myqueue/config.py and read it."""
         if start is None:
             start = Path.cwd()
         home = find_home_folder(start)

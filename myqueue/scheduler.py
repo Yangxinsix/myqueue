@@ -46,6 +46,7 @@ class Scheduler:
 
 
 def get_scheduler(config: Configuration) -> Scheduler:
+    """Create scheduler from config object."""
     name = config.scheduler.lower()
     if name == 'test':
         from myqueue.test.scheduler import TestScheduler
