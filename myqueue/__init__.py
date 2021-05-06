@@ -24,8 +24,8 @@ def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:
         Don't actually submit the task.
     """
     from .queue import Queue
-    from .config import initialize_config
-    from pathlib import Path
-    initialize_config(Path('.').resolve())
-    with Queue(verbosity, dry_run=dry_run) as queue:
+    from .config import Configuration
+
+    config = Configuration.read()
+    with Queue(config, verbosity, dry_run=dry_run) as queue:
         queue.submit(tasks)

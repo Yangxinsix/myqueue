@@ -335,13 +335,13 @@ class Queue(Lock):
         paths = list(self.folder.glob('*-*-*'))
         files = []
         for path in paths:
-            _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, int(id), int(state)))
+            _, str_id, state = path.name.split('-')
+            files.append((path.stat().st_ctime, int(str_id), state))
             path.unlink()
-        states = {0: State.running,
-                  1: State.done,
-                  2: State.FAILED,
-                  3: State.TIMEOUT}
+        states = {'0': State.running,
+                  '1': State.done,
+                  '2': State.FAILED,
+                  '3': State.TIMEOUT}
         for t, id, state in sorted(files):
             self.update(id, states[state], t)
 

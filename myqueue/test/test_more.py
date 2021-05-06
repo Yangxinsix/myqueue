@@ -32,24 +32,21 @@ def test_logo():
 
 
 def test_backends(mq):
-    from ..config import config, guess_configuration, guess_scheduler
-    config['nodes'] = [('abc16', {'cores': 16, 'memory': '16G'}),
-                       ('abc8', {'cores': 8, 'memory': '8G'})]
-    config['mpiexec'] = 'echo'
-    try:
-        for name in ['slurm', 'lsf', 'pbs']:
-            print(name)
-            if name == 'pbs':
-                p = Path('venv/bin/')
-                p.mkdir(parents=True)
-                (p / 'activate').write_text('')
-            config['scheduler'] = name
-            with Queue(dry_run=True, verbosity=2) as q:
-                q.submit([task('shell:echo hello', cores=24)])
-    finally:
-        config['scheduler'] = 'test'
-        del config['nodes']
-        del config['mpiexec']
+    from ..config import guess_configuration, guess_scheduler
+    config = mq.scheduler.config
+    config.nodes = [('abc16', {'cores': 16, 'memory': '16G'}),
+                    ('abc8', {'cores': 8, 'memory': '8G'})]
+    config.mpiexec = 'echo'
+    for name in ['slurm', 'lsf', 'pbs']:
+        print(name)
+        if name == 'pbs':
+            p = Path('venv/bin/')
+            p.mkdir(parents=True)
+            (p / 'activate').write_text('')
+        config.scheduler = name
+        with Queue(config, dry_run=True, verbosity=2) as q:
+            q.submit([task('shell:echo hello', cores=24)])
+
     guess_scheduler()
     guess_configuration('local')
 
@@ -66,14 +63,14 @@ def run(commands, stdout):
 
 
 def test_autoconfig(monkeypatch):
-    from ..lsf import LSF
-    from ..slurm import SLURM
+    from ..scheduler import get_scheduler
+    from ..config import Configuration
 
     monkeypatch.setattr(subprocess, 'run', run)
-    nodes, _ = SLURM().get_config()
+    nodes, _ = get_scheduler(Configuration('slurm')).get_config()
     assert nodes == [('xeon8', 8, '256000M')]
 
-    nodes, _ = LSF().get_config()
+    nodes, _ = get_scheduler(Configuration('LSF')).get_config()
     assert nodes == [('xeon8', 8, '128G')]
 
 

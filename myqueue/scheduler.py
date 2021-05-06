@@ -48,15 +48,19 @@ class Scheduler:
 def get_scheduler(config: Configuration) -> Scheduler:
     name = config.scheduler.lower()
     if name == 'test':
-        from myqueue.test.scheduler import TestScheduler as S
-    elif name == 'local':
-        from myqueue.local import LocalScheduler as S
-    elif name == 'slurm':
-        from myqueue.slurm import SLURM as S
-    elif name == 'pbs':
-        from myqueue.pbs import PBS as S
-    elif name == 'lsf':
-        from myqueue.lsf import LSF as S
-    else:
-        raise ValueError(f'Unknown scheduler: {name}')
-    return S(config)
+        from myqueue.test.scheduler import TestScheduler
+        assert TestScheduler.current_scheduler is not None
+        return TestScheduler.current_scheduler
+    if name == 'local':
+        from myqueue.local import LocalScheduler
+        return LocalScheduler(config)
+    if name == 'slurm':
+        from myqueue.slurm import SLURM
+        return SLURM(config)
+    if name == 'pbs':
+        from myqueue.pbs import PBS
+        return PBS(config)
+    if name == 'lsf':
+        from myqueue.lsf import LSF
+        return LSF(config)
+    raise ValueError(f'Unknown scheduler: {name}')

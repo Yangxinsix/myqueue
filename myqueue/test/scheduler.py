@@ -1,5 +1,5 @@
 import subprocess
-from typing import List
+from typing import List, Optional
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
@@ -8,6 +8,8 @@ from myqueue.config import Configuration
 
 
 class TestScheduler(Scheduler):
+    current_scheduler: Optional['TestScheduler'] = None
+
     def __init__(self, config: Configuration):
         Scheduler.__init__(self, config)
         self.folder = self.config.home / '.myqueue'

@@ -355,7 +355,9 @@ class Task:
             Don't actually submit the task.
         """
         from .queue import Queue
-        with Queue(verbosity, dry_run=dry_run) as queue:
+        from.config import Configuration
+        config = Configuration.read()
+        with Queue(config, verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
     def find_dependents(self, tasks: List['Task']) -> Iterator['Task']:

@@ -2,7 +2,6 @@ import subprocess
 from typing import Set, List, Tuple, Dict
 
 from .task import Task
-from .config import config
 from .scheduler import Scheduler
 from .utils import str2number
 
@@ -12,7 +11,7 @@ class LSF(Scheduler):
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
-        nodelist = config['nodes']
+        nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         name = task.cmd.short_name
@@ -30,8 +29,7 @@ class LSF(Scheduler):
         gbytes = int(str2number(mem) / 1_000_000_000 / nodedct['cores'])
         bsub += ['-R', f'rusage[mem={gbytes}G]']
 
-        extra_args = (config.get('extra_args', []) +
-                      nodedct.get('extra_args', []))
+        extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
             bsub += extra_args
 
@@ -45,11 +43,10 @@ class LSF(Scheduler):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            cmd = ('mpiexec ' +
-                   cmd.replace('python3',
-                               config.get('parallel_python', 'python3')))
+            cmd = 'mpiexec ' + cmd.replace('python3',
+                                           self.config.parallel_python)
 
-        home = config['home']
+        home = self.config.home
 
         script = (
             '#!/bin/bash -l\n'
