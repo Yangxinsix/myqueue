@@ -25,7 +25,8 @@ config = {
     'scheduler': 'test',
     'notifications': {
         'email': 'me@myqueue.org',
-        'host': 'smtp.myqueue.org'}}
+        'host': 'smtp.myqueue.org',
+        'username': 'me'}}
 """
 
 
@@ -37,7 +38,7 @@ class MQ:
         self.config = Configuration.read()
         self.scheduler = TestScheduler(self.config)
         TestScheduler.current_scheduler = self.scheduler
-        os.environ['MYQUEUE_TESTING'] = 'yes'
+        os.environ['MYQUEUE_TESTING'] = str(dir)
 
     def __call__(self, cmd: str, error: int = 0) -> None:
         args = shlex.split(cmd)

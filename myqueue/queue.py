@@ -267,7 +267,7 @@ class Queue(Lock):
         tasks = selection.select(self.tasks)
 
         if email != {State.undefined}:
-            configure_email()
+            configure_email(self.config)
             for task in tasks:
                 if self.dry_run:
                     print(task, email)
@@ -435,7 +435,7 @@ class Queue(Lock):
         """Send email and restart timed-out and out-of-memory tasks."""
         self._read()
 
-        ndct = config.get('notifications')
+        ndct = self.config.notifications
         if ndct:
             notifications = send_notification(self.tasks, **ndct)
             self.changed.update(task for task, statename in notifications)

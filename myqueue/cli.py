@@ -154,7 +154,7 @@ def main(arguments: List[str] = None) -> None:
 
 
 def _main(arguments: List[str] = None) -> int:
-    is_test = os.environ.get('MYQUEUE_TESTING') == 'yes'
+    is_test = bool(os.environ.get('MYQUEUE_TESTING'))
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
@@ -414,7 +414,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.task import task
     from myqueue.queue import Queue
     from myqueue.selection import Selection
-    from myqueue.utils import get_home_folders
+    from myqueue.utils import get_home_folders, mqhome
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon
     from myqueue.states import State
@@ -432,7 +432,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 f'The folder {root} has already been initialized!')
         mq = root / '.myqueue'
         mq.mkdir()
-        path = Path.home() / '.myqueue'
+        path = mqhome() / '.myqueue'
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())

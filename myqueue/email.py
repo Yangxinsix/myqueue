@@ -2,12 +2,13 @@ import smtplib
 import stat
 from collections import defaultdict
 from email.mime.text import MIMEText
-from getpass import getpass
+import getpass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from myqueue.config import config
+from myqueue.config import Configuration
 from myqueue.task import Task
+from myqueue.utils import mqhome
 
 
 def send_notification(tasks: List[Task],
@@ -32,7 +33,7 @@ def send_notification(tasks: List[Task],
         subject = 'MyQueue: ' + ', '.join(f'{c} {name}'
                                           for name, c in count.items())
         body = '\n'.join(lines)
-        password_file = Path.home() / f'.myqueue/{host}'
+        password_file = mqhome() / f'.myqueue/{host}'
         password = read_password(password_file)
         send_mail(subject, body,
                   to=email,
@@ -66,7 +67,7 @@ def send_mail(subject: str,
     msg['To'] = to
     data = msg.as_string()
     if host != 'test.smtp.org':
-        with smtplib.SMTP_SSL(host, 465) as s:
+        with smtplib.SMTP_SSL(host) as s:
             s.login(username, password)
             s.sendmail(msg['From'], [to], data)
 
@@ -77,8 +78,8 @@ def read_password(password_file: Path) -> str:
     return password
 
 
-def configure_email():
-    ndct = config.get('notifications', {})
+def configure_email(config: Configuration) -> None:
+    ndct = config.notifications
     if 'email' not in ndct or 'host' not in ndct:
         raise ValueError(
             "Please add 'notifications': "
@@ -87,14 +88,14 @@ def configure_email():
             '(username can be left out if it is the same as email).')
 
     host = ndct['host']
-    password_file = Path.home() / f'.myqueue/{host}'
+    password_file = mqhome() / f'.myqueue/{host}'
     if password_file.is_file():
         password = read_password(password_file)
     else:
-        password = getpass()
+        password = getpass.getpass()
         padding = (len(password) % 80) * '.'
-        password_file.write(f'{password}\n{padding}\n')
-
+        password_file.write_text(f'{password}\n{padding}\n')
+        password_file.chmod(0o600)
         if input('Would you like to send a test email? [yes] ') in {'', 'yes'}:
             send_mail('Test email from myqueue',
                       'Testing ...\n',

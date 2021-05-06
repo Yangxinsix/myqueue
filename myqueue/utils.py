@@ -13,6 +13,13 @@ from typing import IO, Union, Generator, List, Dict
 from unittest import SkipTest
 
 
+def mqhome() -> Path:
+    name = os.getenv('MYQUEUE_TESTING')
+    if name:
+        return Path(name)
+    return Path.home()
+
+
 @contextmanager
 def chdir(folder: Path) -> Generator:
     """Temporarily change directory."""
@@ -129,7 +136,8 @@ def is_inside(path1: Path, path2: Path) -> bool:
 
 
 def get_home_folders(prune=True) -> List[Path]:
-    path = Path.home() / '.myqueue' / 'folders.txt'
+    home = mqhome()
+    path = home / '.myqueue' / 'folders.txt'
     if path.is_file():
         folders = []
         for f in path.read_text().splitlines():
@@ -138,8 +146,8 @@ def get_home_folders(prune=True) -> List[Path]:
                 folders.append(folder)
         return folders
     else:
-        path.write_text(f'{path.home()}\n')
-        return [Path.home()]
+        path.write_text(f'{home}\n')
+        return [home]
 
 
 def update_readme_and_completion(test=False) -> None:

@@ -13,6 +13,7 @@ class Configuration:
                  mpiexec: str = 'mpiexec',
                  extra_args: List[str] = None,
                  maximum_diskspace: float = inf,
+                 notifications: Dict[str, str] = None,
                  mpi_implementation: str = None,
                  home: Path = None):
         """Configuration object.
@@ -24,6 +25,7 @@ class Configuration:
         self.mpiexec = mpiexec
         self.extra_args = extra_args or []
         self.maximum_diskspace = maximum_diskspace
+        self.notifications = notifications or {}
         self._mpi_implemenation = mpi_implementation
         self.home = home or Path.cwd()
 
@@ -121,9 +123,9 @@ def guess_configuration(scheduler_name: str = '',
     Creates a config.py file.
     """
     from .scheduler import get_scheduler
-    from .utils import str2number
+    from .utils import str2number, mqhome
 
-    folder = Path.home() / '.myqueue'
+    folder = mqhome() / '.myqueue'
     if not folder.is_dir():
         folder.mkdir()
 

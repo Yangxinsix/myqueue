@@ -4,16 +4,16 @@ import socket
 import subprocess
 import sys
 from time import sleep, time
-from pathlib import Path
 from typing import Tuple
 
-from .utils import get_home_folders
+from .utils import get_home_folders, mqhome
 
 T = 600  # ten minutes
 
-out = Path.home() / '.myqueue/daemon.out'
-err = Path.home() / '.myqueue/daemon.err'
-pidfile = Path.home() / '.myqueue/daemon.pid'
+mq = mqhome() / '.myqueue'
+out = mq / 'daemon.out'
+err = mq / 'daemon.err'
+pidfile = mq / 'daemon.pid'
 
 
 def alive() -> bool:
