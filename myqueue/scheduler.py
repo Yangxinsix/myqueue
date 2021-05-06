@@ -1,10 +1,13 @@
 from pathlib import Path
 from typing import Set, List, Tuple
 from myqueue.task import Task
+from myqueue.config import Configuration
 
 
 class Scheduler:
-    name: str
+    def __init__(self, config: Configuration):
+        self.config = config
+        self.name = config.scheduler.lower()
 
     def submit(self, task: Task, dry_run: bool, verbose: bool) -> None:
         pass
@@ -42,25 +45,23 @@ class Scheduler:
         raise NotImplementedError
 
 
-def get_scheduler(name: str) -> Scheduler:
-    name = name.lower()
+def get_scheduler(config: Configuration) -> Scheduler:
+    """Create scheduler from config object."""
+    name = config.scheduler.lower()
     if name == 'test':
         from myqueue.test.scheduler import TestScheduler
         assert TestScheduler.current_scheduler is not None
-        scheduler: Scheduler = TestScheduler.current_scheduler
-    elif name == 'local':
+        return TestScheduler.current_scheduler
+    if name == 'local':
         from myqueue.local import LocalScheduler
-        scheduler = LocalScheduler()
-    elif name == 'slurm':
+        return LocalScheduler(config)
+    if name == 'slurm':
         from myqueue.slurm import SLURM
-        scheduler = SLURM()
-    elif name == 'pbs':
+        return SLURM(config)
+    if name == 'pbs':
         from myqueue.pbs import PBS
-        scheduler = PBS()
-    elif name == 'lsf':
+        return PBS(config)
+    if name == 'lsf':
         from myqueue.lsf import LSF
-        scheduler = LSF()
-    else:
-        assert 0, name
-    scheduler.name = name
-    return scheduler
+        return LSF(config)
+    raise ValueError(f'Unknown scheduler: {name}')

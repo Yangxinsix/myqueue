@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Set
 
 from .task import Task
-from .config import config
 from .scheduler import Scheduler
 
 
@@ -15,7 +14,7 @@ class PBS(Scheduler):
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
-        nodelist = config['nodes']
+        nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
         processes = task.resources.processes
@@ -50,12 +49,11 @@ class PBS(Scheduler):
             if 'mpiargs' in nodedct:
                 mpiexec += nodedct['mpiargs'] + ' '
             cmd = mpiexec + cmd.replace('python3',
-                                        config.get('parallel_python',
-                                                   'python3'))
+                                        self.config.parallel_python)
         else:
             cmd = 'MPLBACKEND=Agg ' + cmd
 
-        home = config['home']
+        home = self.config.home
 
         script = '#!/bin/bash -l\n'
 
@@ -93,9 +91,6 @@ class PBS(Scheduler):
     def get_ids(self) -> Set[int]:
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
-        host = config.get('host')
-        if host:
-            cmd[:0] = ['ssh', host]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {int(line.split()[0].split(b'.')[0])
                   for line in p.stdout.splitlines()

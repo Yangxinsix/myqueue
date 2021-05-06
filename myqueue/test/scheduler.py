@@ -1,20 +1,20 @@
 import subprocess
-from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
 from myqueue.states import State
+from myqueue.config import Configuration
 
 
 class TestScheduler(Scheduler):
     current_scheduler: Optional['TestScheduler'] = None
 
-    def __init__(self, folder: Path):
-        self.folder = folder / '.myqueue'
+    def __init__(self, config: Configuration):
+        Scheduler.__init__(self, config)
+        self.folder = self.config.home / '.myqueue'
         self.tasks: List[Task] = []
         self.number = 0
-        Scheduler.__init__(self)
 
     def submit(self,
                task: Task,
