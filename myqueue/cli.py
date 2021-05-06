@@ -531,7 +531,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         folders = get_home_folders()
         selection.folders = folders
         for folder in folders:
-            config = Configuration.read(folder)
+            try:
+                config = Configuration.read(folder)
+            except FileNotFoundError:
+                continue
             print(f'{folder}:')
             with Queue(config, verbosity, need_lock=False) as queue:
                 if args.sort:
