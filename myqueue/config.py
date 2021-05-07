@@ -24,8 +24,25 @@ class Configuration:
         self.mpiexec = mpiexec
         self.extra_args = extra_args or []
         self.maximum_diskspace = maximum_diskspace
-        self._mpi_implemenation = mpi_implementation
+        self._mpi_implementation = mpi_implementation
         self.home = home or Path.cwd()
+
+    def __repr__(self) -> str:
+        args = ', '.join(f'{name.lstrip("_")}={getattr(self, name)!r}'
+                         for name in self.__dict__)
+        return f'Configuration({args})'
+
+    def print(self):
+        for key, value in self.__dict__.items():
+            if key == '_mpi_implementation':
+                key = 'mpi_implementation'
+                value = self.mpi_implementation
+            elif key == 'nodes':
+                print('nodes')
+                for name, dct in value:
+                    print(f'  {name:10}{dct}')
+                continue
+            print(f'{key:18} {value}')
 
     @property
     def mpi_implementation(self) -> str:
@@ -40,13 +57,13 @@ class Configuration:
             mpiexec -x NAME=VAL
 
         """
-        if self._mpi_implemenation is None:
+        if self._mpi_implementation is None:
             output = subprocess.check_output([self.mpiexec, '-V']).lower()
             if b'intel' in output:
-                self._mpi_implemenation = 'intel'
+                self._mpi_implementation = 'intel'
             else:
-                self._mpi_implemenation = 'openmpi'
-        return self._mpi_implemenation
+                self._mpi_implementation = 'openmpi'
+        return self._mpi_implementation
 
     @classmethod
     def read(self, start: Path = None) -> 'Configuration':
