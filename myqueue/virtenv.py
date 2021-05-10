@@ -1,3 +1,4 @@
+"""Automatically activate venv's."""
 from pathlib import Path
 from typing import List, Dict
 import warnings

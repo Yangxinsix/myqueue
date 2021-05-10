@@ -137,7 +137,7 @@ def is_inside(path1: Path, path2: Path) -> bool:
 
 
 def get_home_folders(prune=True) -> List[Path]:
-    """Return known ".myqueue/" folders."""
+    """Return list of all known .myqueue/ folders."""
     home = mqhome()
     path = home / '.myqueue' / 'folders.txt'
     if path.is_file():
