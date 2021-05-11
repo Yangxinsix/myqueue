@@ -78,7 +78,6 @@ class Configuration:
         dct: Dict[str, Dict[str, Any]] = {}
         exec(compile(config_file.read_text(), str(config_file), 'exec'), dct)
         cfg = dct['config']
-
         if 'scheduler' not in cfg:
             raise ValueError(
                 'Please specify type of scheduler in your '
@@ -90,7 +89,7 @@ class Configuration:
             warnings.warn(
                 'The "mpi" keyword has been deprecated. '
                 'Please remove it or rename to "mpi_implementation"')
-            cfg['mpi_implementation'] = dct.pop('mpi')
+            cfg['mpi_implementation'] = cfg.pop('mpi')
 
         config = Configuration(**cfg, home=home)
         return config
