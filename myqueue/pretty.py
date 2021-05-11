@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from myqueue.task import Task
+from myqueue.utils import mqhome
 
 
 def colored(state: str) -> str:
@@ -33,7 +34,7 @@ def pprint(tasks: List[Task],
     if not tasks:
         return
 
-    home = str(Path.home()) + '/'
+    home = str(mqhome()) + '/'
     cwd = str(Path.cwd()) + '/'
 
     if columns.endswith('-'):

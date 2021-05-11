@@ -31,11 +31,12 @@ The configuration file uses Python syntax to define a dictionary called
 Key                    Description
 =====================  ======================  ========
 ``scheduler``          :ref:`scheduler`        required
-``nodes``              :ref:`nodes`            required
+``nodes``              :ref:`nodes`            optional
 ``mpiexec``            :ref:`mpiexec`          optional
 ``parallel_python``    :ref:`parallel_python`  optional
 ``extra_args``         :ref:`extra_args`       optional
 ``maximum_diskspace``  :ref:`max_disk`         optional
+``notifications``      :ref:`notifications`    optional
 =====================  ======================  ========
 
 See details below.
@@ -197,3 +198,18 @@ state. If you submit more that 20 tasks then some of them will be put in the
 moved from ``hold`` to ``queued``.  Tasks that fail will be counted as still
 running, so you will have to ``mq rm`` those and also remember to remove big
 files left behind.
+
+
+.. notifications:
+
+Notifications
+=============
+
+::
+
+    config = {
+        ...,
+        'notifications': {'email': 'you@somewhere.org',
+                          'host': 'smtp.somewhere.org'
+                          'username': 'name'},
+        ...}

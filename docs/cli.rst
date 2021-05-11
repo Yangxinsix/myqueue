@@ -384,21 +384,24 @@ optional arguments:
 Modify: Modify task(s)
 ----------------------
 
-usage: mq modify [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
-                 [-q] [-T] [-r]
-                 newstate [folder ...]
+usage: mq modify [-h] [-E STATES] [-N NEW_STATE] [-s qhrdFCTMaA] [-i ID]
+                 [-n NAME] [-e ERROR] [-z] [-v] [-q] [-T] [-r]
+                 [folder ...]
 
 Modify task(s).
 
 The following state changes are allowed: h->q, q->h, F->M and F->T.
 
-newstate:
-    New state (one of the letters: qhrdFCTM).
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
 optional arguments:
   -h, --help            show this help message and exit
+  -E STATES, --email STATES
+                        Send email when state changes to one of the specified
+                        states (one or more of the letters: rdFCTMA).
+  -N NEW_STATE, --new-state NEW_STATE
+                        New state (one of the letters: qhrdFCTM).
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",

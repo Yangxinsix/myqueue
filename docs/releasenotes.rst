@@ -9,7 +9,8 @@ Release notes
 Next release
 ============
 
-* ...
+* Email notifications: `mq modify ... -N dA`.  See :ref:`modify` and
+  :ref:`notifications`.
 
 
 Version 21.4.2

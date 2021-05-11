@@ -154,7 +154,7 @@ def main(arguments: List[str] = None) -> None:
 
 
 def _main(arguments: List[str] = None) -> int:
-    is_test = os.environ.get('MYQUEUE_TESTING') == 'yes'
+    is_test = bool(os.environ.get('MYQUEUE_TESTING'))
     parser = argparse.ArgumentParser(
         prog='mq',
         formatter_class=Formatter,
@@ -250,7 +250,11 @@ def _main(arguments: List[str] = None) -> int:
               help='Write <task-name>.state file when task has finished.')
 
         if cmd == 'modify':
-            a('newstate', help='New state (one of the letters: qhrdFCTM).')
+            a('-E', '--email', default='u', metavar='STATES',
+              help='Send email when state changes to one of the specified '
+              'states (one or more of the letters: rdFCTMA).')
+            a('-N', '--new-state', default='u',
+              help='New state (one of the letters: qhrdFCTM).')
 
         if cmd == 'workflow':
             a('script', help='Submit tasks from workflow script.')
@@ -410,7 +414,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.task import task
     from myqueue.queue import Queue
     from myqueue.selection import Selection
-    from myqueue.utils import get_home_folders
+    from myqueue.utils import get_home_folders, mqhome
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon
     from myqueue.states import State
@@ -428,7 +432,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 f'The folder {root} has already been initialized!')
         mq = root / '.myqueue'
         mq.mkdir()
-        path = Path.home() / '.myqueue'
+        path = mqhome() / '.myqueue'
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
@@ -484,25 +488,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
-        states: Set[State] = set()
-        for s in args.states if args.states is not None else default:
-            if s == 'a':
-                states.update([State.queued,
-                               State.hold,
-                               State.running,
-                               State.done])
-            elif s == 'A':
-                states.update([State.FAILED,
-                               State.CANCELED,
-                               State.TIMEOUT,
-                               State.MEMORY])
-            else:
-                try:
-                    states.add(State(s))
-                except ValueError:
-                    raise MQError(
-                        'Unknown state: ' + s +
-                        '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
+        states = State.str2states(args.states
+                                  if args.states is not None
+                                  else default)
 
         ids: Optional[Set[int]] = None
         if args.id:
@@ -602,8 +590,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.run(newtasks)
 
         elif args.command == 'modify':
-            state = State(args.newstate)
-            queue.modify(selection, state)
+            state = State(args.new_state)
+            queue.modify(selection, state, State.str2states(args.email))
 
         elif args.command == 'workflow':
             tasks = workflow(args, folders, verbosity)

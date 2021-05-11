@@ -1,8 +1,23 @@
 from enum import Enum
+from typing import Set
 
 
 class State(Enum):
     """Task-state enum.
+
+    The following 9 states are defined:
+
+    >>> for state in State:
+    ...     state
+    <State.undefined: 'u'>
+    <State.queued: 'q'>
+    <State.hold: 'h'>
+    <State.running: 'r'>
+    <State.done: 'd'>
+    <State.FAILED: 'F'>
+    <State.TIMEOUT: 'T'>
+    <State.MEMORY: 'M'>
+    <State.CANCELED: 'C'>
 
     >>> State.queued == State.queued
     True
@@ -50,3 +65,32 @@ class State(Enum):
         False
         """
         return self.name.isupper()
+
+    @staticmethod
+    def str2states(s: str) -> Set['State']:
+        """Convert single character state string to set of State objects.
+
+        >>> names = [state.name for state in State.str2states('rdA')]
+        >>> sorted(names)
+        ['CANCELED', 'FAILED', 'MEMORY', 'TIMEOUT', 'done', 'running']
+        """
+        states: Set[State] = set()
+        for c in s:
+            if c == 'a':
+                states.update([State.queued,
+                               State.hold,
+                               State.running,
+                               State.done])
+            elif c == 'A':
+                states.update([State.FAILED,
+                               State.CANCELED,
+                               State.TIMEOUT,
+                               State.MEMORY])
+            else:
+                try:
+                    states.add(State(c))
+                except ValueError:
+                    raise ValueError(
+                        'Unknown state: ' + s +
+                        '.  Must be one of q, h, r, d, F, C, T, M, a or A.')
+        return states

@@ -13,6 +13,14 @@ from typing import IO, Union, Generator, List, Dict
 from unittest import SkipTest
 
 
+def mqhome() -> Path:
+    """Don't use "~/" when testing."""
+    name = os.getenv('MYQUEUE_TESTING')
+    if name:
+        return Path(name)
+    return Path.home()
+
+
 @contextmanager
 def chdir(folder: Path) -> Generator:
     """Temporarily change directory."""
@@ -130,7 +138,8 @@ def is_inside(path1: Path, path2: Path) -> bool:
 
 def get_home_folders(prune=True) -> List[Path]:
     """Return list of all known .myqueue/ folders."""
-    path = Path.home() / '.myqueue' / 'folders.txt'
+    home = mqhome()
+    path = home / '.myqueue' / 'folders.txt'
     if path.is_file():
         folders = []
         for f in path.read_text().splitlines():
@@ -139,11 +148,11 @@ def get_home_folders(prune=True) -> List[Path]:
                 folders.append(folder)
         return folders
     else:
-        path.write_text(f'{path.home()}\n')
-        return [Path.home()]
+        path.write_text(f'{home}\n')
+        return [home]
 
 
-def update_completion(test=False) -> None:
+def update_readme_and_completion(test=False) -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
@@ -300,6 +309,7 @@ def convert_done_files() -> None:
         os.unlink(path)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
+    assert sys.version_info >= (3, 9)
     os.environ['COLUMNS'] = '80'
-    update_completion()
+    update_readme_and_completion()

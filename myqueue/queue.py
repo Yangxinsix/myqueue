@@ -21,6 +21,7 @@ from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.utils import Lock, plural
 from myqueue.states import State
+from myqueue.email import send_notification, configure_email
 from myqueue.pretty import pprint
 from myqueue.submitting import submit_tasks
 
@@ -259,33 +260,46 @@ class Queue(Lock):
 
     def modify(self,
                selection: Selection,
-               newstate: State) -> None:
+               newstate: State,
+               email: Set[State]) -> None:
         """Modify task(s)."""
         self._read()
         tasks = selection.select(self.tasks)
 
-        for task in tasks:
-            if task.state == 'hold' and newstate == 'queued':
+        if email != {State.undefined}:
+            configure_email(self.config)
+            for task in tasks:
                 if self.dry_run:
-                    print('Release:', task)
+                    print(task, email)
                 else:
-                    self.scheduler.release_hold(task)
-            elif task.state == 'queued' and newstate == 'hold':
-                if self.dry_run:
-                    print('Hold:', task)
+                    task.notifications = ''.join(state.value
+                                                 for state in email)
+                    self.changed.add(task)
+
+        if newstate != State.undefined:
+            for task in tasks:
+                if task.state == 'hold' and newstate == 'queued':
+                    if self.dry_run:
+                        print('Release:', task)
+                    else:
+                        self.scheduler.release_hold(task)
+                elif task.state == 'queued' and newstate == 'hold':
+                    if self.dry_run:
+                        print('Hold:', task)
+                    else:
+                        self.scheduler.hold(task)
+                elif task.state == 'FAILED' and newstate in ['MEMORY',
+                                                             'TIMEOUT']:
+                    if self.dry_run:
+                        print('FAILED ->', newstate, task)
+                    else:
+                        task.state = newstate
+                        self.changed.add(task)
                 else:
-                    self.scheduler.hold(task)
-            elif task.state == 'FAILED' and newstate in ['MEMORY', 'TIMEOUT']:
-                if self.dry_run:
-                    print('FAILED ->', newstate, task)
-                else:
-                    task.state = newstate
-                    task.write_state_file()
-            else:
-                raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
-            print(f'{task.state} -> {newstate}: {task}')
-            task.state = newstate
-            self.changed.add(task)
+                    raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
+                print(f'{task.state} -> {newstate}: {task}')
+                task.state = newstate
+                self.changed.add(task)
 
     def resubmit(self,
                  selection: Selection,
@@ -418,8 +432,14 @@ class Queue(Lock):
                     self.changed.add(task)
 
     def kick(self) -> int:
-        """Restart timed-out and out-of-memory tasks."""
+        """Send email and restart timed-out and out-of-memory tasks."""
         self._read()
+
+        ndct = self.config.notifications
+        if ndct:
+            notifications = send_notification(self.tasks, **ndct)
+            self.changed.update(task for task, statename in notifications)
+
         tasks = []
         for task in self.tasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:

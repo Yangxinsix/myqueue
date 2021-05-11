@@ -35,7 +35,7 @@ def test_fail(mq):
     mq('resubmit -sF .')
     mq.wait()
     assert mq.states() == 'CCF'
-    mq('modify -s F T .')
+    mq('modify -s F -N T .')
     assert mq.states() == 'CCT'
 
 
