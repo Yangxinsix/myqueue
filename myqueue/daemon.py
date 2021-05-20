@@ -110,7 +110,7 @@ def perform_action(action: str) -> int:
             if host == socket.gethostname():
                 os.kill(pid, signal.SIGWINCH)
             else:
-                print('You have to be on {host} in order to stop the daemon')
+                print(f'You have to be on {host} in order to stop the daemon')
                 return 1
         else:
             print('Not running')
