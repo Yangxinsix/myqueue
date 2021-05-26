@@ -19,11 +19,11 @@
 
 # -- Project information -----------------------------------------------------
 
-# import re
+import datetime
 from myqueue import __version__ as version
 
 project = 'MyQueue'
-copyright = '2018-2020, J. J. Mortensen'
+copyright = f'2018-{datetime.date.today().year}, J. J. Mortensen'
 author = 'J. J. Mortensen'
 # with open('../myqueue/__init__.py') as fd:
 #     version = re.search("__version__ = '(.*)'", fd.read()).group(1)
