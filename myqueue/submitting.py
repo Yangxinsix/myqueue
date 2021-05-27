@@ -31,12 +31,12 @@ def find_dependency(dname: TaskName,
         if task.state.is_bad():
             if force:
                 if dname not in new:
-                    raise DependencyError()
+                    raise DependencyError(dname)
                 task = new[dname]
     elif dname in new:
         task = new[dname]
     else:
-        raise DependencyError()
+        raise DependencyError(dname)
     return task
 
 
