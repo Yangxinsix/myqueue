@@ -7,6 +7,7 @@ command objects.
 """
 from typing import List, Dict, Any, Union, Optional, Type
 from pathlib import Path
+from shlex import quote
 
 from .resources import Resources
 
@@ -178,7 +179,8 @@ class PythonModule(Command):
         self.short_name = mod
 
     def __str__(self) -> str:
-        return ' '.join(['python3', '-m', self.mod] + self.args)
+        return ' '.join(['python3', '-m', self.mod] +
+                        [quote(arg) for arg in self.args])
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
