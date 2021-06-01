@@ -3,9 +3,11 @@ tests:
   script:
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install -e .
-    - echo "import covergageeee; print()" > cov.pth
     - pwd
     - ls -ltra
+    - echo $PYTHONPATH
+    - echo $HOME
+    - echo "import covergageeee; print()" > $PYTHONPATH/cov.pth
     - export COVERAGE_PROCESS_START=cov.cfg
     - coverage run -p --source=myqueue -m pytest -v
     - coverage combine -a .coverage.*
