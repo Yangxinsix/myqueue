@@ -3,7 +3,12 @@ tests:
   script:
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install -e .
-    - coverage run --source=myqueue -m pytest -v
+    - echo "import covergageeee; print()" > cov.pth
+    - pwd
+    - ls -ltra
+    - export COVERAGE_PROCESS_START=cov.cfg
+    - coverage run -p --source=myqueue -m pytest -v
+    - coverage combine -a .coverage.*
     - coverage report -i --fail-under=83
     - mypy -p myqueue
     - flake8 myqueue
