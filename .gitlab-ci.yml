@@ -3,12 +3,14 @@ tests:
   script:
     - python -m venv venv
     - . venv/bin/activate
+    - pip install -U pip
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install -e .
     - pwd
     - ls -ltra
     - echo $HOME
-    - echo "import covergageeee; print()" > cov.pth
+    - echo "import covergageeee; print()" > venv/lib/python3.9/site-packages/cov.pth
+    - touch cov.cfg
     - export COVERAGE_PROCESS_START=/builds/myqueue/myqueue/cov.cfg
     - coverage run -p --source=myqueue -m pytest -v
     - coverage combine -a .coverage.*

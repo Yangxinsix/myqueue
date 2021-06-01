@@ -1,4 +1,4 @@
-"""User configurations (handling of .myqueue/config.py files)."""
+"""User configuration (handling of .myqueue/config.py files)."""
 import subprocess
 import warnings
 from math import inf
