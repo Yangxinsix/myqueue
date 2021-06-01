@@ -7,6 +7,12 @@ from ..utils import chdir
 LOCAL = True
 
 
+def test_submit_args(mq):
+    mq('''submit "myqueue.test.mod --opt={...,x={'y':(1,2)}"''')
+    mq.wait()
+    assert mq.states() == 'd'
+
+
 def test_submit(mq):
     f = Path('folder')
     f.mkdir()
