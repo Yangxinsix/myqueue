@@ -1,14 +1,8 @@
 import os
 from pathlib import Path
 
-from myqueue.task import task
 from myqueue.test.flow1 import workflow
 from myqueue.test.hello import workflow as hello
-
-
-def create_tasks():
-    """Old style."""
-    return [task('somepackage.somemodule')]
 
 
 def test_flow1(mq):

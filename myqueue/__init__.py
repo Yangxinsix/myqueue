@@ -5,7 +5,7 @@ The version number and the submit() function is defined here.
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .task import Task  # noqa
+    from .task import Task  # noqa  # pragma: no cover
 
 
 __version__ = '21.4.3b1'

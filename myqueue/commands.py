@@ -42,6 +42,9 @@ class Command:
         import subprocess
         subprocess.run(str(self), shell=True, check=True)
 
+    def quoted_args(self) -> List[str]:
+        return [quote(arg) for arg in self.args]
+
 
 def create_command(cmd: str,
                    args: List[str] = [],
@@ -91,7 +94,7 @@ class ShellCommand(Command):
         self.short_name = cmd
 
     def __str__(self) -> str:
-        return ' '.join([self.cmd[6:]] + self.args)
+        return ' '.join([self.cmd[6:]] + self.quoted_args())
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
@@ -106,7 +109,7 @@ class ShellScript(Command):
         self.short_name = cmd
 
     def __str__(self) -> str:
-        return ' '.join(['sh', self.cmd] + self.args)
+        return ' '.join(['sh', self.cmd] + self.quoted_args())
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
@@ -131,7 +134,7 @@ class PythonScript(Command):
         self.short_name = path.name
 
     def __str__(self) -> str:
-        return 'python3 ' + ' '.join([self.script] + self.args)
+        return 'python3 ' + ' '.join([self.script] + self.quoted_args())
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
@@ -179,8 +182,7 @@ class PythonModule(Command):
         self.short_name = mod
 
     def __str__(self) -> str:
-        return ' '.join(['python3', '-m', self.mod] +
-                        [quote(arg) for arg in self.args])
+        return ' '.join(['python3', '-m', self.mod] + self.quoted_args())
 
     def todict(self) -> Dict[str, Any]:
         return {**self.dct,
