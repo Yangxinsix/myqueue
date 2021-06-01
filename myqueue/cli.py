@@ -604,7 +604,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.kick()
 
         elif args.command == 'info':
-            queue.info(args.id)
+            info(queue, args.id)
 
         else:
             assert False
