@@ -1,14 +1,15 @@
 tests:
   image: python:3.9
   script:
+    - python -m venv venv
+    - . venv/bin/activate
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install -e .
     - pwd
     - ls -ltra
-    - echo $PYTHONPATH
     - echo $HOME
-    - echo "import covergageeee; print()" > $PYTHONPATH/cov.pth
-    - export COVERAGE_PROCESS_START=cov.cfg
+    - echo "import covergageeee; print()" > cov.pth
+    - export COVERAGE_PROCESS_START=/builds/myqueue/myqueue/cov.cfg
     - coverage run -p --source=myqueue -m pytest -v
     - coverage combine -a .coverage.*
     - coverage report -i --fail-under=83
