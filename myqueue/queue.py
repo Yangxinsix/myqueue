@@ -7,7 +7,6 @@ File format versions:
 
 """
 import json
-import os
 import time
 from collections import defaultdict
 from typing import Set, List, Dict, Optional, Sequence
