@@ -25,7 +25,7 @@ Sub-commands
     * - :ref:`remove <remove>` (rm)
       - Remove or cancel task(s)
     * - :ref:`info <info>`
-      - Show detailed information about task
+      - Show detailed information about MyQueue or a task
     * - :ref:`workflow <workflow>`
       - Submit tasks from Python script or several scripts matching pattern
     * - :ref:`run <run>`
@@ -258,21 +258,20 @@ optional arguments:
 
 .. _info:
 
-Info: Show detailed information about task
-------------------------------------------
+Info: Show detailed information about MyQueue or a task
+-------------------------------------------------------
 
-usage: mq info [-h] [-v] [-q] [-T] id [folder]
+usage: mq info [-h] [-v] [-q] [-T] [id]
 
-Show detailed information about task.
+Show detailed information about MyQueue or a task.
 
 Example::
 
-    $ mq info 12345
+    $ mq info  # Show information about MyQueue
+    $ mq info 12345  # Show information about task with id=12345
 
 id:
     Task ID.
-folder:
-    Show task from this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help       show this help message and exit
