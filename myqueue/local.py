@@ -7,6 +7,7 @@ from typing import Any, Set, Tuple, List
 from .scheduler import Scheduler
 from .task import Task
 from .config import Configuration
+from .states import State
 
 
 class LocalSchedulerError(Exception):
@@ -28,17 +29,17 @@ class LocalScheduler(Scheduler):
     def cancel(self, task: Task) -> None:
         self.send('cancel', task.id)
 
-    def hold(self, task) -> None:
+    def hold(self, task: Task) -> None:
         self.send('hold', task.id)
 
-    def release_hold(self, task) -> None:
+    def release_hold(self, task: Task) -> None:
         self.send('release', task.id)
 
     def get_ids(self) -> Set[int]:
         (ids,) = self.send('list')
         return ids
 
-    def send(self, *args) -> Tuple[Any, ...]:
+    def send(self, *args: Any) -> Tuple[Any, ...]:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(('127.0.0.1', 8888))
             b = pickle.dumps(args)
@@ -56,14 +57,13 @@ class LocalScheduler(Scheduler):
 
 
 class Server:
-    def __init__(self):
+    def __init__(self) -> None:
         self.next_id = 1
-        self.processes = {}
-        self.tasks = []
+        self.tasks: List[Task] = []
         self.config = Configuration.read()
         self.folder = self.config.home / '.myqueue'
 
-    async def main(self):
+    async def main(self) -> None:
         server = await asyncio.start_server(
             self.recv, '127.0.0.1', 8888)
 
@@ -72,7 +72,7 @@ class Server:
         async with server:  # type: ignore
             await server.serve_forever()
 
-    async def recv(self, reader, writer):
+    async def recv(self, reader: Any, writer: Any) -> None:
 
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
@@ -89,7 +89,7 @@ class Server:
         await writer.drain()
         writer.close()
         self.kick()
-        print(self.next_id, self.processes, self.tasks)
+        print(self.next_id, self.tasks)
 
     def kick(self) -> None:
         for task in self.tasks:
@@ -104,7 +104,7 @@ class Server:
 
         asyncio.create_task(self.run(task))
 
-    async def run(self, task):
+    async def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
 
@@ -117,11 +117,10 @@ class Server:
         cmd = f'{cmd} 2> {err} > {out}'
         proc = await asyncio.create_subprocess_shell(
             cmd, cwd=task.folder)
-        self.processes[id] = proc
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
         loop.call_later(tmax, self.terminate, proc, task)
-        task.state = 'running'
+        task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
         await proc.wait()
         self.tasks.remove(task)
@@ -141,10 +140,10 @@ class Server:
         (self.folder / f'local-{task.id}-{state}').write_text('')
         self.kick()
 
-    def terminate(self, proc, task):
+    def terminate(self, proc: Any, task: Task) -> None:
         if proc.returncode is None:
             proc.terminate()
-            task.state = 'TIMEOUT'
+            task.state = State.TIMEOUT
 
 
 if __name__ == '__main__':

@@ -3,10 +3,11 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Union
+from typing import (IO, TYPE_CHECKING, Any, Dict, Iterator, List, Optional,
+                    Union)
 from warnings import warn
 
-from myqueue.commands import Command, create_command, WorkflowTask
+from myqueue.commands import Command, WorkflowTask, create_command
 from myqueue.resources import Resources, T
 from myqueue.states import State
 
@@ -184,7 +185,7 @@ class Task:
             'error': self.error}
 
     def tocsv(self,
-              fd=sys.stdout,
+              fd: IO[str] = sys.stdout,
               write_header: bool = False) -> None:
         if write_header:
             print('# id,folder,cmd,resources,state,restart,workflow,'
@@ -382,7 +383,7 @@ class Task:
             task.state = State.CANCELED
             task.tstop = t
 
-    def run(self):
+    def run(self) -> None:
         self.result = self.cmd.run()
 
 

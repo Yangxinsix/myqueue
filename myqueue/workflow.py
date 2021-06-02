@@ -2,7 +2,9 @@ import ast
 import runpy
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, Type, Sequence
+from types import TracebackType
+
 
 from myqueue.caching import Cached, cached_function
 from myqueue.commands import (Command, PythonModule, PythonScript,
@@ -12,11 +14,12 @@ from myqueue.resources import Resources
 from .progress import progress_bar
 from .task import UNSPECIFIED, Task
 from .utils import chdir, plural
+from argparse import Namespace
 
 DEFAULT_VERBOSITY = 1
 
 
-def workflow(args,
+def workflow(args: Namespace,
              folders: List[Path],
              verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow script(s) and folders."""
@@ -47,7 +50,8 @@ def workflow(args,
 WorkflowFunction = Callable[[], None]
 
 
-def get_workflow_function(path: Path, kwargs={}) -> WorkflowFunction:
+def get_workflow_function(path: Path,
+                          kwargs: Dict[str, Any] = {}) -> WorkflowFunction:
     """Get workflow function from script."""
     module = runpy.run_path(str(path))  # type: ignore # bug in typeshed?
     try:
@@ -83,7 +87,7 @@ def workflow_from_scripts(
 
 
 def workflow_from_script(script: Path,
-                         kwargs,
+                         kwargs: Dict[str, Any],
                          folders: List[Path],
                          verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow defined in python script."""
@@ -156,10 +160,9 @@ class StopRunning(Exception):
 
 class RunHandle:
     """Result of calling run().  Can be used as a context manager."""
-    def __init__(self, task, runner):
+    def __init__(self, task: Task, runner: 'Runner'):
         self.task = task
         self.runner = runner
-        self._result = UNSPECIFIED
 
     @property
     def result(self) -> 'Result':
@@ -167,6 +170,7 @@ class RunHandle:
         result = self.task.result
         if result is UNSPECIFIED:
             return Result(self.task)
+        assert not isinstance(result, str)
         return result
 
     @property
@@ -174,24 +178,27 @@ class RunHandle:
         """Has task been successfully finished?"""
         return self.task.is_done()
 
-    def __enter__(self):
+    def __enter__(self) -> 'RunHandle':
         self.runner.dependencies.append(self.task)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_val: BaseException,
+                 exc_tb: TracebackType) -> None:
         task = self.runner.dependencies.pop()
         assert task is self.task
 
 
 class Result:
     """Result object for a task - used for finding dependencies."""
-    def __init__(self, task):
+    def __init__(self, task: Task):
         self.task = task
 
-    def __getattr__(self, attr) -> 'Result':
+    def __getattr__(self, attr: str) -> 'Result':
         return self
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         raise StopCollecting
 
     __gt__ = __lt__
@@ -215,28 +222,32 @@ def get_name(func: Callable) -> str:
 
 class ResourceHandler:
     """Resource decorator and context manager."""
-    def __init__(self, kwargs, runner):
+    def __init__(self, kwargs: Dict[str, Any], runner: 'Runner'):
         self.kwargs = kwargs
         self.runner = runner
         self.old_kwargs: Dict
 
-    def __call__(self, workflow_function):
-        def new():
+    def __call__(self, workflow_function: Callable[[], Any]
+                 ) -> Callable[[], Any]:
+        def new() -> Any:
             with self:
                 return workflow_function()
         return new
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.old_kwargs = self.runner.resource_kwargs
         self.runner.resource_kwargs = {**self.old_kwargs, **self.kwargs}
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self,
+                 exc_type: Type[BaseException],
+                 exc_val: BaseException,
+                 exc_tb: TracebackType) -> None:
         self.runner.resource_kwargs = self.old_kwargs
 
 
 class Runner:
     """Wrapper for collecting tasks from workflow function."""
-    def __init__(self):
+    def __init__(self) -> None:
         self.tasks: Optional[List[Task]] = None
         self.dependencies: List[Task] = []
         self.resource_kwargs = {'tmax': '10m',
@@ -254,8 +265,8 @@ class Runner:
             module: str = None,
             shell: str = None,
             name: str = '',
-            args=[],
-            kwargs={},
+            args: Sequence[Any] = [],
+            kwargs: Dict[str, Any] = {},
             deps: List[RunHandle] = [],
             tmax: str = None,
             cores: int = None,
@@ -336,7 +347,7 @@ class Runner:
         return RunHandle(task, self)
 
     def extract_dependencies(self,
-                             args: List[Any],
+                             args: Sequence[Any],
                              kwargs: Dict[str, Any],
                              deps: List[RunHandle]) -> List[Path]:
         """Find dependencies on other tasks."""
@@ -348,7 +359,7 @@ class Runner:
                 tasks.add(thing.task)
         return [task.dname for task in tasks]
 
-    def wrap(self, function: Callable, **run_kwargs) -> Callable:
+    def wrap(self, function: Callable, **run_kwargs: Any) -> Callable:
         """Wrap a function as a task.
 
         Takes the same keyword arguments as `run`
@@ -360,7 +371,7 @@ class Runner:
             result = wrap(func, ...)(*args, **kwargs)
 
         """
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Result:
             handle = self.run(function=function,
                               args=args,
                               kwargs=kwargs,
@@ -409,13 +420,13 @@ def create_task(function: Callable = None,
                 module: str = None,
                 shell: str = None,
                 name: str = '',
-                args: List[Any] = [],
+                args: Sequence[Any] = [],
                 kwargs: Dict[str, Any] = {},
                 deps: List[Path] = [],
                 workflow_script: Path = None,
                 folder: Path = Path('.'),
                 restart: int = 0,
-                **resource_kwargs) -> Task:
+                **resource_kwargs: Any) -> Task:
     """Create a Task object."""
     if sum(arg is not None
            for arg in [function, module, script, shell]) != 1:

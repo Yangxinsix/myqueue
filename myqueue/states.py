@@ -73,6 +73,10 @@ class State(Enum):
         >>> names = [state.name for state in State.str2states('rdA')]
         >>> sorted(names)
         ['CANCELED', 'FAILED', 'MEMORY', 'TIMEOUT', 'done', 'running']
+        >>> State.str2states('x')
+        Traceback (most recent call last):
+          ...
+        ValueError: Unknown state: x.  Must be one of q, ..., a or A.
         """
         states: Set[State] = set()
         for c in s:

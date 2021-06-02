@@ -4,7 +4,7 @@ import socket
 import subprocess
 import sys
 from time import sleep, time
-from typing import Tuple
+from typing import Tuple, Any
 
 from .utils import get_home_folders, mqhome
 
@@ -52,7 +52,7 @@ def start_daemon() -> bool:
     return True
 
 
-def exit(signum, frame):
+def exit(signum: int, frame: Any) -> None:
     pidfile.unlink()
     sys.exit()
 

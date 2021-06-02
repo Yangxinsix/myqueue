@@ -20,7 +20,7 @@ mq: List[List[Union[str, int]]] = [
      'c', -50, 0, -50, -50, 0, -50]]
 
 
-def create():
+def create() -> None:
     """Create SVG-logo for MyQueue."""
     print('<svg width="164" height="164" xmlns="http://www.w3.org/2000/svg">')
     for i, a in enumerate(mq[::-1]):

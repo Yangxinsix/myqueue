@@ -9,7 +9,7 @@ from io import StringIO
 from math import inf
 from pathlib import Path
 from types import TracebackType
-from typing import IO, Union, Generator, List, Dict
+from typing import IO, Union, Generator, List, Dict, Any
 from unittest import SkipTest
 
 
@@ -102,14 +102,6 @@ class Lock:
         self.release()
 
 
-def lock(method):
-    """File lock decarator for a method."""
-    def m(self, *args, **kwargs):
-        with self:
-            return method(self, *args, **kwargs)
-    return m
-
-
 def plural(n: int, thing: str) -> str:
     """Add "s" to string if needed.
 
@@ -136,7 +128,7 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
-def get_home_folders(prune=True) -> List[Path]:
+def get_home_folders(prune: bool = True) -> List[Path]:
     """Return list of all known .myqueue/ folders."""
     home = mqhome()
     path = home / '.myqueue' / 'folders.txt'
@@ -152,7 +144,7 @@ def get_home_folders(prune=True) -> List[Path]:
         return [home]
 
 
-def update_readme_and_completion(test=False) -> None:
+def update_readme_and_completion(test: bool = False) -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
@@ -242,27 +234,27 @@ def update_readme_and_completion(test=False) -> None:
         pass
 
     class Parser:
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: Any):
             pass
 
-        def add_argument(self, *args, **kwargs):
+        def add_argument(self, *args: str, **kwargs: Any) -> None:
             pass
 
-        def add_subparsers(self, **kwargs):
+        def add_subparsers(self, **kwargs: Any) -> 'Parser':
             return self
 
-        def add_parser(self, cmd, **kwargs):
+        def add_parser(self, cmd: str, **kwargs: Any) -> 'Subparser':
             return Subparser(cmd)
 
-        def parse_args(self, args=None):
+        def parse_args(self, args: List[str] = None) -> None:
             raise MyException
 
     class Subparser:
-        def __init__(self, command):
+        def __init__(self, command: str):
             self.command = command
             dct[command] = []
 
-        def add_argument(self, *args, **kwargs):
+        def add_argument(self, *args: str, **kwargs: Any) -> None:
             dct[self.command].extend(arg for arg in args
                                      if arg.startswith('-'))
 

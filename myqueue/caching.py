@@ -12,14 +12,14 @@ class Cached:
         self.function = function
         self.path = Path(f'{name}.state')
 
-    def has(self, *args, **kwargs) -> bool:
+    def has(self, *args: Any, **kwargs: Any) -> bool:
         """Check if function has been called."""
         if not self.path.is_file():
             return False
         with self.path.open() as fd:
             return fd.read(30).split(':', 1)[1].split('"', 2)[1] == 'done'
 
-    def __call__(self):
+    def __call__(self) -> Any:
         """Call function (if needed)."""
         if self.has():
             data = decode(self.path.read_text())
@@ -71,7 +71,7 @@ class Encoder(json.JSONEncoder):
     >>> Encoder().encode(np.array([1., 2.]))
     '{"__ndarray__": [1.0, 2.0]}'
     """
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, complex):
             return {'__complex__': [obj.real, obj.imag]}
 

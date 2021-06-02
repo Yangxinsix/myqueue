@@ -5,7 +5,7 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union, Optional, Type
+from typing import List, Dict, Any, Union, Optional, Type, Callable
 from pathlib import Path
 from shlex import quote
 
@@ -21,7 +21,7 @@ class Command:
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
         self.short_name: str
-        self.function = None
+        self.function: Optional[Callable[[], Any]] = None
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -31,16 +31,17 @@ class Command:
         raise NotImplementedError
 
     @property
-    def fname(self):
+    def fname(self) -> str:
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         """Look for "# MQ: resources=..." comments in script."""
         return None
 
-    def run(self):
+    def run(self) -> Any:
         import subprocess
         subprocess.run(str(self), shell=True, check=True)
+        return None
 
     def quoted_args(self) -> List[str]:
         return [quote(arg) for arg in self.args]
@@ -116,7 +117,7 @@ class ShellScript(Command):
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         for line in Path(self.cmd).read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
@@ -141,7 +142,7 @@ class PythonScript(Command):
                 'type': 'python-script',
                 'cmd': self.script}
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         script = Path(self.script)
         if not script.is_absolute():
             script = path / script
@@ -152,7 +153,10 @@ class PythonScript(Command):
 
 
 class WorkflowTask(Command):
-    def __init__(self, cmd: str, args, function=None):
+    def __init__(self,
+                 cmd: str,
+                 args: List[str],
+                 function: Callable[[], Any] = None):
         script, name = cmd.split(':')
         self.script = Path(script)
         Command.__init__(self, name, args)
@@ -165,7 +169,7 @@ class WorkflowTask(Command):
              f'run_workflow_function({str(self.script)!r}, {self.name!r})'])
         return f'python3 -c "{code}"'
 
-    def run(self):
+    def run(self) -> Any:
         assert self.function is not None
         return self.function()
 
