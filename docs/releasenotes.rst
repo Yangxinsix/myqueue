@@ -11,7 +11,8 @@ Next release
 
 * Email notifications: ``mq modify ... -N dA``.  See :ref:`modify` and
   :ref:`notifications`.
-* Use ``mq info`` to get information about your MyQueue installation:
+* You can now use ``mq info`` to get information about your MyQueue
+  installation:
 
   * version
   * location of the source code

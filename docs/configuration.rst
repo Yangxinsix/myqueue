@@ -200,7 +200,7 @@ running, so you will have to ``mq rm`` those and also remember to remove big
 files left behind.
 
 
-.. notifications:
+.. _notifications:
 
 Notifications
 =============
