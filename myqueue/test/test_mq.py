@@ -31,6 +31,7 @@ def test_fail(mq):
     mq('submit shell:echo+hello -d time@sleep+a')
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     mq.wait()
+    mq('info')
     mq('info 1 -v')
     mq('ls -S t')
     # mq('ls -AC')

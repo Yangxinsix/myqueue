@@ -1,10 +1,27 @@
-def info(queue, id: int) -> None:
-    """Print information about a single task."""
-    self._read()
-    task = Selection({id}).select(self.tasks)[0]
+import json
+import os
+from pathlib import Path
+
+from myqueue import __version__
+from myqueue.queue import Queue
+from myqueue.selection import Selection
+
+
+def info(queue: Queue, id: int = None) -> None:
+    """Print information about MyQueue or a single task."""
+    if id is None:
+        print('Version:', __version__)
+        print('Code:   ', Path(__file__).parent)
+        print('Root:   ', queue.config.home / '.myqueue')
+        print('\nConfiguration:')
+        queue.config.print()
+        return
+
+    queue._read()
+    task = Selection({id}).select(queue.tasks)[0]
     print(json.dumps(task.todict(), indent='    '))
-    if self.verbosity > 1:
-        path = self.scheduler.error_file(task)
+    if queue.verbosity > 1:
+        path = queue.scheduler.error_file(task)
         try:
             err = path.read_text()
         except FileNotFoundError:
@@ -18,4 +35,3 @@ def info(queue, id: int) -> None:
             print('v' * N)
             print(err)
             print('^' * N)
-
