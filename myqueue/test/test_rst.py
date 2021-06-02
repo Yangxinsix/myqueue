@@ -54,7 +54,6 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
     errors = 0
     for cmd, output, L in blocks:
         print('$', cmd)
-        # time.sleep(0.3)
         if cmd.startswith('mq '):
             os.chdir(folder)
             out = sys.stdout

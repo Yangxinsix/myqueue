@@ -1,10 +1,11 @@
 import subprocess
+import sys
 from typing import List, Optional
 
-from myqueue.scheduler import Scheduler
-from myqueue.task import Task
-from myqueue.states import State
 from myqueue.config import Configuration
+from myqueue.scheduler import Scheduler
+from myqueue.states import State
+from myqueue.task import Task
 
 
 class TestScheduler(Scheduler):
@@ -76,6 +77,7 @@ class TestScheduler(Scheduler):
         err = f'{task.cmd.short_name}.{task.id}.err'
 
         cmd = str(task.cmd)
+        cmd = cmd.replace('python3', sys.executable)
         if task.resources.processes > 1:
             n = task.resources.processes
             cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
