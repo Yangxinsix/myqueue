@@ -163,7 +163,6 @@ class RunHandle:
     def __init__(self, task: Task, runner: 'Runner'):
         self.task = task
         self.runner = runner
-        #self._result = UNSPECIFIED
 
     @property
     def result(self) -> 'Result':
@@ -348,7 +347,7 @@ class Runner:
         return RunHandle(task, self)
 
     def extract_dependencies(self,
-                             args: List[Any],
+                             args: Sequence[Any],
                              kwargs: Dict[str, Any],
                              deps: List[RunHandle]) -> List[Path]:
         """Find dependencies on other tasks."""
@@ -421,7 +420,7 @@ def create_task(function: Callable = None,
                 module: str = None,
                 shell: str = None,
                 name: str = '',
-                args: List[Any] = [],
+                args: Sequence[Any] = [],
                 kwargs: Dict[str, Any] = {},
                 deps: List[Path] = [],
                 workflow_script: Path = None,

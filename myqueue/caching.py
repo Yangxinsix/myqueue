@@ -12,7 +12,7 @@ class Cached:
         self.function = function
         self.path = Path(f'{name}.state')
 
-    def has(self, *args, **kwargs) -> bool:
+    def has(self, *args: Any, **kwargs: Any) -> bool:
         """Check if function has been called."""
         if not self.path.is_file():
             return False
