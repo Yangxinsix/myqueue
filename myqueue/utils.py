@@ -9,7 +9,7 @@ from io import StringIO
 from math import inf
 from pathlib import Path
 from types import TracebackType
-from typing import IO, Union, Generator, List, Dict
+from typing import IO, Union, Generator, List, Dict, Any
 from unittest import SkipTest
 
 
@@ -233,28 +233,28 @@ def update_readme_and_completion(test: bool = False) -> None:
     class MyException(Exception):
         pass
 
-    class Parser:  # type: ignore
-        def __init__(self, **kwargs):
+    class Parser:
+        def __init__(self, **kwargs: Any):
             pass
 
-        def add_argument(self, *args, **kwargs):
+        def add_argument(self, *args: str, **kwargs: Any) -> None:
             pass
 
-        def add_subparsers(self, **kwargs):
+        def add_subparsers(self, **kwargs: Any) -> 'Parser':
             return self
 
-        def add_parser(self, cmd, **kwargs):
+        def add_parser(self, cmd: str, **kwargs: Any) -> 'Subparser':
             return Subparser(cmd)
 
-        def parse_args(self, args=None):
+        def parse_args(self, args: List[str] = None) -> None:
             raise MyException
 
     class Subparser:
-        def __init__(self, command):
+        def __init__(self, command: str):
             self.command = command
             dct[command] = []
 
-        def add_argument(self, *args, **kwargs):
+        def add_argument(self, *args: str, **kwargs: Any) -> None:
             dct[self.command].extend(arg for arg in args
                                      if arg.startswith('-'))
 

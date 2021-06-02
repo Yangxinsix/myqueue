@@ -21,7 +21,7 @@ class Command:
         self.name = name
         self.dct: Dict[str, Any] = {'args': args}
         self.short_name: str
-        self.function = None
+        self.function = Optional[Callable[[], Any]]
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
