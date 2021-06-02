@@ -5,7 +5,7 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union, Optional, Type
+from typing import List, Dict, Any, Union, Optional, Type, Callable
 from pathlib import Path
 from shlex import quote
 
@@ -38,9 +38,10 @@ class Command:
         """Look for "# MQ: resources=..." comments in script."""
         return None
 
-    def run(self) -> None:
+    def run(self) -> Any:
         import subprocess
         subprocess.run(str(self), shell=True, check=True)
+        return None
 
     def quoted_args(self) -> List[str]:
         return [quote(arg) for arg in self.args]
@@ -152,7 +153,10 @@ class PythonScript(Command):
 
 
 class WorkflowTask(Command):
-    def __init__(self, cmd: str, args, function=None):
+    def __init__(self,
+                 cmd: str,
+                 args: List[str],
+                 function: Callable[[], Any] = None):
         script, name = cmd.split(':')
         self.script = Path(script)
         Command.__init__(self, name, args)
@@ -165,7 +169,7 @@ class WorkflowTask(Command):
              f'run_workflow_function({str(self.script)!r}, {self.name!r})'])
         return f'python3 -c "{code}"'
 
-    def run(self) -> None:
+    def run(self) -> Any:
         assert self.function is not None
         return self.function()
 

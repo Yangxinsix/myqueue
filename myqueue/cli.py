@@ -12,7 +12,7 @@ class MQError(Exception):
     """For nice (expected) CLI errors."""
 
 
-def error(*args):
+def error(*args: str) -> None:
     """Write error message to stderr in red."""
     if sys.stderr.isatty():
         print('\033[91m', end='', file=sys.stderr)
@@ -177,7 +177,7 @@ def _main(arguments: List[str] = None) -> int:
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
 
-        def a(*args, **kwargs):
+        def a(*args, **kwargs):  # type: ignore
             """Wrapper for Parser.add_argument().
 
             Hack to fix argparse's handling of options.  See

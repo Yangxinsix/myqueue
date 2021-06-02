@@ -1,9 +1,10 @@
 """Resource class to handle resource requirements: time, cores, processes."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, TYPE_CHECKING
 
-from myqueue.commands import Command
+if TYPE_CHECKING:
+    from myqueue.commands import Command
 from myqueue.states import State
 
 
@@ -82,11 +83,12 @@ class Resources:
                               processes: int = 0,
                               tmax: str = '',
                               resources: str = '',
-                              command: Command = None,
+                              command: 'Command' = None,
                               path: Path = None) -> 'Resources':
         if cores == 0 and nodename == '' and processes == 0 and tmax == '':
             if resources:
                 return Resources.from_string(resources)
+            assert command is not None and path is not None
             res = command.read_resources(path)
             if res is not None:
                 return res

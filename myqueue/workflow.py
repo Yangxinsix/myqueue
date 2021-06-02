@@ -12,11 +12,12 @@ from myqueue.resources import Resources
 from .progress import progress_bar
 from .task import UNSPECIFIED, Task
 from .utils import chdir, plural
+from argparse import Namespace
 
 DEFAULT_VERBOSITY = 1
 
 
-def workflow(args,
+def workflow(args: Namespace,
              folders: List[Path],
              verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow script(s) and folders."""
@@ -47,7 +48,8 @@ def workflow(args,
 WorkflowFunction = Callable[[], None]
 
 
-def get_workflow_function(path: Path, kwargs={}) -> WorkflowFunction:
+def get_workflow_function(path: Path,
+                          kwargs: Dict[str, Any] = {}) -> WorkflowFunction:
     """Get workflow function from script."""
     module = runpy.run_path(str(path))  # type: ignore # bug in typeshed?
     try:
@@ -83,7 +85,7 @@ def workflow_from_scripts(
 
 
 def workflow_from_script(script: Path,
-                         kwargs,
+                         kwargs: Dict[str, Any],
                          folders: List[Path],
                          verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
     """Collect tasks from workflow defined in python script."""
@@ -156,7 +158,7 @@ class StopRunning(Exception):
 
 class RunHandle:
     """Result of calling run().  Can be used as a context manager."""
-    def __init__(self, task, runner):
+    def __init__(self, task: Task, runner: 'Runner'):
         self.task = task
         self.runner = runner
         self._result = UNSPECIFIED

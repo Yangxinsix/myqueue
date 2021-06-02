@@ -35,7 +35,7 @@ class Configuration:
                          for name in self.__dict__)
         return f'Configuration({args})'
 
-    def print(self):
+    def print(self) -> None:
         for key, value in self.__dict__.items():
             if key == '_mpi_implementation':
                 key = 'mpi_implementation'

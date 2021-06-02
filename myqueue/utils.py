@@ -102,14 +102,6 @@ class Lock:
         self.release()
 
 
-def lock(method):
-    """File lock decarator for a method."""
-    def m(self, *args, **kwargs):
-        with self:
-            return method(self, *args, **kwargs)
-    return m
-
-
 def plural(n: int, thing: str) -> str:
     """Add "s" to string if needed.
 
@@ -136,7 +128,7 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
-def get_home_folders(prune=True) -> List[Path]:
+def get_home_folders(prune: bool = True) -> List[Path]:
     """Return list of all known .myqueue/ folders."""
     home = mqhome()
     path = home / '.myqueue' / 'folders.txt'
@@ -152,7 +144,7 @@ def get_home_folders(prune=True) -> List[Path]:
         return [home]
 
 
-def update_readme_and_completion(test=False) -> None:
+def update_readme_and_completion(test: bool = False) -> None:
     """Update README.rst and commands dict.
 
     Run this when ever options are changed::
@@ -241,7 +233,7 @@ def update_readme_and_completion(test=False) -> None:
     class MyException(Exception):
         pass
 
-    class Parser:
+    class Parser:  # type: ignore
         def __init__(self, **kwargs):
             pass
 
