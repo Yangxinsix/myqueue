@@ -6,6 +6,7 @@ import pytest
 
 from ..queue import Queue
 from ..task import task
+from ..selection import Selection
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9),
@@ -93,3 +94,16 @@ def test_resource_comments(tmp_path):
     t = task(str(script))
     assert t.resources.cores == 2
     assert t.resources.tmax == 3600
+
+
+def test_selection():
+    selection = Selection(error='')
+    print(selection)
+    selection.select()
+
+
+def test_info_missing_error_file():
+    task = ...
+    queue = SimpleNamespace()
+    info(queue)
+    

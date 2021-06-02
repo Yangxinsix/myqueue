@@ -31,14 +31,14 @@ class Command:
         raise NotImplementedError
 
     @property
-    def fname(self):
+    def fname(self) -> str:
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         """Look for "# MQ: resources=..." comments in script."""
         return None
 
-    def run(self):
+    def run(self) -> None:
         import subprocess
         subprocess.run(str(self), shell=True, check=True)
 
@@ -116,7 +116,7 @@ class ShellScript(Command):
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         for line in Path(self.cmd).read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
@@ -141,7 +141,7 @@ class PythonScript(Command):
                 'type': 'python-script',
                 'cmd': self.script}
 
-    def read_resources(self, path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Optional[Resources]:
         script = Path(self.script)
         if not script.is_absolute():
             script = path / script
@@ -165,7 +165,7 @@ class WorkflowTask(Command):
              f'run_workflow_function({str(self.script)!r}, {self.name!r})'])
         return f'python3 -c "{code}"'
 
-    def run(self):
+    def run(self) -> None:
         assert self.function is not None
         return self.function()
 
