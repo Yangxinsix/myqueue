@@ -26,7 +26,8 @@ config = {
     'notifications': {
         'email': 'me@myqueue.org',
         'host': 'smtp.myqueue.org',
-        'username': 'me'}}
+        'username': 'me'},
+    'mpiexec': 'echo'}
 """
 
 

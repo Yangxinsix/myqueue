@@ -75,10 +75,11 @@ Examples:
     $ mq rm -s d . -r  # remove done jobs in this folder and its subfolders
 """),
     ('info',
-     'Show detailed information about task.', """
+     'Show detailed information about MyQueue or a task.', """
 Example:
 
-    $ mq info 12345
+    $ mq info  # Show information about MyQueue
+    $ mq info 12345  # Show information about task with id=12345
 """),
     ('workflow',
      'Submit tasks from Python script or several scripts matching pattern.',
@@ -331,10 +332,7 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd == 'info':
-            a('id', type=int, help='Task ID.')
-            a('folder',
-              nargs='?',
-              help='Show task from this folder.  Defaults to current folder.')
+            a('id', nargs='?', type=int, help='Task ID.')
 
     args = parser.parse_args(
         fix_option_order(arguments if arguments is not None else sys.argv[1:],
@@ -418,6 +416,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon
     from myqueue.states import State
+    from myqueue.info import info
 
     if not is_test:
         start_daemon()
@@ -444,13 +443,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         return
 
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick', 'info']:
-        if args.command != 'info' and args.all:
+    if args.command in ['list', 'sync', 'kick']:
+        if args.all:
             if args.folder is not None:
                 raise MQError('Specifying a folder together with --all '
                               'does not make sense')
         else:
             folder_names = [args.folder or '.']
+    elif args.command == 'info':
+        folder_names = ['.']
     else:
         folder_names = args.folder
 
@@ -604,7 +605,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.kick()
 
         elif args.command == 'info':
-            queue.info(args.id)
+            info(queue, args.id)
 
         else:
             assert False
