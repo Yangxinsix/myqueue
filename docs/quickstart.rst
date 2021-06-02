@@ -12,7 +12,7 @@ Let's create a simple "Hello world" Python script::
 
     $ mkdir proj1
     $ cd proj1
-    $ echo 'import sys;print(sys.executable)' > hello.py
+    $ echo 'print("Hello world")' > hello.py
 
 and :ref:`submit <submit>` it::
 
@@ -39,7 +39,6 @@ There is now an output file and an empty error file in the folder::
     -rw-rw-r-- 1 jensj jensj 12 apr 26 21:55 hello.py.1.out
     $ cat hello.py.1.out
     Hello world
-    $ cat hello.py.1.err
 
 Now we run some calculations in another folder::
 
