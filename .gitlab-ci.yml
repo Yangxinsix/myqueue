@@ -5,7 +5,7 @@ tests:
     - . venv/bin/activate
     - pip install -U pip
     - pip install flake8 mypy coverage pytest interrogate numpy
-    - pip install -e .
+    - pip install .
     - echo "import covergage; coverage.process_startup()" > venv/lib/python3.9/site-packages/cov.pth
     - touch cov.cfg
     - export COVERAGE_PROCESS_START=/builds/myqueue/myqueue/cov.cfg
