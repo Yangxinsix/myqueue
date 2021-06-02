@@ -15,7 +15,7 @@ Next release
 
   * version
   * location of the source code
-  * location of ``.myqueueu/`` folder
+  * location of ``.myqueue/`` folder
   * configuration
 
 
