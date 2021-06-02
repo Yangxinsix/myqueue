@@ -78,8 +78,8 @@ Examples:
      'Show detailed information about MyQueue or a task.', """
 Example:
 
-    $ mq info  # Show information about MyQueue
-    $ mq info 12345  # Show information about task with id=12345
+    $ mq info  # show information about MyQueue
+    $ mq info 12345  # show information about task with id=12345
 """),
     ('workflow',
      'Submit tasks from Python script or several scripts matching pattern.',
