@@ -437,6 +437,8 @@ def create_task(function: Callable = None,
     if function:
         name = name or get_name(function)
         function = partial(function, *args, **kwargs)
+        if hasattr(function.func, 'has'):
+            function.has = function.func.has
         cfunction = cached_function(function, name)
         command = WorkflowTask(f'{workflow_script}:{name}', [], cfunction)
     elif module:
