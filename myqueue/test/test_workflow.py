@@ -9,10 +9,10 @@ def test_flow1(mq):
     script = Path(__file__).with_name('flow1.py')
     mq(f'workflow {script}')
     mq.wait()
-    assert mq.states() == 'ddddddd'
+    assert mq.states() == 'dddddddd'
     mq(f'workflow {script}')
     mq.wait()
-    assert mq.states() == 'dddddddd'
+    assert mq.states() == 'ddddddddd'
 
 
 def test_direct_cached_flow1(tmp_path, capsys):
