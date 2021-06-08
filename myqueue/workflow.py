@@ -468,7 +468,8 @@ def create_task(function: Callable = None,
                 diskspace=0,
                 creates=[])
 
-    if function:
+    if function and not any(isinstance(thing, Result)
+                            for thing in list(args) + list(kwargs.values())):
         if cached_function.has(*args, **kwargs):
             task.result = cached_function()
             task._done = True
