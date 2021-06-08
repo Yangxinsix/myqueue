@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, Type, Sequence
 from types import TracebackType
 
 
-from myqueue.caching import Cached, cached_function
+from myqueue.caching import CachedFunction, create_cached_function
 from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
@@ -260,7 +260,7 @@ class Runner:
 
     def run(self,
             *,
-            function: Union[Callable, Cached] = None,
+            function: Union[Callable, CachedFunction] = None,
             script: Union[Path, str] = None,
             module: str = None,
             shell: str = None,
@@ -436,11 +436,9 @@ def create_task(function: Callable = None,
 
     if function:
         name = name or get_name(function)
-        function = partial(function, *args, **kwargs)
-        if hasattr(function.func, 'has'):
-            function.has = function.func.has
-        cfunction = cached_function(function, name)
-        command = WorkflowTask(f'{workflow_script}:{name}', [], cfunction)
+        cached_function = create_cached_function(function, name, args, kwargs)
+        command = WorkflowTask(f'{workflow_script}:{name}', [],
+                               cached_function)
     elif module:
         assert not kwargs
         command = PythonModule(module, [str(arg) for arg in args])
@@ -471,8 +469,8 @@ def create_task(function: Callable = None,
                 creates=[])
 
     if function:
-        if cfunction.has(*args, **kwargs):
-            task.result = cfunction()
+        if cached_function.has(*args, **kwargs):
+            task.result = cached_function()
             task._done = True
         else:
             task._done = False

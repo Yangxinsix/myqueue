@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
-from myqueue.caching import encode, decode
+from myqueue.caching import encode, decode, CachedFunction
 from datetime import datetime
 from math import inf
+from myqueue.workflow import create_task
 
 objects = [
     [27, 1.4, {'a': 7, 'b': [1, 2]}, inf, -inf],
@@ -30,3 +31,12 @@ def test_encoding(obj1):
         assert obj1.dtype == obj2.dtype
     else:
         assert obj1 == obj2
+
+
+def test_has():
+    """Test function that returns non-jsonable object."""
+    function = CachedFunction(
+        function=lambda: Exception,
+        has=lambda *args, **kwargs: True)
+    task = create_task(function=function)
+    task.cmd.run()

@@ -21,24 +21,8 @@ def work():
     return b
 
 
-class G:
-    pass
-
-
-def g():
-    return G()
-
-
-def has(*args, **kwargs):
-    return True
-
-
-g.has = has
-
-
 @resources(tmax='1h')
 def workflow():
-    run(function=g)
     A = []
     for x in range(3):
         y = wrap(f, name=f'fa-{x}')(x)

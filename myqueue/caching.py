@@ -2,11 +2,31 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict
-from functools import lru_cache
+from typing import Any, Callable, Dict, Sequence
+from functools import lru_cache, partial, wraps
 
 
-class Cached:
+class CachedFunction:
+    """A caching function."""
+
+    __name__ = 'func'
+
+    def __init__(self,
+                 function: Callable[[], Any],
+                 has: Callable[..., bool]):
+        self.function = function
+        self._has = has
+
+    def has(self, *args: Any, **kwargs: Any) -> bool:
+        """Check if function has been called."""
+        return self._has(*args, **kwargs)
+
+    def __call__(self) -> Any:
+        """Call function (if needed)."""
+        return self.function()
+
+
+class JSONCachedFunction(CachedFunction):
     """A caching function."""
     def __init__(self, function: Callable, name: str):
         self.function = function
@@ -53,11 +73,16 @@ def mpi_world() -> MPIWorld:
     return MPIWorld()
 
 
-def cached_function(function: Callable, name: str) -> Cached:
+def create_cached_function(function: Callable,
+                           name: str,
+                           args: Sequence[Any],
+                           kwargs: Dict[str, Any]) -> CachedFunction:
     """Wrap function if needed."""
+    func_no_args = wraps(function)(partial(function, *args, **kwargs))
     if hasattr(function, 'has'):
-        return function  # type: ignore
-    return Cached(function, name)
+        has = function.has  # type: ignore
+        return CachedFunction(func_no_args, has)
+    return JSONCachedFunction(func_no_args, name)
 
 
 class Encoder(json.JSONEncoder):
