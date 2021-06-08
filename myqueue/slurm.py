@@ -58,7 +58,8 @@ class SLURM(Scheduler):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            env.append(('OMP_NUM_THREADS', '1'))
+            if 'OMP_NUM_THREADS' not in os.environ:
+                env.append(('OMP_NUM_THREADS', '1'))
             mpiexec = self.config.mpiexec
             if 'mpiargs' in nodedct:
                 mpiexec += ' ' + nodedct['mpiargs']
