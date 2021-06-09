@@ -341,7 +341,8 @@ class Runner:
                 task.run()
                 raise StopRunning
         elif self.tasks is not None:
-            self.tasks.append(task)
+            if task.state != State.done:
+                self.tasks.append(task)
         else:
             task.run()
 

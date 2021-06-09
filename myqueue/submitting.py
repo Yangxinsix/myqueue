@@ -81,7 +81,8 @@ def submit_tasks(scheduler: Scheduler,
             if task.dname in current:
                 task.state = current[task.dname].state
             else:
-                task.state = task.read_state_file()
+                if task.state == State.undefined:
+                    task.state = task.read_state_file()
 
         count[task.state] += 1
 
