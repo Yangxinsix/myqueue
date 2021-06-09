@@ -10,6 +10,7 @@ from myqueue.caching import CachedFunction, create_cached_function
 from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
+from myqueue.states import State
 
 from .progress import progress_bar
 from .task import UNSPECIFIED, Task
@@ -176,7 +177,7 @@ class RunHandle:
     @property
     def done(self) -> bool:
         """Has task been successfully finished?"""
-        return self.task.is_done()
+        return self.task.state == State.done
 
     def __enter__(self) -> 'RunHandle':
         self.runner.dependencies.append(self.task)
@@ -472,9 +473,7 @@ def create_task(function: Callable = None,
                             for thing in list(args) + list(kwargs.values())):
         if cached_function.has(*args, **kwargs):
             task.result = cached_function()
-            task._done = True
-        else:
-            task._done = False
+            task.state = State.done
 
     return task
 

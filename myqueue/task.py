@@ -303,7 +303,7 @@ class Task:
         state_file = self.folder / f'{self.cmd.fname}.state'
         state_file.write_text(f'{{"state": "{self.state}"}}\n')
 
-    def is_done(self) -> bool:
+    def xxxxxxxx_is_done(self) -> bool:
         return self.read_state_file() == State.done
 
     def remove_state_file(self) -> None:
