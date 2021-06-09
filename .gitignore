@@ -7,3 +7,7 @@ docs/_build/
 .coverage
 htmlcov/
 venv/
+
+# Editor backup files
+*~
+.*.sw?

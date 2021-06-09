@@ -86,8 +86,11 @@ def run_command(cmd: str,
     if cmd.startswith('#'):
         return [], folder
     cmd, _, _ = cmd.partition('  #')
-    result = run(f'export PYTHONPATH={pypath}; cd {folder}; {cmd}; pwd',
-                 shell=True, check=True, stdout=PIPE)
+    env = os.environ.copy()
+    env['PYTHONPATH'] = str(pypath)
+    env['LC_ALL'] = 'C'
+    result = run(f'cd {folder}; {cmd}; pwd',
+                 shell=True, check=True, stdout=PIPE, env=env)
     output = result.stdout.decode().splitlines()
     folder = output.pop()
     return output, folder

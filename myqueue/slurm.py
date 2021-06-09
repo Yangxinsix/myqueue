@@ -58,25 +58,24 @@ class SLURM(Scheduler):
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            env.append(('OMP_NUM_THREADS', '1'))
+            if 'OMP_NUM_THREADS' not in os.environ:
+                env.append(('OMP_NUM_THREADS', '1'))
             mpiexec = self.config.mpiexec
-            if self.config.mpi_implementation == 'intel':
-                mpiexec += ' ' + ' '.join(f'--env {name} {val}'
-                                          for name, val in env)
-            else:
-                mpiexec += ' ' + ' '.join(f'-x {name}={val}'
-                                          for name, val in env)
             if 'mpiargs' in nodedct:
                 mpiexec += ' ' + nodedct['mpiargs']
             cmd = mpiexec + ' ' + cmd.replace('python3',
                                               self.config.parallel_python)
-        else:
-            cmd = ''.join(f'{name}={val} ' for name, val in env) + cmd
+
+        # Use bash for the script
+        script = '#!/bin/bash -l\n'
+
+        # Add environment variables
+        if len(env) > 0:
+            script += '\n'.join(f'export {name}={val}' for name, val in env)
+            script += '\n'
 
         home = self.config.home
-
-        script = (
-            '#!/bin/bash -l\n'
+        script += (
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
