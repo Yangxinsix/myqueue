@@ -401,7 +401,7 @@ def _main(arguments: List[str] = None) -> int:
             raise
         else:
             error(f'{x.__class__.__name__}: {x}',
-                  f'To get a full traceback, use: mq {args.command} ... -T')
+                  f'\nTo get a full traceback, use: mq {args.command} ... -T')
             return 1
     return 0
 

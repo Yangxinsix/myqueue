@@ -41,7 +41,12 @@ class LocalScheduler(Scheduler):
 
     def send(self, *args: Any) -> Tuple[Any, ...]:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(('127.0.0.1', 8888))
+            try:
+                s.connect(('127.0.0.1', 8888))
+            except ConnectionRefusedError:
+                raise ConnectionRefusedError(
+                    'Local scheduler not responding.  '
+                    'Please start it with: "python -m myqueue.local"')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
