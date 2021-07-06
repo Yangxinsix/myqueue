@@ -23,7 +23,7 @@ class LocalScheduler(Scheduler):
             id = 1
         else:
             task.cmd.function = None
-            (id,) = self.send('submit', task)
+            id = self.send('submit', task)
         task.id = id
 
     def cancel(self, task: Task) -> None:
@@ -36,10 +36,10 @@ class LocalScheduler(Scheduler):
         self.send('release', task.id)
 
     def get_ids(self) -> Set[int]:
-        (ids,) = self.send('list')
+        ids = self.send('list')
         return ids
 
-    def send(self, *args: Any) -> Tuple[Any, ...]:
+    def send(self, *args: Any) -> Any:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.connect(('127.0.0.1', 8888))
@@ -51,10 +51,10 @@ class LocalScheduler(Scheduler):
             assert len(b) < 4096
             s.sendall(b)
             b = b''.join(iter(partial(s.recv, 4096), b''))
-        status, *args = pickle.loads(b)
+        status, result = pickle.loads(b)
         if status != 'ok':
             raise LocalSchedulerError(status)
-        return args
+        return result
 
     def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
                                                    List[str]]:
@@ -62,35 +62,49 @@ class LocalScheduler(Scheduler):
 
 
 class Server:
-    def __init__(self) -> None:
+    def __init__(self,
+                 config: Configuration,
+                 cores: int = 1,
+                 port: int = 39999) -> None:
+        self.config = config
+        self.port = port
         self.next_id = 1
         self.tasks: List[Task] = []
-        self.config = Configuration.read()
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
-        server = await asyncio.start_server(
+        self.server = await asyncio.start_server(
             self.recv, '127.0.0.1', 8888)
 
-        # self.task = asyncio.create_task(self.execute())
+        async with self.server:  # type: ignore
+            await self.server.serve_forever()
+            await self.server.wait_closed()
 
-        async with server:  # type: ignore
-            await server.serve_forever()
+    def start(self):
+        try:
+            asyncio.run(self.main())
+        except asyncio.exceptions.CancelledError:
+            pass
 
     async def recv(self, reader: Any, writer: Any) -> None:
 
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print(cmd, args)
-        if cmd == 'submit':
+        if cmd == 'stop':
+            self.server.close()
+            result = None
+        elif cmd == 'submit':
             task = args[0]
             task.id = self.next_id
             self.next_id += 1
             self.tasks.append(task)
-            result = (task.id,)
+            result = task.id
+        elif cmd == 'list':
+            result = [task.id for task in self.tasks]
         else:
             1 / 0
-        writer.write(pickle.dumps(('ok',) + result))
+        writer.write(pickle.dumps(('ok', result)))
         await writer.drain()
         writer.close()
         self.kick()
@@ -152,4 +166,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    asyncio.run(Server().main())
+    asyncio.run(Server(Configuration.read()).main())
