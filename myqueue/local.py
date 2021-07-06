@@ -2,7 +2,7 @@ import asyncio
 import pickle
 import socket
 from functools import partial
-from typing import Any, Set, Tuple, List
+from typing import Any, Set, Tuple, List, Dict
 
 from .scheduler import Scheduler
 from .task import Task
@@ -15,6 +15,8 @@ class LocalSchedulerError(Exception):
 
 
 class LocalScheduler(Scheduler):
+    port = 39999
+
     def submit(self,
                task: Task,
                dry_run: bool = False,
@@ -42,7 +44,7 @@ class LocalScheduler(Scheduler):
     def send(self, *args: Any) -> Any:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
-                s.connect(('127.0.0.1', 8888))
+                s.connect(('127.0.0.1', self.port))
             except ConnectionRefusedError:
                 raise ConnectionRefusedError(
                     'Local scheduler not responding.  '
@@ -69,25 +71,25 @@ class Server:
         self.config = config
         self.port = port
         self.next_id = 1
-        self.tasks: List[Task] = []
+        self.tasks: Dict[int, Task] = {}
+        self.processes: Dict[int, asyncio.Process] = {}
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
         self.server = await asyncio.start_server(
-            self.recv, '127.0.0.1', 8888)
+            self.recv, '127.0.0.1', self.port)
 
         async with self.server:  # type: ignore
             await self.server.serve_forever()
             await self.server.wait_closed()
 
-    def start(self):
+    def start(self) -> None:
         try:
             asyncio.run(self.main())
         except asyncio.exceptions.CancelledError:
             pass
 
     async def recv(self, reader: Any, writer: Any) -> None:
-
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print(cmd, args)
@@ -97,11 +99,14 @@ class Server:
         elif cmd == 'submit':
             task = args[0]
             task.id = self.next_id
+            task.state = State.queued
+            task.dtasks = [self.tasks[t.id] for t in task.dtasks
+                           if t.id in self.tasks]
             self.next_id += 1
-            self.tasks.append(task)
+            self.tasks[task.id] = task
             result = task.id
         elif cmd == 'list':
-            result = [task.id for task in self.tasks]
+            result = list(self.tasks)
         else:
             1 / 0
         writer.write(pickle.dumps(('ok', result)))
@@ -111,14 +116,16 @@ class Server:
         print(self.next_id, self.tasks)
 
     def kick(self) -> None:
-        for task in self.tasks:
-            if task.state == 'running':
+        print(self.tasks)
+        for task in self.tasks.values():
+            print(task.state, task.deps)
+            if task.state == State.running:
                 return
 
-        for task in self.tasks:
-            if task.state == 'queued' and not task.deps:
+        for task in self.tasks.values():
+            if task.state == State.queued and not task.deps:
                 break
-        else:
+        else:  # no break
             return
 
         asyncio.create_task(self.run(task))
@@ -134,19 +141,27 @@ class Server:
             cmd = mpiexec + cmd.replace('python3',
                                         self.config.parallel_python)
         cmd = f'{cmd} 2> {err} > {out}'
+
         proc = await asyncio.create_subprocess_shell(
             cmd, cwd=task.folder)
+
+        self.processes[task.id] = proc
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
-        loop.call_later(tmax, self.terminate, proc, task)
+        x=loop.call_later(tmax, self.terminate, task.id)
+        print('XXX', x)
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
+
         await proc.wait()
-        self.tasks.remove(task)
+
+        del self.tasks[task.id]
+        del self.processes[task.id]
+
         if proc.returncode == 0:
-            for t in self.tasks:
-                if task.dname in t.deps:
-                    t.deps.remove(task.dname)
+            for t in self.tasks.values():
+                if task in t.dtasks:
+                    t.dtasks.remove(task)
             state = 1
         else:
             if task.state == 'TIMEOUT':
@@ -154,15 +169,19 @@ class Server:
             else:
                 state = 2
             task.cancel_dependents(self.tasks)
-            self.tasks = [task for task in self.tasks
-                          if task.state != 'CANCELED']
+            self.tasks = {id: task for id, task in self.tasks.items()
+                          if task.state != 'CANCELED'}
+
         (self.folder / f'local-{task.id}-{state}').write_text('')
+
         self.kick()
 
-    def terminate(self, proc: Any, task: Task) -> None:
-        if proc.returncode is None:
+    def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
+        print('Terminate', id)
+        proc = self.processes.get(id)
+        if proc and proc.returncode is None:
             proc.terminate()
-            task.state = State.TIMEOUT
+            self.tasks[id].state = state
 
 
 if __name__ == '__main__':

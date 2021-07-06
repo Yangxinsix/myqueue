@@ -1,11 +1,12 @@
-import pytest
-import asyncio
 import os
 import threading
-from myqueue.local import Server, LocalScheduler
-from myqueue.config import Configuration
-from myqueue.task import task as create_task
 from pathlib import Path
+
+import pytest
+
+from myqueue.config import Configuration
+from myqueue.local import LocalScheduler, Server
+from myqueue.task import task as create_task
 
 
 @pytest.fixture(scope='function')
@@ -34,8 +35,7 @@ def scheduler(tmpdir):
 
 def test_local_scheduler(scheduler):
     print('hello')
-    task = create_task('shell:sleep+10')
+    task = create_task('shell:sleep+10', tmax='1s')
     scheduler.submit(task)
     ids = scheduler.get_ids()
     assert ids == [1]
-    
