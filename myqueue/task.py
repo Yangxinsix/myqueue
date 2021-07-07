@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import (IO, TYPE_CHECKING, Any, Dict, Iterator, List, Optional,
-                    Union)
+                    Sequence, Union)
 from warnings import warn
 
 from myqueue.commands import Command, WorkflowTask, create_command
@@ -367,14 +367,17 @@ class Task:
         with Queue(config, verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
 
-    def find_dependents(self, tasks: List['Task']) -> Iterator['Task']:
+    def find_dependents(self,
+                        tasks: Sequence['Task']) -> Iterator['Task']:
         """Yield dependents."""
         for task in tasks:
             if self.dname in task.deps and self is not task:
                 yield task
                 yield from task.find_dependents(tasks)
 
-    def cancel_dependents(self, tasks: List['Task'], t: float = 0.0) -> None:
+    def cancel_dependents(self,
+                          tasks: Sequence['Task'],
+                          t: float = 0.0) -> None:
         """Cancel dependents."""
         for task in self.find_dependents(tasks):
             task.state = State.CANCELED

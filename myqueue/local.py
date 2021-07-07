@@ -72,7 +72,7 @@ class Server:
         self.port = port
         self.next_id = 1
         self.tasks: Dict[int, Task] = {}
-        self.processes: Dict[int, asyncio.Process] = {}
+        self.processes: Dict[int, asyncio.subprocess.Process] = {}
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
@@ -93,6 +93,7 @@ class Server:
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print(cmd, args)
+        result: Any
         if cmd == 'stop':
             self.server.close()
             result = None
@@ -100,8 +101,8 @@ class Server:
             task = args[0]
             task.id = self.next_id
             task.state = State.queued
-            task.dtasks = [self.tasks[t.id] for t in task.dtasks
-                           if t.id in self.tasks]
+            task.deps = [t.dname for t in task.dtasks
+                         if t.id in self.tasks]
             self.next_id += 1
             self.tasks[task.id] = task
             result = task.id
@@ -116,9 +117,7 @@ class Server:
         print(self.next_id, self.tasks)
 
     def kick(self) -> None:
-        print(self.tasks)
         for task in self.tasks.values():
-            print(task.state, task.deps)
             if task.state == State.running:
                 return
 
@@ -146,29 +145,31 @@ class Server:
             cmd, cwd=task.folder)
 
         self.processes[task.id] = proc
+
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
-        x=loop.call_later(tmax, self.terminate, task.id)
-        print('XXX', x)
+        handle = loop.call_later(tmax, self.terminate, task.id)
+
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
         await proc.wait()
+        handle.cancel()
 
         del self.tasks[task.id]
         del self.processes[task.id]
 
         if proc.returncode == 0:
             for t in self.tasks.values():
-                if task in t.dtasks:
-                    t.dtasks.remove(task)
+                if task.dname in t.deps:
+                    t.deps.remove(task.dname)
             state = 1
         else:
             if task.state == 'TIMEOUT':
                 state = 3
             else:
                 state = 2
-            task.cancel_dependents(self.tasks)
+            task.cancel_dependents(list(self.tasks.values()))
             self.tasks = {id: task for id, task in self.tasks.items()
                           if task.state != 'CANCELED'}
 
