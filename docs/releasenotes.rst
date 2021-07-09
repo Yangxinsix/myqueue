@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 21.7.0
+==============
+
 * Email notifications: ``mq modify ... -N dA``.  See :ref:`modify` and
   :ref:`notifications`.
 * You can now use ``mq info`` to get information about your MyQueue
