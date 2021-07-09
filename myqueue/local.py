@@ -52,6 +52,8 @@ class LocalScheduler(Scheduler):
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
+            if args[0] == 'stop':
+                return
             b = b''.join(iter(partial(s.recv, 4096), b''))
         status, result = pickle.loads(b)
         if status != 'ok':
@@ -95,7 +97,13 @@ class Server:
         print(cmd, args)
         result: Any
         if cmd == 'stop':
+            await self.t
+            #for proc in self.processes.values():
+            #    await proc.wait()
+            print('HER')
             self.server.close()
+            print('HER')
+            return
             result = None
         elif cmd == 'submit':
             task = args[0]
@@ -127,7 +135,7 @@ class Server:
         else:  # no break
             return
 
-        asyncio.create_task(self.run(task))
+        self.t = asyncio.create_task(self.run(task))
 
     async def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
@@ -149,11 +157,12 @@ class Server:
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
         handle = loop.call_later(tmax, self.terminate, task.id)
-
+        print(tmax, handle, task.id)
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
         await proc.wait()
+        print('DONE')
         handle.cancel()
 
         del self.tasks[task.id]
