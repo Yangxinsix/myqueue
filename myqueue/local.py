@@ -72,9 +72,11 @@ class Server:
                  port: int = 39999) -> None:
         self.config = config
         self.port = port
+
         self.next_id = 1
         self.tasks: Dict[int, Task] = {}
         self.processes: Dict[int, asyncio.subprocess.Process] = {}
+        self.aiotasks = {}
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
@@ -97,12 +99,9 @@ class Server:
         print(cmd, args)
         result: Any
         if cmd == 'stop':
-            await self.t
-            #for proc in self.processes.values():
-            #    await proc.wait()
-            print('HER')
+            for aiotask in self.aiotasks.values():
+                await aiotask
             self.server.close()
-            print('HER')
             return
             result = None
         elif cmd == 'submit':
@@ -116,13 +115,24 @@ class Server:
             result = task.id
         elif cmd == 'list':
             result = list(self.tasks)
+        elif cmd == 'cancel':
+            id = args[0]
+            if id in self.processes:
+                self.terminate(id)
+            elif id in self.tasks:
+                task = self.tasks[id]
+                task.state = State.CANCELED
+                task.cancel_dependents(list(self.tasks.values()))
+                self.tasks = {id: task for id, task in self.tasks.items()
+                              if task.state != State.CANCELED}
+            result = None
         else:
             1 / 0
         writer.write(pickle.dumps(('ok', result)))
         await writer.drain()
         writer.close()
         self.kick()
-        print(self.next_id, self.tasks)
+        print('JOBS:', list(self.tasks))
 
     def kick(self) -> None:
         for task in self.tasks.values():
@@ -135,7 +145,10 @@ class Server:
         else:  # no break
             return
 
-        self.t = asyncio.create_task(self.run(task))
+        print('START', task.id)
+        aiotask = asyncio.create_task(self.run(task))
+        self.aiotasks[task.id] = aiotask
+        aiotask.add_done_callback(lambda: self.aiotasks.pop(task.id))
 
     async def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
@@ -157,12 +170,11 @@ class Server:
         loop = asyncio.get_event_loop()
         tmax = task.resources.tmax
         handle = loop.call_later(tmax, self.terminate, task.id)
-        print(tmax, handle, task.id)
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
         await proc.wait()
-        print('DONE')
+        print('END', task.id)
         handle.cancel()
 
         del self.tasks[task.id]

@@ -22,20 +22,20 @@ def scheduler(tmpdir):
     scheduler = LocalScheduler(config)
     scheduler.port = 39998
     import time
-    print('AAAA1')
     time.sleep(1)
-    print('AAAA2')
     yield scheduler
-    print('AAAA3')
     scheduler.send('stop')
-    print('AAAA4')
     thread.join()
     os.chdir(dir)
 
 
 def test_local_scheduler(scheduler):
-    print('hello')
-    task = create_task('shell:sleep+10', tmax='1s')
-    scheduler.submit(task)
+    task1 = create_task('shell:sleep+10', tmax='1s')
+    scheduler.submit(task1)
+    task2 = create_task('shell:sleep+5')
+    scheduler.submit(task2)
+    ids = scheduler.get_ids()
+    assert ids == [1, 2]
+    scheduler.cancel(task2)
     ids = scheduler.get_ids()
     assert ids == [1]
