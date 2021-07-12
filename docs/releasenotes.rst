@@ -9,6 +9,13 @@ Release notes
 Next release
 ============
 
+* The simple "local" schedudler is now feature complete.
+  See :ref:`scheduler`.
+
+
+Version 21.7.0
+==============
+
 * Email notifications: ``mq modify ... -N dA``.  See :ref:`modify` and
   :ref:`notifications`.
 * You can now use ``mq info`` to get information about your MyQueue
