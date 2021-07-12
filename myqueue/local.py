@@ -96,12 +96,13 @@ class Server:
     async def recv(self, reader: Any, writer: Any) -> None:
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
-        print(cmd, args)
+        print('COMMAND:', cmd, *args)
         result: Any
         if cmd == 'stop':
             for aiotask in self.aiotasks.values():
                 await aiotask
             self.server.close()
+            print('BYE')
             return
             result = None
         elif cmd == 'submit':
@@ -135,6 +136,10 @@ class Server:
         print('JOBS:', list(self.tasks))
 
     def kick(self) -> None:
+        self.aiotasks = {id: aiotask
+                         for id, aiotask in self.aiotasks.items()
+                         if not aiotask.done()}
+
         for task in self.tasks.values():
             if task.state == State.running:
                 return
@@ -148,7 +153,7 @@ class Server:
         print('START', task.id)
         aiotask = asyncio.create_task(self.run(task))
         self.aiotasks[task.id] = aiotask
-        aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
+        # aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
 
     async def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
