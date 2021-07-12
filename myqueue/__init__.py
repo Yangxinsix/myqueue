@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .task import Task  # noqa  # pragma: no cover
 
 
-__version__ = '21.7.0'
+__version__ = '21.7.1b1'
 
 
 def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:
