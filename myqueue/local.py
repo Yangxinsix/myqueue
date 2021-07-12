@@ -76,7 +76,7 @@ class Server:
         self.next_id = 1
         self.tasks: Dict[int, Task] = {}
         self.processes: Dict[int, asyncio.subprocess.Process] = {}
-        self.aiotasks = {}
+        self.aiotasks: Dict[int, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
@@ -148,7 +148,7 @@ class Server:
         print('START', task.id)
         aiotask = asyncio.create_task(self.run(task))
         self.aiotasks[task.id] = aiotask
-        aiotask.add_done_callback(lambda: self.aiotasks.pop(task.id))
+        aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
 
     async def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
