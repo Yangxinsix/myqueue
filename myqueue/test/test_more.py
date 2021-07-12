@@ -9,7 +9,7 @@ from ..task import task
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9),
-                    reason="requires Python 3.9 or higher")
+                    reason='requires Python 3.9 or higher')
 def test_completion():
     from myqueue.utils import update_readme_and_completion
     update_readme_and_completion(test=True)

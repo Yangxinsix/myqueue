@@ -1,9 +1,9 @@
 import os
+import sys
 import threading
 from pathlib import Path
 
 import pytest
-
 from myqueue.config import Configuration
 from myqueue.local import LocalScheduler, Server
 from myqueue.task import task as create_task
@@ -29,6 +29,8 @@ def scheduler(tmpdir):
     os.chdir(dir)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8),
+                    reason='requires Python 3.8 or higher')
 def test_local_scheduler(scheduler):
     task1 = create_task('shell:sleep+10', tmax='1s')
     scheduler.submit(task1)
