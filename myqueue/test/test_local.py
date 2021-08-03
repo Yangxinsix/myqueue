@@ -61,7 +61,7 @@ def workflow():
 @pytest.mark.skipif(sys.version_info < (3, 8),
                     reason='requires Python 3.8 or higher')
 def test_local_scheduler2(scheduler):
-    tasks = collect(workflow, None)
+    tasks = collect(workflow, Path())
     ok, ko, ex = submit_tasks(scheduler,
                               tasks,
                               current={},
