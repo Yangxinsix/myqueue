@@ -15,7 +15,6 @@ class Configuration:
                  extra_args: List[str] = None,
                  maximum_diskspace: float = inf,
                  notifications: Dict[str, str] = None,
-                 mpi_implementation: str = None,
                  home: Path = None):
         """Configuration object.
 
@@ -27,7 +26,6 @@ class Configuration:
         self.extra_args = extra_args or []
         self.maximum_diskspace = maximum_diskspace
         self.notifications = notifications or {}
-        self._mpi_implementation = mpi_implementation
         self.home = home or Path.cwd()
 
     def __repr__(self) -> str:
@@ -37,36 +35,12 @@ class Configuration:
 
     def print(self) -> None:
         for key, value in self.__dict__.items():
-            if key == '_mpi_implementation':
-                key = 'mpi_implementation'
-                value = self.mpi_implementation
-            elif key == 'nodes':
+            if key == 'nodes':
                 print('nodes')
                 for name, dct in value:
                     print(f'  {name:10}{dct}')
                 continue
             print(f'{key:18} {value}')
-
-    @property
-    def mpi_implementation(self) -> str:
-        """Guess MPI implementation: intel or openmpi.
-
-        The intel implementation uses::
-
-            mpiexec --env NAME VAL
-
-        instead of::
-
-            mpiexec -x NAME=VAL
-
-        """
-        if self._mpi_implementation is None:
-            output = subprocess.check_output([self.mpiexec, '-V']).lower()
-            if b'intel' in output:
-                self._mpi_implementation = 'intel'
-            else:
-                self._mpi_implementation = 'openmpi'
-        return self._mpi_implementation
 
     @classmethod
     def read(self, start: Path = None) -> 'Configuration':
@@ -85,11 +59,12 @@ class Configuration:
                 "file (must be 'slurm', 'lfs', 'pbs' or 'test').  See "
                 'https://myqueue.rtfd.io/en/latest/configuration.html')
 
-        if 'mpi' in cfg:
+        if 'mpi' in cfg or 'mpi_implementation' in cfg:
             warnings.warn(
-                'The "mpi" keyword has been deprecated. '
-                'Please remove it or rename to "mpi_implementation"')
-            cfg['mpi_implementation'] = cfg.pop('mpi')
+                'The "mpi" and "mpi_implementation" keywords have been '
+                f'deprecated. Please remove them from {config_file}')
+            cfg.pop('mpi', None)
+            cfg.pop('mpi_implementation', None)
 
         config = Configuration(**cfg, home=home)
         return config
@@ -111,7 +86,6 @@ def find_home_folder(start: Path) -> Path:
 
 def guess_scheduler() -> str:
     """Try different scheduler commands to guess the correct scheduler."""
-    import subprocess
     scheduler_commands = {'sbatch': 'slurm',
                           'bsub': 'lsf',
                           'qsub': 'pbs'}
