@@ -8,11 +8,11 @@ def test_config():
     cfg.print()
 
 
-def test_deprecated_key(mq):
+def test_missing_or_deprecated_key(mq):
     cfg_file = mq.config.home / '.myqueue/config.py'
     cfg_file.write_text('config = {}\n')
     with pytest.raises(ValueError):
         Configuration.read()
     cfg_file.write_text("config = {'scheduler': 'test', 'mpi': 'openmpi'}\n")
     with pytest.warns(UserWarning):
-        cfg = Configuration.read()
+        Configuration.read()
