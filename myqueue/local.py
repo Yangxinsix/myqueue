@@ -109,10 +109,10 @@ class Server:
             task = args[0]
             task.id = self.next_id
             task.state = State.queued
-            task.deps = [t.dname for t in task.dtasks
-                         if t.id in self.tasks]
+            if all(t.id in self.tasks for t in task.dtasks):
+                task.deps = [t.dname for t in task.dtasks]
+                self.tasks[task.id] = task
             self.next_id += 1
-            self.tasks[task.id] = task
             result = task.id
         elif cmd == 'list':
             result = list(self.tasks)
@@ -161,7 +161,7 @@ class Server:
 
         cmd = str(task.cmd)
         if task.resources.processes > 1:
-            mpiexec = 'mpiexec -x OMP_NUM_THREADS=1 '
+            mpiexec = f'{self.config.mpiexec} -x OMP_NUM_THREADS=1 '
             mpiexec += f'-np {task.resources.processes} '
             cmd = mpiexec + cmd.replace('python3',
                                         self.config.parallel_python)
@@ -179,7 +179,7 @@ class Server:
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
         await proc.wait()
-        print('END', task.id)
+        print('END', task.id, proc.returncode)
         handle.cancel()
 
         del self.tasks[task.id]

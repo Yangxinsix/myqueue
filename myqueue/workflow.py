@@ -146,7 +146,7 @@ def get_tasks_from_folder(folder: Path,
             for task in tasks:
                 task.workflow = True
         else:
-            tasks = collect(func, folder, script)
+            tasks = collect(func, script)
 
     return tasks
 
@@ -480,7 +480,6 @@ def create_task(function: Callable = None,
 
 
 def collect(workflow_function: Callable,
-            folder: Path,
             script: Path) -> List[Task]:
     """Collecting tasks from workflow function."""
     runner.tasks = []
