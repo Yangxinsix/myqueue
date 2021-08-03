@@ -12,6 +12,9 @@ Next release
 * The simple "local" scheduler is now feature complete.
   See :ref:`scheduler`.
 
+* The `mpi_implementations` configuration option is no longer needed and has
+  been deprecated.
+
 
 Version 21.7.0
 ==============

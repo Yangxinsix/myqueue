@@ -6,7 +6,7 @@ import sys
 from time import sleep, time
 from typing import Tuple, Any
 
-from .utils import get_home_folders, mqhome
+from .utils import mqhome
 
 T = 600  # ten minutes
 
@@ -63,7 +63,7 @@ def read_hostname_and_pid() -> Tuple[str, int]:
 
 
 def loop() -> None:
-    dir = out.parent
+    # dir = out.parent
 
     pid = os.getpid()
     host = socket.gethostname()
@@ -74,24 +74,19 @@ def loop() -> None:
 
     while True:
         sleep(T)
-        folders = get_home_folders(prune=False)
-        newfolders = []
-        for f in folders:
-            if (f / '.myqueue').is_dir():
-                result = subprocess.run(
-                    f'python3 -m myqueue kick {f} -T >> {out}',
-                    shell=True,
-                    stderr=subprocess.PIPE)
-                if result.returncode:
-                    err.write_bytes(result.stderr)
-                    return
-                newfolders.append(f)
+        f = ...
+        if (f / '.myqueue').is_dir():
+            result = subprocess.run(
+                f'python3 -m myqueue kick {f} -T >> {out}',
+                shell=True,
+                stderr=subprocess.PIPE)
+            if result.returncode:
+                err.write_bytes(result.stderr)
+                return
+        else:
+            return
 
         out.touch()
-
-        if len(newfolders) < len(folders):
-            (dir / 'folders.txt').write_text(
-                ''.join(f'{f}\n' for f in newfolders))
 
 
 def perform_action(action: str) -> int:

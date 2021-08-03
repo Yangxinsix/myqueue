@@ -323,9 +323,6 @@ def _main(arguments: List[str] = None) -> int:
               'subfolders.')
 
         if cmd in ['list', 'sync', 'kick']:
-            a('-A', '--all', action='store_true',
-              help=f'{cmd.title()} all myqueue folders '
-              '(from ~/.myqueue/folders.txt)')
             a('folder',
               nargs='?',
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
@@ -412,7 +409,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.task import task
     from myqueue.queue import Queue
     from myqueue.selection import Selection
-    from myqueue.utils import get_home_folders, mqhome
+    from myqueue.utils import mqhome
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon
     from myqueue.states import State
@@ -424,32 +421,21 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     verbosity = 1 - args.quiet + args.verbose
 
     if args.command == 'init':
-        folders = get_home_folders()
         root = Path.cwd()
-        if root in folders:
+        mq = root / '.myqueue'
+        if mq.is_dir():
             raise MQError(
                 f'The folder {root} has already been initialized!')
-        mq = root / '.myqueue'
         mq.mkdir()
         path = mqhome() / '.myqueue'
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
-
-        folders.append(root)
-        (path / 'folders.txt').write_text('\n'.join(str(folder)
-                                                    for folder in folders) +
-                                          '\n')
         return
 
     folder_names: List[str] = []
     if args.command in ['list', 'sync', 'kick']:
-        if args.all:
-            if args.folder is not None:
-                raise MQError('Specifying a folder together with --all '
-                              'does not make sense')
-        else:
-            folder_names = [args.folder or '.']
+        folder_names = [args.folder or '.']
     elif args.command == 'info':
         folder_names = ['.']
     else:
@@ -515,36 +501,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                       not getattr(args, 'not_recursive',
                                                   False)),
                               regex(args.error))
-
-    if args.command == 'list' and args.all:
-        folders = get_home_folders()
-        selection.folders = folders
-        for folder in folders:
-            try:
-                config = Configuration.read(folder)
-            except FileNotFoundError:
-                continue
-            print(f'{folder}:')
-            with Queue(config, verbosity, need_lock=False) as queue:
-                if args.sort:
-                    reverse = args.sort.endswith('-')
-                    column = args.sort.rstrip('-')
-                else:
-                    reverse = False
-                    column = None
-                queue.list(selection, args.columns, column, reverse,
-                           args.count)
-        return
-
-    if args.command in ['sync', 'kick'] and args.all:
-        for folder in get_home_folders():
-            config = Configuration.read(folder)
-            with Queue(config, verbosity, dry_run=args.dry_run) as queue:
-                if args.command == 'sync':
-                    queue.sync()
-                else:
-                    queue.kick()
-        return
 
     need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
