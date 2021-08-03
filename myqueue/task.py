@@ -377,11 +377,14 @@ class Task:
 
     def cancel_dependents(self,
                           tasks: Sequence['Task'],
-                          t: float = 0.0) -> None:
+                          t: float = 0.0) -> int:
         """Cancel dependents."""
+        ncancel = 0
         for task in self.find_dependents(tasks):
             task.state = State.CANCELED
             task.tstop = t
+            ncancel += 1
+        return ncancel
 
     def run(self) -> None:
         self.result = self.cmd.run()
