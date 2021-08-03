@@ -48,7 +48,7 @@ class LocalScheduler(Scheduler):
             except ConnectionRefusedError:
                 raise ConnectionRefusedError(
                     'Local scheduler not responding.  '
-                    'Please start it with: "python -m myqueue.local"')
+                    'Please start it with: "python3 -m myqueue.local"')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
@@ -178,6 +178,7 @@ class Server:
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
+        print('RUNNING ...', task.id)
         await proc.wait()
         print('END', task.id, proc.returncode)
         handle.cancel()

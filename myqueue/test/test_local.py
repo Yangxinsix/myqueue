@@ -1,6 +1,7 @@
 import os
 import sys
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -70,8 +71,12 @@ def test_local_scheduler2(scheduler):
                               dry_run=False)
     assert len(ok) == 4
     assert ex is None
-    ids = scheduler.get_ids()
-    assert len(ids) == 0
+    for i in range(10):
+        if len(scheduler.get_ids()) == 0:
+            break
+        time.sleep(0.1)
+    else:  # no break
+        1 / 0
     names = set(path.name[6:]
                 for path in Path('.myqueue').glob('local-*-?'))
     assert names == set(['1-2', '2-2', '2-0', '1-0'])
