@@ -136,6 +136,7 @@ class Server:
         print('JOBS:', list(self.tasks))
 
     def kick(self) -> None:
+        """Check if a new task should be started."""
         self.aiotasks = {id: aiotask
                          for id, aiotask in self.aiotasks.items()
                          if not aiotask.done()}
@@ -156,6 +157,7 @@ class Server:
         # aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
 
     async def run(self, task: Task) -> None:
+        """Run a task."""
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
 
@@ -178,7 +180,6 @@ class Server:
         task.state = State.running
         (self.folder / f'local-{task.id}-0').write_text('')  # running
 
-        print('RUNNING ...', task.id)
         await proc.wait()
         print('END', task.id, proc.returncode)
         handle.cancel()
@@ -205,6 +206,7 @@ class Server:
         self.kick()
 
     def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
+        """Terminate a task."""
         print('Terminate', id)
         proc = self.processes.get(id)
         if proc and proc.returncode is None:

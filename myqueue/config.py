@@ -34,6 +34,7 @@ class Configuration:
         return f'Configuration({args})'
 
     def print(self) -> None:
+        """Pretty print."""
         for key, value in self.__dict__.items():
             if key == 'nodes':
                 print('nodes')
