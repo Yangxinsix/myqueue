@@ -71,7 +71,7 @@ List (ls): List tasks in queue
 
 usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
                [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
-               [-T] [-A]
+               [-T]
                [folder]
 
 List tasks in queue.
@@ -125,7 +125,6 @@ optional arguments:
   -v, --verbose         More output.
   -q, --quiet           Less output.
   -T, --traceback       Show full traceback.
-  -A, --all             List all myqueue folders (from ~/.myqueue/folders.txt)
 
 
 .. _submit:
@@ -359,7 +358,7 @@ optional arguments:
 Kick: Restart T and M tasks (timed-out and out-of-memory)
 ---------------------------------------------------------
 
-usage: mq kick [-h] [-z] [-v] [-q] [-T] [-A] [folder]
+usage: mq kick [-h] [-z] [-v] [-q] [-T] [folder]
 
 Restart T and M tasks (timed-out and out-of-memory).
 
@@ -375,7 +374,6 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
-  -A, --all        Kick all myqueue folders (from ~/.myqueue/folders.txt)
 
 
 .. _modify:
@@ -445,7 +443,7 @@ optional arguments:
 Sync: Make sure SLURM/LSF/PBS and MyQueue are in sync
 -----------------------------------------------------
 
-usage: mq sync [-h] [-z] [-v] [-q] [-T] [-A] [folder]
+usage: mq sync [-h] [-z] [-v] [-q] [-T] [folder]
 
 Make sure SLURM/LSF/PBS and MyQueue are in sync.
 
@@ -461,7 +459,6 @@ optional arguments:
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
-  -A, --all        Sync all myqueue folders (from ~/.myqueue/folders.txt)
 
 
 .. _completion:

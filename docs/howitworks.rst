@@ -50,13 +50,3 @@ You now have a ``project2/.myqueue/`` folder that contains a copy of your main
 configuration file (``~/.myqueue/config.py``) that you can edit.  All tasks
 inside the ``project2/`` folder will now use ``project2/.myqueue/`` for
 storing your queue and configuration.
-
-MyQueue keeps track of all your *root* folders in the file
-``~/.myqueue/folders.txt`` so that you can get a quick overview of all your
-projects with::
-
-    $ mq ls -AC
-    /home/jensj:
-    done: 17, total: 17
-    /home/jensj/project2:
-    done: 42, running 117, total: 159

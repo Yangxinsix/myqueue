@@ -361,8 +361,10 @@ def _main(arguments: List[str] = None) -> int:
         return 0
 
     if args.command == 'daemon':
-        from .daemon import perform_action
-        return perform_action(args.action)
+        from myqueue.daemon import perform_action
+        from myqueue.config import find_home_folder
+        mq = find_home_folder(Path.cwd())
+        return perform_action(mq, args.action)
 
     if args.command == 'config':
         from .config import guess_configuration
@@ -415,9 +417,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.states import State
     from myqueue.info import info
 
-    if not is_test:
-        start_daemon()
-
     verbosity = 1 - args.quiet + args.verbose
 
     if args.command == 'init':
@@ -455,23 +454,28 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 raise MQError('Missing folder!')
 
-    if folders:
-        # Find root folder:
-        start = folders[0]
+    # Find root folder:
+    start = folders[0]
+    try:
+        config = Configuration.read(start)
+    except ValueError:
+        raise MQError(
+            f'The folder {start} is not inside a MyQueue tree.\n'
+            'You can create a tree with "cd <root-of-tree>; mq init".')
+
+    home = config.home
+
+    if verbosity > 1:
+        print('Root:', home)
+
+    for folder in folders[1:]:
         try:
-            config = Configuration.read(start)
+            folder.relative_to(home)
         except ValueError:
-            raise MQError(
-                f'The folder {start} is not inside a MyQueue tree.\n'
-                'You can create a tree with "cd <root-of-tree>; mq init".')
-        home = config.home
-        if verbosity > 1:
-            print('Root:', home)
-        for folder in folders[1:]:
-            try:
-                folder.relative_to(home)
-            except ValueError:
-                raise MQError(f'{folder} not inside {home}')
+            raise MQError(f'{folder} not inside {home}')
+
+    if not is_test:
+        start_daemon(home)
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''

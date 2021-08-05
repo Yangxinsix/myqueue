@@ -128,22 +128,6 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
-def get_home_folders(prune: bool = True) -> List[Path]:
-    """Return list of all known .myqueue/ folders."""
-    home = mqhome()
-    path = home / '.myqueue' / 'folders.txt'
-    if path.is_file():
-        folders = []
-        for f in path.read_text().splitlines():
-            folder = Path(f)
-            if not prune or (folder / '.myqueue').is_dir():
-                folders.append(folder)
-        return folders
-    else:
-        path.write_text(f'{home}\n')
-        return [home]
-
-
 def update_readme_and_completion(test: bool = False) -> None:
     """Update README.rst and commands dict.
 
