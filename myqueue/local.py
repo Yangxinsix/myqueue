@@ -8,6 +8,7 @@ from .scheduler import Scheduler
 from .task import Task
 from .config import Configuration
 from .states import State
+from myqueue.queue import Queue
 
 
 class LocalSchedulerError(Exception):
@@ -73,7 +74,11 @@ class Server:
         self.config = config
         self.port = port
 
-        self.next_id = 1
+        with Queue(config) as queue:
+            queue._read()
+            self.next_id = 1 + max((task.id for task in queue.tasks),
+                                   default=0)
+
         self.tasks: Dict[int, Task] = {}
         self.processes: Dict[int, asyncio.subprocess.Process] = {}
         self.aiotasks: Dict[int, asyncio.Task] = {}
