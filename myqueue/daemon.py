@@ -1,3 +1,9 @@
+"""Background demon process.
+
+The daemon process wakes up every ten minutes to check if any tasks need to
+be resubmitted, held or released.  It will write its output to
+.myqueue/daemon.out.
+"""
 import functools
 import os
 import signal
@@ -15,15 +21,18 @@ T = 600  # kick system every ten minutes
 
 
 def is_running(mq: Path) -> bool:
+    """Check if daemon is running."""
     out = mq / 'daemon.out'
     if out.is_file() and (mq / 'daemon.pid').is_file():
         age = time() - out.stat().st_mtime
         if age < 7200:
+            # No action for two hours - it must be dead:
             return True
     return False
 
 
 def start_daemon(mq: Path) -> bool:
+    """Fork a daemon process."""
     err = mq / 'daemon.err'
     out = mq / 'daemon.out'
 
@@ -59,17 +68,20 @@ def start_daemon(mq: Path) -> bool:
 
 
 def exit(pidfile: Path, signum: int, frame: Any) -> None:
+    """Remove .myqueue/daemon.pid file on exit."""
     pidfile.unlink()
     if not os.getenv('MYQUEUE_TESTING'):
         sys.exit()
 
 
 def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
+    """Read from .myqueue/daemon.pid file."""
     host, pid = pidfile.read_text().split(':')
     return host, int(pid)
 
 
 def loop(mq: Path) -> None:
+    """Main loop: kick system every ten minutes."""
     err = mq / 'daemon.err'
     out = mq / 'daemon.out'
     pidfile = mq / 'daemon.pid'
@@ -104,6 +116,10 @@ def loop(mq: Path) -> None:
 
 
 def perform_action(mq: Path, action: str) -> int:
+    """Status of, stop or start daemon.
+
+    Returns PID.
+    """
     pidfile = mq / 'daemon.pid'
     pid = -1
 
