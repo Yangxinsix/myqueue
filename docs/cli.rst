@@ -521,7 +521,8 @@ usage: mq daemon [-h] [-z] [-v] [-q] [-T] {start,stop,status}
 
 Interact with the background process.
 
-Manage daemon for restarting, holding and releasing tasks.
+Manage daemon for sending notifications, restarting, holding and releasing
+tasks.
 
 {start,stop,status}:
     Start, stop or check status.
