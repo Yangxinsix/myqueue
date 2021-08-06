@@ -364,7 +364,8 @@ def _main(arguments: List[str] = None) -> int:
         from myqueue.daemon import perform_action
         from myqueue.config import find_home_folder
         mq = find_home_folder(Path.cwd())
-        return perform_action(mq, args.action)
+        perform_action(mq, args.action)
+        return 0
 
     if args.command == 'config':
         from .config import guess_configuration

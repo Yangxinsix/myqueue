@@ -11,7 +11,7 @@ from typing import Any, Tuple
 from myqueue.queue import Queue
 from myqueue.config import Configuration
 
-T = 600  # Kick system every ten minutes
+T = 600  # kick system every ten minutes
 
 
 def is_running(mq: Path) -> bool:
@@ -23,7 +23,7 @@ def is_running(mq: Path) -> bool:
     return False
 
 
-def start_daemon(mq: Path) -> bool:  # pragma: nocover
+def start_daemon(mq: Path) -> bool:
     err = mq / 'daemon.err'
     out = mq / 'daemon.out'
 
@@ -39,24 +39,29 @@ def start_daemon(mq: Path) -> bool:  # pragma: nocover
 
     pid = os.fork()
     if pid == 0:
-        pid = os.fork()
-        if pid == 0:
-            # redirect standard file descriptors
-            sys.stderr.flush()
-            si = open(os.devnull, 'r')
-            so = open(os.devnull, 'w')
-            se = open(os.devnull, 'w')
-            os.dup2(si.fileno(), sys.stdin.fileno())
-            os.dup2(so.fileno(), sys.stdout.fileno())
-            os.dup2(se.fileno(), sys.stderr.fileno())
+        if os.getenv('MYQUEUE_TESTING'):
+            # Simple version for pytest only:
             loop(mq)
+        else:
+            pid = os.fork()
+            if pid == 0:
+                # redirect standard file descriptors
+                sys.stderr.flush()
+                si = open(os.devnull, 'r')
+                so = open(os.devnull, 'w')
+                se = open(os.devnull, 'w')
+                os.dup2(si.fileno(), sys.stdin.fileno())
+                os.dup2(so.fileno(), sys.stdout.fileno())
+                os.dup2(se.fileno(), sys.stderr.fileno())
+                loop(mq)
         os._exit(0)
     return True
 
 
 def exit(pidfile: Path, signum: int, frame: Any) -> None:
     pidfile.unlink()
-    sys.exit()
+    if not os.getenv('MYQUEUE_TESTING'):
+        sys.exit()
 
 
 def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
@@ -100,6 +105,7 @@ def loop(mq: Path) -> None:
 
 def perform_action(mq: Path, action: str) -> int:
     pidfile = mq / 'daemon.pid'
+    pid = -1
 
     running = is_running(mq)
     if running:
@@ -136,4 +142,4 @@ def perform_action(mq: Path, action: str) -> int:
     else:
         assert False, action
 
-    return 0
+    return pid
