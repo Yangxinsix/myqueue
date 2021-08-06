@@ -1,9 +1,10 @@
-"""Background demon process.
+"""Background daemon process.
 
 The daemon process wakes up every ten minutes to check if any tasks need to
-be resubmitted, held or released.  It will write its output to
-.myqueue/daemon.out.
+be resubmitted, held or released.  Notification emails will also be sent.
+It will write its output to .myqueue/daemon.out.
 """
+
 import functools
 import os
 import signal

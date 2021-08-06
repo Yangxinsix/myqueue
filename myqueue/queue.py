@@ -410,7 +410,13 @@ class Queue(Lock):
                     self.changed.add(task)
 
     def kick(self) -> Tuple[int, int, int]:
-        """Send email and restart timed-out and out-of-memory tasks."""
+        """Kick the system.
+
+        * Send email notifications
+        * restart timed-out tasks
+        * restart out-of-memory tasks
+        * release/hold tasks to stay under *maximum_diskspace*
+        """
         self._read()
 
         ndct = self.config.notifications

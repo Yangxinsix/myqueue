@@ -22,7 +22,8 @@ The daemon
 ----------
 
 The daemon process wakes up every ten minutes to check if any tasks need to be
-resubmitted, held or released.  It will write its output to
+resubmitted, held or released (see :meth:`~myqueue.queue.Queue.kick`).
+Notification emails will also be sent.  It will write its output to
 ``.myqueue/daemon.out``.
 
 How does the daemon get started?  Whenever the time stamp of the
