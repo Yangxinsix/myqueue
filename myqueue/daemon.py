@@ -99,14 +99,15 @@ def loop(mq: Path) -> None:
 
     while True:
         sleep(T)
-        if mq.is_dir():
-            try:
-                with Queue(config, verbosity=0) as queue:
-                    restarted, held, released = queue.kick()
-            except Exception:
-                err.write_text(traceback.format_exc())
-                return
-        else:
+
+        if not mq.is_dir():
+            return
+
+        try:
+            with Queue(config, verbosity=0) as queue:
+                restarted, held, released = queue.kick()
+        except Exception:
+            err.write_text(traceback.format_exc())
             return
 
         if restarted + held + released > 0:
@@ -137,7 +138,10 @@ def perform_action(mq: Path, action: str) -> int:
     elif action == 'stop':
         if running:
             if host == socket.gethostname():
-                os.kill(pid, signal.SIGWINCH)
+                try:
+                    os.kill(pid, signal.SIGWINCH)
+                except ProcessLookupError:
+                    pass
             else:
                 print(f'You have to be on {host} in order to stop the daemon')
                 return 1
@@ -148,7 +152,8 @@ def perform_action(mq: Path, action: str) -> int:
         if running:
             print('Already running')
         else:
-            assert not pidfile.is_file()
+            if pidfile.is_file():
+                pidfile.unlink()
             start_daemon(mq)
             while not pidfile.is_file():
                 # Wait for the fork to start ...

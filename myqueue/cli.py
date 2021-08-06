@@ -137,7 +137,8 @@ Example:
 """),
     ('daemon',
      'Interact with the background process.', """
-Manage daemon for restarting, holding and releasing tasks.
+Manage daemon for sending notifications, restarting, holding and
+releasing tasks.
 """)]
 
 aliases = {'rm': 'remove',
@@ -360,13 +361,6 @@ def _main(arguments: List[str] = None) -> int:
             subparsers.choices[args.cmd].print_help()
         return 0
 
-    if args.command == 'daemon':
-        from myqueue.daemon import perform_action
-        from myqueue.config import find_home_folder
-        mq = find_home_folder(Path.cwd())
-        perform_action(mq, args.action)
-        return 0
-
     if args.command == 'config':
         from .config import guess_configuration
         guess_configuration(args.scheduler, args.queue_name, args.in_place)
@@ -407,14 +401,14 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from myqueue.config import Configuration
+    from myqueue.config import Configuration, find_home_folder
     from myqueue.resources import Resources
     from myqueue.task import task
     from myqueue.queue import Queue
     from myqueue.selection import Selection
     from myqueue.utils import mqhome
     from myqueue.workflow import workflow
-    from myqueue.daemon import start_daemon
+    from myqueue.daemon import start_daemon, perform_action
     from myqueue.states import State
     from myqueue.info import info
 
@@ -431,6 +425,11 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
+        return
+
+    if args.command == 'daemon':
+        mq = find_home_folder(Path.cwd()) / '.myqueue/'
+        perform_action(mq, args.action)
         return
 
     folder_names: List[str] = []
@@ -476,7 +475,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             raise MQError(f'{folder} not inside {home}')
 
     if not is_test:
-        start_daemon(home)
+        try:
+            start_daemon(home)
+        except PermissionError:
+            pass
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
