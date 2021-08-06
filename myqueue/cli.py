@@ -476,7 +476,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     if not is_test:
         try:
-            start_daemon(home)
+            start_daemon(home / '.myqueue/')
         except PermissionError:
             pass
 
