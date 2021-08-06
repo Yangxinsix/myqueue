@@ -9,7 +9,7 @@ File format versions:
 import json
 import time
 from collections import defaultdict
-from typing import Set, List, Dict, Optional, Sequence
+from typing import Set, List, Dict, Optional, Sequence, Tuple
 from types import TracebackType
 
 from myqueue.config import Configuration
@@ -444,7 +444,7 @@ class Queue(Lock):
 
         return len(tasks), held, released
 
-    def hold_or_release(self) -> None:
+    def hold_or_release(self) -> Tuple[int, int]:
         maxmem = self.config.maximum_diskspace
         mem = 0
         for task in self.tasks:

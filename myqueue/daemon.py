@@ -8,7 +8,7 @@ from pathlib import Path
 from time import sleep, time
 from typing import Any, Tuple
 
-from myqueu.queue import Queue
+from myqueue.queue import Queue
 from myqueue.config import Configuration
 
 T = 600  # Kick system every ten minutes
@@ -23,7 +23,7 @@ def is_running(mq: Path) -> bool:
     return False
 
 
-def start_daemon(mq: Path) -> bool:
+def start_daemon(mq: Path) -> bool:  # pragma: nocover
     err = mq / 'daemon.err'
     out = mq / 'daemon.out'
 
@@ -32,7 +32,7 @@ def start_daemon(mq: Path) -> bool:
                'Fix the problem and remove the daemon.err file.')
         raise RuntimeError(msg)
 
-    if is_running():
+    if is_running(mq):
         return False
 
     out.touch()
