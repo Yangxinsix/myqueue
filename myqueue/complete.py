@@ -45,13 +45,12 @@ commands = {
          '--traceback'],
     'kick':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-A', '--all'],
+         '--traceback'],
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
          '-c', '--columns', '-S', '--sort', '-C', '--count',
          '-L', '--use-log-file', '--not-recursive', '-v',
-         '--verbose', '-q', '--quiet', '-T', '--traceback', '-A',
-         '--all'],
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'modify':
         ['-E', '--email', '-N', '--new-state', '-s', '--states', '-i',
          '--id', '-n', '--name', '-e', '--error', '-z',
@@ -76,7 +75,7 @@ commands = {
          '-q', '--quiet', '-T', '--traceback'],
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-A', '--all'],
+         '--traceback'],
     'workflow':
         ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
          '--pattern', '-a', '--arguments', '-z', '--dry-run',

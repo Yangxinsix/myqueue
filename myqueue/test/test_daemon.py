@@ -1,6 +1,8 @@
-from myqueue.daemon import perform_action
 import functools
+import socket
 import time
+
+from myqueue.daemon import perform_action
 
 
 def test_daemon(mq, capsys):
@@ -14,11 +16,13 @@ def test_daemon(mq, capsys):
     cmd('stop')
     time.sleep(0.2)
     cmd('status')
+
+    host = socket.gethostname()
     assert capsys.readouterr().out == '\n'.join(
         ['Not running',
          'Not running',
          f'PID: {pid}',
          'Already running',
-         f'Running on Hjem with pid={pid}',
+         f'Running on {host} with pid={pid}',
          'Not running',
          ''])
