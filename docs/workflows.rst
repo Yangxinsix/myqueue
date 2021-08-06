@@ -259,10 +259,10 @@ result. If the function ``f`` has an attribute ``has`` that is a callable
 that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
 to check if the function has been called with a given set of arguments.  If a
 function doesn't have a ``has`` attribute then MyQueue will wrap it in a
-function that does using the :class:`~myqueue.workflow.Cached`
+function that does using the :class:`~myqueue.caching.CachedFunction`
 object.
 
-.. autoclass:: myqueue.workflow.Cached
+.. autoclass:: myqueue.caching.CachedFunction
     :members:
 
 Helper wrapper for working with functions:
