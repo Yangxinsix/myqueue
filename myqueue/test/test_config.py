@@ -5,7 +5,7 @@ from myqueue.config import Configuration
 def test_config():
     cfg = Configuration('test')
     print(cfg)
-    cfg.print()
+    print(repr(cfg))
 
 
 def test_missing_or_deprecated_key(mq):
