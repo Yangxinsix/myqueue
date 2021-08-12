@@ -23,9 +23,9 @@ T = 600  # kick system every ten minutes
 
 def is_running(mq: Path) -> bool:
     """Check if daemon is running."""
-    out = mq / 'daemon.out'
-    if out.is_file() and (mq / 'daemon.pid').is_file():
-        age = time() - out.stat().st_mtime
+    pidfile = mq / 'daemon.pid'
+    if pidfile.is_file():
+        age = time() - pidfile.stat().st_mtime
         if age < 7200:
             # No action for two hours - it must be dead:
             return True
@@ -70,7 +70,8 @@ def start_daemon(mq: Path) -> bool:
 
 def exit(pidfile: Path, signum: int, frame: Any) -> None:
     """Remove .myqueue/daemon.pid file on exit."""
-    pidfile.unlink()
+    if pidfile.is_file():
+        pidfile.unlink()
     if not os.getenv('MYQUEUE_TESTING'):
         sys.exit()
 
@@ -101,20 +102,22 @@ def loop(mq: Path) -> None:
         sleep(T)
 
         if not mq.is_dir():
-            return
+            break
 
         try:
             with Queue(config, verbosity=0) as queue:
-                restarted, held, released = queue.kick()
+                result = queue.kick()
         except Exception:
             err.write_text(traceback.format_exc())
-            return
+            break
 
-        if restarted + held + released > 0:
+        if result:
             with out.open('a') as fd:
-                print(restarted, held, released, file=fd)
-        else:
-            out.touch()
+                print(result, file=fd)
+
+        pidfile.touch()
+
+    pidfile.unlink()
 
 
 def perform_action(mq: Path, action: str) -> int:

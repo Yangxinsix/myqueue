@@ -409,7 +409,7 @@ class Queue(Lock):
                         task.write_state_file()
                     self.changed.add(task)
 
-    def kick(self) -> Tuple[int, int, int]:
+    def kick(self) -> Dict[str, int]:
         """Kick the system.
 
         * Send email notifications
@@ -419,10 +419,13 @@ class Queue(Lock):
         """
         self._read()
 
+        result = {}
+
         ndct = self.config.notifications
         if ndct:
             notifications = send_notification(self.tasks, **ndct)
             self.changed.update(task for task, statename in notifications)
+            result['notifications'] = len(notifications)
 
         tasks = []
         for task in self.tasks:
@@ -445,12 +448,13 @@ class Queue(Lock):
                     task.id = 0
                     task.state = State.undefined
                 self.submit(tasks, read=False)
+            result['restarts'] = len(tasks)
 
-        held, released = self.hold_or_release()
+        result.update(self.hold_or_release())
 
-        return len(tasks), held, released
+        return result
 
-    def hold_or_release(self) -> Tuple[int, int]:
+    def hold_or_release(self) -> Dict[str, int]:
         maxmem = self.config.maximum_diskspace
         mem = 0
         for task in self.tasks:
@@ -483,7 +487,9 @@ class Queue(Lock):
                     if mem > maxmem:
                         break
 
-        return held, released
+        return {name: n
+                for name, n in [('held', held), ('released', released)]
+                if n > 0}
 
     def _write(self) -> None:
         root = self.folder.parent
