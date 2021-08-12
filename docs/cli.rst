@@ -526,9 +526,8 @@ tasks.
 
 {start,stop,status}:
     Start, stop or check status.
-folder
-    Pick daemon process corresponding to this folder. Defaults
-    to current folder.
+folder:
+    Pick daemon process corresponding to this folder. Defaults to current folder.
 
 optional arguments:
   -h, --help           show this help message and exit
