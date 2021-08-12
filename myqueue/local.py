@@ -66,6 +66,7 @@ class LocalScheduler(Scheduler):
 
 
 class Server:
+    """Run tasks in subprocesses."""
     def __init__(self,
                  config: Configuration,
                  cores: int = 1,
@@ -79,7 +80,14 @@ class Server:
         self.aiotasks: Dict[int, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
-    async def main(self) -> None:
+    def start(self) -> None:
+        """Start server and wait for cammands."""
+        try:
+            asyncio.run(self._start())
+        except asyncio.exceptions.CancelledError:
+            pass
+
+    async def _start(self) -> None:
         for _ in range(5):
             try:
                 self.server = await asyncio.start_server(
@@ -97,13 +105,8 @@ class Server:
             await self.server.serve_forever()
             await self.server.wait_closed()
 
-    def start(self) -> None:
-        try:
-            asyncio.run(self.main())
-        except asyncio.exceptions.CancelledError:
-            pass
-
     async def recv(self, reader: Any, writer: Any) -> None:
+        """Recieve command from client."""
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
         print('COMMAND:', cmd, *args)
@@ -225,4 +228,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    asyncio.run(Server(Configuration.read()).main())
+    asyncio.run(Server(Configuration.read())._start())
