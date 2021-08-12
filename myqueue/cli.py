@@ -202,6 +202,10 @@ def _main(arguments: List[str] = None) -> int:
         if cmd == 'daemon':
             a('action', choices=['start', 'stop', 'status'],
               help='Start, stop or check status.')
+            a('folder',
+              nargs='?',
+              help='Pick daemon process corresponding to this folder.  '
+              'Defaults to current folder.')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -401,7 +405,7 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from myqueue.config import Configuration, find_home_folder
+    from myqueue.config import Configuration
     from myqueue.resources import Resources
     from myqueue.task import task
     from myqueue.queue import Queue
@@ -427,13 +431,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             (mq / 'config.py').write_text(cfg.read_text())
         return
 
-    if args.command == 'daemon':
-        mq = find_home_folder(Path.cwd()) / '.myqueue/'
-        perform_action(mq, args.action)
-        return
-
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick']:
+    if args.command in ['list', 'sync', 'kick', 'daemon']:
         folder_names = [args.folder or '.']
     elif args.command == 'info':
         folder_names = ['.']
@@ -479,6 +478,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             start_daemon(home / '.myqueue/')
         except PermissionError:
             pass
+
+    if args.command == 'daemon':
+        perform_action(home / '.myqueue/', args.action)
+        return
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''

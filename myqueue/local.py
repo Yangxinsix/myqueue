@@ -80,8 +80,18 @@ class Server:
         self.folder = self.config.home / '.myqueue'
 
     async def main(self) -> None:
-        self.server = await asyncio.start_server(
-            self.recv, '127.0.0.1', self.port)
+        for _ in range(5):
+            try:
+                self.server = await asyncio.start_server(
+                    self.recv, '127.0.0.1', self.port)
+            except OSError:
+                self.port -= 1
+            else:
+                break
+        else:  # no break
+            raise OSError('Could not find unused port!')
+
+        print('Port:', self.port)
 
         async with self.server:  # type: ignore
             await self.server.serve_forever()

@@ -5,21 +5,23 @@ Your queue
 ----------
 
 When you submit a task, MyQueue will submit it to your scheduler and add it to
-a *queue* file (:file:`~/.myqueue/queue.json`).  Once the tasks starts
-running (let's say it has a task-id ``1234``), it will write a status file
-called ``1234-0`` in your ``~/.myqueue/`` folder.  When the tasks stops
+a *queue* file (:file:`~/.myqueue/queue.json` by default).  Once the tasks
+starts running (let's say it has a task-id ``1234``), it will write a status
+file called ``1234-0`` in your ``.myqueue/`` folder.  When the tasks stops
 running, it will write a file called ``1234-1`` if it finished successfully
-and ``1234-2`` if it failed.  MyQueue will remove the status files and
-update your queue with information about timing and possible errors.
+and ``1234-2`` if it failed.  MyQueue will remove the status files and update
+your queue with information about timing and possible errors.
 
 The processing of the status files happens whenever you interact with MyQueue
 on the command-line or every 10 minutes when the MyQueue daemon wakes up.
 
-All events are logged to ``~/.myqueue/log.csv``.
+All events are logged to ``.myqueue/log.csv``.
 
 
-The daemon
-----------
+.. _daemon process:
+
+The daemon background process
+-----------------------------
 
 The daemon process wakes up every ten minutes to check if any tasks need to be
 resubmitted, held or released (see :meth:`~myqueue.queue.Queue.kick`).
@@ -32,7 +34,7 @@ command will start the daemon process.  You can also use the :ref:`daemon
 <daemon>` sub-command to explicitely *start* or *stop* of the daemon
 (and check *status*)::
 
-    $ mq daemon {start,stop,status}
+    $ mq daemon {start,stop,status} [folder]
 
 
 More than one configuration file

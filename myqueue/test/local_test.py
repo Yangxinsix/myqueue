@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 import threading
 import time
@@ -16,7 +15,7 @@ from myqueue.workflow import collect, run
 
 @pytest.fixture(scope='function')
 def scheduler(tmpdir):
-    port = random.randrange(39980, 39998)
+    port = 39998
     dir = os.getcwd()
     home = Path(tmpdir)
     (home / '.myqueue').mkdir()
@@ -26,9 +25,9 @@ def scheduler(tmpdir):
     thread = threading.Thread(target=server.start)
     thread.start()
     scheduler = LocalScheduler(config)
-    scheduler.port = port
     import time
-    time.sleep(1)
+    time.sleep(0.5)
+    scheduler.port = server.port
     yield scheduler
     scheduler.send('stop')
     thread.join()
