@@ -33,15 +33,17 @@ class Configuration:
                          for name in self.__dict__)
         return f'Configuration({args})'
 
-    def print(self) -> None:
-        """Pretty print."""
+    def __str__(self) -> str:
+        lines = []
         for key, value in self.__dict__.items():
             if key == 'nodes':
-                print('nodes')
+                lines.append('nodes')
+                n = max((len(name) for name in value), default=0)
                 for name, dct in value:
-                    print(f'  {name:10}{dct}')
+                    lines.append(f'  {name:{n}}  {dct}')
                 continue
-            print(f'{key:18} {value}')
+            lines.append(f'{key:18} {value}')
+        return '\n'.join(lines)
 
     @classmethod
     def read(self, start: Path = None) -> 'Configuration':

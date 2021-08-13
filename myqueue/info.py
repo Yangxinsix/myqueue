@@ -1,5 +1,6 @@
 import json
 import os
+import textwrap
 from pathlib import Path
 
 from myqueue import __version__
@@ -14,7 +15,7 @@ def info(queue: Queue, id: int = None) -> None:
         print('Code:   ', Path(__file__).parent)
         print('Root:   ', queue.config.home / '.myqueue')
         print('\nConfiguration:')
-        queue.config.print()
+        print(textwrap.indent(str(queue.config), '  '))
         return
 
     queue._read()
