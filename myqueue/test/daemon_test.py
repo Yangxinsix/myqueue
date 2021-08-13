@@ -2,11 +2,11 @@ import functools
 import socket
 import time
 
-from myqueue.daemon import perform_action
+from myqueue.daemon import perform_daemon_action
 
 
 def test_daemon(mq, capsys):
-    cmd = functools.partial(perform_action,
+    cmd = functools.partial(perform_daemon_action,
                             mq.config.home / '.myqueue')
     cmd('status')
     cmd('stop')

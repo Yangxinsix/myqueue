@@ -120,7 +120,7 @@ def loop(mq: Path) -> None:
     pidfile.unlink()
 
 
-def perform_action(mq: Path, action: str) -> int:
+def perform_daemon_action(mq: Path, action: str) -> int:
     """Status of, stop or start daemon.
 
     Returns PID.

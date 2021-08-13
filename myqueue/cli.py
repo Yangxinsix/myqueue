@@ -412,7 +412,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.selection import Selection
     from myqueue.utils import mqhome
     from myqueue.workflow import workflow
-    from myqueue.daemon import start_daemon, perform_action
+    from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
     from myqueue.info import info
 
@@ -473,15 +473,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         except ValueError:
             raise MQError(f'{folder} not inside {home}')
 
+    if args.command == 'daemon':
+        perform_daemon_action(home / '.myqueue/', args.action)
+        return
+
     if not is_test:
         try:
             start_daemon(home / '.myqueue/')
         except PermissionError:
             pass
-
-    if args.command == 'daemon':
-        perform_action(home / '.myqueue/', args.action)
-        return
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
