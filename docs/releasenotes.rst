@@ -12,6 +12,16 @@ Next release
 * The simple "local" scheduler is now feature complete.
   See :ref:`scheduler`.
 
+* The `mpi_implementations` configuration option is no longer needed and has
+  been deprecated.
+
+* MyQueue no longer tries to keep track of all your ``.myqueue/`` folders.
+  Consequently, the ``--all`` option has been removed from the :ref:`list`,
+  :ref:`kick` and :ref:`sync` commands.
+
+* There is now one background daemon per ``.myqueue/`` folder.  See
+  :ref:`daemon process`.
+
 
 Version 21.7.0
 ==============

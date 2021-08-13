@@ -41,7 +41,7 @@ class Queue(Lock):
         self.fname = self.folder / 'queue.json'
 
         Lock.__init__(self, self.fname.with_name('queue.json.lock'),
-                      timeout=6.0)
+                      timeout=10.0)
 
         self._scheduler: Optional[Scheduler] = None
         self.tasks: List[Task] = []
@@ -409,14 +409,23 @@ class Queue(Lock):
                         task.write_state_file()
                     self.changed.add(task)
 
-    def kick(self) -> int:
-        """Send email and restart timed-out and out-of-memory tasks."""
+    def kick(self) -> Dict[str, int]:
+        """Kick the system.
+
+        * Send email notifications
+        * restart timed-out tasks
+        * restart out-of-memory tasks
+        * release/hold tasks to stay under *maximum_diskspace*
+        """
         self._read()
+
+        result = {}
 
         ndct = self.config.notifications
         if ndct:
             notifications = send_notification(self.tasks, **ndct)
             self.changed.update(task for task, statename in notifications)
+            result['notifications'] = len(notifications)
 
         tasks = []
         for task in self.tasks:
@@ -431,19 +440,21 @@ class Queue(Lock):
             if self.dry_run:
                 pprint(tasks)
             else:
-                print('Restarting', plural(len(tasks), 'task'))
+                if self.verbosity > 0:
+                    print('Restarting', plural(len(tasks), 'task'))
                 for task in tasks:
                     self.tasks.remove(task)
                     task.error = ''
                     task.id = 0
                     task.state = State.undefined
                 self.submit(tasks, read=False)
+            result['restarts'] = len(tasks)
 
-        self.hold_or_release()
+        result.update(self.hold_or_release())
 
-        return len(tasks)
+        return result
 
-    def hold_or_release(self) -> None:
+    def hold_or_release(self) -> Dict[str, int]:
         maxmem = self.config.maximum_diskspace
         mem = 0
         for task in self.tasks:
@@ -451,11 +462,15 @@ class Queue(Lock):
                               'FAILED', 'TIMEOUT', 'MEMORY'}:
                 mem += task.diskspace
 
+        held = 0
+        released = 0
+
         if mem > maxmem:
             for task in self.tasks:
                 if task.state == 'queued':
                     if task.diskspace > 0:
                         self.scheduler.hold(task)
+                        held += 1
                         task.state = State.hold
                         self.changed.add(task)
                         mem -= task.diskspace
@@ -465,11 +480,16 @@ class Queue(Lock):
             for task in self.tasks[::-1]:
                 if task.state == 'hold' and task.diskspace > 0:
                     self.scheduler.release_hold(task)
+                    released += 1
                     task.state = State.queued
                     self.changed.add(task)
                     mem += task.diskspace
                     if mem > maxmem:
                         break
+
+        return {name: n
+                for name, n in [('held', held), ('released', released)]
+                if n > 0}
 
     def _write(self) -> None:
         root = self.folder.parent

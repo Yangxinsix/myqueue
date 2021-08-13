@@ -137,7 +137,8 @@ Example:
 """),
     ('daemon',
      'Interact with the background process.', """
-Manage daemon for restarting, holding and releasing tasks.
+Manage daemon for sending notifications, restarting, holding and
+releasing tasks.
 """)]
 
 aliases = {'rm': 'remove',
@@ -201,6 +202,10 @@ def _main(arguments: List[str] = None) -> int:
         if cmd == 'daemon':
             a('action', choices=['start', 'stop', 'status'],
               help='Start, stop or check status.')
+            a('folder',
+              nargs='?',
+              help='Pick daemon process corresponding to this folder.  '
+              'Defaults to current folder.')
 
         elif cmd == 'submit':
             a('task', help='Task to submit.')
@@ -323,9 +328,6 @@ def _main(arguments: List[str] = None) -> int:
               'subfolders.')
 
         if cmd in ['list', 'sync', 'kick']:
-            a('-A', '--all', action='store_true',
-              help=f'{cmd.title()} all myqueue folders '
-              '(from ~/.myqueue/folders.txt)')
             a('folder',
               nargs='?',
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
@@ -362,10 +364,6 @@ def _main(arguments: List[str] = None) -> int:
         else:
             subparsers.choices[args.cmd].print_help()
         return 0
-
-    if args.command == 'daemon':
-        from .daemon import perform_action
-        return perform_action(args.action)
 
     if args.command == 'config':
         from .config import guess_configuration
@@ -412,44 +410,30 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.task import task
     from myqueue.queue import Queue
     from myqueue.selection import Selection
-    from myqueue.utils import get_home_folders, mqhome
+    from myqueue.utils import mqhome
     from myqueue.workflow import workflow
-    from myqueue.daemon import start_daemon
+    from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
     from myqueue.info import info
-
-    if not is_test:
-        start_daemon()
 
     verbosity = 1 - args.quiet + args.verbose
 
     if args.command == 'init':
-        folders = get_home_folders()
         root = Path.cwd()
-        if root in folders:
+        mq = root / '.myqueue'
+        if mq.is_dir():
             raise MQError(
                 f'The folder {root} has already been initialized!')
-        mq = root / '.myqueue'
         mq.mkdir()
         path = mqhome() / '.myqueue'
         cfg = path / 'config.py'
         if cfg.is_file():
             (mq / 'config.py').write_text(cfg.read_text())
-
-        folders.append(root)
-        (path / 'folders.txt').write_text('\n'.join(str(folder)
-                                                    for folder in folders) +
-                                          '\n')
         return
 
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick']:
-        if args.all:
-            if args.folder is not None:
-                raise MQError('Specifying a folder together with --all '
-                              'does not make sense')
-        else:
-            folder_names = [args.folder or '.']
+    if args.command in ['list', 'sync', 'kick', 'daemon']:
+        folder_names = [args.folder or '.']
     elif args.command == 'info':
         folder_names = ['.']
     else:
@@ -469,23 +453,35 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 raise MQError('Missing folder!')
 
-    if folders:
-        # Find root folder:
-        start = folders[0]
+    # Find root folder:
+    start = folders[0]
+    try:
+        config = Configuration.read(start)
+    except ValueError:
+        raise MQError(
+            f'The folder {start} is not inside a MyQueue tree.\n'
+            'You can create a tree with "cd <root-of-tree>; mq init".')
+
+    home = config.home
+
+    if verbosity > 1:
+        print('Root:', home)
+
+    for folder in folders[1:]:
         try:
-            config = Configuration.read(start)
+            folder.relative_to(home)
         except ValueError:
-            raise MQError(
-                f'The folder {start} is not inside a MyQueue tree.\n'
-                'You can create a tree with "cd <root-of-tree>; mq init".')
-        home = config.home
-        if verbosity > 1:
-            print('Root:', home)
-        for folder in folders[1:]:
-            try:
-                folder.relative_to(home)
-            except ValueError:
-                raise MQError(f'{folder} not inside {home}')
+            raise MQError(f'{folder} not inside {home}')
+
+    if args.command == 'daemon':
+        perform_daemon_action(home / '.myqueue/', args.action)
+        return
+
+    if not is_test:
+        try:
+            start_daemon(home / '.myqueue/')
+        except PermissionError:
+            pass
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
@@ -515,36 +511,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                       not getattr(args, 'not_recursive',
                                                   False)),
                               regex(args.error))
-
-    if args.command == 'list' and args.all:
-        folders = get_home_folders()
-        selection.folders = folders
-        for folder in folders:
-            try:
-                config = Configuration.read(folder)
-            except FileNotFoundError:
-                continue
-            print(f'{folder}:')
-            with Queue(config, verbosity, need_lock=False) as queue:
-                if args.sort:
-                    reverse = args.sort.endswith('-')
-                    column = args.sort.rstrip('-')
-                else:
-                    reverse = False
-                    column = None
-                queue.list(selection, args.columns, column, reverse,
-                           args.count)
-        return
-
-    if args.command in ['sync', 'kick'] and args.all:
-        for folder in get_home_folders():
-            config = Configuration.read(folder)
-            with Queue(config, verbosity, dry_run=args.dry_run) as queue:
-                if args.command == 'sync':
-                    queue.sync()
-                else:
-                    queue.kick()
-        return
 
     need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
