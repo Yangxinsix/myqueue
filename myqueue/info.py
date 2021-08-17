@@ -40,17 +40,37 @@ def info(queue: Queue, id: int = None) -> None:
             print('^' * N)
 
 
+class Spinner:
+    n = 0
+
+    def spin(self):
+        N = 500
+        if self.n % N == 0:
+            print('\r' + '.oOo. '[(self.n // N) % 6], end='')
+        self.n += 1
+
+
 def info_all(start: Path):
-    for path in start.glob('**/'):
-        print(f'{path}:')
-        if path.name != '.myqueue':
-            continue
+    dev = start.stat().st_dev
+    '.oOo. '
+    for path in scan(start, dev, Spinner()):
+        print(f'\r{path}:')
         try:
             config = Configuration.read(path)
         except FileNotFoundError:
             continue
-        print(f'{path}:', config)
         with Queue(config, need_lock=False) as queue:
             queue._read()
             pprint(queue.tasks, short=True)
-    print(start)
+
+
+def scan(path, dev, spinner):
+    with os.scandir(path) as entries:
+        for entry in entries:
+            spinner.spin()
+            if entry.is_dir(follow_symlinks=False):
+                if entry.name == '.myqueue':
+                    yield path / entry.name
+                elif (not entry.name.startswith(('.', '_')) and
+                      entry.stat().st_dev == dev):
+                    yield from scan(path / entry.name, dev, spinner)
