@@ -12,12 +12,10 @@ from myqueue.submitting import submit_tasks
 from myqueue.task import task as create_task
 from myqueue.workflow import collect, run
 
-port = 39998
-
 
 @pytest.fixture(scope='function')
 def scheduler(tmpdir):
-    global port
+    port = 39998
     dir = os.getcwd()
     home = Path(tmpdir)
     (home / '.myqueue').mkdir()
@@ -27,10 +25,9 @@ def scheduler(tmpdir):
     thread = threading.Thread(target=server.start)
     thread.start()
     scheduler = LocalScheduler(config)
-    scheduler.port = port
-    port -= 1
     import time
-    time.sleep(1)
+    time.sleep(0.5)
+    scheduler.port = server.port
     yield scheduler
     scheduler.send('stop')
     thread.join()

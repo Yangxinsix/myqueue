@@ -1,103 +1,136 @@
+"""Background daemon process.
+
+The daemon process wakes up every ten minutes to check if any tasks need to
+be resubmitted, held or released.  Notification emails will also be sent.
+It will write its output to .myqueue/daemon.out.
+"""
+
+import functools
 import os
 import signal
 import socket
-import subprocess
 import sys
+import traceback
+from pathlib import Path
 from time import sleep, time
-from typing import Tuple, Any
+from typing import Any, Tuple
 
-from .utils import get_home_folders, mqhome
+from myqueue.queue import Queue
+from myqueue.config import Configuration
 
-T = 600  # ten minutes
-
-mq = mqhome() / '.myqueue'
-out = mq / 'daemon.out'
-err = mq / 'daemon.err'
-pidfile = mq / 'daemon.pid'
+T = 600  # kick system every ten minutes
 
 
-def alive() -> bool:
-    if out.is_file() and pidfile.is_file():
-        age = time() - out.stat().st_mtime
+def is_running(mq: Path) -> bool:
+    """Check if daemon is running."""
+    pidfile = mq / 'daemon.pid'
+    if pidfile.is_file():
+        age = time() - pidfile.stat().st_mtime
         if age < 7200:
+            # No action for two hours - it must be dead:
             return True
     return False
 
 
-def start_daemon() -> bool:
+def start_daemon(mq: Path) -> bool:
+    """Fork a daemon process."""
+    err = mq / 'daemon.err'
+    out = mq / 'daemon.out'
+
     if err.is_file():
         msg = (f'Something wrong.  See {err}.  '
                'Fix the problem and remove the daemon.err file.')
         raise RuntimeError(msg)
 
-    if alive():
+    if is_running(mq):
         return False
 
     out.touch()
 
     pid = os.fork()
     if pid == 0:
-        pid = os.fork()
-        if pid == 0:
-            # redirect standard file descriptors
-            sys.stderr.flush()
-            si = open(os.devnull, 'r')
-            so = open(os.devnull, 'w')
-            se = open(os.devnull, 'w')
-            os.dup2(si.fileno(), sys.stdin.fileno())
-            os.dup2(so.fileno(), sys.stdout.fileno())
-            os.dup2(se.fileno(), sys.stderr.fileno())
-            loop()
+        if os.getenv('MYQUEUE_TESTING'):
+            # Simple version for pytest only:
+            loop(mq)
+        else:
+            pid = os.fork()
+            if pid == 0:
+                # redirect standard file descriptors
+                sys.stderr.flush()
+                si = open(os.devnull, 'r')
+                so = open(os.devnull, 'w')
+                se = open(os.devnull, 'w')
+                os.dup2(si.fileno(), sys.stdin.fileno())
+                os.dup2(so.fileno(), sys.stdout.fileno())
+                os.dup2(se.fileno(), sys.stderr.fileno())
+                loop(mq)
         os._exit(0)
     return True
 
 
-def exit(signum: int, frame: Any) -> None:
-    pidfile.unlink()
-    sys.exit()
+def exit(pidfile: Path, signum: int, frame: Any) -> None:
+    """Remove .myqueue/daemon.pid file on exit."""
+    if pidfile.is_file():
+        pidfile.unlink()
+    if not os.getenv('MYQUEUE_TESTING'):
+        sys.exit()
 
 
-def read_hostname_and_pid() -> Tuple[str, int]:
+def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
+    """Read from .myqueue/daemon.pid file."""
     host, pid = pidfile.read_text().split(':')
     return host, int(pid)
 
 
-def loop() -> None:
-    dir = out.parent
+def loop(mq: Path) -> None:
+    """Main loop: kick system every ten minutes."""
+    err = mq / 'daemon.err'
+    out = mq / 'daemon.out'
+    pidfile = mq / 'daemon.pid'
 
     pid = os.getpid()
     host = socket.gethostname()
     pidfile.write_text(f'{host}:{pid}\n')
 
-    signal.signal(signal.SIGWINCH, exit)
-    signal.signal(signal.SIGTERM, exit)
+    cleanup = functools.partial(exit, pidfile)
+    signal.signal(signal.SIGWINCH, cleanup)
+    signal.signal(signal.SIGTERM, cleanup)
+
+    config = Configuration.read(mq)
 
     while True:
         sleep(T)
-        folders = get_home_folders(prune=False)
-        newfolders = []
-        for f in folders:
-            if (f / '.myqueue').is_dir():
-                result = subprocess.run(
-                    f'python3 -m myqueue kick {f} -T >> {out}',
-                    shell=True,
-                    stderr=subprocess.PIPE)
-                if result.returncode:
-                    err.write_bytes(result.stderr)
-                    return
-                newfolders.append(f)
 
-        out.touch()
+        if not mq.is_dir():
+            break
 
-        if len(newfolders) < len(folders):
-            (dir / 'folders.txt').write_text(
-                ''.join(f'{f}\n' for f in newfolders))
+        try:
+            with Queue(config, verbosity=0) as queue:
+                result = queue.kick()
+        except Exception:
+            err.write_text(traceback.format_exc())
+            break
+
+        if result:
+            with out.open('a') as fd:
+                print(result, file=fd)
+
+        pidfile.touch()
+
+    pidfile.unlink()
 
 
-def perform_action(action: str) -> int:
-    running = alive()
+def perform_daemon_action(mq: Path, action: str) -> int:
+    """Status of, stop or start daemon.
+
+    Returns PID.
+    """
+    pidfile = mq / 'daemon.pid'
+    pid = -1
+
+    running = is_running(mq)
     if running:
-        host, pid = read_hostname_and_pid()
+        host, pid = read_hostname_and_pid(pidfile)
 
     if action == 'status':
         if running:
@@ -108,7 +141,10 @@ def perform_action(action: str) -> int:
     elif action == 'stop':
         if running:
             if host == socket.gethostname():
-                os.kill(pid, signal.SIGWINCH)
+                try:
+                    os.kill(pid, signal.SIGWINCH)
+                except ProcessLookupError:
+                    pass
             else:
                 print(f'You have to be on {host} in order to stop the daemon')
                 return 1
@@ -119,13 +155,16 @@ def perform_action(action: str) -> int:
         if running:
             print('Already running')
         else:
-            start_daemon()
+            if pidfile.is_file():
+                pidfile.unlink()
+            start_daemon(mq)
             while not pidfile.is_file():
+                # Wait for the fork to start ...
                 sleep(0.05)
-            host, pid = read_hostname_and_pid()
+            host, pid = read_hostname_and_pid(pidfile)
             print(f'PID: {pid}')
 
     else:
         assert False, action
 
-    return 0
+    return pid
