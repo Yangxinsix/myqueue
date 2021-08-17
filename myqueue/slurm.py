@@ -133,7 +133,10 @@ class SLURM(Scheduler):
                '-n',
                '--units=K',
                '-o', 'MaxRSS']
-        p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        try:
+            p = subprocess.run(cmd, stdout=subprocess.PIPE)
+        except FileNotFoundError:
+            return 0
         mem = 0
         for line in p.stdout.splitlines():
             line = line.strip()
