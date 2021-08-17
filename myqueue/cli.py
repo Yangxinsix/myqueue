@@ -334,7 +334,13 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd == 'info':
-            a('id', nargs='?', type=int, help='Task ID.')
+            a('-i', '--id', help='Show information about specific task.')
+            a('-A', '--all', action='store_true',
+              help='Show information about all your queues.')
+            a('folder',
+              nargs='?',
+              help='Show information for queues in this folder and its '
+              'subfolders.  Defaults to current folder.')
 
     args = parser.parse_args(
         fix_option_order(arguments if arguments is not None else sys.argv[1:],
@@ -414,7 +420,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
-    from myqueue.info import info
+    from myqueue.info import info, info_all
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -432,10 +438,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         return
 
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick', 'daemon']:
+    if args.command in ['list', 'sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
-    elif args.command == 'info':
-        folder_names = ['.']
     else:
         folder_names = args.folder
 
@@ -445,6 +449,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     for folder in folders:
         if not folder.is_dir():
             raise MQError('No such folder:', folder)
+
+    if args.command == 'info' and args.all:
+        info_all(folders[0])
+        return
 
     if args.command in ['remove', 'resubmit', 'modify']:
         if not folders:

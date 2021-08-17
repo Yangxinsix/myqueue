@@ -6,6 +6,8 @@ from pathlib import Path
 from myqueue import __version__
 from myqueue.queue import Queue
 from myqueue.selection import Selection
+from myqueue.config import Configuration
+from myqueue.pretty import pprint
 
 
 def info(queue: Queue, id: int = None) -> None:
@@ -36,3 +38,19 @@ def info(queue: Queue, id: int = None) -> None:
             print('v' * N)
             print(err)
             print('^' * N)
+
+
+def info_all(start: Path):
+    for path in start.glob('**/'):
+        print(f'{path}:')
+        if path.name != '.myqueue':
+            continue
+        try:
+            config = Configuration.read(path)
+        except FileNotFoundError:
+            continue
+        print(f'{path}:', config)
+        with Queue(config, need_lock=False) as queue:
+            queue._read()
+            pprint(queue.tasks, short=True)
+    print(start)
