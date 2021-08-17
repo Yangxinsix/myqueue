@@ -168,10 +168,13 @@ Example::
 
     config = {
         ...,
-        'extra_args': ['arg1', 'arg2', ...],
+        'extra_args': ['arg1', 'arg2'],
+        'nodes': [
+            ('xeon24', {'cores': 24, 'extra_args': ['arg3', 'arg4']}),
+            ...],
         ...}
 
-would give ``<submit command> ... arg1 arg2``.
+would give ``<submit command> arg1 arg2 arg3 arg4``.
 
 
 .. _max_disk:

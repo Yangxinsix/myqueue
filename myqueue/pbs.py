@@ -37,7 +37,7 @@ class PBS(Scheduler):
                 f'nodes={nodes}:ppn={ppn}',
                 '-d', str(task.folder)]
 
-        qsub += nodedct.get('extra_args', [])
+        qsub += self.config.extra_args + nodedct.get('extra_args', [])
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
