@@ -200,12 +200,7 @@ def update_readme_and_completion(test: bool = False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        if '\n'.join(lines[a + 1:]) != '\n'.join(newlines):
-            for L1, L2 in zip(lines[a + 1:], '\n'.join(newlines).splitlines()):
-                if L1 != L2:
-                    print(L1)
-                    print(L2)
-            assert False
+        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')

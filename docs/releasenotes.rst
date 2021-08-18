@@ -19,6 +19,9 @@ Next release
   Consequently, the ``--all`` option has been removed from the :ref:`list`,
   :ref:`kick` and :ref:`sync` commands.
 
+* There is a new ``mq info --all [folder]`` command that will searsch for
+  your ``.myqueue/`` folders and print a status line for each.
+
 * There is now one background daemon per ``.myqueue/`` folder.  See
   :ref:`daemon process`.
 

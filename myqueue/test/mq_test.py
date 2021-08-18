@@ -32,7 +32,7 @@ def test_fail(mq):
     mq('submit shell:echo+hello2 -d shell:echo+hello')
     mq.wait()
     mq('info')
-    mq('info 1 -v')
+    mq('info -i1 -v')
     mq('ls -S t')
     mq('ls -L')
     assert mq.states() == 'FCC', mq.states()
@@ -202,6 +202,7 @@ def test_misc(mq):
     mq('completion')
     mq('ls no_such_folder', error=1)
     mq('')
+    mq('info -A')
 
 
 def test_sync_kick(mq):

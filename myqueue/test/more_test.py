@@ -6,6 +6,11 @@ import pytest
 
 from ..queue import Queue
 from ..task import task
+from myqueue.progress import main
+
+
+def test_progress():
+    main(0.0)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9),
