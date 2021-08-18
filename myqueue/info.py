@@ -56,7 +56,7 @@ def info_all(start: Path):
             queue._read()
             pprint(queue.tasks, short=True)
     spinner.reset()
-    print()
+    print(' ')
 
 
 def scan(path, dev, spinner):

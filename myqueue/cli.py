@@ -334,7 +334,8 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd == 'info':
-            a('-i', '--id', help='Show information about specific task.')
+            a('-i', '--id', type=int,
+              help='Show information about specific task.')
             a('-A', '--all', action='store_true',
               help='Show information about all your queues.')
             a('folder',

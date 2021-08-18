@@ -38,9 +38,9 @@ class Configuration:
         for key, value in self.__dict__.items():
             if key == 'nodes':
                 lines.append('nodes')
-                n = max((len(name) for name in value), default=0)
+                n = max((len(name) for name, _ in value), default=0)
                 for name, dct in value:
-                    lines.append(f'  {name:{n}}  {dct}')
+                    lines.append(f'  {name:<{n}}  {dct}')
                 continue
             lines.append(f'{key:18} {value}')
         return '\n'.join(lines)
