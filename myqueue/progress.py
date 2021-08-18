@@ -1,4 +1,5 @@
 """Progress-bar."""
+import os
 import sys
 from typing import Iterator
 
@@ -51,31 +52,23 @@ def _progress_bar(length: int,
 
 
 class Spinner:
-    n = 0
+    def __init__(self) -> None:
+        if sys.stdout.isatty():
+            self.fd = sys.stdout
+        else:
+            self.fd = open(os.devnull, 'w')
+        self.n = 0
 
-    def spin(self):
+    def spin(self) -> None:
         N = 500
         if self.n % N == 0:
-            print('\r' + '.oOo. '[(self.n // N) % 6], end='')
+            self.fd.write('\r' + '.oOo. '[(self.n // N) % 6])
+            self.fd.flush()
         self.n += 1
 
-    def reset(self):
+    def reset(self) -> None:
         self.n = 0
-        print('\r', end='')
-
-
-class NoSpinner:
-    def spin(self):
-        pass
-
-    def reset(self):
-        pass
-
-
-def create_spinner():
-    if sys.stdout.isatty():
-        return Spinner()
-    return NoSpinner()
+        self.fd.write('\r')
 
 
 if __name__ == '__main__':

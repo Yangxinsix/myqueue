@@ -2,13 +2,14 @@ import json
 import os
 import textwrap
 from pathlib import Path
+from typing import Generator
 
 from myqueue import __version__
-from myqueue.queue import Queue
-from myqueue.selection import Selection
 from myqueue.config import Configuration
 from myqueue.pretty import pprint
-from myqueue.progress import create_spinner
+from myqueue.progress import Spinner
+from myqueue.queue import Queue
+from myqueue.selection import Selection
 
 
 def info(queue: Queue, id: int = None) -> None:
@@ -41,9 +42,9 @@ def info(queue: Queue, id: int = None) -> None:
             print('^' * N)
 
 
-def info_all(start: Path):
+def info_all(start: Path) -> None:
     dev = start.stat().st_dev
-    spinner = create_spinner()
+    spinner = Spinner()
     for path in scan(start, dev, spinner):
         spinner.reset()
         print(f'{path}:\n  ', end='')
@@ -59,7 +60,9 @@ def info_all(start: Path):
     print(' ')
 
 
-def scan(path, dev, spinner):
+def scan(path: Path,
+         dev: int,
+         spinner: Spinner) -> Generator[Path, None, None]:
     with os.scandir(path) as entries:
         for entry in entries:
             spinner.spin()

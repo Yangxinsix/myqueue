@@ -202,6 +202,7 @@ def test_misc(mq):
     mq('completion')
     mq('ls no_such_folder', error=1)
     mq('')
+    mq('info -A')
 
 
 def test_sync_kick(mq):
