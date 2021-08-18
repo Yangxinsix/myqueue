@@ -43,6 +43,7 @@ def info(queue: Queue, id: int = None) -> None:
 
 
 def info_all(start: Path) -> None:
+    """Write information about all .myqueue folders."""
     dev = start.stat().st_dev
     spinner = Spinner()
     for path in scan(start, dev, spinner):
@@ -63,6 +64,10 @@ def info_all(start: Path) -> None:
 def scan(path: Path,
          dev: int,
          spinner: Spinner) -> Generator[Path, None, None]:
+    """Scan for .myqueue folders.
+
+    Only yield paths on same filesystem (dev).
+    """
     with os.scandir(path) as entries:
         for entry in entries:
             spinner.spin()

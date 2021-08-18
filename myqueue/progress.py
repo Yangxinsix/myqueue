@@ -53,6 +53,7 @@ def _progress_bar(length: int,
 
 class Spinner:
     def __init__(self) -> None:
+        """Print the characters .oOo.oOo.oOo.oOo and so on."""
         if sys.stdout.isatty():
             self.fd = sys.stdout
         else:
@@ -60,27 +61,40 @@ class Spinner:
         self.n = 0
 
     def spin(self) -> None:
+        """Spin the spinner."""
         N = 500
         if self.n % N == 0:
-            self.fd.write('\r' + '.oOo. '[(self.n // N) % 6])
+            self.fd.write('\r' + '.oOo'[(self.n // N) % 4])
             self.fd.flush()
         self.n += 1
 
     def reset(self) -> None:
+        """Place cursor at the beginning of the line."""
         self.n = 0
         self.fd.write('\r')
 
 
-if __name__ == '__main__':
+def main(x: float = 1):
+    """Demo."""
     from time import sleep
     pb = progress_bar(500, 'Test 1:')
     for _ in range(500):
-        sleep(0.002)
+        sleep(0.002 * x)
         next(pb)
     pb = progress_bar(500, 'Test 2:', 0)
     for _ in range(500):
         next(pb)
     pb = progress_bar(5, 'Test 3:')
     for _ in range(5):
-        sleep(2.5)
+        sleep(0.5 * x)
         next(pb)
+    spinner = Spinner()
+    for _ in range(10000):
+        spinner.spin()
+        sleep(0.00005 * x)
+    spinner.reset()
+    print('Done!')
+
+
+if __name__ == '__main__':
+    main()
