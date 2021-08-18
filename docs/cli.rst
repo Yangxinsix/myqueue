@@ -260,7 +260,7 @@ optional arguments:
 Info: Show detailed information about MyQueue or a task
 -------------------------------------------------------
 
-usage: mq info [-h] [-v] [-q] [-T] [id]
+usage: mq info [-h] [-v] [-q] [-T] [-i ID] [-A] [folder]
 
 Show detailed information about MyQueue or a task.
 
@@ -269,10 +269,12 @@ Example::
     $ mq info  # show information about MyQueue
     $ mq info 12345  # show information about task with id=12345
 
-id:
-    Task ID.
+folder:
+    Show information for queues in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
+  -i ID, --id ID   Show information about specific task.
+  -A, --all        Show information about all your queues.
   -h, --help       show this help message and exit
   -v, --verbose    More output.
   -q, --quiet      Less output.

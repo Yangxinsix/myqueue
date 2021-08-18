@@ -50,6 +50,34 @@ def _progress_bar(length: int,
         yield n
 
 
+class Spinner:
+    n = 0
+
+    def spin(self):
+        N = 500
+        if self.n % N == 0:
+            print('\r' + '.oOo. '[(self.n // N) % 6], end='')
+        self.n += 1
+
+    def reset(self):
+        self.n = 0
+        print('\r', end='')
+
+
+class NoSpinner:
+    def spin(self):
+        pass
+
+    def reset(self):
+        pass
+
+
+def create_spinner():
+    if sys.stdout.isatty():
+        return Spinner()
+    return NoSpinner()
+
+
 if __name__ == '__main__':
     from time import sleep
     pb = progress_bar(500, 'Test 1:')

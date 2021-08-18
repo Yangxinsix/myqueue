@@ -8,6 +8,7 @@ from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.config import Configuration
 from myqueue.pretty import pprint
+from myqueue.progress import create_spinner
 
 
 def info(queue: Queue, id: int = None) -> None:
@@ -40,28 +41,22 @@ def info(queue: Queue, id: int = None) -> None:
             print('^' * N)
 
 
-class Spinner:
-    n = 0
-
-    def spin(self):
-        N = 500
-        if self.n % N == 0:
-            print('\r' + '.oOo. '[(self.n // N) % 6], end='')
-        self.n += 1
-
-
 def info_all(start: Path):
     dev = start.stat().st_dev
-    '.oOo. '
-    for path in scan(start, dev, Spinner()):
-        print(f'\r{path}:')
+    spinner = create_spinner()
+    for path in scan(start, dev, spinner):
+        spinner.reset()
+        print(f'{path}:\n  ', end='')
         try:
             config = Configuration.read(path)
-        except FileNotFoundError:
+        except FileNotFoundError as ex:
+            print(ex)
             continue
         with Queue(config, need_lock=False) as queue:
             queue._read()
             pprint(queue.tasks, short=True)
+    spinner.reset()
+    print()
 
 
 def scan(path, dev, spinner):
