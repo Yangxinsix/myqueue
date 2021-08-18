@@ -273,12 +273,12 @@ folder:
     Show information for queues in this folder and its subfolders. Defaults to current folder.
 
 optional arguments:
-  -i ID, --id ID   Show information about specific task.
-  -A, --all        Show information about all your queues.
   -h, --help       show this help message and exit
   -v, --verbose    More output.
   -q, --quiet      Less output.
   -T, --traceback  Show full traceback.
+  -i ID, --id ID   Show information about specific task.
+  -A, --all        Show information about all your queues.
 
 
 .. _workflow:

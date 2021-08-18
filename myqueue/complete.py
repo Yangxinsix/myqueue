@@ -39,7 +39,8 @@ commands = {
     'help':
         [''],
     'info':
-        ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback'],
+        ['-v', '--verbose', '-q', '--quiet', '-T', '--traceback', '-i',
+         '--id', '-A', '--all'],
     'init':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
