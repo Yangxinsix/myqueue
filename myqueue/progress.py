@@ -74,7 +74,7 @@ class Spinner:
         self.fd.write('\r')
 
 
-def main(x: float = 1):
+def main(x: float = 1) -> None:
     """Demo."""
     from time import sleep
     pb = progress_bar(500, 'Test 1:')
