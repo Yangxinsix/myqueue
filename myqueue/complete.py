@@ -16,7 +16,7 @@ def read() -> Dict[str, Any]:
     """Read queue as a dict."""
     from pathlib import Path
     import json
-    from .config import find_home_folder
+    from myqueue.config import find_home_folder
     home = find_home_folder(Path('.').resolve())
     path = home / '.myqueue/queue.json'
     try:
