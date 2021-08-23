@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 21.8.0
+==============
+
 * The simple "local" scheduler is now feature complete.
   See :ref:`scheduler`.
 
