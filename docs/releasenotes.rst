@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 21.8.0
+==============
+
 * The simple "local" scheduler is now feature complete.
   See :ref:`scheduler`.
 
@@ -16,8 +22,8 @@ Next release
   been deprecated.
 
 * MyQueue no longer tries to keep track of all your ``.myqueue/`` folders.
-  Consequently, the ``--all`` option has been removed from the :ref:`list`,
-  :ref:`kick` and :ref:`sync` commands.
+  Consequently, the ``--all`` option has been removed from the :ref:`list
+  <list>`, :ref:`kick <kick>` and :ref:`sync <sync>` commands.
 
 * There is a new ``mq info --all [folder]`` command that will searsch for
   your ``.myqueue/`` folders and print a status line for each.
