@@ -93,6 +93,8 @@ class Encoder(json.JSONEncoder):
     '{"__complex__": [1.0, 2.0]}'
     >>> Encoder().encode(datetime(1969, 11, 11, 0, 0))
     '{"__datetime__": "1969-11-11T00:00:00"}'
+    >>> Encoder().encode(Path('abc/123.xyz'))
+    '{"__path__": "abc/123.xyz"}'
     >>> Encoder().encode(np.array([1., 2.]))
     '{"__ndarray__": [1.0, 2.0]}'
     """
@@ -102,6 +104,9 @@ class Encoder(json.JSONEncoder):
 
         if isinstance(obj, datetime):
             return {'__datetime__': obj.isoformat()}
+
+        if isinstance(obj, Path):
+            return {'__path__': str(obj)}
 
         if hasattr(obj, '__array__'):
             if obj.dtype == complex:
@@ -128,6 +133,8 @@ def object_hook(dct: Dict[str, Any]) -> Any:
     (1+2j)
     >>> object_hook({'__datetime__': '1969-11-11T00:00:00'})
     datetime.datetime(1969, 11, 11, 0, 0)
+    >>> object_hook({'__path__': 'abc/123.xyz'})
+    PosixPath('abc/123.xyz')
     >>> object_hook({'__ndarray__': [1.0, 2.0]})
     array([1., 2.])
     """
@@ -138,6 +145,10 @@ def object_hook(dct: Dict[str, Any]) -> Any:
     data = dct.get('__datetime__')
     if data is not None:
         return datetime.fromisoformat(data)
+
+    data = dct.get('__path__')
+    if data is not None:
+        return Path(data)
 
     data = dct.get('__ndarray__')
     if data is not None:
