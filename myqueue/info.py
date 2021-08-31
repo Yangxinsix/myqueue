@@ -46,11 +46,13 @@ def info_all(start: Path) -> None:
     """Write information about all .myqueue folders."""
     dev = start.stat().st_dev
     spinner = Spinner()
+    nfolders = 0
     for path in scan(start, dev, spinner):
         spinner.reset()
         print(f'{path}:\n  ', end='')
         try:
             config = Configuration.read(path)
+            nfolders += 1
         except FileNotFoundError as ex:
             print(ex)
             continue
@@ -58,7 +60,7 @@ def info_all(start: Path) -> None:
             queue._read()
             pprint(queue.tasks, short=True)
     spinner.reset()
-    print(' ')
+    print('Folders found:', nfolders)
 
 
 def scan(path: Path,
