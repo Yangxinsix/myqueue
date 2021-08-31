@@ -1,11 +1,15 @@
 """Resource class to handle resource requirements: time, cores, processes."""
+from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Tuple
 
 if TYPE_CHECKING:
     from myqueue.commands import Command
+
 from myqueue.states import State
+
+Node = Tuple[str, Dict[str, Any]]
 
 
 def seconds_to_short_time_string(n: float) -> str:
@@ -35,9 +39,6 @@ def T(t: str) -> int:
             'd': 24 * 3600}[t[-1]] * int(t[:-1])
 
 
-Node = Tuple[str, Dict[str, Any]]
-
-
 class Resources:
     """Resource description."""
     def __init__(self,
@@ -55,7 +56,7 @@ class Resources:
             self.processes = processes
 
     @staticmethod
-    def from_string(s: str) -> 'Resources':
+    def from_string(s: str) -> Resources:
         """Create Resource object from string.
 
         >>> Resources.from_string('16:1:xeon8:2h')
@@ -83,8 +84,8 @@ class Resources:
                               processes: int = 0,
                               tmax: str = '',
                               resources: str = '',
-                              command: 'Command' = None,
-                              path: Path = None) -> 'Resources':
+                              command: Command = None,
+                              path: Path = None) -> Resources:
         if cores == 0 and nodename == '' and processes == 0 and tmax == '':
             if resources:
                 return Resources.from_string(resources)
@@ -110,9 +111,9 @@ class Resources:
                          for key, value in self.todict().items())
         return f'Resources({args})'
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         """Convert to dict."""
-        dct: Dict[str, Union[int, str]] = {'cores': self.cores}
+        dct: dict[str, int | str] = {'cores': self.cores}
         if self.processes != self.cores:
             dct['processes'] = self.processes
         if self.tmax != 600:
@@ -123,8 +124,8 @@ class Resources:
 
     def bigger(self,
                state: State,
-               nodelist: List[Node],
-               maxtmax: int = 2 * 24 * 3600) -> 'Resources':
+               nodelist: list[Node],
+               maxtmax: int = 2 * 24 * 3600) -> Resources:
         """Create new Resource object with larger tmax or more cores.
 
         >>> nodes = [('node1', {'cores': 8})]
@@ -156,7 +157,7 @@ class Resources:
             raise ValueError
         return new
 
-    def select(self, nodelist: List[Node]) -> Tuple[int, str, Dict[str, Any]]:
+    def select(self, nodelist: list[Node]) -> tuple[int, str, dict[str, Any]]:
         """Select appropriate node.
 
         >>> nodes = [('node1', {'cores': 16}),
