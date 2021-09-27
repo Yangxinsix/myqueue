@@ -10,14 +10,20 @@ from myqueue.pretty import pprint
 from myqueue.progress import Spinner
 from myqueue.queue import Queue
 from myqueue.selection import Selection
+from myqueue.virtenv import find_activation_scripts
 
 
 def info(queue: Queue, id: int = None) -> None:
     """Print information about MyQueue or a single task."""
+
+    cwd = Path.cwd()
+    venv = find_activation_scripts([cwd]).get(cwd, '<none>')
+
     if id is None:
         print('Version:', __version__)
         print('Code:   ', Path(__file__).parent)
         print('Root:   ', queue.config.home / '.myqueue')
+        print('Venv:   ', venv)
         print('\nConfiguration:')
         print(textwrap.indent(str(queue.config), '  '))
         return
