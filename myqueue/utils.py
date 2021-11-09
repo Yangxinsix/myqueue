@@ -200,7 +200,11 @@ def update_readme_and_completion(test: bool = False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
+        old = '\n'.join(lines[a + 1:])
+        new = '\n'.join(newlines)
+        if sys.version_info < (3, 10):
+            new = new.replace('optional arguments:', 'options:')
+        assert new == old
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')
