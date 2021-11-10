@@ -133,7 +133,7 @@ def update_readme_and_completion(test: bool = False) -> None:
 
     Run this when ever options are changed::
 
-        python3.9 -m myqueue.utils
+        python3.9+ -m myqueue.utils
 
     """
 
