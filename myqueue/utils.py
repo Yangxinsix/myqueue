@@ -133,7 +133,7 @@ def update_readme_and_completion(test: bool = False) -> None:
 
     Run this when ever options are changed::
 
-        python3.9 -m myqueue.utils
+        python3.9+ -m myqueue.utils
 
     """
 
@@ -200,8 +200,11 @@ def update_readme_and_completion(test: bool = False) -> None:
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')
     if test:
-        print(lines[a + 1:], newlines)
-        assert '\n'.join(lines[a + 1:]) == '\n'.join(newlines)
+        old = '\n'.join(lines[a + 1:])
+        new = '\n'.join(newlines)
+        if sys.version_info < (3, 10):
+            new = new.replace('optional arguments:', 'options:')
+        assert new == old
     else:
         lines[a + 1:] = newlines
         cli.write_text('\n'.join(lines) + '\n')
