@@ -412,7 +412,7 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from myqueue.config import Configuration
+    from myqueue.config import Configuration, find_home_folder
     from myqueue.resources import Resources
     from myqueue.task import task
     from myqueue.queue import Queue
@@ -481,6 +481,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             folder.relative_to(home)
         except ValueError:
             raise MQError(f'{folder} not inside {home}')
+        home2 = find_home_folder(folder)
+        if home2 != home:
+            raise MQError(
+                f'More than one .myqueue/ folder: {home} and {home2}')
 
     if args.command == 'daemon':
         perform_daemon_action(home / '.myqueue/', args.action)
