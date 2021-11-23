@@ -219,3 +219,11 @@ def test_slash(mq):
 
 def test_config(mq):
     mq('config local')
+
+
+def test_more_homes(mq):
+    f = Path('folder')
+    f.mkdir()
+    with chdir(f):
+        mq('init')
+    mq('submit shell:echo . folder', error=1)
