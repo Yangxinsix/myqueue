@@ -34,7 +34,7 @@ class SLURM(Scheduler):
             cores = task.resources.cores
             if nodes == 1 and cores < nodedct['cores']:
                 mbytes = int(mbytes * cores / nodedct['cores'])
-            sbatch.append(f'--mem={mbytes}MB')
+                sbatch.append(f'--mem={mbytes}MB')
 
         extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
