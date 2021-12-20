@@ -28,7 +28,7 @@ class Configuration:
         self.maximum_diskspace = maximum_diskspace
         self.notifications = notifications or {}
         self.home = home or Path.cwd()
-        self.user = os.environ['USER']
+        self.user = os.environ.get('USER', 'root')
 
     def __repr__(self) -> str:
         args = ', '.join(f'{name.lstrip("_")}={getattr(self, name)!r}'

@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import json
 import os
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import (IO, TYPE_CHECKING, Any, Dict, Iterator, List, Optional,
-                    Sequence, Union)
+from typing import IO, TYPE_CHECKING, Any, Iterator, Sequence
 from warnings import warn
 
 from myqueue.commands import Command, WorkflowTask, create_command
@@ -46,12 +47,12 @@ class Task:
     def __init__(self,
                  cmd: Command,
                  resources: Resources,
-                 deps: List[Path],
+                 deps: list[Path],
                  restart: int,
                  workflow: bool,
                  diskspace: int,
                  folder: Path,
-                 creates: List[str],
+                 creates: list[str],
                  notifications: str = '',
                  state: State = State.undefined,
                  id: int = 0,
@@ -60,7 +61,7 @@ class Task:
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
                  tstop: float = 0.0,
-                 user: str = '') -> None:
+                 user: str = ''):
 
         self.cmd = cmd
         self.resources = resources
@@ -82,14 +83,14 @@ class Task:
         self.trunning = trunning
         self.tstop = tstop
 
-        self.user = user or os.environ['USER']
+        self.user = user or os.environ.get('USER', 'root')
 
         self.memory_usage = memory_usage
 
         self.dname = folder / cmd.name
-        self.dtasks: List[Task] = []
-        self.activation_script: Optional[Path] = None
-        self._done: Optional[bool] = None
+        self.dtasks: list[Task] = []
+        self.activation_script: Path | None = None
+        self._done: bool | None = None
         self.result = UNSPECIFIED
 
     @property
@@ -106,7 +107,7 @@ class Task:
             dt = self.tstop - self.trunning
         return dt
 
-    def words(self) -> List[str]:
+    def words(self) -> list[str]:
         t = time.time()
         age = t - self.tqueued
         dt = self.running_time(t)
@@ -142,7 +143,7 @@ class Task:
         dct = self.todict()
         return f'Task({dct!r})'
 
-    def order(self, column: str) -> Union[int, str, Path, float, State]:
+    def order(self, column: str) -> int | str | Path | float | State:
         """ifnraste"""
         if column == 'i':
             return self.id
@@ -165,7 +166,7 @@ class Task:
         raise ValueError(f'Unknown column: {column}!  '
                          'Must be one of i, f, n, a, I, r, A, s, t or e')
 
-    def todict(self, root: Path = None) -> Dict[str, Any]:
+    def todict(self, root: Path = None) -> dict[str, Any]:
         folder = self.folder
         deps = self.deps
         if root:
@@ -218,7 +219,7 @@ class Task:
               file=fd)
 
     @staticmethod
-    def fromcsv(row: List[str]) -> 'Task':
+    def fromcsv(row: list[str]) -> Task:
         (id, folder, name, resources, state, restart, workflow, diskspace,
          deps, creates, t1, t2, t3, error) = row[:14]
         try:
@@ -245,7 +246,7 @@ class Task:
                     tqueued, trunning, tstop)
 
     @staticmethod
-    def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':
+    def fromdict(dct: dict[str, Any], root: Path) -> Task:
         dct = dct.copy()
 
         # Backwards compatibility with version 2:
@@ -351,7 +352,7 @@ class Task:
             self.error = lines[-1]
         return False
 
-    def ideps(self, map: Dict[Path, 'Task']) -> Iterator['Task']:
+    def ideps(self, map: dict[Path, 'Task']) -> Iterator['Task']:
         """Yield task and its dependencies."""
         yield self
         for dname in self.deps:
@@ -398,12 +399,12 @@ class Task:
 
 
 def task(cmd: str,
-         args: List[str] = [],
+         args: list[str] = [],
          *,
          resources: str = '',
          workflow: bool = False,
          name: str = '',
-         deps: Union[str, List[str], Task, List[Task]] = '',
+         deps: str | list[str] | Task | list[Task] = '',
          cores: int = 0,
          nodename: str = '',
          processes: int = 0,
@@ -411,7 +412,7 @@ def task(cmd: str,
          folder: str = '',
          restart: int = 0,
          diskspace: float = 0.0,
-         creates: List[str] = []) -> Task:
+         creates: list[str] = []) -> Task:
     """Create a Task object.
 
     ::
@@ -489,7 +490,7 @@ def task(cmd: str,
 
     command = create_command(cmd, args, name=name)
 
-    res: Optional[Resources] = None
+    res: Resources | None = None
 
     if cores == 0 and nodename == '' and processes == 0 and tmax == '':
         if resources:
