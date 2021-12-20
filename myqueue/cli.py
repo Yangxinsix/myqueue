@@ -308,6 +308,12 @@ def _main(arguments: List[str] = None) -> int:
               help='List tasks from logfile (~/.myqueue/log.csv).')
             a('--not-recursive', action='store_true',
               help='Do not list subfolders.')
+            a('folder',
+              nargs='*',
+              default=['.'],
+              help='List tasks in this folder and its subfolders.  '
+              'Defaults to current folder.  '
+              'Use --not-recursive to exclude subfolders.')
 
         if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
@@ -327,7 +333,7 @@ def _main(arguments: List[str] = None) -> int:
               help='Task-folder.  Use --recursive (or -r) to include '
               'subfolders.')
 
-        if cmd in ['list', 'sync', 'kick']:
+        if cmd in ['sync', 'kick']:
             a('folder',
               nargs='?',
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
@@ -439,7 +445,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         return
 
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick', 'daemon', 'info']:
+    if args.command in ['sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
     else:
         folder_names = args.folder

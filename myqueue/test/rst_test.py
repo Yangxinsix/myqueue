@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from subprocess import PIPE, run
 from typing import List, Tuple
-from unittest import SkipTest
 
 import pytest
 
@@ -21,8 +20,7 @@ def skip(line: str) -> bool:
 
 
 def run_document(mq, path: Path, test=False, update=False) -> None:
-    if not path.is_file():
-        raise SkipTest
+    assert path.is_file()
     lines = path.read_text().splitlines()
     blocks: List[Tuple[str, List[str], int]] = []
     n = 0
