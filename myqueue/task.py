@@ -226,6 +226,9 @@ class Task:
         except ValueError:  # read old corrupted log.csv files
             memory_usage = 0
         notifications = '' if len(row) < 16 else row[15]
+        tqueued, trunning, tstop = (
+            datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
+            for t in (t1, t2, t3))
         return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')],
@@ -239,8 +242,7 @@ class Task:
                     int(id),
                     error,
                     memory_usage,
-                    *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
-                      for t in (t1, t2, t3)))
+                    tqueued, trunning, tstop)
 
     @staticmethod
     def fromdict(dct: Dict[str, Any], root: Path) -> 'Task':
