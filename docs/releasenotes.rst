@@ -13,6 +13,9 @@ Next release
   as previously, only one.
   They must all belong to the same ``.myqueue/`` folder though.
 
+* There is now one background daemon per user.  This will allow several users
+  to share a ``.myqueue/`` folder.
+
 
 Version 21.8.0
 ==============

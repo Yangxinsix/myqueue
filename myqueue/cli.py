@@ -493,12 +493,12 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 f'More than one .myqueue/ folder: {home} and {home2}')
 
     if args.command == 'daemon':
-        perform_daemon_action(home / '.myqueue/', args.action)
+        perform_daemon_action(config, args.action)
         return
 
     if not is_test:
         try:
-            start_daemon(home / '.myqueue/')
+            start_daemon(config)
         except PermissionError:
             pass
 

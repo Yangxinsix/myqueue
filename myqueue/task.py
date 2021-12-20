@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import time
 from datetime import datetime
@@ -58,7 +59,8 @@ class Task:
                  memory_usage: int = 0,
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
-                 tstop: float = 0.0) -> None:
+                 tstop: float = 0.0,
+                 user: str = '') -> None:
 
         self.cmd = cmd
         self.resources = resources
@@ -79,6 +81,8 @@ class Task:
         self.tqueued = tqueued
         self.trunning = trunning
         self.tstop = tstop
+
+        self.user = user or os.environ['USER']
 
         self.memory_usage = memory_usage
 
@@ -182,7 +186,8 @@ class Task:
             'tqueued': self.tqueued,
             'trunning': self.trunning,
             'tstop': self.tstop,
-            'error': self.error}
+            'error': self.error,
+            'user': self.user}
 
     def tocsv(self,
               fd: IO[str] = sys.stdout,

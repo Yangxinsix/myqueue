@@ -7,7 +7,7 @@ from myqueue.daemon import perform_daemon_action
 
 def test_daemon(mq, capsys):
     cmd = functools.partial(perform_daemon_action,
-                            mq.config.home / '.myqueue')
+                            mq.config)
     cmd('status')
     cmd('stop')
     pid = cmd('start')

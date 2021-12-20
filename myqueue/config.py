@@ -1,4 +1,5 @@
 """User configuration (handling of .myqueue/config.py files)."""
+import os
 import subprocess
 import warnings
 from math import inf
@@ -27,6 +28,7 @@ class Configuration:
         self.maximum_diskspace = maximum_diskspace
         self.notifications = notifications or {}
         self.home = home or Path.cwd()
+        self.user = os.environ['USER']
 
     def __repr__(self) -> str:
         args = ', '.join(f'{name.lstrip("_")}={getattr(self, name)!r}'
@@ -117,7 +119,7 @@ def guess_configuration(scheduler_name: str = '',
     Creates a config.py file.
     """
     from .scheduler import get_scheduler
-    from .utils import str2number, mqhome
+    from .utils import mqhome, str2number
 
     folder = mqhome() / '.myqueue'
     if not folder.is_dir():

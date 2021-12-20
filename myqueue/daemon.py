@@ -21,9 +21,8 @@ from myqueue.config import Configuration
 T = 600  # kick system every ten minutes
 
 
-def is_running(mq: Path) -> bool:
+def is_running(pidfile: Path) -> bool:
     """Check if daemon is running."""
-    pidfile = mq / 'daemon.pid'
     if pidfile.is_file():
         age = time() - pidfile.stat().st_mtime
         if age < 7200:
@@ -32,17 +31,18 @@ def is_running(mq: Path) -> bool:
     return False
 
 
-def start_daemon(mq: Path) -> bool:
+def start_daemon(config: Configuration) -> bool:
     """Fork a daemon process."""
-    err = mq / 'daemon.err'
-    out = mq / 'daemon.out'
+    err = config.home / f'.myqueue/daemon-{config.user}.err'
+    out = config.home / f'.myqueue/daemon-{config.user}.out'
+    pidfile = config.home / f'.myqueue/daemon-{config.user}.pid'
 
     if err.is_file():
         msg = (f'Something wrong.  See {err}.  '
                'Fix the problem and remove the daemon.err file.')
         raise RuntimeError(msg)
 
-    if is_running(mq):
+    if is_running(pidfile):
         return False
 
     out.touch()
@@ -51,7 +51,7 @@ def start_daemon(mq: Path) -> bool:
     if pid == 0:
         if os.getenv('MYQUEUE_TESTING'):
             # Simple version for pytest only:
-            loop(mq)
+            loop(config)
         else:
             pid = os.fork()
             if pid == 0:
@@ -63,7 +63,7 @@ def start_daemon(mq: Path) -> bool:
                 os.dup2(si.fileno(), sys.stdin.fileno())
                 os.dup2(so.fileno(), sys.stdout.fileno())
                 os.dup2(se.fileno(), sys.stderr.fileno())
-                loop(mq)
+                loop(config)
         os._exit(0)
     return True
 
@@ -82,11 +82,11 @@ def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
     return host, int(pid)
 
 
-def loop(mq: Path) -> None:
+def loop(config: Configuration) -> None:
     """Main loop: kick system every ten minutes."""
-    err = mq / 'daemon.err'
-    out = mq / 'daemon.out'
-    pidfile = mq / 'daemon.pid'
+    err = config.home / f'.myqueue/daemon-{config.user}.err'
+    out = config.home / f'.myqueue/daemon-{config.user}.out'
+    pidfile = config.home / f'.myqueue/daemon-{config.user}.pid'
 
     pid = os.getpid()
     host = socket.gethostname()
@@ -96,12 +96,10 @@ def loop(mq: Path) -> None:
     signal.signal(signal.SIGWINCH, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
-    config = Configuration.read(mq)
-
     while True:
         sleep(T)
 
-        if not mq.is_dir():
+        if not (config.home / '.myqueueu').is_dir():
             break
 
         try:
@@ -120,15 +118,15 @@ def loop(mq: Path) -> None:
     pidfile.unlink()
 
 
-def perform_daemon_action(mq: Path, action: str) -> int:
+def perform_daemon_action(config: Configuration, action: str) -> int:
     """Status of, stop or start daemon.
 
     Returns PID.
     """
-    pidfile = mq / 'daemon.pid'
+    pidfile = config.home / f'.myqueue/daemon-{config.user}.pid'
     pid = -1
 
-    running = is_running(mq)
+    running = is_running(pidfile)
     if running:
         host, pid = read_hostname_and_pid(pidfile)
 
@@ -157,7 +155,7 @@ def perform_daemon_action(mq: Path, action: str) -> int:
         else:
             if pidfile.is_file():
                 pidfile.unlink()
-            start_daemon(mq)
+            start_daemon(config)
             while not pidfile.is_file():
                 # Wait for the fork to start ...
                 sleep(0.05)

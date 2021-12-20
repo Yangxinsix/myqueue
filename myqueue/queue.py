@@ -419,6 +419,9 @@ class Queue(Lock):
         """
         self._read()
 
+        self.tasks = [task for task in self.tasks
+                      if task.user == self.config.user]
+
         result = {}
 
         ndct = self.config.notifications
