@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from subprocess import PIPE, run
 from typing import List, Tuple
-from unittest import SkipTest
 
 import pytest
 

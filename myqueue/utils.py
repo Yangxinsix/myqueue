@@ -10,7 +10,6 @@ from math import inf
 from pathlib import Path
 from types import TracebackType
 from typing import IO, Union, Generator, List, Dict, Any
-from unittest import SkipTest
 
 
 def mqhome() -> Path:
