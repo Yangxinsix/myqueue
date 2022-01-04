@@ -76,13 +76,13 @@ class Queue(Lock):
             self._write()
         self.release()
 
-    def list(self,
-             selection: Selection,
-             columns: str,
-             sort: str | None = None,
-             reverse: bool = False,
-             short: bool = False,
-             use_log_file: bool = False) -> list[Task]:
+    def ls(self,
+           selection: Selection,
+           columns: str,
+           sort: str | None = None,
+           reverse: bool = False,
+           short: bool = False,
+           use_log_file: bool = False) -> list[Task]:
         """Pretty-print list of tasks."""
         self._read(use_log_file)
         tasks = selection.select(self.tasks)

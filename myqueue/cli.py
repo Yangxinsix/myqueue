@@ -541,8 +541,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            queue.list(selection, args.columns, column, reverse,
-                       args.count, args.use_log_file)
+            queue.ls(selection, args.columns, column, reverse,
+                     args.count, args.use_log_file)
 
         elif args.command == 'remove':
             queue.remove(selection)
