@@ -419,25 +419,26 @@ class Queue(Lock):
         """
         self._read()
 
-        self.tasks = [task for task in self.tasks
-                      if task.user == self.config.user]
+        mytasks = [task for task in self.tasks
+                   if task.user == self.config.user]
 
         result = {}
 
         ndct = self.config.notifications
         if ndct:
-            notifications = send_notification(self.tasks, **ndct)
+            notifications = send_notification(mytasks, **ndct)
             self.changed.update(task for task, statename in notifications)
             result['notifications'] = len(notifications)
 
         tasks = []
-        for task in self.tasks:
+        for task in mytasks:
             if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
                 nodes = self.config.nodes or [('', {'cores': 1})]
                 if not self.dry_run:
                     task.resources = task.resources.bigger(task.state, nodes)
                     task.restart -= 1
                 tasks.append(task)
+
         if tasks:
             tasks = self.find_depending(tasks)
             if self.dry_run:
@@ -453,14 +454,14 @@ class Queue(Lock):
                 self.submit(tasks, read=False)
             result['restarts'] = len(tasks)
 
-        result.update(self.hold_or_release())
+        result.update(self.hold_or_release(mytasks))
 
         return result
 
-    def hold_or_release(self) -> Dict[str, int]:
+    def hold_or_release(self, tasks: list[Task]) -> dict[str, int]:
         maxmem = self.config.maximum_diskspace
         mem = 0
-        for task in self.tasks:
+        for task in tasks:
             if task.state in {'queued', 'running',
                               'FAILED', 'TIMEOUT', 'MEMORY'}:
                 mem += task.diskspace
@@ -469,7 +470,7 @@ class Queue(Lock):
         released = 0
 
         if mem > maxmem:
-            for task in self.tasks:
+            for task in tasks:
                 if task.state == 'queued':
                     if task.diskspace > 0:
                         self.scheduler.hold(task)
@@ -480,7 +481,7 @@ class Queue(Lock):
                         if mem < maxmem:
                             break
         elif mem < maxmem:
-            for task in self.tasks[::-1]:
+            for task in tasks[::-1]:
                 if task.state == 'hold' and task.diskspace > 0:
                     self.scheduler.release_hold(task)
                     released += 1
