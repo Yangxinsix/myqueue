@@ -72,7 +72,7 @@ List (ls): List tasks in queue
 usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
                [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
                [-T]
-               [folder]
+               [folder ...]
 
 List tasks in queue.
 
@@ -97,7 +97,7 @@ Examples::
     $ mq ls -s F abc/  # show failed jobs in abc/ folder
 
 folder:
-    List tasks in this folder and its subfolders. Defaults to current folder.
+    List tasks in this folder and its subfolders. Defaults to current folder. Use --not-recursive to exclude subfolders.
 
 options:
   -h, --help            show this help message and exit
