@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Set, Pattern, Optional
+from typing import Pattern
 
 from myqueue.task import Task
 from myqueue.states import State
@@ -12,7 +12,7 @@ class Selection:
                  ids: Optional[Set[int]] = None,
                  name: Optional[Pattern[str]] = None,
                  states: Set[State] = set(),
-                 folders: List[Path] = [],
+                 folders: list[Path] = [],
                  recursive: bool = True,
                  error: Optional[Pattern[str]] = None):
         """Selection.
@@ -39,7 +39,7 @@ class Selection:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive}, {self.error})')
 
-    def select(self, tasks: List[Task]) -> List[Task]:
+    def select(self, tasks: list[Task]) -> List[Task]:
         """Filter tasks acording to selection object."""
         if self.ids is not None:
             return [task for task in tasks if task.id in self.ids]

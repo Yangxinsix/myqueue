@@ -5,7 +5,7 @@ import sys
 import textwrap
 from pathlib import Path
 from time import time
-from typing import List, Tuple, Dict, Set, Optional, Pattern
+from typing import Pattern
 
 
 class MQError(Exception):
@@ -145,17 +145,17 @@ aliases = {'rm': 'remove',
            'ls': 'list'}
 
 
-commands: Dict[str, Tuple[str, str]] = {}
+commands: dict[str, Tuple[str, str]] = {}
 for cmd, help, description in _help:
     description = help + '\n\n' + description[1:]
     commands[cmd] = (help, description)
 
 
-def main(arguments: List[str] = None) -> None:
+def main(arguments: list[str] = None) -> None:
     sys.exit(_main(arguments))
 
 
-def _main(arguments: List[str] = None) -> int:
+def _main(arguments: list[str] = None) -> int:
     is_test = bool(os.environ.get('MYQUEUE_TESTING'))
     parser = argparse.ArgumentParser(
         prog='mq',
@@ -167,8 +167,8 @@ def _main(arguments: List[str] = None) -> int:
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    short_options: Dict[str, int] = {}
-    long_options: Dict[str, int] = {}
+    short_options: dict[str, int] = {}
+    long_options: dict[str, int] = {}
 
     for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
@@ -444,7 +444,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             (mq / 'config.py').write_text(cfg.read_text())
         return
 
-    folder_names: List[str] = []
+    folder_names: list[str] = []
     if args.command in ['sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
     else:
@@ -637,12 +637,12 @@ class Formatter(argparse.HelpFormatter):
         return out[:-1]
 
 
-def fix_option_order(arguments: List[str],
-                     short_options: Dict[str, int],
-                     long_options: Dict[str, int]) -> List[str]:
+def fix_option_order(arguments: list[str],
+                     short_options: dict[str, int],
+                     long_options: dict[str, int]) -> list[str]:
     """Allow intermixed options and arguments."""
-    args1: List[str] = []
-    args2: List[str] = []
+    args1: list[str] = []
+    args2: list[str] = []
     i = 0
     while i < len(arguments):
         a = arguments[i]

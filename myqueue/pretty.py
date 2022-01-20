@@ -2,7 +2,6 @@ import os
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List
 
 from myqueue.task import Task
 from myqueue.utils import mqhome
@@ -19,7 +18,7 @@ def colored(state: str) -> str:
     return state
 
 
-def pprint(tasks: List[Task],
+def pprint(tasks: list[Task],
            verbosity: int = 1,
            columns: str = 'ifnaIrAste',
            short: bool = False,
@@ -56,7 +55,7 @@ def pprint(tasks: List[Task],
     lines = []
     lengths = [0] * len(columns)
 
-    count: Dict[str, int] = defaultdict(int)
+    count: dict[str, int] = defaultdict(int)
     for task in tasks:
         words = task.words()
         _, folder, _, _, _, _, _, state, _, _ = words

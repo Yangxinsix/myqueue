@@ -64,7 +64,7 @@ class MQ:
                 break
 
 
-def mqlist(config) -> List[Task]:
+def mqlist(config) -> list[Task]:
     with Queue(config, verbosity=0) as q:
         q._read()
         return q.tasks

@@ -14,7 +14,7 @@ class TestScheduler(Scheduler):
     def __init__(self, config: Configuration):
         Scheduler.__init__(self, config)
         self.folder = self.config.home / '.myqueue'
-        self.tasks: List[Task] = []
+        self.tasks: list[Task] = []
         self.number = 0
 
     def submit(self,

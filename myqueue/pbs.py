@@ -1,7 +1,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Set
 
 from .task import Task
 from .scheduler import Scheduler

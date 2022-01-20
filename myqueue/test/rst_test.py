@@ -22,7 +22,7 @@ def skip(line: str) -> bool:
 def run_document(mq, path: Path, test=False, update=False) -> None:
     assert path.is_file()
     lines = path.read_text().splitlines()
-    blocks: List[Tuple[str, List[str], int]] = []
+    blocks: list[Tuple[str, List[str], int]] = []
     n = 0
     while n < len(lines):
         line = lines[n]
@@ -30,7 +30,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
             line = lines[n + 2]
             if line[:5] == '    $' and not skip(line):
                 cmd = ''
-                output: List[str] = []
+                output: list[str] = []
                 L = 0
                 for n, line in enumerate(lines[n + 2:], n + 2):
                     if not line:
@@ -80,7 +80,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
 
 def run_command(cmd: str,
                 folder: str,
-                pypath: Path) -> Tuple[List[str], str]:
+                pypath: Path) -> Tuple[list[str], str]:
     if cmd.startswith('#'):
         return [], folder
     cmd, _, _ = cmd.partition('  #')

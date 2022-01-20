@@ -13,7 +13,7 @@ import sys
 import traceback
 from pathlib import Path
 from time import sleep, time
-from typing import Any, Tuple
+from typing import Any
 
 from myqueue.queue import Queue
 from myqueue.config import Configuration

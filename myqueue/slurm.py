@@ -2,7 +2,6 @@ import os
 import subprocess
 import warnings
 from math import ceil
-from typing import Set, List, Tuple
 
 from .task import Task
 from .scheduler import Scheduler
@@ -141,8 +140,8 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+                                                   list[str]]:
         cmd = ['sinfo',
                '--noheader',
                '--format=%c %m %P']

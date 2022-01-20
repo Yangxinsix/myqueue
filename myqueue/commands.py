@@ -5,7 +5,7 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
-from typing import List, Dict, Any, Union, Optional, Type, Callable
+from typing import Any, Type, Callable
 from pathlib import Path
 from shlex import quote
 
@@ -14,12 +14,12 @@ from .resources import Resources
 
 class Command:
     """Base class."""
-    def __init__(self, name: str, args: List[str]):
+    def __init__(self, name: str, args: list[str]):
         self.args = args
         if args:
             name += '+' + '_'.join(self.args)
         self.name = name
-        self.dct: Dict[str, Any] = {'args': args}
+        self.dct: dict[str, Any] = {'args': args}
         self.short_name: str
         self.function: Optional[Callable[[], Any]] = None
 
@@ -27,7 +27,7 @@ class Command:
         self.name = name
         self.dct['name'] = name
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         raise NotImplementedError
 
     @property
@@ -43,12 +43,12 @@ class Command:
         subprocess.run(str(self), shell=True, check=True)
         return None
 
-    def quoted_args(self) -> List[str]:
+    def quoted_args(self) -> list[str]:
         return [quote(arg) for arg in self.args]
 
 
 def create_command(cmd: str,
-                   args: List[str] = [],
+                   args: list[str] = [],
                    type: str = None,
                    name: str = '') -> Command:
     """Create command object."""
@@ -89,7 +89,7 @@ def create_command(cmd: str,
 
 
 class ShellCommand(Command):
-    def __init__(self, cmd: str, args: List[str]):
+    def __init__(self, cmd: str, args: list[str]):
         Command.__init__(self, cmd, args)
         self.cmd = cmd
         self.short_name = cmd
@@ -97,14 +97,14 @@ class ShellCommand(Command):
     def __str__(self) -> str:
         return ' '.join([self.cmd[6:]] + self.quoted_args())
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'shell-command',
                 'cmd': self.cmd}
 
 
 class ShellScript(Command):
-    def __init__(self, cmd: str, args: List[str]):
+    def __init__(self, cmd: str, args: list[str]):
         Command.__init__(self, Path(cmd).name, args)
         self.cmd = cmd
         self.short_name = cmd
@@ -112,7 +112,7 @@ class ShellScript(Command):
     def __str__(self) -> str:
         return ' '.join(['sh', self.cmd] + self.quoted_args())
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'shell-script',
                 'cmd': self.cmd}
@@ -125,7 +125,7 @@ class ShellScript(Command):
 
 
 class PythonScript(Command):
-    def __init__(self, script: str, args: List[str]):
+    def __init__(self, script: str, args: list[str]):
         path = Path(script)
         Command.__init__(self, path.name, args)
         if '/' in script:
@@ -137,7 +137,7 @@ class PythonScript(Command):
     def __str__(self) -> str:
         return 'python3 ' + ' '.join([self.script] + self.quoted_args())
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'python-script',
                 'cmd': self.script}
@@ -155,7 +155,7 @@ class PythonScript(Command):
 class WorkflowTask(Command):
     def __init__(self,
                  cmd: str,
-                 args: List[str],
+                 args: list[str],
                  function: Callable[[], Any] = None):
         script, name = cmd.split(':')
         self.script = Path(script)
@@ -173,14 +173,14 @@ class WorkflowTask(Command):
         assert self.function is not None
         return self.function()
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'workflow-task',
                 'cmd': f'{self.script}:{self.name}'}
 
 
 class PythonModule(Command):
-    def __init__(self, mod: str, args: List[str]):
+    def __init__(self, mod: str, args: list[str]):
         Command.__init__(self, mod, args)
         self.mod = mod
         self.short_name = mod
@@ -188,14 +188,14 @@ class PythonModule(Command):
     def __str__(self) -> str:
         return ' '.join(['python3', '-m', self.mod] + self.quoted_args())
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'python-module',
                 'cmd': self.mod}
 
 
 class PythonFunction(Command):
-    def __init__(self, cmd: str, args: List[str]):
+    def __init__(self, cmd: str, args: list[str]):
         if ':' in cmd:
             # Backwards compatibility with version 4:
             self.mod, self.func = cmd.rsplit(':', 1)
@@ -209,14 +209,14 @@ class PythonFunction(Command):
         mod = self.mod
         return f'python3 -c "import {mod}; {mod}.{self.func}({args})"'
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'python-function',
                 'cmd': self.mod + '@' + self.func}
 
 
 class PythonFunctionInScript(Command):
-    def __init__(self, cmd: str, args: List[str]):
+    def __init__(self, cmd: str, args: list[str]):
         script, self.func = cmd.rsplit('@', 1)
         path = Path(script)
         Command.__init__(self, path.name, args)
@@ -232,7 +232,7 @@ class PythonFunctionInScript(Command):
                 f'mod = runpy({self.script!r}); '
                 f'mod.{self.func}({args})')
 
-    def todict(self) -> Dict[str, Any]:
+    def todict(self) -> dict[str, Any]:
         return {**self.dct,
                 'type': 'python-function-in-script',
                 'cmd': self.script + '@' + self.func}

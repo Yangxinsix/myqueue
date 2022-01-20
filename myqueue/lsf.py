@@ -1,5 +1,4 @@
 import subprocess
-from typing import Set, List, Tuple, Dict
 
 from .task import Task
 from .scheduler import Scheduler
@@ -98,15 +97,15 @@ class LSF(Scheduler):
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+                                                   list[str]]:
         from collections import defaultdict
         from .utils import str2number
 
         cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        cores: Dict[str, int] = {}
-        memory: Dict[str, List[str]] = defaultdict(list)
+        cores: dict[str, int] = {}
+        memory: dict[str, list[str]] = defaultdict(list)
         for line in p.stdout.decode().splitlines():
             id, state, procs, load, name, mem, unit, *_ = line.split()
             if state == 'State':

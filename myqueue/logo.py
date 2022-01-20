@@ -1,11 +1,10 @@
 """SVG-logo for MyQueue."""
-from typing import Union, List
 
 H = 200 - 15 - 3
 h = 100
 w = 35
 
-mq: List[List[Union[str, int]]] = [
+mq: list[List[Union[str, int]]] = [
     ['M', 10, 45 + h,
      'l', 0, -h + 30],
     ['M', 10, 70,

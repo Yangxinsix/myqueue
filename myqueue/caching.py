@@ -2,7 +2,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Sequence
+from typing import Any, Callable, Sequence
 from functools import lru_cache, partial, wraps
 
 
@@ -76,7 +76,7 @@ def mpi_world() -> MPIWorld:
 def create_cached_function(function: Callable,
                            name: str,
                            args: Sequence[Any],
-                           kwargs: Dict[str, Any]) -> CachedFunction:
+                           kwargs: dict[str, Any]) -> CachedFunction:
     """Wrap function if needed."""
     func_no_args = wraps(function)(partial(function, *args, **kwargs))
     if hasattr(function, 'has'):
@@ -126,7 +126,7 @@ class Encoder(json.JSONEncoder):
 encode = Encoder().encode
 
 
-def object_hook(dct: Dict[str, Any]) -> Any:
+def object_hook(dct: dict[str, Any]) -> Any:
     """Decode complex, datetime and ndarray representations.
 
     >>> object_hook({'__complex__': [1.0, 2.0]})

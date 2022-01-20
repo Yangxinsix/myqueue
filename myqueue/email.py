@@ -4,17 +4,16 @@ from collections import defaultdict
 from email.mime.text import MIMEText
 import getpass
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 from myqueue.config import Configuration
 from myqueue.task import Task
 from myqueue.utils import mqhome
 
 
-def send_notification(tasks: List[Task],
+def send_notification(tasks: list[Task],
                       email: str,
                       host: str,
-                      username: str = None) -> List[Tuple[Task, str]]:
+                      username: str = None) -> list[Tuple[Task, str]]:
     """Compose and send email."""
     notifications = []
     for task in tasks:
@@ -26,7 +25,7 @@ def send_notification(tasks: List[Task],
             task.notifications = task.notifications.replace(character, '')
             notifications.append((task, task.state.name))
     if notifications:
-        count: Dict[str, int] = defaultdict(int)
+        count: dict[str, int] = defaultdict(int)
         lines = []
         for task, name in notifications:
             count[name] += 1

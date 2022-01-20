@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Tuple
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from myqueue.commands import Command
 
 from myqueue.states import State
 
-Node = Tuple[str, Dict[str, Any]]
+Node = Tuple[str, dict[str, Any]]
 
 
 def seconds_to_short_time_string(n: float) -> str:

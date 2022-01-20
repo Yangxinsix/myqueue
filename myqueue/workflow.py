@@ -2,7 +2,7 @@ import ast
 import runpy
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union, Type, Sequence
+from typing import Any, Callable, Type, Sequence
 from types import TracebackType
 
 
@@ -21,8 +21,8 @@ DEFAULT_VERBOSITY = 1
 
 
 def workflow(args: Namespace,
-             folders: List[Path],
-             verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+             folders: list[Path],
+             verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow script(s) and folders."""
     if args.arguments:
         kwargs = str2kwargs(args.arguments)
@@ -52,7 +52,7 @@ WorkflowFunction = Callable[[], None]
 
 
 def get_workflow_function(path: Path,
-                          kwargs: Dict[str, Any] = {}) -> WorkflowFunction:
+                          kwargs: dict[str, Any] = {}) -> WorkflowFunction:
     """Get workflow function from script."""
     module = runpy.run_path(str(path))  # type: ignore # bug in typeshed?
     try:
@@ -68,11 +68,11 @@ def get_workflow_function(path: Path,
 
 def workflow_from_scripts(
         pattern: str,
-        kwargs: Dict[str, Any],
-        folders: List[Path],
-        verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+        kwargs: dict[str, Any],
+        folders: list[Path],
+        verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Generate tasks from workflows defined by '**/*{script}'."""
-    tasks: List[Task] = []
+    tasks: list[Task] = []
     paths = [path
              for folder in folders
              for path in folder.glob('**/*' + pattern)]
@@ -88,13 +88,13 @@ def workflow_from_scripts(
 
 
 def workflow_from_script(script: Path,
-                         kwargs: Dict[str, Any],
-                         folders: List[Path],
-                         verbosity: int = DEFAULT_VERBOSITY) -> List[Task]:
+                         kwargs: dict[str, Any],
+                         folders: list[Path],
+                         verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow defined in python script."""
     func = get_workflow_function(script, kwargs)
 
-    tasks: List[Task] = []
+    tasks: list[Task] = []
 
     n_folders = plural(len(folders), 'folder')
     pb = progress_bar(len(folders),
@@ -107,7 +107,7 @@ def workflow_from_script(script: Path,
     return tasks
 
 
-def filter_tasks(tasks: List[Task], names: List[str]) -> List[Task]:
+def filter_tasks(tasks: list[Task], names: List[str]) -> List[Task]:
     """Filter tasks that are not in names or in dependencies of names."""
     include = set()
     map = {task.dname: task for task in tasks}
@@ -119,7 +119,7 @@ def filter_tasks(tasks: List[Task], names: List[str]) -> List[Task]:
     return filteredtasks
 
 
-def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
+def str2kwargs(args: str) -> dict[str, Union[int, str, bool, float]]:
     """Convert str to dict.
 
     >>> str2kwargs('name=hello,n=5')
@@ -138,7 +138,7 @@ def str2kwargs(args: str) -> Dict[str, Union[int, str, bool, float]]:
 
 def get_tasks_from_folder(folder: Path,
                           func: Callable,
-                          script: Path) -> List[Task]:
+                          script: Path) -> list[Task]:
     """Collect tasks from folder."""
     with chdir(folder):
         if func.__name__ == 'create_tasks':
@@ -223,7 +223,7 @@ def get_name(func: Callable) -> str:
 
 class ResourceHandler:
     """Resource decorator and context manager."""
-    def __init__(self, kwargs: Dict[str, Any], runner: 'Runner'):
+    def __init__(self, kwargs: dict[str, Any], runner: 'Runner'):
         self.kwargs = kwargs
         self.runner = runner
         self.old_kwargs: Dict
@@ -249,8 +249,8 @@ class ResourceHandler:
 class Runner:
     """Wrapper for collecting tasks from workflow function."""
     def __init__(self) -> None:
-        self.tasks: Optional[List[Task]] = None
-        self.dependencies: List[Task] = []
+        self.tasks: Optional[list[Task]] = None
+        self.dependencies: list[Task] = []
         self.resource_kwargs = {'tmax': '10m',
                                 'cores': 1,
                                 'nodename': '',
@@ -267,8 +267,8 @@ class Runner:
             shell: str = None,
             name: str = '',
             args: Sequence[Any] = [],
-            kwargs: Dict[str, Any] = {},
-            deps: List[RunHandle] = [],
+            kwargs: dict[str, Any] = {},
+            deps: list[RunHandle] = [],
             tmax: str = None,
             cores: int = None,
             nodename: str = None,
@@ -350,8 +350,8 @@ class Runner:
 
     def extract_dependencies(self,
                              args: Sequence[Any],
-                             kwargs: Dict[str, Any],
-                             deps: List[RunHandle]) -> List[Path]:
+                             kwargs: dict[str, Any],
+                             deps: list[RunHandle]) -> List[Path]:
         """Find dependencies on other tasks."""
         tasks = set(self.dependencies)
         for handle in deps:
@@ -423,8 +423,8 @@ def create_task(function: Callable = None,
                 shell: str = None,
                 name: str = '',
                 args: Sequence[Any] = [],
-                kwargs: Dict[str, Any] = {},
-                deps: List[Path] = [],
+                kwargs: dict[str, Any] = {},
+                deps: list[Path] = [],
                 workflow_script: Path = None,
                 folder: Path = Path('.'),
                 restart: int = 0,
@@ -480,7 +480,7 @@ def create_task(function: Callable = None,
 
 
 def collect(workflow_function: Callable,
-            script: Path) -> List[Task]:
+            script: Path) -> list[Task]:
     """Collecting tasks from workflow function."""
     runner.tasks = []
     runner.workflow_script = script

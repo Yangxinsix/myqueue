@@ -1,7 +1,7 @@
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Sequence
+from typing import Sequence
 try:
     import graphlib
 except ImportError:
@@ -22,8 +22,8 @@ class DependencyError(Exception):
 
 
 def find_dependency(dname: TaskName,
-                    current: Dict[TaskName, Task],
-                    new: Dict[TaskName, Task],
+                    current: dict[TaskName, Task],
+                    new: dict[TaskName, Task],
                     force: bool = False) -> Task:
     """Convert dependency name to task."""
     if dname in current:
@@ -40,14 +40,14 @@ def find_dependency(dname: TaskName,
     return task
 
 
-def mark_children(task: Task, children: Dict[Task, List[Task]]) -> None:
+def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
     """Mark children of task as FAILED."""
     for child in children[task]:
         child.state = State.FAILED
         mark_children(child, children)
 
 
-def remove_bad_tasks(tasks: List[Task]) -> List[Task]:
+def remove_bad_tasks(tasks: list[Task]) -> List[Task]:
     """Create list without bad dependencies."""
     children = defaultdict(list)
     for task in tasks:
@@ -63,18 +63,18 @@ def remove_bad_tasks(tasks: List[Task]) -> List[Task]:
 
 def submit_tasks(scheduler: Scheduler,
                  tasks: Sequence[Task],
-                 current: Dict[Path, Task],
+                 current: dict[Path, Task],
                  force: bool,
                  max_tasks: int,
                  verbosity: int,
-                 dry_run: bool) -> Tuple[List[Task],
-                                         List[Task],
+                 dry_run: bool) -> Tuple[list[Task],
+                                         list[Task],
                                          Optional[Exception]]:
     """Submit tasks."""
 
     new = {task.dname: task for task in tasks}
 
-    count: Dict[State, int] = defaultdict(int)
+    count: dict[State, int] = defaultdict(int)
     submit = []
     for task in tasks:
         if task.workflow:

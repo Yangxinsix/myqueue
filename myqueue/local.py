@@ -2,7 +2,7 @@ import asyncio
 import pickle
 import socket
 from functools import partial
-from typing import Any, Set, Tuple, List, Dict
+from typing import Any
 
 from .scheduler import Scheduler
 from .task import Task
@@ -61,8 +61,8 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return result
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+                                                   list[str]]:
         return [], []
 
 
@@ -80,9 +80,9 @@ class Server:
             self.next_id = 1 + max((task.id for task in queue.tasks),
                                    default=0)
 
-        self.tasks: Dict[int, Task] = {}
-        self.processes: Dict[int, asyncio.subprocess.Process] = {}
-        self.aiotasks: Dict[int, asyncio.Task] = {}
+        self.tasks: dict[int, Task] = {}
+        self.processes: dict[int, asyncio.subprocess.Process] = {}
+        self.aiotasks: dict[int, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
     def start(self) -> None:
