@@ -10,7 +10,6 @@ from math import inf
 from pathlib import Path
 from types import TracebackType
 from typing import IO, Union, Generator, List, Dict, Any
-from unittest import SkipTest
 
 
 def mqhome() -> Path:
@@ -193,9 +192,6 @@ def update_readme_and_completion(test: bool = False) -> None:
         n += 1
 
     cli = dir / '..' / 'docs' / 'cli.rst'
-
-    if test and not cli.is_file():
-        raise SkipTest
 
     lines = cli.read_text().splitlines()
     a = lines.index('.. computer generated text:')

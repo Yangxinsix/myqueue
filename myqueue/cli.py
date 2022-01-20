@@ -308,6 +308,12 @@ def _main(arguments: List[str] = None) -> int:
               help='List tasks from logfile (~/.myqueue/log.csv).')
             a('--not-recursive', action='store_true',
               help='Do not list subfolders.')
+            a('folder',
+              nargs='*',
+              default=['.'],
+              help='List tasks in this folder and its subfolders.  '
+              'Defaults to current folder.  '
+              'Use --not-recursive to exclude subfolders.')
 
         if cmd not in ['list', 'completion', 'info', 'test']:
             a('-z', '--dry-run',
@@ -327,7 +333,7 @@ def _main(arguments: List[str] = None) -> int:
               help='Task-folder.  Use --recursive (or -r) to include '
               'subfolders.')
 
-        if cmd in ['list', 'sync', 'kick']:
+        if cmd in ['sync', 'kick']:
             a('folder',
               nargs='?',
               help=f'{cmd.title()} tasks in this folder and its subfolders.  '
@@ -412,7 +418,7 @@ def _main(arguments: List[str] = None) -> int:
 
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
-    from myqueue.config import Configuration
+    from myqueue.config import Configuration, find_home_folder
     from myqueue.resources import Resources
     from myqueue.task import task
     from myqueue.queue import Queue
@@ -439,7 +445,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         return
 
     folder_names: List[str] = []
-    if args.command in ['list', 'sync', 'kick', 'daemon', 'info']:
+    if args.command in ['sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
     else:
         folder_names = args.folder
@@ -481,6 +487,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             folder.relative_to(home)
         except ValueError:
             raise MQError(f'{folder} not inside {home}')
+        home2 = find_home_folder(folder)
+        if home2 != home:
+            raise MQError(
+                f'More than one .myqueue/ folder: {home} and {home2}')
 
     if args.command == 'daemon':
         perform_daemon_action(home / '.myqueue/', args.action)
