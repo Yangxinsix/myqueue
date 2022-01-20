@@ -262,7 +262,7 @@ class Runner:
 
     def run(self,
             *,
-            function: (Callable | CachedFunction) = None,
+            function: Union[Callable | CachedFunction] = None,
             script: Union[Path, str] = None,
             module: str = None,
             shell: str = None,
@@ -419,7 +419,7 @@ resources = runner.resources
 
 
 def create_task(function: Callable = None,
-                script: Path | str = None,
+                script: Union[Path | str] = None,
                 module: str = None,
                 shell: str = None,
                 name: str = '',

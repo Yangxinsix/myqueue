@@ -5,6 +5,7 @@ ShellCommand, ShellScript, PythonScript, PythonModule and
 PythonFunction.  Use the factory function command() to create
 command objects.
 """
+from __future__ import annotations
 from typing import Any, Type, Callable
 from pathlib import Path
 from shlex import quote

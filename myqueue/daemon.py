@@ -5,6 +5,7 @@ be resubmitted, held or released.  Notification emails will also be sent.
 It will write its output to .myqueue/daemon.out.
 """
 
+from __future__ import annotations
 import functools
 import os
 import signal

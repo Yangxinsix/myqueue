@@ -1,4 +1,5 @@
 """User configuration (handling of .myqueue/config.py files)."""
+from __future__ import annotations
 import subprocess
 import warnings
 from math import inf

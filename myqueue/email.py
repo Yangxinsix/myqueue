@@ -1,3 +1,4 @@
+from __future__ import annotations
 import smtplib
 import stat
 from collections import defaultdict

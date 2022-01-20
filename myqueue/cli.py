@@ -1,3 +1,4 @@
+from __future__ import annotations
 import argparse
 import os
 import re
@@ -541,8 +542,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            queue.list(selection, args.columns, column, reverse,
-                       args.count, args.use_log_file)
+            queue.list_(selection, args.columns, column, reverse,
+                        args.count, args.use_log_file)
 
         elif args.command == 'remove':
             queue.remove(selection)
