@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from myqueue.states import State
 
-Node = Tuple[str, dict[str, Any]]
+Node = tuple[str, dict[str, Any]]
 
 
 def seconds_to_short_time_string(n: float) -> str:

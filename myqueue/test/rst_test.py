@@ -4,7 +4,6 @@ import re
 import sys
 from pathlib import Path
 from subprocess import PIPE, run
-from typing import List, Tuple
 
 import pytest
 
@@ -22,7 +21,7 @@ def skip(line: str) -> bool:
 def run_document(mq, path: Path, test=False, update=False) -> None:
     assert path.is_file()
     lines = path.read_text().splitlines()
-    blocks: list[Tuple[str, List[str], int]] = []
+    blocks: list[tuple[str, list[str], int]] = []
     n = 0
     while n < len(lines):
         line = lines[n]
@@ -80,7 +79,7 @@ def run_document(mq, path: Path, test=False, update=False) -> None:
 
 def run_command(cmd: str,
                 folder: str,
-                pypath: Path) -> Tuple[list[str], str]:
+                pypath: Path) -> tuple[list[str], str]:
     if cmd.startswith('#'):
         return [], folder
     cmd, _, _ = cmd.partition('  #')

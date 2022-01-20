@@ -1,10 +1,11 @@
 """SVG-logo for MyQueue."""
+from __future__ import annotations
 
 H = 200 - 15 - 3
 h = 100
 w = 35
 
-mq: list[List[Union[str, int]]] = [
+mq: list[list[str | int]] = [
     ['M', 10, 45 + h,
      'l', 0, -h + 30],
     ['M', 10, 70,

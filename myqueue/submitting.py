@@ -47,7 +47,7 @@ def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
         mark_children(child, children)
 
 
-def remove_bad_tasks(tasks: list[Task]) -> List[Task]:
+def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
     """Create list without bad dependencies."""
     children = defaultdict(list)
     for task in tasks:
@@ -67,9 +67,9 @@ def submit_tasks(scheduler: Scheduler,
                  force: bool,
                  max_tasks: int,
                  verbosity: int,
-                 dry_run: bool) -> Tuple[list[Task],
+                 dry_run: bool) -> tuple[list[Task],
                                          list[Task],
-                                         Optional[Exception]]:
+                                         Exception | None]:
     """Submit tasks."""
 
     new = {task.dname: task for task in tasks}

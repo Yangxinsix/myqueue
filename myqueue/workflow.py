@@ -1,8 +1,9 @@
+from __future__ import annotations
 import ast
 import runpy
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Type, Sequence
+from typing import Any, Callable, Type, Sequence, Union
 from types import TracebackType
 
 
@@ -107,7 +108,7 @@ def workflow_from_script(script: Path,
     return tasks
 
 
-def filter_tasks(tasks: list[Task], names: List[str]) -> List[Task]:
+def filter_tasks(tasks: list[Task], names: list[str]) -> list[Task]:
     """Filter tasks that are not in names or in dependencies of names."""
     include = set()
     map = {task.dname: task for task in tasks}
@@ -119,7 +120,7 @@ def filter_tasks(tasks: list[Task], names: List[str]) -> List[Task]:
     return filteredtasks
 
 
-def str2kwargs(args: str) -> dict[str, Union[int, str, bool, float]]:
+def str2kwargs(args: str) -> dict[str, int | str | bool | float]:
     """Convert str to dict.
 
     >>> str2kwargs('name=hello,n=5')
@@ -226,7 +227,7 @@ class ResourceHandler:
     def __init__(self, kwargs: dict[str, Any], runner: 'Runner'):
         self.kwargs = kwargs
         self.runner = runner
-        self.old_kwargs: Dict
+        self.old_kwargs: dict
 
     def __call__(self, workflow_function: Callable[[], Any]
                  ) -> Callable[[], Any]:
@@ -249,7 +250,7 @@ class ResourceHandler:
 class Runner:
     """Wrapper for collecting tasks from workflow function."""
     def __init__(self) -> None:
-        self.tasks: Optional[list[Task]] = None
+        self.tasks: list[Task] | None = None
         self.dependencies: list[Task] = []
         self.resource_kwargs = {'tmax': '10m',
                                 'cores': 1,
@@ -257,11 +258,11 @@ class Runner:
                                 'processes': 0,
                                 'restart': 0}
         self.target = ''
-        self.workflow_script: Optional[Path] = None
+        self.workflow_script: Path | None = None
 
     def run(self,
             *,
-            function: Union[Callable, CachedFunction] = None,
+            function: (Callable | CachedFunction) = None,
             script: Union[Path, str] = None,
             module: str = None,
             shell: str = None,
@@ -274,7 +275,7 @@ class Runner:
             nodename: str = None,
             processes: int = None,
             restart: int = None,
-            folder: Union[Path, str] = '.') -> RunHandle:
+            folder: Path | str = '.') -> RunHandle:
         """Run or submit a task.
 
         The type of task is specifyed by one and only one of the arguments
@@ -351,7 +352,7 @@ class Runner:
     def extract_dependencies(self,
                              args: Sequence[Any],
                              kwargs: dict[str, Any],
-                             deps: list[RunHandle]) -> List[Path]:
+                             deps: list[RunHandle]) -> list[Path]:
         """Find dependencies on other tasks."""
         tasks = set(self.dependencies)
         for handle in deps:
@@ -418,7 +419,7 @@ resources = runner.resources
 
 
 def create_task(function: Callable = None,
-                script: Union[Path, str] = None,
+                script: Path | str = None,
                 module: str = None,
                 shell: str = None,
                 name: str = '',

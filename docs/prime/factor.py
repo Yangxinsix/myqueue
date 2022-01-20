@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 
-def factor(x: int) -> List[int]:
+def factor(x: int) -> list[int]:
     for f in range(2, x // 2 + 1):
         if x % f == 0:
             return [f] + factor(x // f)

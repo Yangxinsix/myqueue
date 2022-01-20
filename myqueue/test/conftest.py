@@ -1,7 +1,6 @@
 import os
 import shlex
 from pathlib import Path
-from typing import List
 
 import pytest  # type: ignore
 

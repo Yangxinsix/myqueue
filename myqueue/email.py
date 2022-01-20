@@ -13,7 +13,7 @@ from myqueue.utils import mqhome
 def send_notification(tasks: list[Task],
                       email: str,
                       host: str,
-                      username: str = None) -> list[Tuple[Task, str]]:
+                      username: str = None) -> list[tuple[Task, str]]:
     """Compose and send email."""
     notifications = []
     for task in tasks:

@@ -116,7 +116,7 @@ class SLURM(Scheduler):
     def release_hold(self, task: Task) -> None:
         subprocess.run(['scontrol', 'release', str(task.id)])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[int]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
@@ -140,7 +140,7 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         cmd = ['sinfo',
                '--noheader',

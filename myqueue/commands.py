@@ -21,7 +21,7 @@ class Command:
         self.name = name
         self.dct: dict[str, Any] = {'args': args}
         self.short_name: str
-        self.function: Optional[Callable[[], Any]] = None
+        self.function: Callable[[], Any] | None = None
 
     def set_non_standard_name(self, name: str) -> None:
         self.name = name
@@ -34,7 +34,7 @@ class Command:
     def fname(self) -> str:
         return self.name.replace('/', '\\')  # filename can't contain slashes
 
-    def read_resources(self, path: Path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Resources | None:
         """Look for "# MQ: resources=..." comments in script."""
         return None
 
@@ -117,7 +117,7 @@ class ShellScript(Command):
                 'type': 'shell-script',
                 'cmd': self.cmd}
 
-    def read_resources(self, path: Path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Resources | None:
         for line in Path(self.cmd).read_text().splitlines():
             if line.startswith('# MQ: resources='):
                 return Resources.from_string(line.split('=', 1)[1])
@@ -142,7 +142,7 @@ class PythonScript(Command):
                 'type': 'python-script',
                 'cmd': self.script}
 
-    def read_resources(self, path: Path) -> Optional[Resources]:
+    def read_resources(self, path: Path) -> Resources | None:
         script = Path(self.script)
         if not script.is_absolute():
             script = path / script
@@ -238,7 +238,7 @@ class PythonFunctionInScript(Command):
                 'cmd': self.script + '@' + self.func}
 
 
-def convert(x: str) -> Union[bool, int, float, str]:
+def convert(x: str) -> bool | int | float | str:
     """Convert str to bool, int, float or str."""
     if x == 'True':
         return True

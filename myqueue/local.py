@@ -38,7 +38,7 @@ class LocalScheduler(Scheduler):
     def release_hold(self, task: Task) -> None:
         self.send('release', task.id)
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[int]:
         ids = self.send('list')
         return ids
 
@@ -61,7 +61,7 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return result
 
-    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         return [], []
 

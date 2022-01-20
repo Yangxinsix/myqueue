@@ -76,7 +76,7 @@ def exit(pidfile: Path, signum: int, frame: Any) -> None:
         sys.exit()
 
 
-def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
+def read_hostname_and_pid(pidfile: Path) -> tuple[str, int]:
     """Read from .myqueue/daemon.pid file."""
     host, pid = pidfile.read_text().split(':')
     return host, int(pid)

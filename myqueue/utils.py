@@ -46,7 +46,7 @@ def str2number(s: str) -> int:
                      'GiB': 1024**3}[s[len(n):]]
 
 
-def opencew(filename: str) -> Union[IO[bytes], None]:
+def opencew(filename: str) -> IO[bytes] | None:
     """Create and open filename exclusively for writing.
 
     If master cpu gets exclusive write access to filename, a file

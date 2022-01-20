@@ -90,14 +90,14 @@ class LSF(Scheduler):
     def cancel(self, task: Task) -> None:
         subprocess.run(['bkill', str(task.id)])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[int]:
         p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
         queued = {int(line.split()[0])
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self, queue: str = '') -> Tuple[list[Tuple[str, int, str]],
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         from collections import defaultdict
         from .utils import str2number

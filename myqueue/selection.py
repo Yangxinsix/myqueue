@@ -9,12 +9,12 @@ class Selection:
     """Object used for selecting tasks."""
 
     def __init__(self,
-                 ids: Optional[Set[int]] = None,
-                 name: Optional[Pattern[str]] = None,
-                 states: Set[State] = set(),
+                 ids: set[int] | None = None,
+                 name: Pattern[str] | None = None,
+                 states: set[State] = set(),
                  folders: list[Path] = [],
                  recursive: bool = True,
-                 error: Optional[Pattern[str]] = None):
+                 error: Pattern[str] | None = None):
         """Selection.
 
         Selections is based on:
@@ -39,7 +39,7 @@ class Selection:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive}, {self.error})')
 
-    def select(self, tasks: list[Task]) -> List[Task]:
+    def select(self, tasks: list[Task]) -> list[Task]:
         """Filter tasks acording to selection object."""
         if self.ids is not None:
             return [task for task in tasks if task.id in self.ids]

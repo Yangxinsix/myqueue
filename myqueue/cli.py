@@ -145,7 +145,7 @@ aliases = {'rm': 'remove',
            'ls': 'list'}
 
 
-commands: dict[str, Tuple[str, str]] = {}
+commands: dict[str, tuple[str, str]] = {}
 for cmd, help, description in _help:
     description = help + '\n\n' + description[1:]
     commands[cmd] = (help, description)
@@ -508,7 +508,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                   if args.states is not None
                                   else default)
 
-        ids: Optional[Set[int]] = None
+        ids: set[int] | None = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -548,7 +548,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.remove(selection)
 
         elif args.command == 'resubmit':
-            resources: Optional[Resources]
+            resources: Resources | None
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
@@ -596,7 +596,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             assert False
 
 
-def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+def regex(pattern: str | None) -> Pattern[str] | None:
     r"""Convert string to regex pattern.
 
     Examples:
