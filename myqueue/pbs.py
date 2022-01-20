@@ -57,10 +57,7 @@ class PBS(Scheduler):
 
         script = '#!/bin/bash -l\n'
 
-        if task.activation_script:
-            script += (
-                f'source {task.activation_script}\n'
-                f'echo "venv: {task.activation_script}"\n')
+        script += task.get_venv_activation_line()
 
         script += (
             '#!/bin/bash -l\n'

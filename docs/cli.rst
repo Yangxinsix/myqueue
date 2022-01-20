@@ -60,7 +60,7 @@ More help can be found here: https://myqueue.readthedocs.io/.
 cmd:
     Subcommand.
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 
@@ -72,7 +72,7 @@ List (ls): List tasks in queue
 usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
                [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
                [-T]
-               [folder]
+               [folder ...]
 
 List tasks in queue.
 
@@ -97,9 +97,9 @@ Examples::
     $ mq ls -s F abc/  # show failed jobs in abc/ folder
 
 folder:
-    List tasks in this folder and its subfolders. Defaults to current folder.
+    List tasks in this folder and its subfolders. Defaults to current folder. Use --not-recursive to exclude subfolders.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
@@ -148,7 +148,7 @@ task:
 folder:
     Submit tasks in this folder. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -d DEPENDENCIES, --dependencies DEPENDENCIES
                         Comma-separated task names.
@@ -189,7 +189,7 @@ Example::
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
@@ -234,7 +234,7 @@ Examples::
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
@@ -272,7 +272,7 @@ Example::
 folder:
     Show information for queues in this folder and its subfolders. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -v, --verbose    More output.
   -q, --quiet      Less output.
@@ -306,7 +306,7 @@ script:
 folder:
     Submit tasks in this folder. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -f, --force           Submit also failed tasks.
   --max-tasks MAX_TASKS
@@ -345,7 +345,7 @@ task:
 folder:
     Submit tasks in this folder. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -n NAME, --name NAME  Name used for task.
   -w, --workflow        Write <task-name>.state file when task has finished.
@@ -370,7 +370,7 @@ it manually.
 folder:
     Kick tasks in this folder and its subfolders. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
@@ -394,7 +394,7 @@ The following state changes are allowed: h->q, q->h, F->M and F->T.
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -E STATES, --email STATES
                         Send email when state changes to one of the specified
@@ -432,7 +432,7 @@ Initialize new queue.
 This will create a .myqueue/ folder in your current working directory and copy
 ~/.myqueue/config.py into it.
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
@@ -455,7 +455,7 @@ its corresponding folder no longer exists.
 folder:
     Sync tasks in this folder and its subfolders. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -z, --dry-run    Show what will happen without doing anything.
   -v, --verbose    More output.
@@ -476,7 +476,7 @@ Do this::
 
     $ mq completion >> ~/.bashrc
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -v, --verbose    More output.
   -q, --quiet      Less output.
@@ -503,7 +503,7 @@ Example::
 {local,slurm,pbs,lsf}:
      Name of scheduler. Will be guessed if not supplied.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -Q QUEUE_NAME, --queue-name QUEUE_NAME
                         Name of queue. May be needed.
@@ -531,7 +531,7 @@ tasks.
 folder:
     Pick daemon process corresponding to this folder. Defaults to current folder.
 
-optional arguments:
+options:
   -h, --help           show this help message and exit
   -z, --dry-run        Show what will happen without doing anything.
   -v, --verbose        More output.

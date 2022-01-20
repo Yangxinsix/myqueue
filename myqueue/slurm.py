@@ -34,7 +34,7 @@ class SLURM(Scheduler):
             cores = task.resources.cores
             if nodes == 1 and cores < nodedct['cores']:
                 mbytes = int(mbytes * cores / nodedct['cores'])
-            sbatch.append(f'--mem={mbytes}MB')
+                sbatch.append(f'--mem={mbytes}MB')
 
         extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
@@ -79,10 +79,7 @@ class SLURM(Scheduler):
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
-        if task.activation_script:
-            script += (
-                f'source {task.activation_script}\n'
-                f'echo "venv: {task.activation_script}"\n')
+        script += task.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
