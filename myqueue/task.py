@@ -53,7 +53,7 @@ class Task:
                  creates: List[str],
                  notifications: str = '',
                  state: State = State.undefined,
-                 id: int = 0,
+                 id: str = '0',
                  error: str = '',
                  memory_usage: int = 0,
                  tqueued: float = 0.0,
@@ -119,7 +119,7 @@ class Task:
         if self.notifications:
             info.append(self.notifications)
 
-        return [str(self.id),
+        return [self.id,
                 str(self.folder) + '/',
                 self.cmd.short_name,
                 ' '.join(self.cmd.args),
@@ -231,7 +231,7 @@ class Task:
                     creates.split(','),
                     notifications,
                     State[state],
-                    int(id),
+                    id,
                     error,
                     memory_usage,
                     *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
@@ -262,12 +262,15 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
+        id = str(dct.pop('id'))
+
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
                     state=State[dct.pop('state')],
                     folder=folder,
                     deps=deps,
                     notifications=dct.pop('notifications', ''),
+                    id=id,
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:

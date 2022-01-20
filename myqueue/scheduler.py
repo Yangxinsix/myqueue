@@ -37,7 +37,7 @@ class Scheduler:
                     return True
         return False
 
-    def maxrss(self, id: int) -> int:
+    def maxrss(self, id: str) -> int:
         return 0
 
     def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
