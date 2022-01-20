@@ -13,7 +13,7 @@ from myqueue.selection import Selection
 from myqueue.virtenv import find_activation_scripts
 
 
-def info(queue: Queue, id: int = None) -> None:
+def info(queue: Queue, id: str = None) -> None:
     """Print information about MyQueue or a single task."""
 
     cwd = Path.cwd()

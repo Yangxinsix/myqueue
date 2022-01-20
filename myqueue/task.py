@@ -92,6 +92,10 @@ class Task:
     def name(self) -> str:
         return f'{self.cmd.name}.{self.id}'
 
+    @ property
+    def int_id(self) -> int:
+        return int(self.id.split('.')[0])
+
     def running_time(self, t: float = None) -> float:
         if self.state in ['CANCELED', 'queued', 'hold']:
             dt = 0.0

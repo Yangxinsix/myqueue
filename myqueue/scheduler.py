@@ -15,7 +15,7 @@ class Scheduler:
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> Set[str]:
         raise NotImplementedError
 
     def hold(self, task: Task) -> None:

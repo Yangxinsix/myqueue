@@ -75,7 +75,7 @@ class LSF(Scheduler):
         out, err = p.communicate(script.encode())
 
         assert p.returncode == 0
-        id = int(out.split()[1][1:-1])
+        id = out.split()[1][1:-1].decode()
         task.id = id
 
     def has_timed_out(self, task: Task) -> bool:
@@ -89,11 +89,11 @@ class LSF(Scheduler):
         return False
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['bkill', str(task.id)])
+        subprocess.run(['bkill', task.id])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> Set[str]:
         p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
-        queued = {int(line.split()[0])
+        queued = {line.split()[0].decode()
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
