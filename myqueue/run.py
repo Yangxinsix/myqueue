@@ -1,10 +1,10 @@
+from __future__ import annotations
 import subprocess
-from typing import List
 
 from .task import Task
 
 
-def run_tasks(tasks: List[Task]) -> None:
+def run_tasks(tasks: list[Task]) -> None:
     for task in tasks:
         cmd = str(task.cmd)
         print(f'{task.folder}: {cmd}')

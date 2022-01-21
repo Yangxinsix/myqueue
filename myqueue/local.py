@@ -1,8 +1,9 @@
+from __future__ import annotations
 import asyncio
 import pickle
 import socket
 from functools import partial
-from typing import Any, Set, Tuple, List, Dict
+from typing import Any
 
 from .scheduler import Scheduler
 from .task import Task
@@ -38,7 +39,7 @@ class LocalScheduler(Scheduler):
     def release_hold(self, task: Task) -> None:
         self.send('release', task.id)
 
-    def get_ids(self) -> Set[str]:
+    def get_ids(self) -> set[str]:
         ids = self.send('list')
         return ids
 
@@ -61,8 +62,8 @@ class LocalScheduler(Scheduler):
             raise LocalSchedulerError(status)
         return result
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
+                                                   list[str]]:
         return [], []
 
 
@@ -80,9 +81,15 @@ class Server:
             self.next_id = 1 + max((task.int_id for task in queue.tasks),
                                    default=0)
 
+<<<<<<< HEAD
         self.tasks: Dict[str, Task] = {}
         self.processes: Dict[str, asyncio.subprocess.Process] = {}
         self.aiotasks: Dict[str, asyncio.Task] = {}
+=======
+        self.tasks: dict[int, Task] = {}
+        self.processes: dict[int, asyncio.subprocess.Process] = {}
+        self.aiotasks: dict[int, asyncio.Task] = {}
+>>>>>>> master
         self.folder = self.config.home / '.myqueue'
 
     def start(self) -> None:

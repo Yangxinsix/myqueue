@@ -2,6 +2,7 @@
 
 The version number and the submit() function is defined here.
 """
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

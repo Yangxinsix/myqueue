@@ -1,3 +1,4 @@
+from __future__ import annotations
 from myqueue.workflow import run as run0, wrap, resources
 
 

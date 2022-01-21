@@ -7,12 +7,13 @@ Put this in your .bashrc::
 
 """
 
+from __future__ import annotations
 import os
 import sys
-from typing import Dict, Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping
 
 
-def read() -> Dict[str, Any]:
+def read() -> dict[str, Any]:
     """Read queue as a dict."""
     from pathlib import Path
     import json
@@ -20,7 +21,7 @@ def read() -> Dict[str, Any]:
     home = find_home_folder(Path('.').resolve())
     path = home / '.myqueue/queue.json'
     try:
-        dct: Dict[str, Any] = json.loads(path.read_text())
+        dct: dict[str, Any] = json.loads(path.read_text())
         return dct
     except Exception:
         return {}
