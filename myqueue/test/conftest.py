@@ -1,7 +1,7 @@
+from __future__ import annotations
 import os
 import shlex
 from pathlib import Path
-from typing import List
 
 import pytest  # type: ignore
 
@@ -64,7 +64,7 @@ class MQ:
                 break
 
 
-def mqlist(config) -> List[Task]:
+def mqlist(config) -> list[Task]:
     with Queue(config, verbosity=0) as q:
         q._read()
         return q.tasks

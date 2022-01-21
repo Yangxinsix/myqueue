@@ -1,7 +1,7 @@
+from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Set
 
 from .task import Task
 from .scheduler import Scheduler
@@ -85,7 +85,7 @@ class PBS(Scheduler):
     def cancel(self, task: Task) -> None:
         subprocess.run(['qdel', str(task.id)])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[int]:
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

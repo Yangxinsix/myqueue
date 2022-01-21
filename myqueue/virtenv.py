@@ -1,12 +1,12 @@
 """Automatically activate venv's."""
+from __future__ import annotations
 from pathlib import Path
-from typing import List, Dict
 import warnings
 
 
-def find_activation_scripts(folders: List[Path]) -> Dict[Path, Path]:
+def find_activation_scripts(folders: list[Path]) -> dict[Path, Path]:
     """Find virtualenv activation scripts."""
-    scripts: Dict[Path, Path] = {}
+    scripts: dict[Path, Path] = {}
     for folder in folders:
         found = []
         while True:

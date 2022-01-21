@@ -6,10 +6,11 @@ File format versions:
 6) Relative paths.
 
 """
+from __future__ import annotations
 import json
 import time
 from collections import defaultdict
-from typing import Set, List, Dict, Optional, Sequence
+from typing import Sequence
 from types import TracebackType
 
 from myqueue.config import Configuration
@@ -43,9 +44,9 @@ class Queue(Lock):
         Lock.__init__(self, self.fname.with_name('queue.json.lock'),
                       timeout=10.0)
 
-        self._scheduler: Optional[Scheduler] = None
-        self.tasks: List[Task] = []
-        self.changed: Set[Task] = set()
+        self._scheduler: Scheduler | None = None
+        self.tasks: list[Task] = []
+        self.changed: set[Task] = set()
 
     @property
     def scheduler(self) -> Scheduler:
@@ -74,13 +75,13 @@ class Queue(Lock):
             self._write()
         self.release()
 
-    def list(self,
-             selection: Selection,
-             columns: str,
-             sort: Optional[str] = None,
-             reverse: bool = False,
-             short: bool = False,
-             use_log_file: bool = False) -> List[Task]:
+    def list_(self,
+              selection: Selection,
+              columns: str,
+              sort: str | None = None,
+              reverse: bool = False,
+              short: bool = False,
+              use_log_file: bool = False) -> list[Task]:
         """Pretty-print list of tasks."""
         self._read(use_log_file)
         tasks = selection.select(self.tasks)
@@ -138,7 +139,7 @@ class Queue(Lock):
             raise ex
 
     def run(self,
-            tasks: List[Task]) -> None:
+            tasks: list[Task]) -> None:
         """Run tasks locally."""
         self._read()
         dnames = {task.dname for task in tasks}
@@ -159,7 +160,7 @@ class Queue(Lock):
 
         self._remove(tasks)
 
-    def _remove(self, tasks: List[Task]) -> None:
+    def _remove(self, tasks: list[Task]) -> None:
         t = time.time()
         for task in tasks:
             if task.tstop is None:
@@ -214,10 +215,10 @@ class Queue(Lock):
                     self.changed.add(task)
                 print(plural(len(remove), 'job'), 'removed')
 
-    def find_depending(self, tasks: List[Task]) -> List[Task]:
+    def find_depending(self, tasks: list[Task]) -> list[Task]:
         """Generate list of tasks including dependencies."""
         map = {task.dname: task for task in self.tasks}
-        d: Dict[Task, List[Task]] = defaultdict(list)
+        d: dict[Task, list[Task]] = defaultdict(list)
         for task in self.tasks:
             for dname in task.deps:
                 tsk = map.get(dname)
@@ -239,7 +240,7 @@ class Queue(Lock):
     def modify(self,
                selection: Selection,
                newstate: State,
-               email: Set[State]) -> None:
+               email: set[State]) -> None:
         """Modify task(s)."""
         self._read()
         tasks = selection.select(self.tasks)
@@ -281,7 +282,7 @@ class Queue(Lock):
 
     def resubmit(self,
                  selection: Selection,
-                 resources: Optional[Resources]) -> None:
+                 resources: Resources | None) -> None:
         """Resubmit failed or timed-out tasks."""
         self._read()
         tasks = []
@@ -409,7 +410,7 @@ class Queue(Lock):
                         task.write_state_file()
                     self.changed.add(task)
 
-    def kick(self) -> Dict[str, int]:
+    def kick(self) -> dict[str, int]:
         """Kick the system.
 
         * Send email notifications
@@ -454,7 +455,7 @@ class Queue(Lock):
 
         return result
 
-    def hold_or_release(self) -> Dict[str, int]:
+    def hold_or_release(self) -> dict[str, int]:
         maxmem = self.config.maximum_diskspace
         mem = 0
         for task in self.tasks:

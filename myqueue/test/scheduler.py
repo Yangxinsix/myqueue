@@ -1,6 +1,6 @@
+from __future__ import annotations
 import subprocess
 import sys
-from typing import List, Optional
 
 from myqueue.config import Configuration
 from myqueue.scheduler import Scheduler
@@ -9,12 +9,12 @@ from myqueue.task import Task
 
 
 class TestScheduler(Scheduler):
-    current_scheduler: Optional['TestScheduler'] = None
+    current_scheduler: TestScheduler | None = None
 
     def __init__(self, config: Configuration):
         Scheduler.__init__(self, config)
         self.folder = self.config.home / '.myqueue'
-        self.tasks: List[Task] = []
+        self.tasks: list[Task] = []
         self.number = 0
 
     def submit(self,

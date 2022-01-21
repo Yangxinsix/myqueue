@@ -43,7 +43,7 @@ We put the three Python files in a ``prime/`` folder::
     $ ls -l prime/
     totalt 12
     -rw-rw-r-- 1 jensj jensj 190 apr 26 21:55 check.py
-    -rw-rw-r-- 1 jensj jensj 387 apr 26 21:55 factor.py
+    -rw-rw-r-- 1 jensj jensj 398 apr 26 21:55 factor.py
     -rw-rw-r-- 1 jensj jensj 164 apr 26 21:55 workflow.py
 
 Make sure Python can find the files by adding this line::

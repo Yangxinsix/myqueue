@@ -5,6 +5,7 @@ be resubmitted, held or released.  Notification emails will also be sent.
 It will write its output to .myqueue/daemon.out.
 """
 
+from __future__ import annotations
 import functools
 import os
 import signal
@@ -13,7 +14,7 @@ import sys
 import traceback
 from pathlib import Path
 from time import sleep, time
-from typing import Any, Tuple
+from typing import Any
 
 from myqueue.queue import Queue
 from myqueue.config import Configuration
@@ -76,7 +77,7 @@ def exit(pidfile: Path, signum: int, frame: Any) -> None:
         sys.exit()
 
 
-def read_hostname_and_pid(pidfile: Path) -> Tuple[str, int]:
+def read_hostname_and_pid(pidfile: Path) -> tuple[str, int]:
     """Read from .myqueue/daemon.pid file."""
     host, pid = pidfile.read_text().split(':')
     return host, int(pid)

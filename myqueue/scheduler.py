@@ -1,5 +1,5 @@
+from __future__ import annotations
 from pathlib import Path
-from typing import Set, List, Tuple
 from myqueue.task import Task
 from myqueue.config import Configuration
 
@@ -15,7 +15,7 @@ class Scheduler:
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[int]:
         raise NotImplementedError
 
     def hold(self, task: Task) -> None:
@@ -40,8 +40,8 @@ class Scheduler:
     def maxrss(self, id: int) -> int:
         return 0
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
+                                                   list[str]]:
         raise NotImplementedError
 
 

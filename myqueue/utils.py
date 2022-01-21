@@ -1,4 +1,5 @@
 """Useful utilities."""
+from __future__ import annotations
 import errno
 import os
 import re
@@ -9,7 +10,7 @@ from io import StringIO
 from math import inf
 from pathlib import Path
 from types import TracebackType
-from typing import IO, Union, Generator, List, Dict, Any
+from typing import IO, Generator, Any
 
 
 def mqhome() -> Path:
@@ -46,7 +47,7 @@ def str2number(s: str) -> int:
                      'GiB': 1024**3}[s[len(n):]]
 
 
-def opencew(filename: str) -> Union[IO[bytes], None]:
+def opencew(filename: str) -> IO[bytes] | None:
     """Create and open filename exclusively for writing.
 
     If master cpu gets exclusive write access to filename, a file
@@ -176,7 +177,7 @@ def update_readme_and_completion(test: bool = False) -> None:
     while n < len(newlines):
         line = newlines[n]
         if line == 'positional arguments:':
-            L: List[str] = []
+            L: list[str] = []
             n += 1
             while True:
                 line = newlines.pop(n)
@@ -207,7 +208,7 @@ def update_readme_and_completion(test: bool = False) -> None:
 
     filename = dir / 'complete.py'
 
-    dct: Dict[str, List[str]] = {}
+    dct: dict[str, list[str]] = {}
 
     class MyException(Exception):
         pass
@@ -225,7 +226,7 @@ def update_readme_and_completion(test: bool = False) -> None:
         def add_parser(self, cmd: str, **kwargs: Any) -> 'Subparser':
             return Subparser(cmd)
 
-        def parse_args(self, args: List[str] = None) -> None:
+        def parse_args(self, args: list[str] = None) -> None:
             raise MyException
 
     class Subparser:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from myqueue.utils import convert_done_files
 
