@@ -81,15 +81,9 @@ class Server:
             self.next_id = 1 + max((task.int_id for task in queue.tasks),
                                    default=0)
 
-<<<<<<< HEAD
-        self.tasks: Dict[str, Task] = {}
-        self.processes: Dict[str, asyncio.subprocess.Process] = {}
-        self.aiotasks: Dict[str, asyncio.Task] = {}
-=======
-        self.tasks: dict[int, Task] = {}
-        self.processes: dict[int, asyncio.subprocess.Process] = {}
-        self.aiotasks: dict[int, asyncio.Task] = {}
->>>>>>> master
+        self.tasks: dict[str, Task] = {}
+        self.processes: dict[str, asyncio.subprocess.Process] = {}
+        self.aiotasks: dict[str, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
     def start(self) -> None:
