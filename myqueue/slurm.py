@@ -6,7 +6,6 @@ from math import ceil
 
 from .task import Task
 from .scheduler import Scheduler
-from .utils import str2number
 
 
 class SLURM(Scheduler):
@@ -27,14 +26,6 @@ class SLURM(Scheduler):
                   f'--chdir={task.folder}',
                   f'--output={name}.%j.out',
                   f'--error={name}.%j.err']
-
-        mem = nodedct.get('memory')
-        if mem:
-            mbytes = str2number(mem) // 1_000_000
-            cores = task.resources.cores
-            if nodes == 1 and cores < nodedct['cores']:
-                mbytes = int(mbytes * cores / nodedct['cores'])
-                sbatch.append(f'--mem={mbytes}MB')
 
         extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
