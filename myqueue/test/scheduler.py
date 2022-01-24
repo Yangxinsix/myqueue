@@ -22,14 +22,14 @@ class TestScheduler(Scheduler):
                dry_run: bool = False,
                verbose: bool = False) -> None:
         if dry_run:
-            task.id = 1
+            task.id = '1'
             return
         if task.dtasks:
             ids = {t.id for t in self.tasks}
             for t in task.dtasks:
                 assert t.id in ids
         self.number += 1
-        task.id = self.number
+        task.id = str(self.number)
         self.tasks.append(task)
 
     def cancel(self, task):

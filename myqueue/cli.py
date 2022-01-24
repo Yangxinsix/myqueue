@@ -341,7 +341,7 @@ def _main(arguments: list[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd == 'info':
-            a('-i', '--id', type=int,
+            a('-i', '--id',
               help='Show information about specific task.')
             a('-A', '--all', action='store_true',
               help='Show information about all your queues.')
@@ -509,7 +509,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                   if args.states is not None
                                   else default)
 
-        ids: set[int] | None = None
+        ids: set[str] | None = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -517,9 +517,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
-                ids = {int(line.split()[0]) for line in sys.stdin}
+                ids = {line.split()[0] for line in sys.stdin}
             else:
-                ids = {int(id) for id in args.id.split(',')}
+                ids = {id for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 

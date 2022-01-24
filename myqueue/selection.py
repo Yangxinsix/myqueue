@@ -10,7 +10,7 @@ class Selection:
     """Object used for selecting tasks."""
 
     def __init__(self,
-                 ids: set[int] | None = None,
+                 ids: set[str] | None = None,
                  name: Pattern[str] | None = None,
                  states: set[State] = set(),
                  folders: list[Path] = [],

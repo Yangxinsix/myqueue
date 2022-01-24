@@ -15,7 +15,7 @@ class Scheduler:
     def cancel(self, task: Task) -> None:
         raise NotImplementedError
 
-    def get_ids(self) -> set[int]:
+    def get_ids(self) -> set[str]:
         raise NotImplementedError
 
     def hold(self, task: Task) -> None:
@@ -37,7 +37,7 @@ class Scheduler:
                     return True
         return False
 
-    def maxrss(self, id: int) -> int:
+    def maxrss(self, id: str) -> int:
         return 0
 
     def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],

@@ -43,10 +43,10 @@ def test_local_scheduler(scheduler):
     task2 = create_task('shell:sleep+5')
     scheduler.submit(task2)
     ids = scheduler.get_ids()
-    assert ids == [1, 2]
+    assert ids == ['1', '2']
     scheduler.cancel(task2)
     ids = scheduler.get_ids()
-    assert ids == [1]
+    assert ids == ['1']
 
 
 def workflow():
