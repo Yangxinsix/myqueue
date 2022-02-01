@@ -14,7 +14,9 @@ Enable bash tab-completion for future terminal sessions like this::
 
     $ mq completion >> ~/.profile
 
-Subscribe here_ if you want to be notified of updates on PyPI_.
+Subscribe here_ or use this `RSS feed`_ if you want to be notified of updates
+on PyPI_.
 
+.. _RSS feed: https://pypi.org/project/myqueue/#history
 .. _here: https://libraries.io/pypi/myqueue
 .. _PyPI: https://pypi.org/project/myqueue/

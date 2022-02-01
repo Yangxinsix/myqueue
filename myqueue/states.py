@@ -1,5 +1,5 @@
+from __future__ import annotations
 from enum import Enum
-from typing import Set
 
 
 class State(Enum):
@@ -67,7 +67,7 @@ class State(Enum):
         return self.name.isupper()
 
     @staticmethod
-    def str2states(s: str) -> Set['State']:
+    def str2states(s: str) -> set['State']:
         """Convert single character state string to set of State objects.
 
         >>> names = [state.name for state in State.str2states('rdA')]
@@ -78,7 +78,7 @@ class State(Enum):
           ...
         ValueError: Unknown state: x.  Must be one of q, ..., a or A.
         """
-        states: Set[State] = set()
+        states: set[State] = set()
         for c in s:
             if c == 'a':
                 states.update([State.queued,

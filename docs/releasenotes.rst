@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 22.1.0
+==============
+
 * The :ref:`list` command can now list several folders instead of,
   as previously, only one.
   They must all belong to the same ``.myqueue/`` folder though.

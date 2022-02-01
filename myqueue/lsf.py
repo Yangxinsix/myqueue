@@ -1,5 +1,5 @@
+from __future__ import annotations
 import subprocess
-from typing import Set, List, Tuple, Dict
 
 from .task import Task
 from .scheduler import Scheduler
@@ -53,10 +53,7 @@ class LSF(Scheduler):
             'id=$LSB_JOBID\n'
             f'mq={home}/.myqueue/lsf-$id\n')
 
-        if task.activation_script:
-            script += (
-                f'source {task.activation_script}\n'
-                f'echo "venv: {task.activation_script}"\n')
+        script += task.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -78,7 +75,7 @@ class LSF(Scheduler):
         out, err = p.communicate(script.encode())
 
         assert p.returncode == 0
-        id = int(out.split()[1][1:-1])
+        id = out.split()[1][1:-1].decode()
         task.id = id
 
     def has_timed_out(self, task: Task) -> bool:
@@ -92,24 +89,24 @@ class LSF(Scheduler):
         return False
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['bkill', str(task.id)])
+        subprocess.run(['bkill', task.id])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[str]:
         p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
-        queued = {int(line.split()[0])
+        queued = {line.split()[0].decode()
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
+                                                   list[str]]:
         from collections import defaultdict
         from .utils import str2number
 
         cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        cores: Dict[str, int] = {}
-        memory: Dict[str, List[str]] = defaultdict(list)
+        cores: dict[str, int] = {}
+        memory: dict[str, list[str]] = defaultdict(list)
         for line in p.stdout.decode().splitlines():
             id, state, procs, load, name, mem, unit, *_ = line.split()
             if state == 'State':

@@ -17,6 +17,7 @@ setup(name='myqueue',
       packages=find_packages(),
       entry_points={'console_scripts': ['mq = myqueue.cli:main']},
       install_requires=['graphlib-backport'],
+      python_requires='>=3.7',
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Console',

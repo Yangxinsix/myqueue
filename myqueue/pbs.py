@@ -1,7 +1,7 @@
+from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Set
 
 from .task import Task
 from .scheduler import Scheduler
@@ -40,7 +40,7 @@ class PBS(Scheduler):
         qsub += self.config.extra_args + nodedct.get('extra_args', [])
 
         if task.dtasks:
-            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
+            ids = ':'.join(tsk.id for tsk in task.dtasks)
             qsub.extend(['-W', f'depend=afterok:{ids}'])
 
         cmd = str(task.cmd)
@@ -57,10 +57,7 @@ class PBS(Scheduler):
 
         script = '#!/bin/bash -l\n'
 
-        if task.activation_script:
-            script += (
-                f'source {task.activation_script}\n'
-                f'echo "venv: {task.activation_script}"\n')
+        script += task.get_venv_activation_line()
 
         script += (
             '#!/bin/bash -l\n'
@@ -79,20 +76,20 @@ class PBS(Scheduler):
                              stdout=subprocess.PIPE)
         out, err = p.communicate(script.encode())
         assert p.returncode == 0
-        id = int(out.split(b'.')[0])
+        id = out.split(b'.')[0].decode()
         task.id = id
 
     def error_file(self, task: Task) -> Path:
         return task.folder / f'{task.cmd.short_name}.e{task.id}'
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['qdel', str(task.id)])
+        subprocess.run(['qdel', task.id])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[str]:
         user = os.environ['USER']
         cmd = ['qstat', '-u', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {int(line.split()[0].split(b'.')[0])
+        queued = {line.split()[0].split(b'.')[0].decode()
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
