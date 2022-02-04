@@ -1,14 +1,12 @@
 <svg width="164" height="164" xmlns="http://www.w3.org/2000/svg">
  <path d="M 132 32 c -50 0 -50 50 0 50"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#9BFA32"/>
+       fill="none" stroke-width="20" stroke-linecap="round" stroke="#9BB9C8"/>
  <path d="M 132 132 l 0 -100"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#AFD232"/>
+       fill="none" stroke-width="20" stroke-linecap="round" stroke="#A5C3BE"/>
  <path d="M 82 112 l 70 0"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#C3AA32"/>
+       fill="none" stroke-width="20" stroke-linecap="round" stroke="#AFCDB4"/>
  <path d="M 47 112 c 0 -100 35 -100 35 0"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#D78232"/>
+       fill="none" stroke-width="20" stroke-linecap="round" stroke="#B9D7AA"/>
  <path d="M 12 112 c 0 -100 35 -100 35 0"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#EB5A32"/>
- <path d="M 12 37 l 0 70"
-       fill="none" stroke-width="20" stroke-linecap="round" stroke="#FF3232"/>
+       fill="none" stroke-width="20" stroke-linecap="round" stroke="#C3E1A0"/>
 </svg>
