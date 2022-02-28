@@ -1,4 +1,5 @@
 """Module for testing a module as a task."""
+from __future__ import annotations
 import sys
 
 

@@ -2,13 +2,14 @@
 
 The version number and the submit() function is defined here.
 """
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .task import Task  # noqa  # pragma: no cover
 
 
-__version__ = '21.8.1b1'
+__version__ = '22.1.0'
 
 
 def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:

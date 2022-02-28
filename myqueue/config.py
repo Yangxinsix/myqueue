@@ -1,20 +1,21 @@
 """User configuration (handling of .myqueue/config.py files)."""
+from __future__ import annotations
 import subprocess
 import warnings
 from math import inf
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 
 class Configuration:
     def __init__(self,
                  scheduler: str,
-                 nodes: List[Tuple[str, Dict[str, Any]]] = None,
+                 nodes: list[tuple[str, dict[str, Any]]] = None,
                  parallel_python: str = 'python3',
                  mpiexec: str = 'mpiexec',
-                 extra_args: List[str] = None,
+                 extra_args: list[str] = None,
                  maximum_diskspace: float = inf,
-                 notifications: Dict[str, str] = None,
+                 notifications: dict[str, str] = None,
                  home: Path = None):
         """Configuration object.
 
@@ -52,7 +53,7 @@ class Configuration:
             start = Path.cwd()
         home = find_home_folder(start)
         config_file = home / '.myqueue' / 'config.py'
-        dct: Dict[str, Dict[str, Any]] = {}
+        dct: dict[str, dict[str, Any]] = {}
         exec(compile(config_file.read_text(), str(config_file), 'exec'), dct)
         cfg = dct['config']
         if 'scheduler' not in cfg:
@@ -127,8 +128,8 @@ def guess_configuration(scheduler_name: str = '',
     scheduler = get_scheduler(Configuration(scheduler=name))
     nodelist, extra_args = scheduler.get_config(queue_name)
     nodelist.sort(key=lambda ncm: (-ncm[1], str2number(ncm[2])))
-    nodelist2: List[Tuple[str, int, str]] = []
-    done: Set[int] = set()
+    nodelist2: list[tuple[str, int, str]] = []
+    done: set[int] = set()
     for name, cores, memory in nodelist:
         if cores not in done:
             nodelist2.insert(len(done), (name, cores, memory))
@@ -136,7 +137,7 @@ def guess_configuration(scheduler_name: str = '',
         else:
             nodelist2.append((name, cores, memory))
 
-    cfg: Dict[str, Any] = {'scheduler': scheduler.name}
+    cfg: dict[str, Any] = {'scheduler': scheduler.name}
 
     if nodelist2:
         cfg['nodes'] = [(name, {'cores': cores, 'memory': memory})

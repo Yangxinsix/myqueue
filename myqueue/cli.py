@@ -1,3 +1,4 @@
+from __future__ import annotations
 import argparse
 import os
 import re
@@ -5,7 +6,7 @@ import sys
 import textwrap
 from pathlib import Path
 from time import time
-from typing import List, Tuple, Dict, Set, Optional, Pattern
+from typing import Pattern
 
 
 class MQError(Exception):
@@ -145,17 +146,17 @@ aliases = {'rm': 'remove',
            'ls': 'list'}
 
 
-commands: Dict[str, Tuple[str, str]] = {}
+commands: dict[str, tuple[str, str]] = {}
 for cmd, help, description in _help:
     description = help + '\n\n' + description[1:]
     commands[cmd] = (help, description)
 
 
-def main(arguments: List[str] = None) -> None:
+def main(arguments: list[str] = None) -> None:
     sys.exit(_main(arguments))
 
 
-def _main(arguments: List[str] = None) -> int:
+def _main(arguments: list[str] = None) -> int:
     is_test = bool(os.environ.get('MYQUEUE_TESTING'))
     parser = argparse.ArgumentParser(
         prog='mq',
@@ -167,8 +168,8 @@ def _main(arguments: List[str] = None) -> int:
 
     subparsers = parser.add_subparsers(title='Commands', dest='command')
 
-    short_options: Dict[str, int] = {}
-    long_options: Dict[str, int] = {}
+    short_options: dict[str, int] = {}
+    long_options: dict[str, int] = {}
 
     for cmd, (help, description) in commands.items():
         p = subparsers.add_parser(cmd,
@@ -340,7 +341,7 @@ def _main(arguments: List[str] = None) -> int:
               'Defaults to current folder.')
 
         if cmd == 'info':
-            a('-i', '--id', type=int,
+            a('-i', '--id',
               help='Show information about specific task.')
             a('-A', '--all', action='store_true',
               help='Show information about all your queues.')
@@ -444,7 +445,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             (mq / 'config.py').write_text(cfg.read_text())
         return
 
-    folder_names: List[str] = []
+    folder_names: list[str] = []
     if args.command in ['sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
     else:
@@ -508,7 +509,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                   if args.states is not None
                                   else default)
 
-        ids: Optional[Set[int]] = None
+        ids: set[str] | None = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -516,9 +517,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
-                ids = {int(line.split()[0]) for line in sys.stdin}
+                ids = {line.split()[0] for line in sys.stdin}
             else:
-                ids = {int(id) for id in args.id.split(',')}
+                ids = {id for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
@@ -541,14 +542,14 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            queue.list(selection, args.columns, column, reverse,
-                       args.count, args.use_log_file)
+            queue.list_(selection, args.columns, column, reverse,
+                        args.count, args.use_log_file)
 
         elif args.command == 'remove':
             queue.remove(selection)
 
         elif args.command == 'resubmit':
-            resources: Optional[Resources]
+            resources: Resources | None
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
@@ -596,7 +597,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             assert False
 
 
-def regex(pattern: Optional[str]) -> Optional[Pattern[str]]:
+def regex(pattern: str | None) -> Pattern[str] | None:
     r"""Convert string to regex pattern.
 
     Examples:
@@ -637,12 +638,12 @@ class Formatter(argparse.HelpFormatter):
         return out[:-1]
 
 
-def fix_option_order(arguments: List[str],
-                     short_options: Dict[str, int],
-                     long_options: Dict[str, int]) -> List[str]:
+def fix_option_order(arguments: list[str],
+                     short_options: dict[str, int],
+                     long_options: dict[str, int]) -> list[str]:
     """Allow intermixed options and arguments."""
-    args1: List[str] = []
-    args2: List[str] = []
+    args1: list[str] = []
+    args2: list[str] = []
     i = 0
     while i < len(arguments):
         a = arguments[i]

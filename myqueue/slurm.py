@@ -1,12 +1,11 @@
+from __future__ import annotations
 import os
 import subprocess
 import warnings
 from math import ceil
-from typing import Set, List, Tuple
 
 from .task import Task
 from .scheduler import Scheduler
-from .utils import str2number
 
 
 class SLURM(Scheduler):
@@ -28,14 +27,6 @@ class SLURM(Scheduler):
                   f'--output={name}.%j.out',
                   f'--error={name}.%j.err']
 
-        mem = nodedct.get('memory')
-        if mem:
-            mbytes = str2number(mem) // 1_000_000
-            cores = task.resources.cores
-            if nodes == 1 and cores < nodedct['cores']:
-                mbytes = int(mbytes * cores / nodedct['cores'])
-                sbatch.append(f'--mem={mbytes}MB')
-
         extra_args = self.config.extra_args + nodedct.get('extra_args', [])
         if extra_args:
             sbatch += extra_args
@@ -51,7 +42,7 @@ class SLURM(Scheduler):
             sbatch.append(f'--reservation={reservation}')
 
         if task.dtasks:
-            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
+            ids = ':'.join(tsk.id for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
 
         env = []
@@ -79,10 +70,7 @@ class SLURM(Scheduler):
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
-        if task.activation_script:
-            script += (
-                f'source {task.activation_script}\n'
-                f'echo "venv: {task.activation_script}"\n')
+        script += task.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -95,7 +83,7 @@ class SLURM(Scheduler):
             if verbose:
                 print(' \\\n    '.join(sbatch))
                 print(script)
-            task.id = 1
+            task.id = '1'
             return
 
         # Use a clean set of environment variables without any MPI stuff:
@@ -109,27 +97,29 @@ class SLURM(Scheduler):
         if p.returncode != 0:
             raise RuntimeError(err)
 
-        task.id = int(out.split()[-1])
+        task.id = out.split()[-1].decode()
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['scancel', str(task.id)])
+        subprocess.run(['scancel', task.id])
 
     def hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'hold', str(task.id)])
+        subprocess.run(['scontrol', 'hold', task.id])
 
     def release_hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'release', str(task.id)])
+        subprocess.run(['scontrol', 'release', task.id])
 
-    def get_ids(self) -> Set[int]:
+    def get_ids(self) -> set[str]:
         user = os.environ['USER']
         cmd = ['squeue', '--user', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {int(line.split()[0]) for line in p.stdout.splitlines()[1:]}
+        queued = {line.split()[0].decode()
+                  for line in p.stdout.splitlines()[1:]}
         return queued
 
-    def maxrss(self, id: int) -> int:
+    def maxrss(self, id: str) -> int:
+        assert '.' not in id
         cmd = ['sacct',
-               '-j', str(id),
+               '-j', id,
                '-n',
                '--units=K',
                '-o', 'MaxRSS']
@@ -144,8 +134,8 @@ class SLURM(Scheduler):
                 mem = max(mem, int(line[:-1]) * 1000)
         return mem
 
-    def get_config(self, queue: str = '') -> Tuple[List[Tuple[str, int, str]],
-                                                   List[str]]:
+    def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
+                                                   list[str]]:
         cmd = ['sinfo',
                '--noheader',
                '--format=%c %m %P']
