@@ -334,7 +334,7 @@ class Task:
         for line in lines[::-1]:
             ll = line.lower()
             if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
-                                     'out of memory']):
+                                     'out of memory', 'AssertionError']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):
                     return True
