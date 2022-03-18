@@ -228,7 +228,7 @@ class Task:
         notifications = '' if len(row) < 16 else row[15]
         return Task(create_command(name),
                     Resources.from_string(resources),
-                    [Path(dep) for dep in deps.split(',')],
+                    [Path(dep) for dep in deps.split(',')] if deps else [],
                     int(restart),
                     bool(workflow),
                     int(diskspace),
