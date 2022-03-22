@@ -1,18 +1,22 @@
 from __future__ import annotations
+
 import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Sequence
+
 try:
     import graphlib
 except ImportError:
     import graphlib_backport as graphlib  # type: ignore
 
-from myqueue.progress import progress_bar
+import rich.progress as progress
+
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
-from myqueue.virtenv import find_activation_scripts
 from myqueue.utils import plural
+from myqueue.virtenv import find_activation_scripts
+
 from .states import State
 
 TaskName = Path
@@ -130,22 +134,24 @@ def submit_tasks(scheduler: Scheduler,
     for task in submit:
         task.activation_script = activation_scripts.get(task.folder)
 
-    pb = progress_bar(len(submit),
-                      f'Submitting {len(submit)} tasks:',
-                      verbosity and len(submit) > 1)
     submitted = []
     ex = None
-    try:
-        for task in submit:
-            scheduler.submit(
-                task,
-                dry_run,
-                verbosity >= 2)
-            submitted.append(task)
-            if not dry_run:
-                task.remove_state_file()
-            next(pb)
-    except Exception as x:
-        ex = x
+
+    with progress.Progress('[progress.description]{task.description}',
+                           progress.BarColumn(),
+                           progress.MofNCompleteColumn()) as pb:
+        try:
+            id = pb.add_task('Submitting tasks:', total=len(submit))
+            for task in submit:
+                scheduler.submit(
+                    task,
+                    dry_run,
+                    verbosity >= 2)
+                submitted.append(task)
+                if not dry_run:
+                    task.remove_state_file()
+                pb.advance(id)
+        except Exception as x:
+            ex = x
 
     return submitted, submit[len(submitted):], ex
