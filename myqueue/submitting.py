@@ -137,9 +137,14 @@ def submit_tasks(scheduler: Scheduler,
     submitted = []
     ex = None
 
-    with progress.Progress('[progress.description]{task.description}',
-                           progress.BarColumn(),
-                           progress.MofNCompleteColumn()) as pb:
+    if verbosity and len(submit) > 1:
+        pb = progress.Progress('[progress.description]{task.description}',
+                               progress.BarColumn(),
+                               progress.MofNCompleteColumn())
+    else:
+        pb = NoProgressBar()
+
+    with pb:
         try:
             id = pb.add_task('Submitting tasks:', total=len(submit))
             for task in submit:
@@ -155,3 +160,17 @@ def submit_tasks(scheduler: Scheduler,
             ex = x
 
     return submitted, submit[len(submitted):], ex
+
+
+class NoProgressBar:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def add_task(self, text, total):
+        return 0
+
+    def advance(self, id):
+        pass

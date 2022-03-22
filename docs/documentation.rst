@@ -208,7 +208,7 @@ Examples
 
     $ mkdir f1 f2
     $ mq submit "shell:echo hello" f1/ f2/
-    Submitting 2 tasks: |--------------------| 100.0%
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     2 ./f1/ shell:echo hello +1 1:10m
     3 ./f2/ shell:echo hello +1 1:10m
     2 tasks submitted
@@ -245,9 +245,9 @@ Remove the failed and done jobs from the list with
 The output files from a task will look like this::
 
     $ ls -l f2
-    totalt 4
-    -rw-rw-r-- 1 jensj jensj 0 apr 26 21:55 shell:echo.3.err
-    -rw-rw-r-- 1 jensj jensj 6 apr 26 21:55 shell:echo.3.out
+    total 4
+    -rw-rw-r-- 1 jensj jensj 0 Mar 22 10:06 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 Mar 22 10:06 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 
