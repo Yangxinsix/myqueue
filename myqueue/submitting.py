@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from pathlib import Path
+from types import TracebackType
 from typing import Sequence
 
 try:
@@ -137,6 +138,8 @@ def submit_tasks(scheduler: Scheduler,
     submitted = []
     ex = None
 
+    pb: progress.Progress | NoProgressBar
+
     if verbosity and len(submit) > 1:
         pb = progress.Progress('[progress.description]{task.description}',
                                progress.BarColumn(),
@@ -163,14 +166,17 @@ def submit_tasks(scheduler: Scheduler,
 
 
 class NoProgressBar:
-    def __enter__(self):
+    def __enter__(self) -> NoProgressBar:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self,
+                 type: Exception,
+                 value: Exception,
+                 tb: TracebackType) -> None:
         pass
 
-    def add_task(self, text, total):
-        return 0
+    def add_task(self, text: str, total: int) -> progress.TaskID:
+        return progress.TaskID(0)
 
-    def advance(self, id):
+    def advance(self, id: progress.TaskID) -> None:
         pass
