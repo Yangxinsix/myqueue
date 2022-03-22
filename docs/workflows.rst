@@ -41,10 +41,10 @@ decorator.
 We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
-    totalt 12
-    -rw-rw-r-- 1 jensj jensj 190 apr 26 21:55 check.py
-    -rw-rw-r-- 1 jensj jensj 398 apr 26 21:55 factor.py
-    -rw-rw-r-- 1 jensj jensj 164 apr 26 21:55 workflow.py
+    total 12
+    -rw-rw-r-- 1 jensj jensj 190 Mar 22 10:06 check.py
+    -rw-rw-r-- 1 jensj jensj 398 Mar 22 10:06 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 Mar 22 10:06 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -61,14 +61,14 @@ Create some folders::
 and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
-    Scanning 1 folder: |--------------------| 100.0%
-    Submitting 2 tasks: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     1 ./1001/ prime.factor    1:2s
     1 ./1001/ prime.check  d1 1:2s
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
-    Scanning 1 folder: |--------------------| 100.0%
-    Submitting 2 tasks: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     1 ./1001/ prime.factor    1:2s
     2 ./1001/ prime.check  d1 1:2s
     2 tasks submitted
@@ -84,9 +84,9 @@ and now in all subfolders::
     -- ------- ------------ ---- ---- ----- ----
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
-    Scanning 6 folders: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6/6
     done: 2
-    Submitting 10 tasks: |--------------------| 100.0%
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/10
     3  ./100007/ prime.factor    1:2s
     4  ./36791/  prime.factor    1:2s
     5  ./8069/   prime.factor    1:2s
@@ -124,22 +124,22 @@ Note that ``prime.check.done`` and ``prime.factor.done`` files are created
 to mark that these tasks have been completed::
 
     $ ls -l 1001/
-    totalt 12
-    -rw-rw-r-- 1 jensj jensj 24 apr 26 21:55 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.check.2.err
-    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj 18 apr 26 21:55 prime.check.state
-    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.factor.1.err
-    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj 18 apr 26 21:55 prime.factor.state
+    total 12
+    -rw-rw-r-- 1 jensj jensj 24 Mar 22 10:06 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj 18 Mar 22 10:06 prime.check.state
+    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.factor.1.out
+    -rw-rw-r-- 1 jensj jensj 18 Mar 22 10:06 prime.factor.state
 
 Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
-    Scanning 7 folders: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
     done: 12
-    Submitting 2 tasks: |--------------------| 100.0%
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     13 ./42/ prime.factor    1:2s
     14 ./42/ prime.check  d1 1:2s
     2 tasks submitted
@@ -170,14 +170,14 @@ more tasks than allowed by the scheduler.  In that case, you will have to
 submit the tasks in batches::
 
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning 1500 folders: |--------------------| 100.0%
-    Submitting 2000 tasks: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1500/1500
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2000/2000
     ...
     $ # wait ten days ...
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning 1500 folders: |--------------------| 100.0%
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1500/1500
     done: 2000
-    Submitting 1000 tasks: |--------------------| 100.0%
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1000/1000
     ...
 
 

@@ -33,10 +33,10 @@ The ``1:10m`` means that 1 core and 10 minutes was reserved for the task.
 There is now an output file and an empty error file in the folder::
 
     $ ls -l
-    totalt 8
-    -rw-rw-r-- 1 jensj jensj 21 apr 26 21:55 hello.py
-    -rw-rw-r-- 1 jensj jensj  0 apr 26 21:55 hello.py.1.err
-    -rw-rw-r-- 1 jensj jensj 12 apr 26 21:55 hello.py.1.out
+    total 8
+    -rw-rw-r-- 1 jensj jensj 21 Mar 22 10:06 hello.py
+    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 hello.py.1.err
+    -rw-rw-r-- 1 jensj jensj 12 Mar 22 10:06 hello.py.1.out
     $ cat hello.py.1.out
     Hello world
 
