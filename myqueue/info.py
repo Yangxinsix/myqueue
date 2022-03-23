@@ -4,7 +4,7 @@ import json
 import os
 import textwrap
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Callable
 from math import inf
 import rich.progress as progress
 
@@ -72,7 +72,7 @@ def info_all(start: Path) -> None:
             with Queue(config, need_lock=False) as queue:
                 queue._read()
                 from collections import defaultdict
-                count = defaultdict(int)
+                count: dict[str, int] = defaultdict(int)
                 for task in queue.tasks:
                     count[task.state.name] += 1
                 count['total'] = len(queue.tasks)
@@ -90,7 +90,8 @@ def info_all(start: Path) -> None:
 
 
 def scan(path: Path,
-         dev: int, spin) -> Generator[Path, None, None]:
+         dev: int,
+         spin: Callable[[], None]) -> Generator[Path, None, None]:
     """Scan for .myqueue folders.
 
     Only yield paths on same filesystem (dev).
