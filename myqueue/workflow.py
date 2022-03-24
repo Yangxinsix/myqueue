@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import ast
 import runpy
+from argparse import Namespace
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, Type, Sequence, Union
 from types import TracebackType
+from typing import Any, Callable, Sequence, Type, Union
 
+import rich.progress as progress
 
 from myqueue.caching import CachedFunction, create_cached_function
 from myqueue.commands import (Command, PythonModule, PythonScript,
@@ -13,10 +16,8 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
 from myqueue.resources import Resources
 from myqueue.states import State
 
-from .progress import progress_bar
 from .task import UNSPECIFIED, Task
-from .utils import chdir, plural
-from argparse import Namespace
+from .utils import chdir
 
 DEFAULT_VERBOSITY = 1
 
@@ -77,14 +78,16 @@ def workflow_from_scripts(
     paths = [path
              for folder in folders
              for path in folder.glob('**/*' + pattern)]
-    pb = progress_bar(len(paths),
-                      f'Scanning {len(paths)} scripts:',
-                      verbosity)
 
-    for path in paths:
-        func = get_workflow_function(path, kwargs)
-        tasks += get_tasks_from_folder(path.parent, func, path.absolute())
-        next(pb)
+    with progress.Progress('[progress.description]{task.description}',
+                           progress.BarColumn(),
+                           progress.MofNCompleteColumn()) as pb:
+        id = pb.add_task('Reading scripts:', total=len(paths))
+        for path in paths:
+            func = get_workflow_function(path, kwargs)
+            tasks += get_tasks_from_folder(path.parent, func, path.absolute())
+            pb.advance(id)
+
     return tasks
 
 
@@ -97,13 +100,13 @@ def workflow_from_script(script: Path,
 
     tasks: list[Task] = []
 
-    n_folders = plural(len(folders), 'folder')
-    pb = progress_bar(len(folders),
-                      f'Scanning {n_folders}:',
-                      verbosity)
-    for folder in folders:
-        tasks += get_tasks_from_folder(folder, func, script.absolute())
-        next(pb)
+    with progress.Progress('[progress.description]{task.description}',
+                           progress.BarColumn(),
+                           progress.MofNCompleteColumn()) as pb:
+        id = pb.add_task('Scanning folders:', total=len(folders))
+        for folder in folders:
+            tasks += get_tasks_from_folder(folder, func, script.absolute())
+            pb.advance(id)
 
     return tasks
 

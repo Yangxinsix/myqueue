@@ -236,7 +236,7 @@ class Task:
             for t in (t1, t2, t3))
         return Task(create_command(name),
                     Resources.from_string(resources),
-                    [Path(dep) for dep in deps.split(',')],
+                    [Path(dep) for dep in deps.split(',')] if deps else [],
                     int(restart),
                     bool(workflow),
                     int(diskspace),
@@ -341,7 +341,7 @@ class Task:
         for line in lines[::-1]:
             ll = line.lower()
             if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
-                                     'out of memory']):
+                                     'out of memory', 'AssertionError']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):
                     return True

@@ -4,7 +4,7 @@ Installation
 
 Install with ``pip``::
 
-    $ python3 -m pip install myqueue --user
+    $ python3 -m pip install myqueue
 
 .. note::
 

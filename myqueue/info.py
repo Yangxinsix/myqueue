@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 import json
 import os
 import textwrap
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Callable
+from math import inf
+import rich.progress as progress
 
 from myqueue import __version__
 from myqueue.config import Configuration
-from myqueue.pretty import pprint
-from myqueue.progress import Spinner
 from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.virtenv import find_activation_scripts
@@ -52,37 +53,56 @@ def info(queue: Queue, id: str = None) -> None:
 def info_all(start: Path) -> None:
     """Write information about all .myqueue folders."""
     dev = start.stat().st_dev
-    spinner = Spinner()
     nfolders = 0
-    for path in scan(start, dev, spinner):
-        spinner.reset()
-        print(f'{path}:\n  ', end='')
-        try:
-            config = Configuration.read(path)
-            nfolders += 1
-        except FileNotFoundError as ex:
-            print(ex)
-            continue
-        with Queue(config, need_lock=False) as queue:
-            queue._read()
-            pprint(queue.tasks, short=True)
-    spinner.reset()
+    spinner = progress.Progress('[progress.description]{task.description}',
+                                progress.SpinnerColumn('pong'),
+                                transient=True)
+    p = spinner.console.print
+
+    with spinner:
+        id = spinner.add_task('Searching', total=inf)
+        for path in scan(start, dev, lambda: spinner.advance(id)):
+            p(f'{path}:\n  ', end='')
+            try:
+                config = Configuration.read(path)
+                nfolders += 1
+            except FileNotFoundError as ex:
+                p(f'[red]{ex}')
+                continue
+            with Queue(config, need_lock=False) as queue:
+                queue._read()
+                from collections import defaultdict
+                count: dict[str, int] = defaultdict(int)
+                for task in queue.tasks:
+                    count[task.state.name] += 1
+                count['total'] = len(queue.tasks)
+                states = []
+                for state, n in count.items():
+                    if state == 'done':
+                        state = '[green]done[/]'
+                    elif state == 'running':
+                        state = '[yellow]running[/]'
+                    elif state.isupper():
+                        state = f'[red]{state}[/]'
+                    states.append(f'{state}: {n}')
+                p(', '.join(states))
     print('Folders found:', nfolders)
 
 
 def scan(path: Path,
          dev: int,
-         spinner: Spinner) -> Generator[Path, None, None]:
+         spin: Callable[[], None]) -> Generator[Path, None, None]:
     """Scan for .myqueue folders.
 
     Only yield paths on same filesystem (dev).
     """
+
     with os.scandir(path) as entries:
         for entry in entries:
-            spinner.spin()
+            spin()
             if entry.is_dir(follow_symlinks=False):
                 if entry.name == '.myqueue':
                     yield path / entry.name
                 elif (not entry.name.startswith(('.', '_')) and
                       entry.stat().st_dev == dev):
-                    yield from scan(path / entry.name, dev, spinner)
+                    yield from scan(path / entry.name, dev, spin)

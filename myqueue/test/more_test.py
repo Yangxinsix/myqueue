@@ -32,11 +32,6 @@ def test_api(mq):
     assert mq.states() == 'MTd'
 
 
-def test_logo():
-    from myqueue.logo import create
-    create()
-
-
 def test_backends(mq):
     from ..config import guess_configuration, guess_scheduler
     config = mq.scheduler.config

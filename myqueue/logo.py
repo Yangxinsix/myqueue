@@ -24,10 +24,12 @@ def create() -> None:
     """Create SVG-logo for MyQueue."""
     print('<svg width="164" height="164" xmlns="http://www.w3.org/2000/svg">')
     for i, a in enumerate(mq[::-1]):
+        if i == 5:
+            continue
         i = 5 - i
-        r = 255 - i * 20
-        g = 50 + i * 40
-        b = 50
+        r = 205 - i * 10
+        b = 150 + i * 10
+        g = r + 30
         color = f'#{r:02X}{g:02X}{b:02X}'
         xml = []
         xy = False
