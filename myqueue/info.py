@@ -44,7 +44,7 @@ def info(queue: Queue, id: str = None) -> None:
         table = Table(title='Nodes')
         table.add_column('Name', style='green')
         table.add_column('Values', style='yellow')
-        for name, dct in queue.config.nodess:
+        for name, dct in queue.config.nodes:
             table.add_row(name, str(dct))
         print(table)
 
