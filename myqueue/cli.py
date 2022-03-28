@@ -410,6 +410,8 @@ def _main(arguments: list[str] = None) -> int:
         return 1
     except Exception as x:
         if args.traceback:
+            from rich.console import Console
+            Console().print_exception()
             raise
         else:
             error(f'{x.__class__.__name__}: {x}',
