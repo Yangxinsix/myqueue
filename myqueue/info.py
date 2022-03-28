@@ -24,7 +24,7 @@ def info(queue: Queue, id: str = None) -> None:
     print = Console().print
 
     if id is None:
-        table =  Table(title=f'MyQueue-{__version__}')
+        table = Table(title=f'MyQueue-{__version__}')
         table.add_column(style='green')
         table.add_column('Path', style='cyan')
         table.add_row('Code', str(Path(__file__).parent))
