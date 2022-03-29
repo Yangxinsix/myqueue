@@ -12,15 +12,19 @@ Next release
 * ...
 
 
+Version 22.3.0
+==============
+
+* There is now one background daemon per user.  This will allow several users
+  to share a ``.myqueue/`` folder.
+
+
 Version 22.1.0
 ==============
 
 * The :ref:`list` command can now list several folders instead of,
   as previously, only one.
   They must all belong to the same ``.myqueue/`` folder though.
-
-* There is now one background daemon per user.  This will allow several users
-  to share a ``.myqueue/`` folder.
 
 
 Version 21.8.0
