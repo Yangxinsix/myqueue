@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import os
-import textwrap
 from pathlib import Path
 from typing import Generator, Callable
 from math import inf
 import rich.progress as progress
+from rich.table import Table
+from rich.console import Console
 
 from myqueue import __version__
 from myqueue.config import Configuration
@@ -20,14 +21,33 @@ def info(queue: Queue, id: str = None) -> None:
 
     cwd = Path.cwd()
     venv = find_activation_scripts([cwd]).get(cwd, '<none>')
+    print = Console().print
 
     if id is None:
-        print('Version:', __version__)
-        print('Code:   ', Path(__file__).parent)
-        print('Root:   ', queue.config.home / '.myqueue')
-        print('Venv:   ', venv)
-        print('\nConfiguration:')
-        print(textwrap.indent(str(queue.config), '  '))
+        table = Table(title=f'MyQueue-{__version__}')
+        table.add_column(style='green')
+        table.add_column('Path', style='cyan')
+        table.add_row('Code', str(Path(__file__).parent))
+        table.add_row('Root', str(queue.config.home / '.myqueue'))
+        table.add_row('Venv', str(venv))
+        print(table)
+
+        table = Table(title='Configuration')
+        table.add_column('Key', style='green')
+        table.add_column('Value', style='yellow')
+        for key, value in queue.config.__dict__.items():
+            if key == 'nodes':
+                continue
+            table.add_row(key, str(value))
+        print(table)
+
+        table = Table(title='Nodes')
+        table.add_column('Name', style='green')
+        table.add_column('Values', style='yellow')
+        for name, dct in queue.config.nodes:
+            table.add_row(name, str(dct))
+        print(table)
+
         return
 
     queue._read()
