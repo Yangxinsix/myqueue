@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from datetime import datetime
@@ -59,7 +60,8 @@ class Task:
                  memory_usage: int = 0,
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
-                 tstop: float = 0.0) -> None:
+                 tstop: float = 0.0,
+                 user: str = ''):
 
         self.cmd = cmd
         self.resources = resources
@@ -80,6 +82,8 @@ class Task:
         self.tqueued = tqueued
         self.trunning = trunning
         self.tstop = tstop
+
+        self.user = user or os.environ.get('USER', 'root')
 
         self.memory_usage = memory_usage
 
@@ -187,7 +191,8 @@ class Task:
             'tqueued': self.tqueued,
             'trunning': self.trunning,
             'tstop': self.tstop,
-            'error': self.error}
+            'error': self.error,
+            'user': self.user}
 
     def tocsv(self,
               fd: IO[str] = sys.stdout,
@@ -226,6 +231,9 @@ class Task:
         except ValueError:  # read old corrupted log.csv files
             memory_usage = 0
         notifications = '' if len(row) < 16 else row[15]
+        tqueued, trunning, tstop = (
+            datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
+            for t in (t1, t2, t3))
         return Task(create_command(name),
                     Resources.from_string(resources),
                     [Path(dep) for dep in deps.split(',')] if deps else [],
@@ -239,8 +247,7 @@ class Task:
                     id,
                     error,
                     memory_usage,
-                    *(datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
-                      for t in (t1, t2, t3)))
+                    tqueued, trunning, tstop)
 
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
