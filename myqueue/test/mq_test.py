@@ -22,6 +22,7 @@ def test_submit(mq):
     mq.wait()
     assert mq.states() == 'ddd'
     shutil.rmtree(f)
+    mq('sync -z')
     mq('sync')
     assert mq.states() == 'dd'
     mq('daemon status')
