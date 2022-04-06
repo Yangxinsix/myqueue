@@ -44,7 +44,7 @@ def test_task(tmp_path):
            'trunning': 0.0,
            'tstop': 0.0,
            'error': '',
-           'user': 'jensj'}
+           'user': t.user}
     assert t.todict() == dct
 
     del dct['diskspace']
