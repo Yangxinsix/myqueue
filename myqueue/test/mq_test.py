@@ -1,8 +1,13 @@
 from __future__ import annotations
+
 import shutil
 import time
 from pathlib import Path
 
+import pytest
+from myqueue.queue import Queue
+from myqueue.task import task
+from myqueue.states import State
 from ..utils import chdir
 
 LOCAL = True
@@ -109,6 +114,7 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
+    mq('rm -s d . -z')
     mq('rm -s d .')
     Path('shell:touch+hello.state').unlink()
     mq('workflow wf.py .')
@@ -229,3 +235,29 @@ def test_more_homes(mq):
     with chdir(f):
         mq('init')
     mq('submit shell:echo . folder', error=1)
+
+
+def test_permission_error(mq):
+    try:
+        (mq.config.home / '.myqueue').chmod(0o500)
+        mq('ls')
+    finally:
+        (mq.config.home / '.myqueue').chmod(0o700)
+
+
+def test_failing_scheduler(mq):
+    # Special argument that makes test-scheduler raise an error:
+    with pytest.raises(RuntimeError):
+        mq('submit "time.sleep _FAIL_"')
+
+
+def test_sync_cancel(mq):
+    with Queue(mq.config, verbosity=0) as q:
+        t = task('shell:echo')
+        t.state = State.running
+        t.trunning = time.time()
+        q.tasks.append(t)
+        q.changed.add(t)
+    mq('sync')
+    assert mq.states() == 'C'
+

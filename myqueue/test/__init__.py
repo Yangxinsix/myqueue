@@ -16,4 +16,4 @@ def timeout_once():
     path = Path('timeout_once.out')
     if not path.is_file():
         path.touch()
-        time.sleep(1000)
+        time.sleep(10)
