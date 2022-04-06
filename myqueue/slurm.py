@@ -104,7 +104,7 @@ class SLURM(Scheduler):
         subprocess.run(['scontrol', 'release', task.id])
 
     def get_ids(self) -> set[str]:
-        user = os.environ['USER']
+        user = os.environ.get('USER', 'test')
         cmd = ['squeue', '--user', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {line.split()[0].decode()
