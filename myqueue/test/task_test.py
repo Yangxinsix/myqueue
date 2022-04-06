@@ -81,4 +81,3 @@ def test_task(tmp_path):
 
     t.folder = t.folder / 'missing'
     t.write_state_file()
-    
