@@ -91,7 +91,7 @@ def pprint(tasks: list[Task],
         cut = 999999
 
     if verbosity:
-        lines[1:1] = [['-' * L for L in lengths]]
+        lines[1:1] = [['─' * L for L in lengths]]
         lines.append(lines[1])
 
     use_color = sys.stdout.isatty() and 'MYQUEUE_TESTING' not in os.environ
