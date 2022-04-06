@@ -1,7 +1,9 @@
-import pytest
-from myqueue.task import task as create_task
-from myqueue.states import State
+from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
+from myqueue.states import State
+from myqueue.task import task as create_task
 
 
 def test_task(tmp_path):
@@ -50,7 +52,7 @@ def test_task(tmp_path):
     del dct['diskspace']
     del dct['creates']
     del dct['restart']
-    t.fromdict(dct, None)
+    t.fromdict(dct, Path())
 
     (t.folder / f'{t.cmd.fname}.done').write_text('')
     assert t.read_state_file() == State.done
@@ -60,7 +62,8 @@ def test_task(tmp_path):
     err = tmp_path / 'x.err'
 
     def oom():
-        return t.read_error(SimpleNamespace(error_file=lambda _: err))
+        return t.read_error(
+            SimpleNamespace(error_file=lambda _: err))  # type: ignore
 
     assert not oom()
     err.write_text('... memory limit at some point.')

@@ -145,7 +145,7 @@ class Task:
     def __repr__(self) -> str:
         return f'Task({self.cmd.name})'
 
-    def order(self, column: str) -> int | str | Path | float | State:
+    def order(self, column: str) -> Any:
         """ifnAraste"""
         if column == 'i':
             return self.id
