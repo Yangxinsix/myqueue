@@ -9,7 +9,10 @@ class Scheduler:
         self.config = config
         self.name = config.scheduler.lower()
 
-    def submit(self, task: Task, dry_run: bool, verbose: bool) -> None:
+    def submit(self,
+               task: Task,
+               dry_run: bool = False,
+               verbose: bool = False) -> None:
         pass
 
     def cancel(self, task: Task) -> None:
