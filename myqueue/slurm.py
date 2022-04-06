@@ -87,17 +87,12 @@ class SLURM(Scheduler):
             return
 
         # Use a clean set of environment variables without any MPI stuff:
-        p = subprocess.Popen(sbatch,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             env=os.environ)
-        out, err = p.communicate(script.encode())
+        p = subprocess.run(sbatch,
+                           input=script.encode(),
+                           capture_output=True,
+                           env=os.environ)
 
-        if p.returncode != 0:
-            raise RuntimeError(err)
-
-        task.id = out.split()[-1].decode()
+        task.id = p.stdout.split()[-1].decode()
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', task.id])
