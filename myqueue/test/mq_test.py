@@ -9,6 +9,7 @@ from myqueue.queue import Queue
 from myqueue.task import task
 from myqueue.states import State
 from ..utils import chdir
+from myqueue.cli import _main
 
 LOCAL = True
 
@@ -208,10 +209,12 @@ def test_misc(mq):
     f.mkdir()
     with chdir(f):
         mq('init')
+        mq('init', error=1)
     mq('help')
     mq('ls -saA')
     mq('-V')
     mq('completion')
+    mq('completion -v')
     mq('ls no_such_folder', error=1)
     mq('')
     mq('info -A')
@@ -243,10 +246,10 @@ def test_more_homes(mq):
 
 def test_permission_error(mq):
     try:
-        (mq.config.home / '.myqueue').chmod(0o500)
+        (mq.config.home / '.myqueue').chmod(0o500)  # r-x
         mq('ls')
     finally:
-        (mq.config.home / '.myqueue').chmod(0o700)
+        (mq.config.home / '.myqueue').chmod(0o700)  # rwx
 
 
 def test_failing_scheduler(mq):
@@ -290,3 +293,25 @@ def test_clean_up(mq):
         q.tasks += [t1, t2]
         q.changed.add(t1)
     assert mq.states() == 'TC'
+
+
+def test_cli_exception(mq, monkeypatch):
+    def run(args, test):
+        raise ValueError
+
+    monkeypatch.setattr('myqueue.cli.run', run)
+
+    # With --traceback:
+    with pytest.raises(ValueError):
+        mq('ls')
+
+    # Without --traceback:
+    assert _main(['ls']) == 1
+
+
+def test_mq_exception(mq):
+    mq('rm', error=1)
+    mq('ls -i 0 -s q', error=1)
+    with pytest.raises(ValueError):
+        mq('ls -i 0 .')
+    mq('rm .', error=1)
