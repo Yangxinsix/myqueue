@@ -30,6 +30,7 @@ def test_notify(mq, monkeypatch):
     monkeypatch.setattr(getpass, 'getpass', lambda: '********')
     monkeypatch.setattr('builtins.input', lambda _: 'yes')
     mq('submit math@sin+3.13')
+    mq('modify . -s q -E rdA -z')
     mq('modify . -s q -E rdA')
     mq.wait()
     mq('kick')

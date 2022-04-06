@@ -167,6 +167,9 @@ def test_workflow2(mq):
     Path('wf2.py').write_text(wf2)
     mq('workflow wf2.py . -a name=hello,n=5')
     mq('kick')
+    assert mq.states() == 'hhqq'
+    mq.wait()
+    mq('kick')
     mq.wait()
     assert mq.states() == 'dddd'
 
@@ -185,6 +188,7 @@ def test_check_dependency_order(mq):
     mq('submit shell:echo+ok -d myqueue.test@timeout_once --restart 1')
     mq.wait()
     assert mq.states() == 'TC'
+    mq('kick -z')
     mq('kick')
     mq.wait()
     assert mq.states() == 'dd'
@@ -261,3 +265,28 @@ def test_sync_cancel(mq):
     mq('sync')
     assert mq.states() == 'C'
 
+
+def test_hold_release(mq):
+    mq('submit shell:echo+hello')
+    mq('modify -s q -N h . -z')
+    mq('modify -s q -N h .')
+    mq.wait()
+    assert mq.states() == 'h'
+    mq('modify -s h -N q . -z')
+    mq('modify -s h -N q .')
+    mq.wait()
+    assert mq.states() == 'd'
+    with pytest.raises(ValueError):
+        mq('modify -s d -N q .')
+
+
+def test_clean_up(mq):
+    with Queue(mq.config, verbosity=0) as q:
+        t1 = task('shell:echo')
+        t1.state = State.running
+        t1.trunning = 0.0  # very old
+        t2 = task('shell:echo', deps=[t1])
+        t2.state = State.queued
+        q.tasks += [t1, t2]
+        q.changed.add(t1)
+    assert mq.states() == 'TC'
