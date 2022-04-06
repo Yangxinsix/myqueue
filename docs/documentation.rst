@@ -224,12 +224,12 @@ You can see the status of your jobs with::
 
     $ mq list
     id folder name       args  info res.   age state  time error
-    -- ------ ---------- ----- ---- ----- ---- ------ ---- -----------------------------------
+    ── ────── ────────── ───── ──── ───── ──── ────── ──── ───────────────────────────────────
     1  ./     time@sleep 2     +1   1:1m  0:02 done   0:02
     2  ./f1/  shell:echo hello +1   1:10m 0:00 done   0:00
     3  ./f2/  shell:echo hello +1   1:10m 0:00 done   0:00
     4  ./     script.py             8:10h 0:00 FAILED 0:00 ZeroDivisionError: division by zero
-    -- ------ ---------- ----- ---- ----- ---- ------ ---- -----------------------------------
+    ── ────── ────────── ───── ──── ───── ──── ────── ──── ───────────────────────────────────
     done: 3, FAILED: 1, total: 4
 
 Remove the failed and done jobs from the list with
@@ -246,8 +246,8 @@ The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-rw-r-- 1 jensj jensj 0 Mar 22 10:06 shell:echo.3.err
-    -rw-rw-r-- 1 jensj jensj 6 Mar 22 10:06 shell:echo.3.out
+    -rw-rw-r-- 1 jensj jensj 0 Apr  6 11:25 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 Apr  6 11:25 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 
@@ -258,9 +258,9 @@ If a job fails or times out, then you can resubmit it with more resources::
     1 task submitted
     $ mq list
     id folder name        args info res.  age state   time
-    -- ------ ----------- ---- ---- ---- ---- ------- ----
+    ── ────── ─────────── ──── ──── ──── ──── ─────── ────
     5  ./     shell:sleep 4    +1   1:2s 0:02 TIMEOUT 0:02
-    -- ------ ----------- ---- ---- ---- ---- ------- ----
+    ── ────── ─────────── ──── ──── ──── ──── ─────── ────
     TIMEOUT: 1, total: 1
     $ mq resubmit -i 5 -R 1:1m
     6 ./ shell:sleep 4 +1 1:1m

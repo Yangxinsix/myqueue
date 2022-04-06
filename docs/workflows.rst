@@ -42,9 +42,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-rw-r-- 1 jensj jensj 190 Mar 22 10:06 check.py
-    -rw-rw-r-- 1 jensj jensj 398 Mar 22 10:06 factor.py
-    -rw-rw-r-- 1 jensj jensj 164 Mar 22 10:06 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 Apr  6 11:24 check.py
+    -rw-rw-r-- 1 jensj jensj 398 Apr  6 11:24 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 Apr  6 11:24 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -78,10 +78,10 @@ and now in all subfolders::
 
     $ mq ls
     id folder  name         res.  age state time
-    -- ------- ------------ ---- ---- ----- ----
+    ── ─────── ──────────── ──── ──── ───── ────
     1  ./1001/ prime.factor 1:2s 0:02 done  0:00
     2  ./1001/ prime.check  1:2s 0:02 done  0:00
-    -- ------- ------------ ---- ---- ----- ----
+    ── ─────── ──────────── ──── ──── ───── ────
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6/6
@@ -104,7 +104,7 @@ and now in all subfolders::
     $ sleep 2  # wait for tasks to finish
     $ mq ls
     id folder    name         res.  age state time
-    -- --------- ------------ ---- ---- ----- ----
+    ── ───────── ──────────── ──── ──── ───── ────
     1  ./1001/   prime.factor 1:2s 0:04 done  0:00
     2  ./1001/   prime.check  1:2s 0:04 done  0:00
     3  ./100007/ prime.factor 1:2s 0:02 done  0:00
@@ -117,7 +117,7 @@ and now in all subfolders::
     10 ./8069/   prime.check  1:2s 0:02 done  0:00
     11 ./98769/  prime.check  1:2s 0:02 done  0:00
     12 ./99/     prime.check  1:2s 0:02 done  0:00
-    -- --------- ------------ ---- ---- ----- ----
+    ── ───────── ──────────── ──── ──── ───── ────
     done: 12, total: 12
 
 Note that ``prime.check.done`` and ``prime.factor.done`` files are created
@@ -125,13 +125,13 @@ to mark that these tasks have been completed::
 
     $ ls -l 1001/
     total 12
-    -rw-rw-r-- 1 jensj jensj 24 Mar 22 10:06 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.check.2.err
-    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj 18 Mar 22 10:06 prime.check.state
-    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.factor.1.err
-    -rw-rw-r-- 1 jensj jensj  0 Mar 22 10:06 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj 18 Mar 22 10:06 prime.factor.state
+    -rw-rw-r-- 1 jensj jensj 24 Apr  6 11:24 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj 18 Apr  6 11:25 prime.check.state
+    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.factor.1.out
+    -rw-rw-r-- 1 jensj jensj 18 Apr  6 11:25 prime.factor.state
 
 Now, add another number::
 
