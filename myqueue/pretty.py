@@ -90,14 +90,14 @@ def pprint(tasks: list[Task],
     except OSError:
         cut = 999999
 
-    if verbosity:
-        lines[1:1] = [['-' * L for L in lengths]]
-        lines.append(lines[1])
-
     use_color = sys.stdout.isatty() and 'MYQUEUE_TESTING' not in os.environ
 
+    if verbosity:
+        lines[1:1] = [['─' * L for L in lengths]]
+        lines.append(lines[1])
+
     if not short:
-        for words in lines:
+        for i, words in enumerate(lines):
             words2 = []
             for word, c, L in zip(words, columns, lengths):
                 if c == 'e':
@@ -109,7 +109,13 @@ def pprint(tasks: list[Task],
                     if c == 's' and use_color:
                         word = colored(word)
                 words2.append(word)
-            print(' '.join(words2))
+            line = ' '.join(words2)
+            if use_color:
+                if i == 0:
+                    line = '\033[94m' + line + '\033[0m'
+                elif i == 1 or i == len(lines) - 1:
+                    line = '\033[93m' + line + '\033[0m'
+            print(line)
 
     if verbosity:
         count['total'] = len(tasks)

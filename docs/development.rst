@@ -36,7 +36,7 @@ Documentation
 Whenever the output of *mq* changes, please update the examples in the
 ReStructuredText documentation-files with::
 
-    $ pytest (... with update=True in test_rst.py ...)
+    $ pytest (... with update=True in rst_test.py ...)
 
 Whenever changes are made to the command-line tool, please update the
 documentation and tab-completion script with::
