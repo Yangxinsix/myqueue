@@ -148,7 +148,7 @@ def perform_daemon_action(config: Configuration, action: str) -> int:
                 print(f'You have to be on {host} in order to stop the daemon')
                 return 1
         else:
-            print('Not running')
+            print('Not running!')
 
     elif action == 'start':
         if running:

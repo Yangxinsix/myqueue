@@ -27,7 +27,8 @@ config = {
         'email': 'me@myqueue.org',
         'host': 'smtp.myqueue.org',
         'username': 'me'},
-    'mpiexec': 'echo'}
+    'mpiexec': 'echo',
+    'maximum_diskspace': 2.5}
 """
 
 

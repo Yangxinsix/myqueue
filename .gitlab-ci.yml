@@ -11,11 +11,11 @@ tests:
     - export COVERAGE_PROCESS_START=$PWD/cov.cfg
     - coverage run -p --source=myqueue -m pytest -v
     - coverage combine -a .coverage.*
-    - coverage report -i --precision=2 --fail-under=86.8
+    - coverage report -i --precision=2 --fail-under=90.46
     - coverage html
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 54.2 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 53.3 myqueue -e myqueue/test
 
 oldtests:
   image: python:3.7

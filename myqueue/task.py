@@ -143,12 +143,10 @@ class Task:
         return ' '.join(self.words())
 
     def __repr__(self) -> str:
-        return str(self.dname)
-        dct = self.todict()
-        return f'Task({dct!r})'
+        return f'Task({self.cmd.name})'
 
-    def order(self, column: str) -> int | str | Path | float | State:
-        """ifnraste"""
+    def order(self, column: str) -> Any:
+        """ifnAraste"""
         if column == 'i':
             return self.id
         if column == 'f':
@@ -162,7 +160,7 @@ class Task:
         if column == 'a':
             return self.tqueued
         if column == 's':
-            return self.state
+            return self.state.name
         if column == 't':
             return self.running_time()
         if column == 'e':
@@ -341,6 +339,7 @@ class Task:
         for line in lines[::-1]:
             ll = line.lower()
             if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
+                                     'memory limit', 'oom-kill',
                                      'out of memory', 'AssertionError']):
                 self.error = line
                 if line.endswith('memory limit at some point.'):

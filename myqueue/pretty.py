@@ -113,7 +113,7 @@ def pprint(tasks: list[Task],
             if use_color:
                 if i == 0:
                     line = '\033[94m' + line + '\033[0m'
-                elif i == 1 or i == len(lines) - 1:
+                elif (i == 1 or i == len(lines) - 1) or not verbosity:
                     line = '\033[93m' + line + '\033[0m'
             print(line)
 

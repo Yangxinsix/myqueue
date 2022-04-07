@@ -592,11 +592,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         elif args.command == 'kick':
             queue.kick()
 
-        elif args.command == 'info':
-            info(queue, args.id)
-
         else:
-            assert False
+            assert args.command == 'info'
+            info(queue, args.id)
 
 
 def regex(pattern: str | None) -> Pattern[str] | None:
