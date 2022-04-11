@@ -182,6 +182,14 @@ def test_failing_scheduler(mq):
     assert mq.states() == ''
 
 
+def test_ctrl_c(mq):
+    with pytest.raises(RuntimeError):
+        # Special argument that makes test-scheduler raise an error:
+        mq('submit "time.sleep SIMULATE-CTRL-C"')
+    mq.wait()
+    assert mq.states() == 'd'
+
+
 def test_sync_cancel(mq):
     with Queue(mq.config, verbosity=0) as q:
         t = task('shell:echo')
