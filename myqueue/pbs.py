@@ -71,12 +71,10 @@ class PBS(Scheduler):
             print(qsub, script)
             return
 
-        p = subprocess.Popen(qsub,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        out, err = p.communicate(script.encode())
-        assert p.returncode == 0
-        id = out.split(b'.')[0].decode()
+        p = subprocess.run(qsub,
+                           input=script.encode(),
+                           capture_output=True)
+        id = p.stdout.split(b'.')[0].decode()
         task.id = id
 
     def error_file(self, task: Task) -> Path:

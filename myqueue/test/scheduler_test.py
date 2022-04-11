@@ -1,4 +1,6 @@
 import subprocess
+
+import pytest
 from myqueue.task import task as create_task
 
 
@@ -14,15 +16,27 @@ def run(commands, stdout=None, env=None, capture_output=None, input=None):
         return Result(b'1K\n')
     if commands[0] == 'squeue':
         return Result(b'bla-bla\n1\n2\n')
+    if commands[0] == 'scontrol':
+        return
+    if commands[0] == 'scancel':
+        return
+    if commands[0] == 'qsub':
+        return Result(b'42.hmmm\n')
+    if commands[0] == 'qdel':
+        return
+    if commands[0] == 'qstat':
+        return Result(b'bla-bla\n1.x abc\n2.x abc\n')
+    assert False, commands
 
 
-def test_slurm(monkeypatch):
-    from ..scheduler import get_scheduler
+@pytest.mark.parametrize('name', ['slurm', 'pbs', 'lsf'])
+def test_slurm(monkeypatch, name):
     from ..config import Configuration
+    from ..scheduler import get_scheduler
 
     monkeypatch.setattr(subprocess, 'run', run)
 
-    config = Configuration('slurm')
+    config = Configuration(name)
     config.nodes = [('abc16', {'cores': 16, 'memory': '16G'}),
                     ('abc8', {'cores': 8, 'memory': '8G'})]
     scheduler = get_scheduler(config)
@@ -30,8 +44,10 @@ def test_slurm(monkeypatch):
     scheduler.submit(t, dry_run=True, verbose=True)
     scheduler.submit(t)
     assert t.id == '42'
-    scheduler.hold(t)
-    scheduler.release_hold(t)
+    if name != 'pbs':
+        scheduler.hold(t)
+        scheduler.release_hold(t)
     scheduler.cancel(t)
     assert scheduler.get_ids() == {'1', '2'}
-    assert scheduler.maxrss('1') == 1000
+    if name != 'pbs':
+        assert scheduler.maxrss('1') == 1000
