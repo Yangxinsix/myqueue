@@ -125,7 +125,7 @@ class Queue(Lock):
                     self.tasks.remove(oldtask)
 
         if 'MYQUEUE_TESTING' in os.environ:
-            if any(task.args == ['SIMULATE-CTRL-C'] for task in submitted):
+            if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
                 raise KeyboardInterrupt
 
         self.tasks += submitted
