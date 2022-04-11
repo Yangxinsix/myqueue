@@ -84,7 +84,7 @@ class PBS(Scheduler):
         subprocess.run(['qdel', task.id])
 
     def get_ids(self) -> set[str]:
-        user = os.environ['USER']
+        user = os.environ.get('USER', 'test')
         cmd = ['qstat', '-u', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {line.split()[0].split(b'.')[0].decode()
