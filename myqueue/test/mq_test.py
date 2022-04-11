@@ -177,7 +177,7 @@ def test_permission_error(mq):
 def test_failing_scheduler(mq):
     with pytest.raises(RuntimeError):
         # Special argument that makes test-scheduler raise an error:
-        mq('submit "time.sleep _FAIL_"')
+        mq('submit "time.sleep FAIL"')
     mq.wait()
     assert mq.states() == ''
 
