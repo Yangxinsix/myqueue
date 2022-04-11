@@ -11,6 +11,7 @@ File format versions:
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections import defaultdict
 from types import TracebackType
@@ -58,7 +59,7 @@ class Queue(Lock):
             self._scheduler = get_scheduler(self.config)
         return self._scheduler
 
-    def __enter__(self) -> 'Queue':
+    def __enter__(self) -> Queue:
         if self.dry_run:
             return self
         if self.need_lock:
