@@ -11,6 +11,7 @@ File format versions:
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections import defaultdict
 from types import TracebackType
@@ -58,7 +59,7 @@ class Queue(Lock):
             self._scheduler = get_scheduler(self.config)
         return self._scheduler
 
-    def __enter__(self) -> 'Queue':
+    def __enter__(self) -> Queue:
         if self.dry_run:
             return self
         if self.need_lock:
@@ -117,6 +118,19 @@ class Queue(Lock):
             force, max_tasks,
             self.verbosity, self.dry_run)
 
+        for task in submitted:
+            if task.workflow:
+                oldtask = current.get(task.dname)
+                if oldtask:
+                    self.tasks.remove(oldtask)
+
+        if 'MYQUEUE_TESTING' in os.environ:
+            if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
+                raise KeyboardInterrupt
+
+        self.tasks += submitted
+        self.changed.update(submitted)
+
         if ex:
             print()
             print('Skipped', plural(len(skipped), 'task'))
@@ -128,15 +142,6 @@ class Queue(Lock):
                 print(plural(len(submitted), 'task'), 'to submit')
             else:
                 print(plural(len(submitted), 'task'), 'submitted')
-
-        for task in submitted:
-            if task.workflow:
-                oldtask = current.get(task.dname)
-                if oldtask:
-                    self.tasks.remove(oldtask)
-
-        self.tasks += submitted
-        self.changed.update(submitted)
 
         if ex:
             raise ex

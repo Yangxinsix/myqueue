@@ -97,84 +97,6 @@ def test_oom(mq):
     assert mq.states() == 'd'
 
 
-wf = """
-from myqueue.task import task
-def create_tasks():
-    t1 = task('shell:sleep+3')
-    t2 = task('shell:touch+hello', deps=[t1], creates=['hello'])
-    return [t1, t2]
-"""
-
-
-def test_workflow(mq):
-    mq('submit shell:sleep+3 -R1:1m -w')
-    time.sleep(2)
-    Path('wf.py').write_text(wf)
-    mq('workflow wf.py . -t shell:touch+hello')
-    mq.wait()
-    assert mq.states() == 'dd'
-    mq('workflow wf.py .')
-    assert mq.states() == 'dd'
-    mq('rm -s d . -z')
-    mq('rm -s d .')
-    Path('shell:touch+hello.state').unlink()
-    mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == ''
-    hello = Path('hello')
-    hello.unlink()
-    mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == 'd'
-    assert hello.is_file()
-
-
-def test_workflow_running_only_with_targets(mq):
-    Path('wf.py').write_text(wf)
-    mq('workflow wf.py . -t shell:touch+hello')
-    mq.wait()
-    assert mq.states() == 'dd'
-
-
-def test_workflow_with_failed_job(mq):
-    Path('wf.py').write_text(wf)
-    failed = Path('shell:sleep+3.state')
-    failed.write_text('{"state": "FAILED"}\n')
-    mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == ''
-
-    mq('workflow wf.py . --force --dry-run')
-    mq.wait()
-    assert mq.states() == ''
-    assert failed.read_text() == '{"state": "FAILED"}\n'
-
-    mq('workflow wf.py . --force')
-    mq.wait()
-    assert mq.states() == 'dd'
-    assert failed.read_text() == '{"state": "done"}\n'
-
-
-wf2 = """
-from myqueue.task import task
-def create_tasks(name, n):
-    assert name == 'hello'
-    assert n == 5
-    return [task('shell:echo+hi', diskspace=1) for _ in range(4)]
-"""
-
-
-def test_workflow2(mq):
-    Path('wf2.py').write_text(wf2)
-    mq('workflow wf2.py . -a name=hello,n=5')
-    mq('kick')
-    assert mq.states() == 'hhqq'
-    mq.wait()
-    mq('kick')
-    mq.wait()
-    assert mq.states() == 'dddd'
-
-
 def test_cancel(mq):
     mq('submit shell:sleep+2')
     mq('submit shell:sleep+999')
@@ -253,9 +175,19 @@ def test_permission_error(mq):
 
 
 def test_failing_scheduler(mq):
-    # Special argument that makes test-scheduler raise an error:
     with pytest.raises(RuntimeError):
-        mq('submit "time.sleep _FAIL_"')
+        # Special argument that makes test-scheduler raise an error:
+        mq('submit "time.sleep FAIL"')
+    mq.wait()
+    assert mq.states() == ''
+
+
+@pytest.mark.xfail
+def test_ctrl_c(mq):
+    # Special argument that makes test-scheduler raise an error:
+    mq('submit "time.sleep SIMULATE-CTRL-C"')
+    mq.wait()
+    assert mq.states() == 'd'
 
 
 def test_sync_cancel(mq):

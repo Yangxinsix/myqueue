@@ -69,13 +69,10 @@ class LSF(Scheduler):
             print(script)
             return
 
-        p = subprocess.Popen(bsub,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        out, err = p.communicate(script.encode())
-
-        assert p.returncode == 0
-        id = out.split()[1][1:-1].decode()
+        p = subprocess.run(bsub,
+                           input=script.encode(),
+                           capture_output=True)
+        id = p.stdout.split()[1][1:-1].decode()
         task.id = id
 
     def has_timed_out(self, task: Task) -> bool:
