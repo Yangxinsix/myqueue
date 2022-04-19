@@ -184,9 +184,8 @@ def test_failing_scheduler(mq):
 
 @pytest.mark.xfail
 def test_ctrl_c(mq):
-    with pytest.raises(RuntimeError):
-        # Special argument that makes test-scheduler raise an error:
-        mq('submit "time.sleep SIMULATE-CTRL-C"')
+    # Special argument that makes test-scheduler raise an error:
+    mq('submit "time.sleep SIMULATE-CTRL-C"')
     mq.wait()
     assert mq.states() == 'd'
 
