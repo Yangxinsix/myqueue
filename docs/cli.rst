@@ -494,7 +494,9 @@ usage: mq config [-h] [-Q QUEUE_NAME] [--in-place] [-z] [-v] [-q] [-T]
 Create config.py file.
 
 This tool will try to guess your configuration.  Some hand editing afterwards
-will most likely be needed.
+will most likely be needed. Read more about config.py file here::
+
+    https://myqueue.readthedocs.io/en/latest/configuration.html
 
 Example::
 
