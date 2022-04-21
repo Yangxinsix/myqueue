@@ -131,6 +131,9 @@ Do this:
      'Create config.py file.', """
 This tool will try to guess your configuration.  Some hand editing
 afterwards will most likely be needed.
+Read more about config.py file here:
+
+    https://myqueue.readthedocs.io/en/latest/configuration.html
 
 Example:
 

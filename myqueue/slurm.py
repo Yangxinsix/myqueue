@@ -133,7 +133,8 @@ class SLURM(Scheduler):
                                                    list[str]]:
         cmd = ['sinfo',
                '--noheader',
-               '--format=%c %m %P']
+               '-O',
+               'CPUs,Memory,Partition']
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         nodes = []
         for line in p.stdout.decode().splitlines():
