@@ -440,14 +440,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     if args.command == 'init':
         root = Path.cwd()
         mq = root / '.myqueue'
-        if mq.is_dir():
-            raise MQError(
-                f'The folder {root} has already been initialized!')
-        mq.mkdir()
+        if not mq.is_dir():
+            print(f'Creating {mq}')
+            mq.mkdir()
         path = mqhome() / '.myqueue'
-        cfg = path / 'config.py'
-        if cfg.is_file():
-            (mq / 'config.py').write_text(cfg.read_text())
+        cfg1 = path / 'config.py'
+        cfg2 = mq / 'config.py'
+        if cfg1.is_file() and not cfg2.is_file():
+            print(f'Copying {cfg1} to {cfg2}')
+            cfg2.write_text(cfg1.read_text())
         return
 
     folder_names: list[str] = []
