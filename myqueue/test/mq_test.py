@@ -131,7 +131,7 @@ def test_misc(mq):
     f.mkdir()
     with chdir(f):
         mq('init')
-        mq('init', error=1)
+        mq('init')
     mq('help')
     mq('ls -saA')
     mq('-V')
