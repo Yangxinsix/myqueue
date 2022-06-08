@@ -14,6 +14,7 @@ import json
 import os
 import time
 from collections import defaultdict
+from pathlib import Path
 from types import TracebackType
 from typing import Sequence
 
@@ -337,25 +338,28 @@ class Queue(Lock):
         files = []
         for path in paths:
             _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, id, state))
-            path.unlink()
+            files.append((path.stat().st_ctime, id, state, path))
         states = {'0': State.running,
                   '1': State.done,
                   '2': State.FAILED,
                   '3': State.TIMEOUT}
-        for t, id, state in sorted(files):
-            self.update(id, states[state], t)
+        for t, id, state, path in sorted(files):
+            self.update(id, states[state], t, path)
 
     def update(self,
                id: str,
                state: State,
-               t: float = 0.0) -> None:
+               t: float,
+               path: Path) -> None:
 
         for task in self.tasks:
             if task.id == id:
                 break
-        else:
+        else:  # no break
             print(f'No such task: {id}, {state}')
+            return
+
+        if task.user != self.config.user:
             return
 
         t = t or time.time()
@@ -385,6 +389,7 @@ class Queue(Lock):
             task.memory_usage = mem
 
         self.changed.add(task)
+        path.unlink()
 
     def check(self) -> None:
         t = time.time()

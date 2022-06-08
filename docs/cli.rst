@@ -163,7 +163,8 @@ options:
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
-                        16 cores, 1 process, half an hour.
+                        16 cores, 1 process, half an hour. "1:xeon40:5m": 1
+                        core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
@@ -194,7 +195,8 @@ options:
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
-                        16 cores, 1 process, half an hour.
+                        16 cores, 1 process, half an hour. "1:xeon40:5m": 1
+                        core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",

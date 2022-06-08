@@ -253,7 +253,8 @@ def _main(arguments: list[str] = None) -> int:
               help='Examples: "8:1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days. '
-              '"16:1:30m": 16 cores, 1 process, half an hour.')
+              '"16:1:30m": 16 cores, 1 process, half an hour. '
+              '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
 
         if cmd in ['resubmit', 'submit', 'run']:
             a('-w', '--workflow', action='store_true',
