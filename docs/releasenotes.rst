@@ -12,6 +12,13 @@ Next release
 * ...
 
 
+Version 22.6.0
+==============
+
+* Fixed bug related to several users having write access to the same
+  ``.myqueue/`` folder.
+
+
 Version 22.3.0
 ==============
 

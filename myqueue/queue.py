@@ -14,6 +14,7 @@ import json
 import os
 import time
 from collections import defaultdict
+from pathlib import Path
 from types import TracebackType
 from typing import Sequence
 
@@ -349,7 +350,7 @@ class Queue(Lock):
                id: str,
                state: State,
                t: float,
-               path) -> None:
+               path: Path) -> None:
 
         for task in self.tasks:
             if task.id == id:
