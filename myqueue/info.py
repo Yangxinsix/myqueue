@@ -13,14 +13,11 @@ from myqueue import __version__
 from myqueue.config import Configuration
 from myqueue.queue import Queue
 from myqueue.selection import Selection
-from myqueue.virtenv import find_activation_scripts
 
 
 def info(queue: Queue, id: str = None) -> None:
     """Print information about MyQueue or a single task."""
 
-    cwd = Path.cwd()
-    venv = find_activation_scripts([cwd]).get(cwd, '<none>')
     print = Console().print
 
     if id is None:
@@ -29,7 +26,6 @@ def info(queue: Queue, id: str = None) -> None:
         table.add_column('Path', style='cyan')
         table.add_row('Code', str(Path(__file__).parent))
         table.add_row('Root', str(queue.config.home / '.myqueue'))
-        table.add_row('Venv', str(venv))
         print(table)
 
         table = Table(title='Configuration')

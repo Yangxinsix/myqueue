@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -16,7 +17,6 @@ import rich.progress as progress
 from myqueue.scheduler import Scheduler
 from myqueue.task import Task
 from myqueue.utils import plural
-from myqueue.virtenv import find_activation_scripts
 
 from .states import State
 
@@ -130,10 +130,11 @@ def submit_tasks(scheduler: Scheduler,
         task.tqueued = t
         task.deps = [dep.dname for dep in task.dtasks]
 
-    activation_scripts = find_activation_scripts([task.folder
-                                                  for task in submit])
-    for task in submit:
-        task.activation_script = activation_scripts.get(task.folder)
+    venv = os.envvar.get('VIRTUAL_ENV')
+    if venv:
+        activation_script = Path(venv) / 'bin/activate'
+        for task in submit:
+            task.activation_script = activation_script
 
     submitted = []
     ex = None
