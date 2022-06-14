@@ -130,7 +130,7 @@ def submit_tasks(scheduler: Scheduler,
         task.tqueued = t
         task.deps = [dep.dname for dep in task.dtasks]
 
-    venv = os.envvar.get('VIRTUAL_ENV')
+    venv = os.environ.get('VIRTUAL_ENV')
     if venv:
         activation_script = Path(venv) / 'bin/activate'
         for task in submit:
