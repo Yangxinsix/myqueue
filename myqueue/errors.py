@@ -7,8 +7,8 @@ def parse_stderr(text: str) -> tuple[str, bool]:
     >>> parse_stderr('OOM-kill')
     ('OOM-kill', True)
     >>> parse_stderr('raise SCFConvergenceError\n'
-                     'Set MCA parameter "orte_base_help_aggregate" '
-                     'to 0 to see all help / error messages')
+    ...              'Set MCA parameter "orte_base_help_aggregate" '
+    ...              'to 0 to see all help / error messages')
     ('raise SCFConvergenceError', False)
     """
     lines = text.splitlines()
@@ -17,16 +17,16 @@ def parse_stderr(text: str) -> tuple[str, bool]:
         if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
                                  'memory limit', 'oom-kill',
                                  'out of memory', 'assertionerror']):
-            oom = (line.endswith('memory limit at some point.') or
-                   'malloc' in line or
+            oom = (ll.endswith('memory limit at some point.') or
+                   'malloc' in ll or
                    line.startswith('MemoryError') or
-                   'oom-kill' in line or
+                   'oom-kill' in ll or
                    line.endswith('out of memory'))
             return line, oom
 
     for line in lines:
         ll = line.lower()
-        if 'error' in line:
+        if 'error' in ll:
             return line, False
     if lines:
         return lines[-1], False
