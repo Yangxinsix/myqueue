@@ -3,8 +3,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from .task import Task
-from .scheduler import Scheduler
+from myqueue.task import Task
+from myqueue.scheduler import Scheduler, SchedulerError
 
 
 class PBS(Scheduler):
@@ -74,6 +74,8 @@ class PBS(Scheduler):
         p = subprocess.run(qsub,
                            input=script.encode(),
                            capture_output=True)
+        if p.returncode:
+            raise SchedulerError((p.stderr + p.stdout).decode())
         id = p.stdout.split(b'.')[0].decode()
         task.id = id
 

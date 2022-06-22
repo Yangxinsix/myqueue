@@ -1,17 +1,26 @@
 import subprocess
 
 import pytest
+from myqueue.scheduler import SchedulerError
 from myqueue.task import task as create_task
 
 
 class Result:
-    def __init__(self, stdout):
+    def __init__(self, stdout, stderr=b'', returncode=0):
         self.stdout = stdout
+        self.stderr = stderr
+        self.returncode = returncode
 
 
-def run(commands, stdout=None, env=None, capture_output=None, input=None):
+def run(commands,
+        stdout=None,
+        env=None,
+        capture_output=None,
+        input=None):
     """Fake subprocess.run() function."""
     # slurm:
+    if any('FAIL' in arg for arg in commands):
+        return Result(b'', b'FAIL', 1)
     if commands[0] == 'sbatch':
         return Result(b'ID: 42\n')
     if commands[0] == 'sacct':
@@ -34,8 +43,6 @@ def run(commands, stdout=None, env=None, capture_output=None, input=None):
     # lsf:
     if commands[0] == 'bsub':
         return Result(b'bla-bla: j42.\n')
-    if commands[0] == 'bsub':
-        return
     if commands[0] == 'bkill':
         return
     if commands[0] == 'bjobs':
@@ -65,3 +72,7 @@ def test_scheduler_subprocess(monkeypatch, name):
         assert scheduler.maxrss('1') == 1000
     scheduler.cancel(t)
     assert scheduler.get_ids() == {'1', '2'}
+
+    t = create_task('FAIL', resources='2:1h')
+    with pytest.raises(SchedulerError, match='FAIL'):
+        scheduler.submit(t)

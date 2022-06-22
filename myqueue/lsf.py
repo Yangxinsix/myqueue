@@ -1,9 +1,9 @@
 from __future__ import annotations
 import subprocess
 
-from .task import Task
-from .scheduler import Scheduler
-from .utils import str2number
+from myqueue.task import Task
+from myqueue.scheduler import Scheduler, SchedulerError
+from myqueue.utils import str2number
 
 
 class LSF(Scheduler):
@@ -72,6 +72,8 @@ class LSF(Scheduler):
         p = subprocess.run(bsub,
                            input=script.encode(),
                            capture_output=True)
+        if p.returncode:
+            raise SchedulerError((p.stderr + p.stdout).decode())
         id = p.stdout.split()[1][1:-1].decode()
         task.id = id
 
