@@ -10,6 +10,10 @@ def parse_stderr(text: str) -> tuple[str, bool]:
     ...              'Set MCA parameter "orte_base_help_aggregate" '
     ...              'to 0 to see all help / error messages')
     ('raise SCFConvergenceError', False)
+    >>> parse_stderr('Bla-bla')
+    ('Bla-bla', False)
+    >>> parse_stderr('')
+    ('-', False)
     """
     lines = text.splitlines()
     for line in lines[::-1]:
