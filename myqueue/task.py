@@ -333,7 +333,7 @@ class Task:
         path = scheduler.error_file(self)
 
         try:
-            text = path.read_text().splitlines()
+            text = path.read_text()
         except (FileNotFoundError, UnicodeDecodeError):
             return False
 
