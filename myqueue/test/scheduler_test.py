@@ -9,7 +9,12 @@ class Result:
         self.stdout = stdout
 
 
-def run(commands, stdout=None, env=None, capture_output=None, input=None):
+def run(commands,
+        stdout=None,
+        env=None,
+        capture_output=None,
+        input=None,
+        check=False):
     """Fake subprocess.run() function."""
     # slurm:
     if commands[0] == 'sbatch':
@@ -34,8 +39,6 @@ def run(commands, stdout=None, env=None, capture_output=None, input=None):
     # lsf:
     if commands[0] == 'bsub':
         return Result(b'bla-bla: j42.\n')
-    if commands[0] == 'bsub':
-        return
     if commands[0] == 'bkill':
         return
     if commands[0] == 'bjobs':
