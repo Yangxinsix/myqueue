@@ -10,6 +10,7 @@ Next release
 ============
 
 * Better error message when ``sbatch``/``qsub``/``bsub`` fails.
+* Improved parsing of ``stderr`` from failed jobs.
 
 
 Version 22.6.0
