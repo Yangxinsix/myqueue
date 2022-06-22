@@ -9,7 +9,7 @@ Release notes
 Next release
 ============
 
-* ...
+* Better error message when ``sbatch``/``qsub``/``bsub`` fails.
 
 
 Version 22.6.0

@@ -5,7 +5,7 @@ import warnings
 from math import ceil
 
 from myqueue.task import Task
-from myqueue.scheduler import Scheduler
+from myqueue.scheduler import Scheduler, SchedulerError
 
 
 class SLURM(Scheduler):
@@ -90,8 +90,10 @@ class SLURM(Scheduler):
         p = subprocess.run(sbatch,
                            input=script.encode(),
                            capture_output=True,
-                           check=True,
                            env=os.environ)
+
+        if p.returncode:
+            raise SchedulerError((p.stderr + p.stdout).decode())
 
         task.id = p.stdout.split()[-1].decode()
 
