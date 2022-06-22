@@ -12,6 +12,7 @@ from warnings import warn
 from myqueue.commands import Command, WorkflowTask, create_command
 from myqueue.resources import Resources, T
 from myqueue.states import State
+from myqueue.errors import parse_stderr
 
 if TYPE_CHECKING:
     from .scheduler import Scheduler
@@ -332,31 +333,12 @@ class Task:
         path = scheduler.error_file(self)
 
         try:
-            lines = path.read_text().splitlines()
+            text = path.read_text().splitlines()
         except (FileNotFoundError, UnicodeDecodeError):
             return False
 
-        for line in lines[::-1]:
-            ll = line.lower()
-            if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
-                                     'memory limit', 'oom-kill',
-                                     'out of memory', 'AssertionError']):
-                self.error = line
-                if line.endswith('memory limit at some point.'):
-                    return True
-                if 'malloc' in line:
-                    return True
-                if line.startswith('MemoryError'):
-                    return True
-                if 'oom-kill' in line:
-                    return True
-                if line.endswith('out of memory'):
-                    return True
-                return False
-
-        if lines:
-            self.error = lines[-1]
-        return False
+        self.error, oom = parse_stderr(text)
+        return oom
 
     def ideps(self, map: dict[Path, Task]) -> Iterator[Task]:
         """Yield task and its dependencies."""
