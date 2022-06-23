@@ -1,7 +1,13 @@
 from __future__ import annotations
+
 from pathlib import Path
-from myqueue.task import Task
+
 from myqueue.config import Configuration
+from myqueue.task import Task
+
+
+class SchedulerError(Exception):
+    """Error from scheduler command."""
 
 
 class Scheduler:

@@ -192,6 +192,10 @@ def update_readme_and_completion(test: bool = False) -> None:
             n += len(L)
         n += 1
 
+    if sys.version_info < (3, 10):
+        newlines = [line.replace('optional arguments:', 'options:')
+                    for line in newlines]
+
     cli = dir / '..' / 'docs' / 'cli.rst'
 
     lines = cli.read_text().splitlines()
@@ -199,8 +203,6 @@ def update_readme_and_completion(test: bool = False) -> None:
     if test:
         old = '\n'.join(lines[a + 1:])
         new = '\n'.join(newlines)
-        if sys.version_info < (3, 10):
-            new = new.replace('optional arguments:', 'options:')
         assert new == old
     else:
         lines[a + 1:] = newlines

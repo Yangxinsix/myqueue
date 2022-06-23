@@ -153,7 +153,15 @@ def guess_configuration(scheduler_name: str = '',
     text = text.replace(", 'nodes'", ",\n    'nodes'")
     text = text.replace(", 'extra_args'", ",\n    'extra_args'")
     text = text.replace('(', '\n        (')
-    text = '# generated with mq config\n' + text
+    text = ('# Generated with mq config.\n'
+            '#\n'
+            '# Please review the list of node types and remove those\n'
+            "# that you don't want to use.  Read more about config.py\n"
+            '# files here:\n'
+            '#\n'
+            '#   https://myqueue.readthedocs.io/en/latest/configuration.html\n'
+            '\n' +
+            text)
 
     if in_place:
         cfgfile = folder / 'config.py'

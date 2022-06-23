@@ -131,6 +131,9 @@ Do this:
      'Create config.py file.', """
 This tool will try to guess your configuration.  Some hand editing
 afterwards will most likely be needed.
+Read more about config.py file here:
+
+    https://myqueue.readthedocs.io/en/latest/configuration.html
 
 Example:
 
@@ -250,7 +253,8 @@ def _main(arguments: list[str] = None) -> int:
               help='Examples: "8:1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days. '
-              '"16:1:30m": 16 cores, 1 process, half an hour.')
+              '"16:1:30m": 16 cores, 1 process, half an hour. '
+              '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
 
         if cmd in ['resubmit', 'submit', 'run']:
             a('-w', '--workflow', action='store_true',
@@ -437,14 +441,15 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     if args.command == 'init':
         root = Path.cwd()
         mq = root / '.myqueue'
-        if mq.is_dir():
-            raise MQError(
-                f'The folder {root} has already been initialized!')
-        mq.mkdir()
+        if not mq.is_dir():
+            print(f'Creating {mq}')
+            mq.mkdir()
         path = mqhome() / '.myqueue'
-        cfg = path / 'config.py'
-        if cfg.is_file():
-            (mq / 'config.py').write_text(cfg.read_text())
+        cfg1 = path / 'config.py'
+        cfg2 = mq / 'config.py'
+        if cfg1.is_file() and not cfg2.is_file():
+            print(f'Copying {cfg1} to {cfg2}')
+            cfg2.write_text(cfg1.read_text())
         return
 
     folder_names: list[str] = []

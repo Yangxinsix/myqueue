@@ -24,7 +24,7 @@ class TestScheduler(Scheduler):
         if dry_run:
             task.id = '1'
             return
-        if task.cmd.args == ['_FAIL_']:
+        if task.cmd.args == ['FAIL']:
             raise RuntimeError
         if task.dtasks:
             ids = {t.id for t in self.tasks}

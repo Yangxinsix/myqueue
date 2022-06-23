@@ -4,8 +4,8 @@ import subprocess
 import warnings
 from math import ceil
 
-from .task import Task
-from .scheduler import Scheduler
+from myqueue.task import Task
+from myqueue.scheduler import Scheduler, SchedulerError
 
 
 class SLURM(Scheduler):
@@ -92,6 +92,9 @@ class SLURM(Scheduler):
                            capture_output=True,
                            env=os.environ)
 
+        if p.returncode:
+            raise SchedulerError((p.stderr + p.stdout).decode())
+
         task.id = p.stdout.split()[-1].decode()
 
     def cancel(self, task: Task) -> None:
@@ -133,7 +136,8 @@ class SLURM(Scheduler):
                                                    list[str]]:
         cmd = ['sinfo',
                '--noheader',
-               '--format=%c %m %P']
+               '-O',
+               'CPUs,Memory,Partition']
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         nodes = []
         for line in p.stdout.decode().splitlines():

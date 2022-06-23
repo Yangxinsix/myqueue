@@ -13,6 +13,15 @@ Next release
   is found in one of the parent folders.
 * Tasks submitted from an activated virtual environment will now activate that
   environment when the job starts running.
+* Better error message when ``sbatch``/``qsub``/``bsub`` fails.
+* Improved parsing of ``stderr`` from failed jobs.
+
+
+Version 22.6.0
+==============
+
+* Fixed bug related to several users having write access to the same
+  ``.myqueue/`` folder.
 
 
 Version 22.3.0

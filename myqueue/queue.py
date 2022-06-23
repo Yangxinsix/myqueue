@@ -11,8 +11,10 @@ File format versions:
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections import defaultdict
+from pathlib import Path
 from types import TracebackType
 from typing import Sequence
 
@@ -58,7 +60,7 @@ class Queue(Lock):
             self._scheduler = get_scheduler(self.config)
         return self._scheduler
 
-    def __enter__(self) -> 'Queue':
+    def __enter__(self) -> Queue:
         if self.dry_run:
             return self
         if self.need_lock:
@@ -117,6 +119,19 @@ class Queue(Lock):
             force, max_tasks,
             self.verbosity, self.dry_run)
 
+        for task in submitted:
+            if task.workflow:
+                oldtask = current.get(task.dname)
+                if oldtask:
+                    self.tasks.remove(oldtask)
+
+        if 'MYQUEUE_TESTING' in os.environ:
+            if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
+                raise KeyboardInterrupt
+
+        self.tasks += submitted
+        self.changed.update(submitted)
+
         if ex:
             print()
             print('Skipped', plural(len(skipped), 'task'))
@@ -128,15 +143,6 @@ class Queue(Lock):
                 print(plural(len(submitted), 'task'), 'to submit')
             else:
                 print(plural(len(submitted), 'task'), 'submitted')
-
-        for task in submitted:
-            if task.workflow:
-                oldtask = current.get(task.dname)
-                if oldtask:
-                    self.tasks.remove(oldtask)
-
-        self.tasks += submitted
-        self.changed.update(submitted)
 
         if ex:
             raise ex
@@ -332,25 +338,28 @@ class Queue(Lock):
         files = []
         for path in paths:
             _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, id, state))
-            path.unlink()
+            files.append((path.stat().st_ctime, id, state, path))
         states = {'0': State.running,
                   '1': State.done,
                   '2': State.FAILED,
                   '3': State.TIMEOUT}
-        for t, id, state in sorted(files):
-            self.update(id, states[state], t)
+        for t, id, state, path in sorted(files):
+            self.update(id, states[state], t, path)
 
     def update(self,
                id: str,
                state: State,
-               t: float = 0.0) -> None:
+               t: float,
+               path: Path) -> None:
 
         for task in self.tasks:
             if task.id == id:
                 break
-        else:
+        else:  # no break
             print(f'No such task: {id}, {state}')
+            return
+
+        if task.user != self.config.user:
             return
 
         t = t or time.time()
@@ -380,6 +389,7 @@ class Queue(Lock):
             task.memory_usage = mem
 
         self.changed.add(task)
+        path.unlink()
 
     def check(self) -> None:
         t = time.time()

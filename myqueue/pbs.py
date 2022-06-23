@@ -3,8 +3,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from .task import Task
-from .scheduler import Scheduler
+from myqueue.task import Task
+from myqueue.scheduler import Scheduler, SchedulerError
 
 
 class PBS(Scheduler):
@@ -71,12 +71,12 @@ class PBS(Scheduler):
             print(qsub, script)
             return
 
-        p = subprocess.Popen(qsub,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
-        out, err = p.communicate(script.encode())
-        assert p.returncode == 0
-        id = out.split(b'.')[0].decode()
+        p = subprocess.run(qsub,
+                           input=script.encode(),
+                           capture_output=True)
+        if p.returncode:
+            raise SchedulerError((p.stderr + p.stdout).decode())
+        id = p.stdout.split(b'.')[0].decode()
         task.id = id
 
     def error_file(self, task: Task) -> Path:
@@ -86,7 +86,7 @@ class PBS(Scheduler):
         subprocess.run(['qdel', task.id])
 
     def get_ids(self) -> set[str]:
-        user = os.environ['USER']
+        user = os.environ.get('USER', 'test')
         cmd = ['qstat', '-u', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         queued = {line.split()[0].split(b'.')[0].decode()
