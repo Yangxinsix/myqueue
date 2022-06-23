@@ -121,9 +121,9 @@ would run ``python3 -c "import mymod; mymod.func('ABC', 123)``.
 Using a Python virtual environment
 ==================================
 
-Tasks will activate a virtual environment if a ``venv/`` folder is found
-in one of the parent folders.  The activation script will be
-``venv/bin/activate``.
+If a task is submitted from a virtual environment then that ``venv`` will also
+be activated in the script that runs the task.  MyQueue does this by looking
+for an ``VIRTUAL_ENV`` environment variable.
 
 
 .. _resources:

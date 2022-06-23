@@ -285,6 +285,7 @@ class Task:
                     **dct)
 
     def infolder(self, folder: Path, recursive: bool) -> bool:
+        """Check if task runs inside a folder tree."""
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 

@@ -19,12 +19,15 @@ class Scheduler:
                task: Task,
                dry_run: bool = False,
                verbose: bool = False) -> None:
+        """Submit a task."""
         pass
 
     def cancel(self, task: Task) -> None:
+        """Cancel a task."""
         raise NotImplementedError
 
     def get_ids(self) -> set[str]:
+        """Get ids for all tasks the scheduler knows about."""
         raise NotImplementedError
 
     def hold(self, task: Task) -> None:

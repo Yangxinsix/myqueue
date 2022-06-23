@@ -9,6 +9,10 @@ Release notes
 Next release
 ============
 
+* Tasks will no longer activate a virtual environment if a ``venv/`` folder
+  is found in one of the parent folders.
+* Tasks submitted from an activated virtual environment will now activate that
+  environment when the job starts running.
 * Better error message when ``sbatch``/``qsub``/``bsub`` fails.
 * Improved parsing of ``stderr`` from failed jobs.
 
