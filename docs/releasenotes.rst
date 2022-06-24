@@ -11,6 +11,10 @@ Next release
 
 * Better error message when ``sbatch``/``qsub``/``bsub`` fails.
 * Improved parsing of ``stderr`` from failed jobs.
+* Depth first submit ordering.  A workflow with an ``A`` task and a ``B``
+  task where ``B`` depends on ``A`` would previously run all the ``A``
+  tasks and then all the ``B`` tasks.  The order will now be ``A``, ``B``
+  in the first folder, then  ``A``, ``B`` in the next folder and so on.
 
 
 Version 22.6.0

@@ -170,7 +170,8 @@ def workflow():
 """
 
 
-def test_workflow4(mq):
+def test_workflow_depth_first(mq):
+    """Order should be 1/A, 1/B, 2/A, 2/B and not 1/A, 2/A, 1/B, 2/B."""
     Path('wf4.py').write_text(wf4)
     Path('1').mkdir()
     Path('2').mkdir()
