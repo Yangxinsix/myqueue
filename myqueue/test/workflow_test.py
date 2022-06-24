@@ -160,3 +160,21 @@ def test_workflow3(mq):
         mq('workflow wf3.py')
     mq.wait()
     assert mq.states() == 'd'
+
+
+wf4 = """
+from myqueue.workflow import run
+def workflow():
+    with run(function=lambda: None, name='A'):
+        run(function=lambda: None, name='B')
+"""
+
+
+def test_workflow4(mq):
+    Path('wf4.py').write_text(wf4)
+    Path('1').mkdir()
+    Path('2').mkdir()
+    mq('workflow wf4.py 1 2')
+    mq.wait()
+    assert mq.states() == 'dddd'
+    assert Path('1/B.2.out').is_file()

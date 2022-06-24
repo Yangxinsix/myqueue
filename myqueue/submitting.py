@@ -4,13 +4,9 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
-from typing import Sequence
+from typing import Sequence, TypeVar
 
-try:
-    import graphlib
-except ImportError:
-    import graphlib_backport as graphlib  # type: ignore
-
+import networkx as nx
 import rich.progress as progress
 
 from myqueue.scheduler import Scheduler
@@ -117,9 +113,7 @@ def submit_tasks(scheduler: Scheduler,
     if n > 0:
         print('Skipping', plural(n, 'task'), '(bad dependency)')
 
-    submit = [task
-              for task in graphlib.TopologicalSorter(
-                  {task: task.dtasks for task in submit}).static_order()
+    submit = [task for task in order({task: task.dtasks for task in submit})
               if task.state == State.undefined]
 
     submit = submit[:max_tasks]
@@ -163,6 +157,24 @@ def submit_tasks(scheduler: Scheduler,
             ex = x
 
     return submitted, submit[len(submitted):], ex
+
+
+T = TypeVar('T')
+
+
+def order(nodes: dict[T, list[T]]) -> list[T]:
+    """Depth first.
+
+    >>> order({1: [2], 2: [], 3: [4], 4: []})
+    [2, 1, 4, 3]
+    """
+    result = []
+    g = nx.Graph(nodes)
+    for component in nx.connected_components(g):
+        dg = nx.DiGraph({node: nodes[node] for node in component})
+        order = nx.topological_sort(dg)
+        result += reversed(list(order))
+    return result
 
 
 class NoProgressBar:
