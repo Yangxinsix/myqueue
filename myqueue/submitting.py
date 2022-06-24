@@ -6,7 +6,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Sequence, TypeVar
 
-import networkx as nx
+import networkx as nx  # type: ignore
 import rich.progress as progress
 
 from myqueue.scheduler import Scheduler
@@ -168,7 +168,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
     >>> order({1: [2], 2: [], 3: [4], 4: []})
     [2, 1, 4, 3]
     """
-    result = []
+    result: list[T] = []
     g = nx.Graph(nodes)
     for component in nx.connected_components(g):
         dg = nx.DiGraph({node: nodes[node]
