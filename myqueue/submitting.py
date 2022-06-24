@@ -171,7 +171,9 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
     result = []
     g = nx.Graph(nodes)
     for component in nx.connected_components(g):
-        dg = nx.DiGraph({node: nodes[node] for node in component})
+        dg = nx.DiGraph({node: nodes[node]
+                         for node in component
+                         if node in nodes})
         order = nx.topological_sort(dg)
         result += reversed(list(order))
     return result

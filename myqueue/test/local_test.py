@@ -77,4 +77,4 @@ def test_local_scheduler2(scheduler):
         1 / 0
     names = set(path.name[6:]
                 for path in Path('.myqueue').glob('local-*-?'))
-    assert names == set(['1-2', '2-2', '2-0', '1-0'])
+    assert names == set(['1-2', '3-2', '3-0', '1-0'])
