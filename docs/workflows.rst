@@ -42,9 +42,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-rw-r-- 1 jensj jensj 190 Apr  6 11:24 check.py
-    -rw-rw-r-- 1 jensj jensj 398 Apr  6 11:24 factor.py
-    -rw-rw-r-- 1 jensj jensj 164 Apr  6 11:24 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 Jun 24 22:33 check.py
+    -rw-rw-r-- 1 jensj jensj 398 Jun 24 22:33 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 Jun 24 22:33 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -88,14 +88,14 @@ and now in all subfolders::
     done: 2
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/10
     3  ./100007/ prime.factor    1:2s
-    4  ./36791/  prime.factor    1:2s
-    5  ./8069/   prime.factor    1:2s
-    6  ./98769/  prime.factor    1:2s
-    7  ./99/     prime.factor    1:2s
-    8  ./100007/ prime.check  d1 1:2s
-    9  ./36791/  prime.check  d1 1:2s
-    10 ./8069/   prime.check  d1 1:2s
-    11 ./98769/  prime.check  d1 1:2s
+    4  ./100007/ prime.check  d1 1:2s
+    5  ./36791/  prime.factor    1:2s
+    6  ./36791/  prime.check  d1 1:2s
+    7  ./8069/   prime.factor    1:2s
+    8  ./8069/   prime.check  d1 1:2s
+    9  ./98769/  prime.factor    1:2s
+    10 ./98769/  prime.check  d1 1:2s
+    11 ./99/     prime.factor    1:2s
     12 ./99/     prime.check  d1 1:2s
     10 tasks submitted
 
@@ -108,14 +108,14 @@ and now in all subfolders::
     1  ./1001/   prime.factor 1:2s 0:04 done  0:00
     2  ./1001/   prime.check  1:2s 0:04 done  0:00
     3  ./100007/ prime.factor 1:2s 0:02 done  0:00
-    4  ./36791/  prime.factor 1:2s 0:02 done  0:00
-    5  ./8069/   prime.factor 1:2s 0:02 done  0:00
-    6  ./98769/  prime.factor 1:2s 0:02 done  0:00
-    7  ./99/     prime.factor 1:2s 0:02 done  0:00
-    8  ./100007/ prime.check  1:2s 0:02 done  0:00
-    9  ./36791/  prime.check  1:2s 0:02 done  0:00
-    10 ./8069/   prime.check  1:2s 0:02 done  0:00
-    11 ./98769/  prime.check  1:2s 0:02 done  0:00
+    4  ./100007/ prime.check  1:2s 0:02 done  0:00
+    5  ./36791/  prime.factor 1:2s 0:02 done  0:00
+    6  ./36791/  prime.check  1:2s 0:02 done  0:00
+    7  ./8069/   prime.factor 1:2s 0:02 done  0:00
+    8  ./8069/   prime.check  1:2s 0:02 done  0:00
+    9  ./98769/  prime.factor 1:2s 0:02 done  0:00
+    10 ./98769/  prime.check  1:2s 0:02 done  0:00
+    11 ./99/     prime.factor 1:2s 0:02 done  0:00
     12 ./99/     prime.check  1:2s 0:02 done  0:00
     ── ───────── ──────────── ──── ──── ───── ────
     done: 12, total: 12
@@ -125,13 +125,13 @@ to mark that these tasks have been completed::
 
     $ ls -l 1001/
     total 12
-    -rw-rw-r-- 1 jensj jensj 24 Apr  6 11:24 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.check.2.err
-    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj 18 Apr  6 11:25 prime.check.state
-    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.factor.1.err
-    -rw-rw-r-- 1 jensj jensj  0 Apr  6 11:24 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj 18 Apr  6 11:25 prime.factor.state
+    -rw-rw-r-- 1 jensj jensj 24 Jun 24 22:33 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.check.state
+    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.out
+    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.factor.state
 
 Now, add another number::
 
