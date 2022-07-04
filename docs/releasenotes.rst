@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 22.7.0
+==============
+
 * Tasks will no longer activate a virtual environment if a ``venv/`` folder
   is found in one of the parent folders.
 * Tasks submitted from an activated virtual environment will now activate that
