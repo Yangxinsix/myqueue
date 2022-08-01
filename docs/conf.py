@@ -46,6 +46,7 @@ release = version
 extensions = [
     'sphinx.ext.autodoc',
     # 'sphinx.ext.autodoc.typehints',
+    'sphinx.ext.extlinks',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx']
