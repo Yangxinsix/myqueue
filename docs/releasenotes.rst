@@ -12,6 +12,12 @@ Next release
 * ...
 
 
+Version 22.7.1
+==============
+
+* Fixed: :issue:`mq list does not work with ID specifier (-i) <42>`.
+
+
 Version 22.7.0
 ==============
 
