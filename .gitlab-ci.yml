@@ -16,6 +16,12 @@ tests:
     - mypy -p myqueue
     - flake8 myqueue
     - interrogate -v -m -i -f 53.3 myqueue -e myqueue/test
+  coverage: '/TOTAL.+ ([0-9]+\.[0-9]+%)/'
+  artifacts:
+    paths:
+      - htmlcov
+    expire_in: 1 week
+
 
 oldtests:
   image: python:3.7
