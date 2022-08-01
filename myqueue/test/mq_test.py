@@ -243,6 +243,7 @@ def test_cli_exception(mq, monkeypatch):
 
 def test_mq_exception(mq):
     mq('rm', error=1)
+    mq('ls -i 0')
     mq('ls -i 0 -s q', error=1)
     with pytest.raises(ValueError):
         mq('ls -i 0 .')
