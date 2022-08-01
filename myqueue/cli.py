@@ -222,7 +222,7 @@ def _main(arguments: list[str] = None) -> int:
               'number of cores will be increased to the next number of nodes '
               'for a task that runs out of memory.')
             a('folder',
-              nargs='*', default=['.'],
+              nargs='*',
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
@@ -230,7 +230,7 @@ def _main(arguments: list[str] = None) -> int:
             a('task', help='Task to run locally.')
             a('-n', '--name', help='Name used for task.')
             a('folder',
-              nargs='*', default=['.'],
+              nargs='*',
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
@@ -276,7 +276,7 @@ def _main(arguments: list[str] = None) -> int:
               help='Use submit scripts matching "script" pattern in all '
               'subfolders.')
             a('folder',
-              nargs='*', default=['.'],
+              nargs='*',
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
             a('-a', '--arguments',
@@ -315,7 +315,6 @@ def _main(arguments: list[str] = None) -> int:
               help='Do not list subfolders.')
             a('folder',
               nargs='*',
-              default=['.'],
               help='List tasks in this folder and its subfolders.  '
               'Defaults to current folder.  '
               'Use --not-recursive to exclude subfolders.')
@@ -456,7 +455,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     if args.command in ['sync', 'kick', 'daemon', 'info']:
         folder_names = [args.folder or '.']
     else:
-        folder_names = args.folder
+        folder_names = args.folder or ['.']
 
     folders = [Path(folder).expanduser().absolute().resolve()
                for folder in folder_names]

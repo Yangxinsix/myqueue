@@ -359,7 +359,7 @@ class Task:
             Don't actually submit the task.
         """
         from .queue import Queue
-        from.config import Configuration
+        from .config import Configuration
         config = Configuration.read()
         with Queue(config, verbosity, dry_run=dry_run) as queue:
             queue.submit([self])
