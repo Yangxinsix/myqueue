@@ -293,10 +293,10 @@ def get_tasks(ids: list[str], folder: Path = None) -> list[Task]:
     """Get tasks with given id's from folder."""
     from myqueue.queue import Queue
     config = Configuration.read(folder)
-    queue = Queue(config)
-    queue._read()
-    selection = Selection(ids=set(ids))
-    tasks = selection.select(queue.tasks)
+    with Queue(config) as queue:
+        queue._read()
+        selection = Selection(ids=set(ids))
+        tasks = selection.select(queue.tasks)
     return tasks
 
 
