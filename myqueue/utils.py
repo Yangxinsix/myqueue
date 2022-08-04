@@ -1,5 +1,6 @@
 """Useful utilities."""
 from __future__ import annotations
+
 import errno
 import os
 import re
@@ -10,7 +11,11 @@ from io import StringIO
 from math import inf
 from pathlib import Path
 from types import TracebackType
-from typing import IO, Generator, Any
+from typing import IO, Any, Generator
+
+from myqueue.config import Configuration
+from myqueue.selection import Selection
+from myqueue.task import Task
 
 
 def mqhome() -> Path:
@@ -139,7 +144,8 @@ def update_readme_and_completion(test: bool = False) -> None:
 
     import argparse
     import textwrap
-    from myqueue.cli import _main, commands, aliases
+
+    from myqueue.cli import _main, aliases, commands
 
     aliases = {command: alias for alias, command in aliases.items()}
 
@@ -281,6 +287,17 @@ def convert_done_files() -> None:
             out = '{"state": "done"}\n'
         path.with_suffix('.state').write_text(out)
         os.unlink(path)
+
+
+def get_tasks(ids: list[str], folder: Path = None) -> list[Task]:
+    """Get tasks with given id's from folder."""
+    from myqueue.queue import Queue
+    config = Configuration.read(folder)
+    queue = Queue(config)
+    queue._read()
+    selection = Selection(ids=set(ids))
+    tasks = selection.select(queue.tasks)
+    return tasks
 
 
 if __name__ == '__main__':  # pragma: no cover
