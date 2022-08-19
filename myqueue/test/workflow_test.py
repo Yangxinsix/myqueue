@@ -123,7 +123,7 @@ from myqueue.task import task
 def create_tasks(name, n):
     assert name == 'hello'
     assert n == 5
-    return [task('shell:echo+hi', diskspace=1) for _ in range(4)]
+    return [task('shell:echo+hi', name=f'x{i}', diskspace=1) for i in range(4)]
 """
 
 
