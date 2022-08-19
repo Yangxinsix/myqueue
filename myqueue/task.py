@@ -98,7 +98,7 @@ class Task:
     def name(self) -> str:
         return f'{self.cmd.name}.{self.id}'
 
-    @ property
+    @property
     def int_id(self) -> int:
         return int(self.id.split('.')[0])
 

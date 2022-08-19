@@ -9,8 +9,8 @@ from types import TracebackType
 from typing import Any, Callable, Sequence, Type, Union
 
 import rich.progress as progress
-
 from myqueue.caching import CachedFunction, create_cached_function
+from myqueue.cli import MQError
 from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
@@ -46,6 +46,13 @@ def workflow(args: Namespace,
     if args.targets:
         names = args.targets.split(',')
         tasks = filter_tasks(tasks, names)
+
+    dnames = set()
+    for task in tasks:
+        if task.dname in dnames:
+            raise MQError('Please use unique names for all tasks.  '
+                          f'{task.cmd.name!r} is already used')
+        dnames.add(task.dname)
 
     return tasks
 
