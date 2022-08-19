@@ -179,3 +179,16 @@ def test_workflow_depth_first(mq):
     mq.wait()
     assert mq.states() == 'dddd'
     assert Path('1/B.2.out').is_file()
+
+
+wf5 = """
+from myqueue.workflow import run
+def workflow():
+    run(function=lambda: None, name='A')
+    run(function=lambda: None, name='A')
+"""
+
+
+def test_workflow_repeated_name(mq):
+    Path('wf5.py').write_text(wf5)
+    mq('workflow wf5.py', error=1)
