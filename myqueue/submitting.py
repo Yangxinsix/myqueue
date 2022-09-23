@@ -154,7 +154,7 @@ def submit_tasks(scheduler: Scheduler,
                 if not dry_run:
                     task.remove_state_file()
                 pb.advance(id)
-        except Exception as x:
+        except (Exception, KeyboardInterrupt) as x:
             ex = x
 
     return submitted, submit[len(submitted):], ex
