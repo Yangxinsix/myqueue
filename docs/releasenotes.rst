@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 22.9.0
+==============
+
 * Hitting CTRL-C in the middle of submitting jobs is now safe.
 
 
