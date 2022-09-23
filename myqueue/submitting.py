@@ -71,7 +71,7 @@ def submit_tasks(scheduler: Scheduler,
                  verbosity: int,
                  dry_run: bool) -> tuple[list[Task],
                                          list[Task],
-                                         Exception | None]:
+                                         Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
 
     new = {task.dname: task for task in tasks}
