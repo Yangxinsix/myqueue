@@ -71,7 +71,7 @@ def submit_tasks(scheduler: Scheduler,
                  verbosity: int,
                  dry_run: bool) -> tuple[list[Task],
                                          list[Task],
-                                         Exception | None]:
+                                         Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
 
     new = {task.dname: task for task in tasks}
@@ -154,7 +154,7 @@ def submit_tasks(scheduler: Scheduler,
                 if not dry_run:
                     task.remove_state_file()
                 pb.advance(id)
-        except Exception as x:
+        except (Exception, KeyboardInterrupt) as x:
             ex = x
 
     return submitted, submit[len(submitted):], ex

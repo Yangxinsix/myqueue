@@ -1,5 +1,5 @@
 tests:
-  image: python:3.10
+  image: python:3.10.6
   script:
     - python -m venv venv
     - . venv/bin/activate

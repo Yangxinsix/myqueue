@@ -357,6 +357,7 @@ class Queue(Lock):
                 break
         else:  # no break
             print(f'No such task: {id}, {state}')
+            path.unlink()
             return
 
         if task.user != self.config.user:

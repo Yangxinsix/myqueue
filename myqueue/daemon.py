@@ -100,7 +100,7 @@ def loop(config: Configuration) -> None:
     while True:
         sleep(T)
 
-        if not (config.home / '.myqueueu').is_dir():
+        if not (config.home / '.myqueue').is_dir():
             break
 
         try:
