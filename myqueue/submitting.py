@@ -10,11 +10,11 @@ from typing import Sequence, TypeVar
 import networkx as nx  # type: ignore
 import rich.progress as progress
 
+from myqueue.pretty import pprint
 from myqueue.scheduler import Scheduler
+from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import plural
-
-from .states import State
 
 TaskName = Path
 
@@ -61,6 +61,54 @@ def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
             mark_children(task, children)
 
     return [task for task in tasks if not task.state.is_bad()]
+
+
+def submit(queue,
+           tasks: Sequence[Task],
+           force: bool = False,
+           max_tasks: int = 1_000_000_000,
+           verbosity: int = 1) -> None:
+    """Submit tasks to queue.
+
+    Parameters
+    ==========
+    force: bool
+        Ignore and remove name.FAILED files.
+    """
+
+    current = {task.dname: task for task in queue.tasks}
+
+    submitted, skipped, ex = submit_tasks(
+        queue.scheduler, tasks, current,
+        force, max_tasks,
+        verbosity, queue.dry_run)
+
+    for task in submitted:
+        if task.workflow:
+            oldtask = current.get(task.dname)
+            if oldtask:
+                queue.remove(oldtask)
+
+    if 'MYQUEUE_TESTING' in os.environ:
+        if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
+            raise KeyboardInterrupt
+
+    queue.add(submitted)
+
+    if ex:
+        print()
+        print('Skipped', plural(len(skipped), 'task'))
+
+    pprint(submitted, 0, 'ifnaIr',
+           maxlines=10 if verbosity < 2 else 99999999999999)
+    if submitted:
+        if queue.dry_run:
+            print(plural(len(submitted), 'task'), 'to submit')
+        else:
+            print(plural(len(submitted), 'task'), 'submitted')
+
+    if ex:
+        raise ex
 
 
 def submit_tasks(scheduler: Scheduler,

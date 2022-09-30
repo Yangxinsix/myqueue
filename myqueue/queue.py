@@ -16,7 +16,6 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
-from typing import Sequence
 
 from myqueue.config import Configuration
 from myqueue.email import configure_email, send_notification
@@ -26,7 +25,6 @@ from myqueue.run import run_tasks
 from myqueue.scheduler import Scheduler, get_scheduler
 from myqueue.selection import Selection
 from myqueue.states import State
-from myqueue.submitting import submit_tasks
 from myqueue.task import Task
 from myqueue.utils import Lock, plural
 
@@ -35,23 +33,20 @@ class Queue(Lock):
     """Object for interacting with the scheduler."""
     def __init__(self,
                  config: Configuration,
-                 verbosity: int = 1,
                  need_lock: bool = True,
                  dry_run: bool = False):
-        self.verbosity = verbosity
         self.need_lock = need_lock
         self.dry_run = dry_run
         self.config = config
 
         self.folder = config.home / '.myqueue'
-        self.fname = self.folder / 'queue.json'
 
-        Lock.__init__(self, self.fname.with_name('queue.json.lock'),
+        Lock.__init__(self,
+                      self.folder / 'queue.json.lock',
                       timeout=10.0)
 
         self._scheduler: Scheduler | None = None
         self.tasks: list[Task] = []
-        self.changed: set[Task] = set()
 
     @property
     def scheduler(self) -> Scheduler:
@@ -79,73 +74,6 @@ class Queue(Lock):
         if self.changed and not self.dry_run:
             self._write()
         self.release()
-
-    def ls(self,
-           selection: Selection,
-           columns: str,
-           sort: str | None = None,
-           reverse: bool = False,
-           short: bool = False,
-           use_log_file: bool = False) -> list[Task]:
-        """Pretty-print list of tasks."""
-        self._read(use_log_file)
-        tasks = selection.select(self.tasks)
-        if isinstance(sort, str):
-            tasks.sort(key=lambda task: task.order(sort),  # type: ignore
-                       reverse=reverse)
-        pprint(tasks, self.verbosity, columns, short)
-        return tasks
-
-    def submit(self,
-               tasks: Sequence[Task],
-               force: bool = False,
-               max_tasks: int = 1_000_000_000,
-               read: bool = True) -> None:
-        """Submit tasks to queue.
-
-        Parameters
-        ==========
-        force: bool
-            Ignore and remove name.FAILED files.
-        """
-
-        if read:
-            self._read()
-
-        current = {task.dname: task for task in self.tasks}
-
-        submitted, skipped, ex = submit_tasks(
-            self.scheduler, tasks, current,
-            force, max_tasks,
-            self.verbosity, self.dry_run)
-
-        for task in submitted:
-            if task.workflow:
-                oldtask = current.get(task.dname)
-                if oldtask:
-                    self.tasks.remove(oldtask)
-
-        if 'MYQUEUE_TESTING' in os.environ:
-            if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
-                raise KeyboardInterrupt
-
-        self.tasks += submitted
-        self.changed.update(submitted)
-
-        if ex:
-            print()
-            print('Skipped', plural(len(skipped), 'task'))
-
-        pprint(submitted, 0, 'ifnaIr',
-               maxlines=10 if self.verbosity < 2 else 99999999999999)
-        if submitted:
-            if self.dry_run:
-                print(plural(len(submitted), 'task'), 'to submit')
-            else:
-                print(plural(len(submitted), 'task'), 'submitted')
-
-        if ex:
-            raise ex
 
     def run(self,
             tasks: list[Task]) -> None:

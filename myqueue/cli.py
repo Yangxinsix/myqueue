@@ -309,8 +309,6 @@ def _main(arguments: list[str] = None) -> int:
               'Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
-            a('-L', '--use-log-file', action='store_true',
-              help='List tasks from logfile (~/.myqueue/log.csv).')
             a('--not-recursive', action='store_true',
               help='Do not list subfolders.')
             a('folder',
@@ -434,6 +432,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
     from myqueue.info import info, info_all
+    from myqueue.ls import ls
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -540,7 +539,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
-    with Queue(config, verbosity, need_lock, dry_run) as queue:
+    with Queue(config, need_lock, dry_run) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -548,8 +547,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            queue.ls(selection, args.columns, column, reverse,
-                     args.count, args.use_log_file)
+            ls(selection, args.columns, column, reverse,
+               args.count, verbosity)
 
         elif args.command == 'remove':
             queue.remove(selection)
