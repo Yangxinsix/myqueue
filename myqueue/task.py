@@ -15,7 +15,7 @@ from myqueue.states import State
 from myqueue.errors import parse_stderr
 
 if TYPE_CHECKING:
-    from .scheduler import Scheduler
+    from myqueue.schedulers import Scheduler
 
 UNSPECIFIED = 'hydelifytskibadut'
 

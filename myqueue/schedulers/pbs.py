@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 from myqueue.task import Task
-from myqueue.scheduler import Scheduler, SchedulerError
+from myqueue.schedulers import Scheduler, SchedulerError
 
 
 class PBS(Scheduler):

@@ -2,7 +2,7 @@ from __future__ import annotations
 import subprocess
 
 from myqueue.task import Task
-from myqueue.scheduler import Scheduler, SchedulerError
+from myqueue.schedulers import Scheduler, SchedulerError
 from myqueue.utils import str2number
 
 

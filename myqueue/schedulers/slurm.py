@@ -5,7 +5,7 @@ import warnings
 from math import ceil
 
 from myqueue.task import Task
-from myqueue.scheduler import Scheduler, SchedulerError
+from myqueue.schedulers import Scheduler, SchedulerError
 
 
 class SLURM(Scheduler):

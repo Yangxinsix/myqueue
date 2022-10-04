@@ -9,7 +9,7 @@ from myqueue.cli import _main
 from myqueue.config import Configuration
 from myqueue.queue import Queue
 from myqueue.task import Task
-from myqueue.test.scheduler import TestScheduler
+from myqueue.schedulers.test import TestScheduler
 
 
 @pytest.fixture(scope='function')

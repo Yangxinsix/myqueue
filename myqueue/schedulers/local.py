@@ -5,10 +5,10 @@ import socket
 from functools import partial
 from typing import Any
 
-from .scheduler import Scheduler
-from .task import Task
-from .config import Configuration
-from .states import State
+from myqueue.schedulers import Scheduler
+from myqueue.task import Task
+from myqueue.config import Configuration
+from myqueue.states import State
 from myqueue.queue import Queue
 
 

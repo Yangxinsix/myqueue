@@ -11,7 +11,7 @@ import networkx as nx  # type: ignore
 import rich.progress as progress
 
 from myqueue.pretty import pprint
-from myqueue.scheduler import Scheduler
+from myqueue.shedulers.scheduler import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import plural

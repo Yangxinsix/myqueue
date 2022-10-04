@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 from myqueue.config import Configuration
-from myqueue.scheduler import Scheduler
+from myqueue.schedulers import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
 
