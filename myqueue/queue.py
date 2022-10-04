@@ -2,16 +2,15 @@
 
 File format versions:
 
-5) Changed from mod:func to mod@func.
-6) Relative paths.
-8) Type of Task.id changed from int to str.
-9) Added "user".
-
+5)  Changed from mod:func to mod@func.
+6)  Relative paths.
+8)  Type of Task.id changed from int to str.
+9)  Added "user".
+10) ...
 """
 from __future__ import annotations
 
 import json
-import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -74,18 +73,6 @@ class Queue(Lock):
         if self.changed and not self.dry_run:
             self._write()
         self.release()
-
-    def run(self,
-            tasks: list[Task]) -> None:
-        """Run tasks locally."""
-        self._read()
-        dnames = {task.dname for task in tasks}
-        self._remove([task for task in self.tasks if task.dname in dnames])
-        if self.dry_run:
-            for task in tasks:
-                print(f'{task.folder}: {task.cmd}')
-        else:
-            run_tasks(tasks)
 
     def remove(self, selection: Selection) -> None:
         """Remove or cancel tasks."""
@@ -451,11 +438,3 @@ class Queue(Lock):
              'tasks': dicts},
             indent=2)
         self.fname.write_text(text)
-
-        # Write to log:
-        logfile = root / '.myqueue/log.csv'
-        write_header = not logfile.is_file()
-        with logfile.open('a') as fd:
-            for task in self.changed:
-                task.tocsv(fd, write_header)
-                write_header = False
