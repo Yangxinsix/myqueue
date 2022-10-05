@@ -537,8 +537,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                                   False)),
                               regex(args.error))
 
-    need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
+    need_lock = args.command not in ['list', 'info'] and not dry_run
     with Queue(config, need_lock) as queue:
         if args.command == 'list':
             if args.sort:
@@ -597,7 +597,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.sync()
 
         elif args.command == 'kick':
-            queue.kick()
+            from myqueue.kick import kick
+            kick(queue, verbosity)
 
         else:
             assert args.command == 'info'

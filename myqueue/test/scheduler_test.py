@@ -53,8 +53,8 @@ def run(commands,
 
 @pytest.mark.parametrize('name', ['slurm', 'pbs', 'lsf'])
 def test_scheduler_subprocess(monkeypatch, name):
-    from ..config import Configuration
-    from ..scheduler import get_scheduler
+    from myqueue.config import Configuration
+    from myqueue.schedulers import get_scheduler
 
     monkeypatch.setattr(subprocess, 'run', run)
 

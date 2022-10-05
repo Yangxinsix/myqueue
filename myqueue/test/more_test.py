@@ -5,8 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from ..queue import Queue
-from ..task import task
+from myqueue.queue import Queue
+from myqueue.task import task
+from myqueue.submitting import submit
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9),
@@ -17,12 +18,12 @@ def test_completion():
 
 
 def test_api(mq):
-    from myqueue import submit
+    from myqueue import submit as simple_submit
     from myqueue.task import task
-    submit(task('myqueue.test@oom 1'))
-    submit(task('myqueue.test@timeout_once', tmax='1s'))
+    simple_submit(task('myqueue.test@oom 1'))
+    simple_submit(task('myqueue.test@timeout_once', tmax='1s'))
     mq.wait()
-    submit(task('myqueue.test@timeout_once'))
+    simple_submit(task('myqueue.test@timeout_once'))
     mq.wait()
     assert mq.states() == 'MTd'
 
@@ -40,8 +41,8 @@ def test_backends(mq):
             p.mkdir(parents=True)
             (p / 'activate').write_text('')
         config.scheduler = name
-        with Queue(config, dry_run=True, verbosity=2) as q:
-            q.submit([task('shell:echo hello', cores=24)])
+        with Queue(config) as q:
+            submit(q, [task('shell:echo hello', cores=24)], dry_run=True)
 
     guess_scheduler()
     guess_configuration('local')
@@ -59,8 +60,8 @@ def run(commands, stdout):
 
 
 def test_autoconfig(monkeypatch):
-    from ..scheduler import get_scheduler
-    from ..config import Configuration
+    from myqueue.schedulers import get_scheduler
+    from myqueue.config import Configuration
 
     monkeypatch.setattr(subprocess, 'run', run)
     nodes, _ = get_scheduler(Configuration('slurm')).get_config()

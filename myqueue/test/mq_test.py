@@ -191,7 +191,7 @@ def test_ctrl_c(mq):
 
 
 def test_sync_cancel(mq):
-    with Queue(mq.config, verbosity=0) as q:
+    with Queue(mq.config) as q:
         t = task('shell:echo')
         t.state = State.running
         t.trunning = time.time()
@@ -216,7 +216,7 @@ def test_hold_release(mq):
 
 
 def test_clean_up(mq):
-    with Queue(mq.config, verbosity=0) as q:
+    with Queue(mq.config) as q:
         t1 = task('shell:echo')
         t1.state = State.running
         t1.trunning = 0.0  # very old

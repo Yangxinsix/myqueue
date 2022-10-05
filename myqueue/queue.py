@@ -11,6 +11,7 @@ File format versions:
 from __future__ import annotations
 
 import json
+import sys
 import time
 from collections import defaultdict
 from functools import cached_property
@@ -27,17 +28,23 @@ VERSION = 10
 
 
 class Queue:
-    """Object for interacting with the scheduler."""
+    """Object for interacting with your .myqueue/queue.json file"""
     def __init__(self,
                  config: Configuration,
+                 *,
                  need_lock: bool = True,
                  dry_run: bool = False):
         self.need_lock = need_lock
+        self.dry_run = dry_run
         self.config = config
         self.folder = config.home / '.myqueue'
         self.lock = Lock(self.folder / 'queue.json.lock',
                          timeout=10.0)
-        self.tasks: list[Task] = []
+        self.changed = set()
+
+    @cached_property
+    def tasks(self) -> list[Task]:
+        return self._read_tasks()
 
     @cached_property
     def scheduler(self) -> Scheduler:
@@ -59,6 +66,7 @@ class Queue:
                  value: Exception,
                  tb: TracebackType) -> None:
         if self.changed:
+            assert not self.dry_run
             assert self.lock.locked
             self._write()
         self.lock.release()
@@ -85,18 +93,21 @@ class Queue:
 
         return sorted(set(removed), key=lambda task: task.id)
 
-    def _read(self) -> None:
+    def _read_tasks(self) -> list[Task]:
+        tasks = []
         q = self.folder / 'queue.json'
         if q.is_file():
             data = json.loads(q.read_text())
             root = self.folder.parent
             for dct in data['tasks']:
                 task = Task.fromdict(dct, root)
-                self.tasks.append(task)
+                tasks.append(task)
 
-        if self.lock.locked:
+        if self.lock.locked and not self.dry_run:
             self.read_change_files()
             self.check()
+
+        return tasks
 
     def read_change_files(self) -> None:
         paths = list(self.folder.glob('*-*-*'))
@@ -121,7 +132,7 @@ class Queue:
             if task.id == id:
                 break
         else:  # no break
-            print(f'No such task: {id}, {state}')
+            print(f'No such task: {id}, {state}', file=sys.stderr)
             path.unlink()
             return
 
