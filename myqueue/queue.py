@@ -28,22 +28,17 @@ from myqueue.task import Task
 from myqueue.utils import Lock, plural
 
 
-class Queue(Lock):
+class Queue:
     """Object for interacting with the scheduler."""
     def __init__(self,
                  config: Configuration,
                  need_lock: bool = True,
                  dry_run: bool = False):
         self.need_lock = need_lock
-        self.dry_run = dry_run
         self.config = config
-
         self.folder = config.home / '.myqueue'
-
-        Lock.__init__(self,
-                      self.folder / 'queue.json.lock',
-                      timeout=10.0)
-
+        self.lock = Lock(self.folder / 'queue.json.lock',
+                         timeout=10.0)
         self._scheduler: Scheduler | None = None
         self.tasks: list[Task] = []
 
@@ -55,13 +50,11 @@ class Queue(Lock):
         return self._scheduler
 
     def __enter__(self) -> Queue:
-        if self.dry_run:
-            return self
         if self.need_lock:
-            self.acquire()
+            self.lock.acquire()
         else:
             try:
-                self.acquire()
+                self.lock.acquire()
             except PermissionError:
                 pass
         return self
@@ -70,74 +63,9 @@ class Queue(Lock):
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        if self.changed and not self.dry_run:
+        if self.changed:
             self._write()
-        self.release()
-
-    def remove(self, selection: Selection) -> None:
-        """Remove or cancel tasks."""
-
-        self._read()
-
-        tasks = selection.select(self.tasks)
-        tasks = self.find_depending(tasks)
-
-        self._remove(tasks)
-
-    def _remove(self, tasks: list[Task]) -> None:
-        t = time.time()
-        for task in tasks:
-            if task.tstop is None:
-                task.tstop = t  # XXX is this for dry_run only?
-
-        if self.dry_run:
-            if tasks:
-                pprint(tasks, 0)
-                print(plural(len(tasks), 'task'), 'to be removed')
-        else:
-            if self.verbosity > 0:
-                if tasks:
-                    pprint(tasks, 0)
-                    print(plural(len(tasks), 'task'), 'removed')
-            for task in tasks:
-                if task.state in ['running', 'hold', 'queued']:
-                    self.scheduler.cancel(task)
-                self.tasks.remove(task)
-                # XXX why cancel?
-                task.cancel_dependents(self.tasks, time.time())
-                self.changed.add(task)
-
-    def sync(self) -> None:
-        """Syncronize queue with the real world."""
-        self._read()
-        in_the_queue = {'running', 'hold', 'queued'}
-        ids = self.scheduler.get_ids()
-        cancel = []
-        remove = []
-        for task in self.tasks:
-            if task.id not in ids:
-                if task.state in in_the_queue:
-                    cancel.append(task)
-                if not task.folder.is_dir():
-                    remove.append(task)
-
-        if cancel:
-            if self.dry_run:
-                print(plural(len(cancel), 'job'), 'to be canceled')
-            else:
-                for task in cancel:
-                    task.state = State.CANCELED
-                    self.changed.add(task)
-                print(plural(len(cancel), 'job'), 'canceled')
-
-        if remove:
-            if self.dry_run:
-                print(plural(len(remove), 'job'), 'to be removed')
-            else:
-                for task in remove:
-                    self.tasks.remove(task)
-                    self.changed.add(task)
-                print(plural(len(remove), 'job'), 'removed')
+        self.lock.release()
 
     def find_depending(self, tasks: list[Task]) -> list[Task]:
         """Generate list of tasks including dependencies."""
@@ -161,70 +89,6 @@ class Queue(Lock):
 
         return sorted(set(removed), key=lambda task: task.id)
 
-    def modify(self,
-               selection: Selection,
-               newstate: State,
-               email: set[State]) -> None:
-        """Modify task(s)."""
-        self._read()
-        tasks = selection.select(self.tasks)
-
-        if email != {State.undefined}:
-            configure_email(self.config)
-            for task in tasks:
-                if self.dry_run:
-                    print(task, email)
-                else:
-                    task.notifications = ''.join(state.value
-                                                 for state in email)
-                    self.changed.add(task)
-
-        if newstate != State.undefined:
-            for task in tasks:
-                if task.state == 'hold' and newstate == 'queued':
-                    if self.dry_run:
-                        print('Release:', task)
-                    else:
-                        self.scheduler.release_hold(task)
-                elif task.state == 'queued' and newstate == 'hold':
-                    if self.dry_run:
-                        print('Hold:', task)
-                    else:
-                        self.scheduler.hold(task)
-                elif task.state == 'FAILED' and newstate in ['MEMORY',
-                                                             'TIMEOUT']:
-                    if self.dry_run:
-                        print('FAILED ->', newstate, task)
-                    else:
-                        task.state = newstate
-                        self.changed.add(task)
-                else:
-                    raise ValueError(f'Can\'t do {task.state} -> {newstate}!')
-                print(f'{task.state} -> {newstate}: {task}')
-                task.state = newstate
-                self.changed.add(task)
-
-    def resubmit(self,
-                 selection: Selection,
-                 resources: Resources | None) -> None:
-        """Resubmit failed or timed-out tasks."""
-        self._read()
-        tasks = []
-        for task in selection.select(self.tasks):
-            if task.state not in {'queued', 'hold', 'running'}:
-                self.tasks.remove(task)
-            task.remove_state_file()
-            self.changed.add(task)
-            task = Task(task.cmd,
-                        deps=task.deps,
-                        resources=resources or task.resources,
-                        folder=task.folder,
-                        restart=task.restart,
-                        workflow=task.workflow,
-                        creates=task.creates,
-                        diskspace=0)
-            tasks.append(task)
-        self.submit(tasks, read=False)
 
     def _read(self, use_log_file: bool = False) -> None:
         if use_log_file:
