@@ -1,3 +1,8 @@
+from myqueue.selection import Selection
+from myqueue.states import State
+from myqueue.email import configure_email
+
+
 def modify(self,
            selection: Selection,
            newstate: State,

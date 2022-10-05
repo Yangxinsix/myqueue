@@ -1,14 +1,19 @@
-def resubmit(self,
+from myqueue.resources import Resources
+from myqueue.selection import Selection
+from myqueue.task import Task
+
+
+def resubmit(queue,
              selection: Selection,
              resources: Resources | None) -> None:
     """Resubmit failed or timed-out tasks."""
-    self._read()
+    queue._read()
     tasks = []
-    for task in selection.select(self.tasks):
+    for task in selection.select(queue.tasks):
         if task.state not in {'queued', 'hold', 'running'}:
-            self.tasks.remove(task)
+            queue.tasks.remove(task)
         task.remove_state_file()
-        self.changed.add(task)
+        queue.changed.add(task)
         task = Task(task.cmd,
                     deps=task.deps,
                     resources=resources or task.resources,
@@ -18,4 +23,4 @@ def resubmit(self,
                     creates=task.creates,
                     diskspace=0)
         tasks.append(task)
-    self.submit(tasks, read=False)
+    queue.submit(tasks, read=False)

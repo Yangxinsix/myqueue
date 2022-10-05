@@ -65,9 +65,11 @@ def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
 
 def submit(queue,
            tasks: Sequence[Task],
+           *,
            force: bool = False,
            max_tasks: int = 1_000_000_000,
-           verbosity: int = 1) -> None:
+           verbosity: int = 1,
+           dry_run: bool = False) -> None:
     """Submit tasks to queue.
 
     Parameters
@@ -81,7 +83,7 @@ def submit(queue,
     submitted, skipped, ex = submit_tasks(
         queue.scheduler, tasks, current,
         force, max_tasks,
-        verbosity, queue.dry_run)
+        verbosity, dry_run)
 
     for task in submitted:
         if task.workflow:
@@ -102,7 +104,7 @@ def submit(queue,
     pprint(submitted, 0, 'ifnaIr',
            maxlines=10 if verbosity < 2 else 99999999999999)
     if submitted:
-        if queue.dry_run:
+        if dry_run:
             print(plural(len(submitted), 'task'), 'to submit')
         else:
             print(plural(len(submitted), 'task'), 'submitted')

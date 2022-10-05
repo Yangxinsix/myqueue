@@ -66,6 +66,6 @@ class MQ:
 
 
 def mqlist(config) -> list[Task]:
-    with Queue(config, verbosity=0) as q:
+    with Queue(config) as q:
         q._read()
         return q.tasks

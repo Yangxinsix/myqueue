@@ -1,3 +1,11 @@
+import time
+
+from myqueue.pretty import pprint
+from myqueue.selection import Selection
+from myqueue.task import Task
+from myqueue.utils import plural
+
+
 def remove(self, selection: Selection) -> None:
     """Remove or cancel tasks."""
 
@@ -31,4 +39,3 @@ def _remove(self, tasks: list[Task]) -> None:
             # XXX why cancel?
             task.cancel_dependents(self.tasks, time.time())
             self.changed.add(task)
-

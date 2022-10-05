@@ -13,19 +13,17 @@ from __future__ import annotations
 import json
 import time
 from collections import defaultdict
+from functools import cached_property
 from pathlib import Path
 from types import TracebackType
 
 from myqueue.config import Configuration
-from myqueue.email import configure_email, send_notification
-from myqueue.pretty import pprint
-from myqueue.resources import Resources
-from myqueue.run import run_tasks
 from myqueue.scheduler import Scheduler, get_scheduler
-from myqueue.selection import Selection
 from myqueue.states import State
 from myqueue.task import Task
-from myqueue.utils import Lock, plural
+from myqueue.utils import Lock
+
+VERSION = 10
 
 
 class Queue:
@@ -39,15 +37,12 @@ class Queue:
         self.folder = config.home / '.myqueue'
         self.lock = Lock(self.folder / 'queue.json.lock',
                          timeout=10.0)
-        self._scheduler: Scheduler | None = None
         self.tasks: list[Task] = []
 
-    @property
+    @cached_property
     def scheduler(self) -> Scheduler:
         """Scheduler object."""
-        if self._scheduler is None:
-            self._scheduler = get_scheduler(self.config)
-        return self._scheduler
+        return get_scheduler(self.config)
 
     def __enter__(self) -> Queue:
         if self.need_lock:
@@ -56,7 +51,7 @@ class Queue:
             try:
                 self.lock.acquire()
             except PermissionError:
-                pass
+                pass  # it's OK to try to read without beeing able to write
         return self
 
     def __exit__(self,
@@ -64,6 +59,7 @@ class Queue:
                  value: Exception,
                  tb: TracebackType) -> None:
         if self.changed:
+            assert self.lock.locked
             self._write()
         self.lock.release()
 
@@ -89,26 +85,16 @@ class Queue:
 
         return sorted(set(removed), key=lambda task: task.id)
 
-
-    def _read(self, use_log_file: bool = False) -> None:
-        if use_log_file:
-            logfile = self.folder / 'log.csv'
-            if logfile.is_file():
-                import csv
-                with logfile.open() as fd:
-                    reader = csv.reader(fd)
-                    next(reader)  # skip header
-                    self.tasks = [Task.fromcsv(row) for row in reader]
-            return
-
-        if self.fname.is_file():
-            data = json.loads(self.fname.read_text())
+    def _read(self) -> None:
+        q = self.folder / 'queue.json'
+        if q.is_file():
+            data = json.loads(q.read_text())
             root = self.folder.parent
             for dct in data['tasks']:
                 task = Task.fromdict(dct, root)
                 self.tasks.append(task)
 
-        if self.locked:
+        if self.lock.locked:
             self.read_change_files()
             self.check()
 
@@ -203,92 +189,6 @@ class Queue:
                         task.write_state_file()
                     self.changed.add(task)
 
-    def kick(self) -> dict[str, int]:
-        """Kick the system.
-
-        * Send email notifications
-        * restart timed-out tasks
-        * restart out-of-memory tasks
-        * release/hold tasks to stay under *maximum_diskspace*
-        """
-        self._read()
-
-        mytasks = [task for task in self.tasks
-                   if task.user == self.config.user]
-
-        result = {}
-
-        ndct = self.config.notifications
-        if ndct:
-            notifications = send_notification(mytasks, **ndct)
-            self.changed.update(task for task, statename in notifications)
-            result['notifications'] = len(notifications)
-
-        tasks = []
-        for task in mytasks:
-            if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
-                nodes = self.config.nodes or [('', {'cores': 1})]
-                if not self.dry_run:
-                    task.resources = task.resources.bigger(task.state, nodes)
-                    task.restart -= 1
-                tasks.append(task)
-
-        if tasks:
-            tasks = self.find_depending(tasks)
-            if self.dry_run:
-                pprint(tasks)
-            else:
-                if self.verbosity > 0:
-                    print('Restarting', plural(len(tasks), 'task'))
-                for task in tasks:
-                    self.tasks.remove(task)
-                    task.error = ''
-                    task.id = '0'
-                    task.state = State.undefined
-                self.submit(tasks, read=False)
-            result['restarts'] = len(tasks)
-
-        result.update(self.hold_or_release(mytasks))
-
-        return result
-
-    def hold_or_release(self, tasks: list[Task]) -> dict[str, int]:
-        maxmem = self.config.maximum_diskspace
-        mem = 0
-        for task in tasks:
-            if task.state in {'queued', 'running',
-                              'FAILED', 'TIMEOUT', 'MEMORY'}:
-                mem += task.diskspace
-
-        held = 0
-        released = 0
-
-        if mem > maxmem:
-            for task in tasks:
-                if task.state == 'queued':
-                    if task.diskspace > 0:
-                        self.scheduler.hold(task)
-                        held += 1
-                        task.state = State.hold
-                        self.changed.add(task)
-                        mem -= task.diskspace
-                        if mem < maxmem:
-                            break
-        elif mem < maxmem:
-            for task in tasks[::-1]:
-                if task.state == 'hold' and task.diskspace > 0:
-                    self.scheduler.release_hold(task)
-                    released += 1
-                    task.state = State.queued
-                    self.changed.add(task)
-                    mem += task.diskspace
-                    if mem > maxmem:
-                        break
-
-        return {name: n
-                for name, n in [('held', held), ('released', released)]
-                if n > 0}
-
     def _write(self) -> None:
         root = self.folder.parent
         dicts = []
@@ -296,7 +196,7 @@ class Queue:
             dicts.append(task.todict(root))
 
         text = json.dumps(
-            {'version': 9,
+            {'version': VERSION,
              'warning': 'Do NOT edit this file!',
              'unless': 'you know what you are doing.',
              'tasks': dicts},

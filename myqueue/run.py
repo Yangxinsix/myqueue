@@ -25,4 +25,3 @@ def run(self,
             print(f'{task.folder}: {task.cmd}')
     else:
         run_tasks(tasks)
-

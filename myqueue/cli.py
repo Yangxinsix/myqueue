@@ -539,7 +539,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
-    with Queue(config, need_lock, dry_run) as queue:
+    with Queue(config, need_lock) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -562,6 +562,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             queue.resubmit(selection, resources)
 
         elif args.command == 'submit':
+            from myqueue.submitting import submit
             newtasks = [task(args.task,
                              resources=args.resources,
                              name=args.name,
@@ -571,7 +572,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.force, args.max_tasks)
+            submit(queue, newtasks,
+                   force=args.force,
+                   max_tasks=args.max_tasks,
+                   dry_run=dry_run)
 
         elif args.command == 'run':
             newtasks = [task(args.task,
