@@ -2,13 +2,13 @@ from myqueue.resources import Resources
 from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.queue import Queue
+from myqueue.submitting import submit
 
 
 def resubmit(queue: Queue,
              selection: Selection,
              resources: Resources | None) -> None:
     """Resubmit failed or timed-out tasks."""
-    queue._read()
     tasks = []
     for task in selection.select(queue.tasks):
         if task.state not in {'queued', 'hold', 'running'}:
@@ -24,4 +24,4 @@ def resubmit(queue: Queue,
                     creates=task.creates,
                     diskspace=0)
         tasks.append(task)
-    queue.submit(tasks, read=False)
+    submit(queue, tasks)

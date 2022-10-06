@@ -11,7 +11,8 @@ import networkx as nx  # type: ignore
 import rich.progress as progress
 
 from myqueue.pretty import pprint
-from myqueue.shedulers.scheduler import Scheduler
+from myqueue.queue import Queue
+from myqueue.schedulers import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import plural
@@ -63,7 +64,7 @@ def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
     return [task for task in tasks if not task.state.is_bad()]
 
 
-def submit(queue,
+def submit(queue: Queue,
            tasks: Sequence[Task],
            *,
            force: bool = False,
@@ -89,13 +90,15 @@ def submit(queue,
         if task.workflow:
             oldtask = current.get(task.dname)
             if oldtask:
-                queue.remove(oldtask)
+                queue.tasks.remove(oldtask)
+                queue.changed.add(oldtask)
 
     if 'MYQUEUE_TESTING' in os.environ:
         if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
             raise KeyboardInterrupt
 
-    queue.add(submitted)
+    queue.tasks += submitted
+    queue.changed.update(submitted)
 
     if ex:
         print()

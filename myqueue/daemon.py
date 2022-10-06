@@ -18,6 +18,7 @@ from typing import Any
 
 from myqueue.queue import Queue
 from myqueue.config import Configuration
+from myqueue.kick import kick
 
 T = 600  # kick system every ten minutes
 
@@ -104,8 +105,8 @@ def loop(config: Configuration) -> None:
             break
 
         try:
-            with Queue(config, verbosity=0) as queue:
-                result = queue.kick()
+            with Queue(config) as queue:
+                result = kick(queue, verbosity=0)
         except Exception:
             err.write_text(traceback.format_exc())
             break

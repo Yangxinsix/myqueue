@@ -17,11 +17,11 @@ def test_task(tmp_path):
     assert repr(t) == 'Task(x)'
 
     for c in 'ifnAraste':
-        x = t.order(c)
+        x = t.order_key(c)
         assert not (x < x)
 
     with pytest.raises(ValueError):
-        t.order('x')
+        t.order_key('x')
 
     # id, folder, name, resources, state, restart, workflow, diskspace,
     # deps, creates, t1, t2, t3, error, memory_usage

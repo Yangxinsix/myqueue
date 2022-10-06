@@ -1,10 +1,10 @@
 from myqueue.utils import plural
 from myqueue.states import State
+from myqueue.queue import Queue
 
 
-def sync(queue) -> None:
+def sync(queue: Queue) -> None:
     """Syncronize queue with the real world."""
-    queue._read()
     in_the_queue = {'running', 'hold', 'queued'}
     ids = queue.scheduler.get_ids()
     cancel = []

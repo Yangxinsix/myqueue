@@ -19,7 +19,7 @@ from pathlib import Path
 from types import TracebackType
 
 from myqueue.config import Configuration
-from myqueue.scheduler import Scheduler, get_scheduler
+from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import Lock
@@ -40,7 +40,7 @@ class Queue:
         self.folder = config.home / '.myqueue'
         self.lock = Lock(self.folder / 'queue.json.lock',
                          timeout=10.0)
-        self.changed = set()
+        self.changed: set[Task] = set()
 
     @cached_property
     def tasks(self) -> list[Task]:
@@ -109,64 +109,62 @@ class Queue:
 
         return tasks
 
-    def read_change_files(self) -> None:
-        paths = list(self.folder.glob('*-*-*'))
-        files = []
-        for path in paths:
-            _, id, state = path.name.split('-')
-            files.append((path.stat().st_ctime, id, state, path))
-        states = {'0': State.running,
-                  '1': State.done,
-                  '2': State.FAILED,
-                  '3': State.TIMEOUT}
-        for t, id, state, path in sorted(files):
-            self.update(id, states[state], t, path)
 
-    def update(self,
-               id: str,
-               state: State,
-               t: float,
-               path: Path) -> None:
+def read_change_files(folder: Path, tasks) -> None:
+    paths = list(folder.glob('*-*-*'))
+    files = []
+    for path in paths:
+        _, id, state = path.name.split('-')
+        files.append((path.stat().st_ctime, id, state, path))
+    states = {'0': State.running,
+              '1': State.done,
+              '2': State.FAILED,
+              '3': State.TIMEOUT}
+    for t, id, state, path in sorted(files):
+        update(tasks, id, states[state], t, path)
 
-        for task in self.tasks:
-            if task.id == id:
-                break
-        else:  # no break
-            print(f'No such task: {id}, {state}', file=sys.stderr)
-            path.unlink()
-            return
 
-        if task.user != self.config.user:
-            return
+def update(tasks,
+           id: str,
+           state: State,
+           t: float,
+           path: Path) -> None:
 
-        t = t or time.time()
-
-        task.state = state
-
-        if state == 'done':
-            for tsk in self.tasks:
-                if task.dname in tsk.deps:
-                    tsk.deps.remove(task.dname)
-            task.write_state_file()
-            task.tstop = t
-
-        elif state == 'running':
-            task.trunning = t
-
-        elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
-            task.cancel_dependents(self.tasks, t)
-            task.tstop = t
-            task.write_state_file()
-
-        else:
-            raise ValueError(f'Bad state: {state}')
-
-        if state != 'running':
-            mem = self.scheduler.maxrss(id)
-            task.memory_usage = mem
-
-        self.changed.add(task)
+    for task in tasks:
+        if task.id == id:
+            break
+    else:  # no break
+        print(f'No such task: {id}, {state}', file=sys.stderr)
         path.unlink()
+        return
+
+    if task.user != self.config.user:
+        return
+
+    t = t or time.time()
+
+    task.state = state
+
+    if state == 'done':
+        for tsk in tasks:
+            if task.dname in tsk.deps:
+                tsk.deps.remove(task.dname)
+        task.write_state_file()
+        task.tstop = t
+
+    elif state == 'running':
+        task.trunning = t
+
+    elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
+        task.cancel_dependents(self.tasks, t)
+        task.tstop = t
+        task.write_state_file()
+
+    else:
+        raise ValueError(f'Bad state: {state}')
+
+    self.changed.add(task)
+    path.unlink()
 
     def check(self) -> None:
         t = time.time()
@@ -212,4 +210,4 @@ class Queue:
              'unless': 'you know what you are doing.',
              'tasks': dicts},
             indent=2)
-        self.fname.write_text(text)
+        (self.folder / 'queue.json').write_text(text)

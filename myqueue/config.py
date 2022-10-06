@@ -120,7 +120,7 @@ def guess_configuration(scheduler_name: str = '',
 
     Creates a config.py file.
     """
-    from myqueue.scheduler import get_scheduler
+    from myqueue.schedulers import get_scheduler
     from myqueue.utils import mqhome, str2number
 
     folder = mqhome() / '.myqueue'

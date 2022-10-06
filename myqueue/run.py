@@ -18,9 +18,9 @@ def run_tasks(tasks: list[Task]) -> None:
 def run(queue: Queue,
         tasks: list[Task]) -> None:
     """Run tasks locally."""
-    queue._read()
-    dnames = {task.dname for task in tasks}
-    queue._remove([task for task in queue.tasks if task.dname in dnames])
+    1 / 0
+    # dnames = {task.dname for task in tasks}
+    # queue._remove([task for task in queue.tasks if task.dname in dnames])
     if queue.dry_run:
         for task in tasks:
             print(f'{task.folder}: {task.cmd}')

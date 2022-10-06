@@ -1,9 +1,11 @@
 from myqueue.task import Task
 from myqueue.states import State
+from myqueue.queue import Queue
 
 
-def hold_or_release(self, tasks: list[Task]) -> dict[str, int]:
-    maxmem = self.config.maximum_diskspace
+def hold_or_release(queue: Queue,
+                    tasks: list[Task]) -> dict[str, int]:
+    maxmem = queue.config.maximum_diskspace
     mem = 0
     for task in tasks:
         if task.state in {'queued', 'running',
@@ -17,20 +19,20 @@ def hold_or_release(self, tasks: list[Task]) -> dict[str, int]:
         for task in tasks:
             if task.state == 'queued':
                 if task.diskspace > 0:
-                    self.scheduler.hold(task)
+                    queue.scheduler.hold(task)
                     held += 1
                     task.state = State.hold
-                    self.changed.add(task)
+                    queue.changed.add(task)
                     mem -= task.diskspace
                     if mem < maxmem:
                         break
     elif mem < maxmem:
         for task in tasks[::-1]:
             if task.state == 'hold' and task.diskspace > 0:
-                self.scheduler.release_hold(task)
+                queue.scheduler.release_hold(task)
                 released += 1
                 task.state = State.queued
-                self.changed.add(task)
+                queue.changed.add(task)
                 mem += task.diskspace
                 if mem > maxmem:
                     break

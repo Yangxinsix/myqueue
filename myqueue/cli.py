@@ -539,7 +539,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
     dry_run = getattr(args, 'dry_run', False)
     need_lock = args.command not in ['list', 'info'] and not dry_run
-    with Queue(config, need_lock) as queue:
+    with Queue(config, need_lock=need_lock, dry_run=dry_run) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -547,19 +547,23 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            ls(selection, args.columns, column, reverse,
+            ls(queue, selection, args.columns, column, reverse,
                args.count, verbosity)
 
         elif args.command == 'remove':
-            queue.remove(selection)
+            from myqueue.remove import remove
+            tasks = selection.select(queue.tasks)
+            tasks = queue.find_depending(tasks)
+            remove(queue, tasks, verbosity)
 
         elif args.command == 'resubmit':
+            from myqueue.resubmit import resubmit
             resources: Resources | None
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            queue.resubmit(selection, resources)
+            resubmit(queue, selection, resources)
 
         elif args.command == 'submit':
             from myqueue.submitting import submit
@@ -578,23 +582,27 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                    dry_run=dry_run)
 
         elif args.command == 'run':
+            from myqueue.run import run as _run
             newtasks = [task(args.task,
                              name=args.name,
                              workflow=args.workflow,
                              folder=str(folder))
                         for folder in folders]
-            queue.run(newtasks)
+            _run(queue, newtasks)
 
         elif args.command == 'modify':
+            from myqueue.modify import modify
             state = State(args.new_state)
-            queue.modify(selection, state, State.str2states(args.email))
+            modify(queue, selection, state, State.str2states(args.email))
 
         elif args.command == 'workflow':
+            from myqueue.submitting import submit
             tasks = workflow(args, folders, verbosity)
-            queue.submit(tasks, args.force, args.max_tasks)
+            submit(queue, tasks, force=args.force, max_tasks=args.max_tasks)
 
         elif args.command == 'sync':
-            queue.sync()
+            from myqueue.syncronize import sync
+            sync(queue)
 
         elif args.command == 'kick':
             from myqueue.kick import kick
@@ -602,7 +610,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         else:
             assert args.command == 'info'
-            info(queue, args.id)
+            info(queue, args.id, verbosity)
 
 
 def regex(pattern: str | None) -> Pattern[str] | None:

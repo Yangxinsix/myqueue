@@ -15,7 +15,9 @@ from myqueue.queue import Queue
 from myqueue.selection import Selection
 
 
-def info(queue: Queue, id: str = None) -> None:
+def info(queue: Queue,
+         id: str = None,
+         verbosity: int = 1) -> None:
     """Print information about MyQueue or a single task."""
 
     print = Console().print
@@ -46,10 +48,9 @@ def info(queue: Queue, id: str = None) -> None:
 
         return
 
-    queue._read()
     task = Selection({id}).select(queue.tasks)[0]
     print(json.dumps(task.todict(), indent='    '))
-    if queue.verbosity > 1:
+    if verbosity > 1:
         path = queue.scheduler.error_file(task)
         try:
             err = path.read_text()
@@ -86,7 +87,6 @@ def info_all(start: Path) -> None:
                 p(f'[red]{ex}')
                 continue
             with Queue(config, need_lock=False) as queue:
-                queue._read()
                 from collections import defaultdict
                 count: dict[str, int] = defaultdict(int)
                 for task in queue.tasks:
