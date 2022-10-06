@@ -29,7 +29,7 @@ def test_api(mq):
 
 
 def test_backends(mq):
-    from ..config import guess_configuration, guess_scheduler
+    from myqueue.config import guess_configuration, guess_scheduler
     config = mq.scheduler.config
     config.nodes = [('abc16', {'cores': 16, 'memory': '16G'}),
                     ('abc8', {'cores': 8, 'memory': '8G'})]
@@ -72,7 +72,7 @@ def test_autoconfig(monkeypatch):
 
 
 def test_commands():
-    from ..commands import ShellScript, convert, create_command
+    from myqueue.commands import ShellScript, convert, create_command
     assert convert('True') is True
     assert convert('False') is False
     assert convert('3.14') == 3.14
@@ -84,7 +84,7 @@ def test_commands():
 
 
 def test_resource_comments(tmp_path):
-    from ..task import task
+    from myqueue.task import task
     script = tmp_path / 'script.py'
     script.write_text('# Script\n# MQ: resources=2:1h\n')
     t = task(str(script))

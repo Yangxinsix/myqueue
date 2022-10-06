@@ -9,7 +9,6 @@ def modify(queue: Queue,
            newstate: State,
            email: set[State]) -> None:
     """Modify task(s)."""
-    queue._read()
     tasks = selection.select(queue.tasks)
 
     if email != {State.undefined}:

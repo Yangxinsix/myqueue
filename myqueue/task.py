@@ -358,8 +358,8 @@ class Task:
         dry_run: bool
             Don't actually submit the task.
         """
-        from .queue import Queue
-        from .config import Configuration
+        from myqueue.queue import Queue
+        from myqueue.config import Configuration
         config = Configuration.read()
         with Queue(config, verbosity, dry_run=dry_run) as queue:
             queue.submit([self])

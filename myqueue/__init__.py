@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .task import Task
+    from myqueue.task import Task
 
 
 __version__ = '22.9.1b1'

@@ -381,7 +381,7 @@ def _main(arguments: list[str] = None) -> int:
         return 0
 
     if args.command == 'config':
-        from .config import guess_configuration
+        from myqueue.config import guess_configuration
         guess_configuration(args.scheduler, args.queue_name, args.in_place)
         return 0
 

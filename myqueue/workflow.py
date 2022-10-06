@@ -16,8 +16,8 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
 from myqueue.resources import Resources
 from myqueue.states import State
 
-from .task import UNSPECIFIED, Task
-from .utils import chdir
+from myqueue.task import UNSPECIFIED, Task
+from myqueue.utils import chdir
 
 DEFAULT_VERBOSITY = 1
 
