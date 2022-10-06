@@ -77,7 +77,6 @@ class Server:
         self.port = port
 
         with Queue(config) as queue:
-            queue._read()
             self.next_id = 1 + max((task.int_id for task in queue.tasks),
                                    default=0)
 

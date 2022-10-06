@@ -1,7 +1,8 @@
 from __future__ import annotations
 import subprocess
 
-from .task import Task
+from myqueue.task import Task
+from myqueue.queue import Queue
 
 
 def run_tasks(tasks: list[Task]) -> None:
@@ -14,13 +15,13 @@ def run_tasks(tasks: list[Task]) -> None:
         assert p.returncode == 0
 
 
-def run(self,
+def run(queue: Queue,
         tasks: list[Task]) -> None:
     """Run tasks locally."""
-    self._read()
+    queue._read()
     dnames = {task.dname for task in tasks}
-    self._remove([task for task in self.tasks if task.dname in dnames])
-    if self.dry_run:
+    queue._remove([task for task in queue.tasks if task.dname in dnames])
+    if queue.dry_run:
         for task in tasks:
             print(f'{task.folder}: {task.cmd}')
     else:

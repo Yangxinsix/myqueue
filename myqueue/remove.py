@@ -4,38 +4,39 @@ from myqueue.pretty import pprint
 from myqueue.selection import Selection
 from myqueue.task import Task
 from myqueue.utils import plural
+from myqueue.queue import Queue
 
 
-def remove(self, selection: Selection) -> None:
+def remove(queue: Queue, selection: Selection) -> None:
     """Remove or cancel tasks."""
 
-    self._read()
+    queue._read()
 
-    tasks = selection.select(self.tasks)
-    tasks = self.find_depending(tasks)
+    tasks = selection.select(queue.tasks)
+    tasks = queue.find_depending(tasks)
 
-    self._remove(tasks)
+    queue._remove(tasks)
 
 
-def _remove(self, tasks: list[Task]) -> None:
+def _remove(queue: Queue, tasks: list[Task]) -> None:
     t = time.time()
     for task in tasks:
         if task.tstop is None:
             task.tstop = t  # XXX is this for dry_run only?
 
-    if self.dry_run:
+    if queue.dry_run:
         if tasks:
             pprint(tasks, 0)
             print(plural(len(tasks), 'task'), 'to be removed')
     else:
-        if self.verbosity > 0:
+        if queue.verbosity > 0:
             if tasks:
                 pprint(tasks, 0)
                 print(plural(len(tasks), 'task'), 'removed')
         for task in tasks:
             if task.state in ['running', 'hold', 'queued']:
-                self.scheduler.cancel(task)
-            self.tasks.remove(task)
+                queue.scheduler.cancel(task)
+            queue.tasks.remove(task)
             # XXX why cancel?
-            task.cancel_dependents(self.tasks, time.time())
-            self.changed.add(task)
+            task.cancel_dependents(queue.tasks, time.time())
+            queue.changed.add(task)

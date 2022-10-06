@@ -8,7 +8,7 @@ import pytest
 from myqueue.queue import Queue
 from myqueue.task import task
 from myqueue.states import State
-from ..utils import chdir
+from myqueue.utils import chdir
 from myqueue.cli import _main
 
 LOCAL = True

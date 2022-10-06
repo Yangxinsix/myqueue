@@ -1,9 +1,10 @@
 from myqueue.resources import Resources
 from myqueue.selection import Selection
 from myqueue.task import Task
+from myqueue.queue import Queue
 
 
-def resubmit(queue,
+def resubmit(queue: Queue,
              selection: Selection,
              resources: Resources | None) -> None:
     """Resubmit failed or timed-out tasks."""
