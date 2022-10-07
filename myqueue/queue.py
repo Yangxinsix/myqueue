@@ -40,10 +40,7 @@ class Queue:
         self.lock = Lock(self.folder / 'queue.json.lock',
                          timeout=10.0)
         self.changed: set[Task] = set()
-
-    @cached_property
-    def tasks(self) -> list[Task]:
-        return self._read_tasks()
+        self.tasks = None
 
     @cached_property
     def scheduler(self) -> Scheduler:
@@ -58,6 +55,7 @@ class Queue:
                 self.lock.acquire()
             except PermissionError:
                 pass  # it's OK to try to read without beeing able to write
+        self.tasks = self._read_tasks()
         return self
 
     def __exit__(self,
