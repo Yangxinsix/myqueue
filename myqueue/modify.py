@@ -1,3 +1,4 @@
+from __future__ import annotations
 from myqueue.selection import Selection
 from myqueue.states import State
 from myqueue.email import configure_email

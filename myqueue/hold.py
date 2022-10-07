@@ -1,3 +1,4 @@
+from __future__ import annotations
 from myqueue.task import Task
 from myqueue.states import State
 from myqueue.queue import Queue

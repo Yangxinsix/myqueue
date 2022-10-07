@@ -1,3 +1,4 @@
+from __future__ import annotations
 from myqueue.states import State
 from myqueue.email import send_notification
 from myqueue.pretty import pprint

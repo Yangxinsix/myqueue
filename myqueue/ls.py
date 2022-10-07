@@ -1,3 +1,4 @@
+from __future__ import annotations
 from myqueue.queue import Queue
 from myqueue.selection import Selection
 from myqueue.task import Task
