@@ -239,8 +239,8 @@ def _main(arguments: list[str] = None) -> int:
               '"h" for hours and "d" for days. '
               '"16:1:30m": 16 cores, 1 process, half an hour. '
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
-
-        if cmd in ['resubmit', 'submit']:
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
 
@@ -547,7 +547,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            resubmit(queue, selection, resources)
+            resubmit(queue, selection, resources, force=args.force)
 
         elif args.command == 'submit':
             from myqueue.submitting import submit

@@ -125,7 +125,6 @@ def submit_tasks(scheduler: Scheduler,
                                          list[Task],
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
-    add explanaition here ...
 
     new = {task.dname: task for task in tasks}
 
