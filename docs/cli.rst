@@ -28,8 +28,6 @@ Sub-commands
       - Show detailed information about MyQueue or a task
     * - :ref:`workflow <workflow>`
       - Submit tasks from Python script or several scripts matching pattern
-    * - :ref:`run <run>`
-      - Run task(s) on local computer
     * - :ref:`kick <kick>`
       - Restart T and M tasks (timed-out and out-of-memory)
     * - :ref:`modify <modify>`
@@ -70,8 +68,7 @@ List (ls): List tasks in queue
 ------------------------------
 
 usage: mq list [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR]
-               [-c ifnaIrAste] [-S c] [-C] [-L] [--not-recursive] [-v] [-q]
-               [-T]
+               [-c ifnaIrAste] [-S c] [-C] [--not-recursive] [-v] [-q] [-T]
                [folder ...]
 
 List tasks in queue.
@@ -120,7 +117,6 @@ options:
                         n, a, r, A, s, t or e. Use "-S c-" for a descending
                         sort.
   -C, --count           Just show the number of tasks.
-  -L, --use-log-file    List tasks from logfile (~/.myqueue/log.csv).
   --not-recursive       Do not list subfolders.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -321,36 +317,6 @@ options:
   -a ARGUMENTS, --arguments ARGUMENTS
                         Pass arguments to workflow() function. Example: "-a
                         name=hello,n=5" will call workflow(name='hello', n=5).
-  -z, --dry-run         Show what will happen without doing anything.
-  -v, --verbose         More output.
-  -q, --quiet           Less output.
-  -T, --traceback       Show full traceback.
-
-
-.. _run:
-
-Run: Run task(s) on local computer
-----------------------------------
-
-usage: mq run [-h] [-n NAME] [-w] [-z] [-v] [-q] [-T] task [folder ...]
-
-Run task(s) on local computer.
-
-Remove task(s) from queue and run locally.
-
-Example::
-
-    $ mq run script.py f1/ f2/
-
-task:
-    Task to run locally.
-folder:
-    Submit tasks in this folder. Defaults to current folder.
-
-options:
-  -h, --help            show this help message and exit
-  -n NAME, --name NAME  Name used for task.
-  -w, --workflow        Write <task-name>.state file when task has finished.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.

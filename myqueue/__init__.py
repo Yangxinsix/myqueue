@@ -29,5 +29,5 @@ def submit(*tasks: Task, verbosity: int = 1, dry_run: bool = False) -> None:
     from myqueue.submitting import submit as _submit
 
     config = Configuration.read()
-    with Queue(config, ) as queue:
-        _submit(queue, tasks, verbosity=verbosity, dry_run=dry_run)
+    with Queue(config, dry_run=dry_run) as queue:
+        _submit(queue, tasks, verbosity=verbosity)

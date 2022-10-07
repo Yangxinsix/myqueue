@@ -41,8 +41,8 @@ def test_backends(mq):
             p.mkdir(parents=True)
             (p / 'activate').write_text('')
         config.scheduler = name
-        with Queue(config) as q:
-            submit(q, [task('shell:echo hello', cores=24)], dry_run=True)
+        with Queue(config, dry_run=True) as q:
+            submit(q, [task('shell:echo hello', cores=24)])
 
     guess_scheduler()
     guess_configuration('local')

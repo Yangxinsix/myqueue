@@ -42,7 +42,6 @@ def test_fail(mq):
     mq('info')
     mq('info -i1 -v')
     mq('ls -S t')
-    mq('ls -L')
     assert mq.states() == 'FCC', mq.states()
     mq('resubmit -sF . -z')
     assert mq.states() == 'FCC'
@@ -115,15 +114,6 @@ def test_check_dependency_order(mq):
     mq('kick')
     mq.wait()
     assert mq.states() == 'dd'
-
-
-def test_run(mq):
-    mq('run "math@sin 3.14" . -z')
-    mq('run "math@sin 3.14" .')
-    mq('submit "time@sleep 1"')
-    mq('run "time@sleep 1" .')
-    mq.wait()
-    assert mq.states() == ''
 
 
 def test_misc(mq):

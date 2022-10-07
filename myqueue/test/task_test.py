@@ -23,14 +23,6 @@ def test_task(tmp_path):
     with pytest.raises(ValueError):
         t.order_key('x')
 
-    # id, folder, name, resources, state, restart, workflow, diskspace,
-    # deps, creates, t1, t2, t3, error, memory_usage
-    line = ('0,/home/jensj/,x.py,1:1h,done,'
-            '0,1,0,,,'
-            '2021-07-09 17:04:52,2021-07-09 17:25:16,2021-07-09 17:39:44,'
-            ',10MB')
-    assert t.fromcsv(line.split(',')).memory_usage == 0
-
     dct = {'id': '0',
            'folder': str(tmp_path),
            'cmd': {'args': [], 'type': 'python-module', 'cmd': 'x'},

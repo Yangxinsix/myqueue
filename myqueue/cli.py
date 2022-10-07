@@ -94,14 +94,6 @@ The script(s) must define a workflow() function as shown here:
             run(<task2>)
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 """),
-    ('run',
-     'Run task(s) on local computer.', """
-Remove task(s) from queue and run locally.
-
-Example:
-
-    $ mq run script.py f1/ f2/
-"""),
     ('kick',
      'Restart T and M tasks (timed-out and out-of-memory).', """
 The queue is kicked automatically every ten minutes - so you don't have
@@ -226,14 +218,6 @@ def _main(arguments: list[str] = None) -> int:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
-        elif cmd == 'run':
-            a('task', help='Task to run locally.')
-            a('-n', '--name', help='Name used for task.')
-            a('folder',
-              nargs='*',
-              help='Submit tasks in this folder.  '
-              'Defaults to current folder.')
-
         elif cmd == 'config':
             a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
               help='Name of scheduler.  Will be guessed if not supplied.')
@@ -256,7 +240,7 @@ def _main(arguments: list[str] = None) -> int:
               '"16:1:30m": 16 cores, 1 process, half an hour. '
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
 
-        if cmd in ['resubmit', 'submit', 'run']:
+        if cmd in ['resubmit', 'submit']:
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
 
@@ -578,17 +562,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
             submit(queue, newtasks,
                    force=args.force,
-                   max_tasks=args.max_tasks,
-                   dry_run=dry_run)
-
-        elif args.command == 'run':
-            from myqueue.run import run as _run
-            newtasks = [task(args.task,
-                             name=args.name,
-                             workflow=args.workflow,
-                             folder=str(folder))
-                        for folder in folders]
-            _run(queue, newtasks)
+                   max_tasks=args.max_tasks)
 
         elif args.command == 'modify':
             from myqueue.modify import modify
