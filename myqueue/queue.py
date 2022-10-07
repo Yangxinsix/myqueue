@@ -168,7 +168,6 @@ def update(tasks: list[Task],
         for tsk in tasks:
             if task.dname in tsk.deps:
                 tsk.deps.remove(task.dname)
-        task.write_state_file()
         task.tstop = t
 
     elif state == 'running':
@@ -177,7 +176,6 @@ def update(tasks: list[Task],
     elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
         task.cancel_dependents(tasks, t)
         task.tstop = t
-        task.write_state_file()
 
     else:
         raise ValueError(f'Bad state: {state}')
@@ -217,6 +215,5 @@ def check(tasks: list[Task], scheduler: Scheduler) -> set[Task]:
                 oom = task.read_error(scheduler)
                 if oom:
                     task.state = State.MEMORY
-                    task.write_state_file()
                 changed.add(task)
     return changed

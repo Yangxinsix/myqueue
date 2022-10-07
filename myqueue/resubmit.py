@@ -13,8 +13,9 @@ def resubmit(queue: Queue,
     tasks = []
     for task in selection.select(queue.tasks):
         if task.state not in {'queued', 'hold', 'running'}:
+            see #12 and #24
             queue.tasks.remove(task)
-        task.remove_state_file()
+        #####task.remove_state_file()
         queue.changed.add(task)
         task = Task(task.cmd,
                     deps=task.deps,

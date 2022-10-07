@@ -125,6 +125,7 @@ def submit_tasks(scheduler: Scheduler,
                                          list[Task],
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
+    add explanaition here ...
 
     new = {task.dname: task for task in tasks}
 
@@ -136,7 +137,7 @@ def submit_tasks(scheduler: Scheduler,
                 task.state = current[task.dname].state
             else:
                 if task.state == State.undefined:
-                    task.state = task.read_state_file()
+                    task.state = task.check_creates_files()
 
         count[task.state] += 1
 
@@ -233,6 +234,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
 
 
 class NoProgressBar:
+    """Dummy progress-bar."""
     def __enter__(self) -> NoProgressBar:
         return self
 
