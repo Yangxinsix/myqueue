@@ -1,5 +1,5 @@
 tests:
-  image: python:3.10.6
+  image: python:3.10
   script:
     - python -m venv venv
     - . venv/bin/activate
@@ -15,7 +15,7 @@ tests:
     - coverage html
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 53.3 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 51.0 myqueue -e myqueue/test
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:

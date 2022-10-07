@@ -14,7 +14,6 @@ import json
 import sys
 import time
 from collections import defaultdict
-from functools import cached_property
 from pathlib import Path
 from types import TracebackType
 
@@ -22,7 +21,7 @@ from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.states import State
 from myqueue.task import Task
-from myqueue.utils import Lock
+from myqueue.utils import Lock, cached_property
 
 VERSION = 10
 

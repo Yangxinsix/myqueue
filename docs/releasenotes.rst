@@ -9,7 +9,7 @@ Release notes
 Next release
 ============
 
-* ...
+* Remove *mq run* command.
 
 
 Version 22.9.0
