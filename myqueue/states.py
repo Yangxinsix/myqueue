@@ -67,7 +67,7 @@ class State(Enum):
         return self.name.isupper()
 
     @staticmethod
-    def str2states(s: str) -> set['State']:
+    def str2states(s: str) -> set[State]:
         """Convert single character state string to set of State objects.
 
         >>> names = [state.name for state in State.str2states('rdA')]

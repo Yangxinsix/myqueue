@@ -78,17 +78,16 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
-    mq('rm -s d . -z')
-    mq('rm -s d .')
-    Path('shell:touch+hello.state').unlink()
+    mq('rm -i 2 . -z')
+    mq('rm -i 2 .')
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'd'
     hello = Path('hello')
     hello.unlink()
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == 'd'
+    assert mq.states() == 'dd'
     assert hello.is_file()
 
 
