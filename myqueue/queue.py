@@ -40,7 +40,7 @@ class Queue:
         self.lock = Lock(self.folder / 'queue.json.lock',
                          timeout=10.0)
         self.changed: set[Task] = set()
-        self.tasks = None
+        self.tasks: list[Task] = []
 
     @cached_property
     def scheduler(self) -> Scheduler:

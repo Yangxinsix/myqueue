@@ -18,11 +18,11 @@ from myqueue.selection import Selection
 from myqueue.task import Task
 
 
-def cached_property(method):
+def cached_property(method):  # type: ignore
     """Quick'n'dirty implementation of cached_property coming in Python 3.8."""
     name = f'__{method.__name__}'
 
-    def new_method(self):
+    def new_method(self):  # type: ignore
         if not hasattr(self, name):
             setattr(self, name, method(self))
         return getattr(self, name)
