@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import errno
+import json
 import os
 import re
 import sys
@@ -14,8 +15,6 @@ from types import TracebackType
 from typing import IO, Any, Generator
 
 from myqueue.config import Configuration
-from myqueue.selection import Selection
-from myqueue.task import Task
 
 
 def cached_property(method):  # type: ignore
@@ -301,15 +300,13 @@ def convert_done_files() -> None:
         os.unlink(path)
 
 
-def get_active_task_states(ids: list[str],
-                           folder: Path = None) -> list[Task]:
+def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
     """Get tasks with given id's from folder."""
-    from myqueue.queue import Queue
     config = Configuration.read(folder)
-    with Queue(config) as queue:
-        selection = Selection(ids=set(ids))
-        tasks = selection.select(queue.tasks)
-    return tasks
+    mq = config.home / '.myqueue'
+    with Lock(mq / 'queue.json.lock',
+              timeout=10.0):
+        return json.loads((mq / 'active.json').read_text())
 
 
 if __name__ == '__main__':  # pragma: no cover

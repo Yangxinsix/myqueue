@@ -121,6 +121,11 @@ class Queue:
             indent=2)
         (self.folder / 'queue.json').write_text(text)
 
+        text = json.dumps(
+            {task.id: str(task.state) for task in self.tasks
+             if task.state.is_active()})
+        (self.folder / 'active.json').write_text(text)
+
 
 def read_change_files(folder: Path,
                       tasks: list[Task],
