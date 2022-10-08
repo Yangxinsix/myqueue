@@ -136,8 +136,8 @@ def submit_tasks(scheduler: Scheduler,
                 task.state = current[task.dname].state
             else:
                 if task.state == State.undefined:
-                    task.state = task.check_creates_files()
-
+                    if task.check_creates_files():
+                        task.state = State.done
         count[task.state] += 1
 
         if task.state == State.undefined:
@@ -203,8 +203,6 @@ def submit_tasks(scheduler: Scheduler,
                     dry_run,
                     verbosity >= 2)
                 submitted.append(task)
-                if not dry_run:
-                    task.remove_state_file()
                 pb.advance(id)
         except (Exception, KeyboardInterrupt) as x:
             ex = x

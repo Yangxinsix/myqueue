@@ -232,6 +232,10 @@ def _main(arguments: list[str] = None) -> int:
             a('--max-tasks', type=int, default=1_000_000_000,
               help='Maximum number of tasks to submit.')
 
+        if cmd == 'resubmit':
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
+
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8:1h", 8 cores for 1 hour. '
@@ -239,8 +243,6 @@ def _main(arguments: list[str] = None) -> int:
               '"h" for hours and "d" for days. '
               '"16:1:30m": 16 cores, 1 process, half an hour. '
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
-            a('-f', '--force', action='store_true',
-              help='Submit also failed tasks.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
 

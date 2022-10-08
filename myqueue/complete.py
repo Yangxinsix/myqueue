@@ -63,10 +63,10 @@ commands = {
          '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
          '-T', '--traceback', '-r', '--recursive'],
     'resubmit':
-        ['-R', '--resources', '-w', '--workflow', '-s', '--states', '-i',
-         '--id', '-n', '--name', '-e', '--error', '-z',
-         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-r', '--recursive'],
+        ['-f', '--force', '-R', '--resources', '-w', '--workflow', '-s',
+         '--states', '-i', '--id', '-n', '--name', '-e',
+         '--error', '-z', '--dry-run', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback', '-r', '--recursive'],
     'submit':
         ['-d', '--dependencies', '-n', '--name', '--restart', '-f',
          '--force', '--max-tasks', '-R', '--resources', '-w',

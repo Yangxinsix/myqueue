@@ -59,7 +59,7 @@ def test_fail2(mq):
     mq('remove --states F .')
     mq('submit time@sleep+a --workflow')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'F'
 
 
 def test_timeout(mq):

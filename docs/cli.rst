@@ -173,8 +173,8 @@ options:
 Resubmit: Resubmit failed or timed-out tasks
 --------------------------------------------
 
-usage: mq resubmit [-h] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID] [-n NAME]
-                   [-e ERROR] [-z] [-v] [-q] [-T] [-r]
+usage: mq resubmit [-h] [-f] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID]
+                   [-n NAME] [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder ...]
 
 Resubmit failed or timed-out tasks.
@@ -188,6 +188,7 @@ folder:
 
 options:
   -h, --help            show this help message and exit
+  -f, --force           Submit also failed tasks.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":

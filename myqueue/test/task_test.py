@@ -46,11 +46,6 @@ def test_task(tmp_path):
     del dct['restart']
     t.fromdict(dct, Path())
 
-    (t.folder / f'{t.cmd.fname}.done').write_text('')
-    assert t.read_state_file() == State.done
-    (t.folder / f'{t.cmd.fname}.FAILED').write_text('')
-    assert t.read_state_file() == State.FAILED
-
     err = tmp_path / 'x.err'
 
     def oom():
@@ -70,6 +65,3 @@ def test_task(tmp_path):
     assert oom()
     err.write_text('... some other error ...')
     assert not oom()
-
-    t.folder = t.folder / 'missing'
-    t.write_state_file()

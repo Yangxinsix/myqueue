@@ -128,10 +128,8 @@ to mark that these tasks have been completed::
     -rw-rw-r-- 1 jensj jensj 24 Jun 24 22:33 factors.json
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.err
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.check.state
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.err
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.factor.state
 
 Now, add another number::
 

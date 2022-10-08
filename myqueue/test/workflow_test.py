@@ -78,8 +78,8 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
-    mq('rm -i 2 . -z')
-    mq('rm -i 2 .')
+    mq('rm -i 2 -z')
+    mq('rm -i 2')
     mq('workflow wf.py .')
     mq.wait()
     assert mq.states() == 'd'
@@ -99,22 +99,21 @@ def test_workflow_running_only_with_targets(mq):
 
 
 def test_workflow_with_failed_job(mq):
-    Path('wf.py').write_text(wf)
-    failed = Path('shell:sleep+3.state')
-    failed.write_text('{"state": "FAILED"}\n')
+    # Introduce bug in workflow task:
+    Path('wf.py').write_text(wf.replace('+3', '+a'))
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'FC'
 
+    # Fix bug:
+    Path('wf.py').write_text(wf)
     mq('workflow wf.py . --force --dry-run')
     mq.wait()
-    assert mq.states() == ''
-    assert failed.read_text() == '{"state": "FAILED"}\n'
+    assert mq.states() == 'FC'
 
     mq('workflow wf.py . --force')
     mq.wait()
     assert mq.states() == 'dd'
-    assert failed.read_text() == '{"state": "done"}\n'
 
 
 wf2 = """

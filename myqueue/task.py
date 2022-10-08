@@ -229,40 +229,14 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def read_state_file(self) -> State:
+    def check_creates_files(self) -> State:
         """Read state file."""
-        if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
-            return State.FAILED
         if self.creates:
             for pattern in self.creates:
                 if not any(self.folder.glob(pattern)):
-                    return State.undefined
-            return State.done
-        if (self.folder / f'{self.cmd.fname}.done').is_file():
-            return State.done
-        state_file = self.folder / f'{self.cmd.fname}.state'
-        try:
-            return State[json.loads(state_file.read_text())['state']]
-        except (FileNotFoundError, KeyError):
-            return State.undefined
-
-    def write_state_file(self) -> None:
-        """Write state file for workflows."""
-        if not self.workflow:
-            return
-        if self.state == State.done and isinstance(self.cmd, WorkflowTask):
-            # Already done when writing results of function call
-            return
-        if not self.folder.is_dir():
-            return
-        state_file = self.folder / f'{self.cmd.fname}.state'
-        state_file.write_text(f'{{"state": "{self.state}"}}\n')
-
-    def remove_state_file(self) -> None:
-        """Remove state file if it is there."""
-        p = self.folder / f'{self.cmd.fname}.state'
-        if p.is_file():
-            p.unlink()
+                    return False
+            return True
+        return False
 
     def read_error(self, scheduler: 'Scheduler') -> bool:
         """Check error message.
