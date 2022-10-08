@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
 import os
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator, Sequence
 from warnings import warn
 
-from myqueue.commands import Command, WorkflowTask, create_command
+from myqueue.commands import Command, create_command
 from myqueue.resources import Resources, T
 from myqueue.states import State
 from myqueue.errors import parse_stderr
@@ -229,7 +228,7 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def check_creates_files(self) -> State:
+    def check_creates_files(self) -> bool:
         """Read state file."""
         if self.creates:
             for pattern in self.creates:

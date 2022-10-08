@@ -31,25 +31,19 @@ class JSONCachedFunction(CachedFunction):
     """A caching function."""
     def __init__(self, function: Callable, name: str):
         self.function = function
-        self.path = Path(f'{name}.state')
+        self.path = Path(f'{name}.result')
 
     def has(self, *args: Any, **kwargs: Any) -> bool:
         """Check if function has been called."""
-        if not self.path.is_file():
-            return False
-        with self.path.open() as fd:
-            return fd.read(30).split(':', 1)[1].split('"', 2)[1] == 'done'
+        return self.path.is_file()
 
     def __call__(self) -> Any:
         """Call function (if needed)."""
         if self.has():
-            data = decode(self.path.read_text())
-            if data['state'] == 'done':
-                return data['result']
-            raise RuntimeError(data['state'])
+            return decode(self.path.read_text())
         result = self.function()
         if mpi_world().rank == 0:
-            self.path.write_text(encode({'state': 'done', 'result': result}))
+            self.path.write_text(encode(result))
         return result
 
 

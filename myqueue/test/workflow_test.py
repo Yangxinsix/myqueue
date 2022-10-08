@@ -113,7 +113,7 @@ def test_workflow_with_failed_job(mq):
 
     mq('workflow wf.py . --force')
     mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.states() == 'Fdd'
 
 
 wf2 = """
