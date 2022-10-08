@@ -8,7 +8,7 @@ import pytest
 from myqueue.queue import Queue
 from myqueue.task import task
 from myqueue.states import State
-from myqueue.utils import chdir
+from myqueue.utils import chdir, get_states_of_active_tasks
 from myqueue.cli import _main
 
 LOCAL = True
@@ -32,6 +32,7 @@ def test_submit(mq):
     mq('sync')
     assert mq.states() == 'dd'
     mq('daemon status')
+    assert get_states_of_active_tasks() == {}
 
 
 def test_fail(mq):
@@ -197,6 +198,8 @@ def test_hold_release(mq):
     mq('modify -s q -N h .')
     mq.wait()
     assert mq.states() == 'h'
+    assert get_states_of_active_tasks() == {'1': 'hold'}
+
     mq('modify -s h -N q . -z')
     mq('modify -s h -N q .')
     mq.wait()
