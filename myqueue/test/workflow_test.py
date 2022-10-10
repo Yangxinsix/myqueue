@@ -16,7 +16,7 @@ def test_flow1(mq):
     mq.wait()
     assert mq.states() == 'ddddddd'
 
-mq(f'workflow {script}')
+    mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'dddddddd'
 
@@ -71,7 +71,7 @@ def test_flow2(mq):
     mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'MCCC'
-    mq('rm -sC .')
+    mq('rm -sC . --force')
     mq(f'workflow {script}')
     assert mq.states() == 'M'
     mq(f'workflow {script} --force')
@@ -99,6 +99,7 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('rm -i 2 -z')
     mq('rm -i 2')
+    mq('rm -i 2 --force')
     mq('workflow wf.py .')
     mq.wait()
     assert mq.states() == 'd'

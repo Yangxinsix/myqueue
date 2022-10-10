@@ -21,7 +21,7 @@ def remove(queue: Queue,
     tasks = [task for task in tasks if force or not task.workflow]
     ntasks = len(tasks)
     if ntasks < ntasks0:
-        print(plural(ntasks - ntasks0, 'task'), 'part of workflow.  '
+        print(plural(ntasks0 - ntasks, 'task'), 'part of workflow.  '
               'Use --force to remove them.')
 
     if queue.dry_run:

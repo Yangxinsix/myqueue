@@ -219,8 +219,8 @@ options:
 Remove (rm): Remove or cancel task(s)
 -------------------------------------
 
-usage: mq remove [-h] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v]
-                 [-q] [-T] [-r]
+usage: mq remove [-h] [-f] [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z]
+                 [-v] [-q] [-T] [-r]
                  [folder ...]
 
 Remove or cancel task(s).
@@ -235,6 +235,7 @@ folder:
 
 options:
   -h, --help            show this help message and exit
+  -f, --force           Remove also workflow tasks.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",

@@ -59,9 +59,10 @@ commands = {
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-r', '--recursive'],
     'remove':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback', '-r', '--recursive'],
+        ['-f', '--force', '-s', '--states', '-i', '--id', '-n', '--name',
+         '-e', '--error', '-z', '--dry-run', '-v', '--verbose',
+         '-q', '--quiet', '-T', '--traceback', '-r',
+         '--recursive'],
     'resubmit':
         ['-f', '--force', '-R', '--resources', '-w', '--workflow', '-s',
          '--states', '-i', '--id', '-n', '--name', '-e',

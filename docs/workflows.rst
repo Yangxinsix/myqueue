@@ -156,7 +156,6 @@ Turns out, there were two prime numbers::
     $ ls */PRIME
     36791/PRIME
     8069/PRIME
-    $ mq rm -sd */ -q
 
 
 Handling many tasks
