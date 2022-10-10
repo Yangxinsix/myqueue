@@ -244,6 +244,7 @@ class NoProgressBar:
         pass
 
     def add_task(self, text: str, total: int) -> progress.TaskID:
+        import rich.progress as progress
         return progress.TaskID(0)
 
     def advance(self, id: progress.TaskID) -> None:
