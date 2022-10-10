@@ -9,12 +9,20 @@ from myqueue.queue import Queue
 
 def remove(queue: Queue,
            tasks: list[Task],
-           verbosity: int = 1) -> None:
+           verbosity: int = 1,
+           force: bool = False) -> None:
     """Remove or cancel tasks."""
     t = time.time()
     for task in tasks:
         if task.tstop is None:
             task.tstop = t  # XXX is this for dry_run only?
+
+    ntasks0 = len(tasks)
+    tasks = [task for task in tasks if force or not task.workflow]
+    ntasks = len(tasks)
+    if ntasks < ntasks0:
+        print(plural(ntasks - ntasks0, 'task'), 'part of workflow.  '
+              'Use --force to remove them.')
 
     if queue.dry_run:
         if tasks:

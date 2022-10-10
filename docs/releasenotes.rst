@@ -10,6 +10,8 @@ Next release
 ============
 
 * Removed *mq run* command.
+* No more ``<task-name>.state`` files.
+* Removing tasks part of a workflow can now only be done with a ``--force``.
 
 
 Version 22.9.0

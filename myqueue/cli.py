@@ -236,6 +236,10 @@ def _main(arguments: list[str] = None) -> int:
             a('-f', '--force', action='store_true',
               help='Submit also failed tasks.')
 
+        if cmd == 'remove':
+            a('-f', '--force', action='store_true',
+              help='Remove also workflow tasks.')
+
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8:1h", 8 cores for 1 hour. '
@@ -540,7 +544,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             from myqueue.remove import remove
             tasks = selection.select(queue.tasks)
             tasks = queue.find_depending(tasks)
-            remove(queue, tasks, verbosity)
+            remove(queue, tasks, verbosity, args.force)
 
         elif args.command == 'resubmit':
             from myqueue.resubmit import resubmit
