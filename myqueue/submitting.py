@@ -5,10 +5,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
-from typing import Sequence, TypeVar
-
-import networkx as nx  # type: ignore
-import rich.progress as progress
+from typing import Sequence, TypeVar, TYPE_CHECKING
 
 from myqueue.pretty import pprint
 from myqueue.queue import Queue
@@ -16,6 +13,9 @@ from myqueue.schedulers import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import plural
+
+if TYPE_CHECKING:
+    import rich.progress as progress
 
 TaskName = Path
 
@@ -125,6 +125,7 @@ def submit_tasks(scheduler: Scheduler,
                                          list[Task],
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
+    import rich.progress as progress
 
     new = {task.dname: task for task in tasks}
 
@@ -219,6 +220,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
     >>> order({1: [2], 2: [], 3: [4], 4: []})
     [2, 1, 4, 3]
     """
+    import networkx as nx  # type: ignore
     result: list[T] = []
     g = nx.Graph(nodes)
     for component in nx.connected_components(g):

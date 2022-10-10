@@ -421,7 +421,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
-    from myqueue.info import info, info_all
     from myqueue.ls import ls
 
     verbosity = 1 - args.quiet + args.verbose
@@ -454,6 +453,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             raise MQError('No such folder:', folder)
 
     if args.command == 'info' and args.all:
+        from myqueue.info import info_all
         info_all(folders[0])
         return
 
@@ -589,6 +589,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             kick(queue, verbosity)
 
         else:
+            from myqueue.info import info
             assert args.command == 'info'
             info(queue, args.id, verbosity)
 

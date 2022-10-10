@@ -12,6 +12,7 @@ Next release
 * Removed *mq run* command.
 * No more ``<task-name>.state`` files.
 * Removing tasks part of a workflow can now only be done with a ``--force``.
+* Speed up most commands by delaying import of ``rich`` and ``networkx``.
 
 
 Version 22.9.0
