@@ -97,8 +97,9 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
-    mq('rm -i 2 -z')
-    mq('rm -i 2')
+    mq('rm -i 2 -z')  # dry-run
+    mq('rm -i 2')  # needs --force
+    assert mq.states() == 'dd'
     mq('rm -i 2 --force')
     mq('workflow wf.py .')
     mq.wait()
