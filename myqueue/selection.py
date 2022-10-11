@@ -40,15 +40,18 @@ class Selection:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive}, {self.error})')
 
-    def sql(self):
+    def sql_statement(self) -> tuple[str, list[str]]:
         if self.ids is not None:
-            return ' id IN (?' + ', ?' * (len(self.ids) - 1) + ')', self.ids
+            return ('id IN (?' + ', ?' * (len(self.ids) - 1) + ')',
+                    list(self.ids))
 
-        sql = ''
+        parts = []
         args = []
         if self.states:
-            sql += ' state IN (?' + ', ?' * (len(self.states) - 1) + ')'
+            parts.append('state IN (?' + ', ?' * (len(self.states) - 1) + ')')
             args += self.states
+
+        return ' AND '.join(f'({part})' for part in parts), args
 
     def select(self, tasks: list[Task]) -> list[Task]:
         """Filter tasks acording to selection object."""

@@ -178,12 +178,10 @@ def update(tasks: list[Task],
     elif state == 'running':
         task.trunning = t
 
-    elif state in ['FAILED', 'TIMEOUT', 'MEMORY']:
+    else:
+        assert state in ['FAILED', 'TIMEOUT', 'MEMORY']
         task.cancel_dependents(tasks, t)
         task.tstop = t
-
-    else:
-        raise ValueError(f'Bad state: {state}')
 
     path.unlink()
     return task
