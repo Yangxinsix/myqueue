@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 from pathlib import Path
@@ -7,9 +8,9 @@ from typing import TYPE_CHECKING, Any, Iterator, Sequence
 from warnings import warn
 
 from myqueue.commands import Command, create_command
+from myqueue.errors import parse_stderr
 from myqueue.resources import Resources, T
 from myqueue.states import State
-from myqueue.errors import parse_stderr
 
 if TYPE_CHECKING:
     from myqueue.schedulers import Scheduler
@@ -188,25 +189,44 @@ class Task:
             'user': self.user}
 
     def to_sql(self, root: Path):
-        dct = self.todict(root)
-        return (int(dct['id']),
-                dct['folder'],
-                dct['state'][0],
-                dct['cmd'],
-                dct['resources'],
-                dct['restart'],
-                dct['workflow'],
-                dct['deps'],
-                dct['diskspace'],
-                dct['notifications'],
-                dct['creates'],
-                dct['tqueued'],
-                dct['trunning'],
-                dct['tstop'],
-                dct['error'],
-                dct['user'])
+        return (int(self.id),
+                str(self.folder.relative_to(root)),
+                self.state.name[0],
+                json.dumps(self.cmd.todict()),
+                json.dumps(self.resources.todict()),
+                self.restart,
+                self.workflow,
+                ','.join(str(dep.relative_to(root)) for dep in self.deps),
+                self.diskspace,
+                self.notifications,
+                ','.join(self.creates),
+                self.tqueued,
+                self.trunning,
+                self.tstop,
+                self.error,
+                self.user)
 
-
+    @staticmethod
+    def from_sql_row(row: tuple, root: Path) -> Task:
+        (id, folder, state, cmd, resources, restart, workflow, deps,
+         diskspace, notifications, creates, tqueued, trunning, tstop,
+         error, user) = row
+        return Task(id=str(id),
+                    folder = root / folder,
+                    state=State(state),
+                    cmd=create_command(**json.loads(cmd)),
+                    resources=Resources(**json.loads(resources)),
+                    restart=restart,
+                    workflow=bool(workflow),
+                    deps=[root / dep for dep in deps.split(',')],
+                    diskspace= diskspace,
+                    notifications=notifications,
+                    creates=creates.split(','),
+                    tqueued=tqueued,
+                    trunning=trunning,
+                    tstop=tstop,
+                    error=error,
+                    user=user)
 
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
@@ -292,8 +312,8 @@ class Task:
         dry_run: bool
             Don't actually submit the task.
         """
-        from myqueue.queue import Queue
         from myqueue.config import Configuration
+        from myqueue.queue import Queue
         from myqueue.submitting import submit
         config = Configuration.read()
         with Queue(config, dry_run=dry_run) as queue:

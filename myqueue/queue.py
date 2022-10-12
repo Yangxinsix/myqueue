@@ -62,8 +62,9 @@ class Queue:
         self.dry_run = dry_run
         self.config = config or Configuration('test')
         self.folder = self.config.home / '.myqueue'
-        self.lock = Lock(self.folder / 'queue.json.lock',
+        self.lock = Lock(self.folder / 'queue.sqlite3.myqueue.lock',
                          timeout=10.0)
+        self.con: sqlite3.Connection | None = None
 
     @cached_property
     def scheduler(self) -> Scheduler:
@@ -79,55 +80,64 @@ class Queue:
             except PermissionError:
                 pass  # it's OK to try to read without beeing able to write
 
+        self._make_connection()
+
         return self
-
-    @cached_property
-    def connection(self) -> sqlite3.Connection:
-        sqlfile = self.folder / 'queue.sqlite3'
-        con = sqlite3.connect(sqlfile)
-        cur = con.execute(
-            'SELECT COUNT(*) FROM sqlite_master WHERE name="tasks"')
-
-        if cur.fetchone()[0] == 0:
-            self._initialize_db(con)
-        else:
-            version = int(
-                con.execute(
-                    'SELECT value FROM information WHERE name="version"')
-                .fetchone()[0])
-            assert version <= VERSION
-        return con
-
-    def _initialize_db(self, con: sqlite3.Connection) -> None:
-        with con:
-            for statement in INIT.split(';'):
-                con.execute(statement)
-            con.execute('INSERT INTO information VALUES (?)', [VERSION])
-
-        jsonfile = self.folder / 'queue.json'
-        if jsonfile.is_file():
-            print(f'Converting {jsonfile} to SQLite3 file ...', end='')
-            text = jsonfile.read_text()
-            data = json.loads(text)
-            root = self.folder.parent
-            with con:
-                q = ', '.join('?' * 16)
-                con.executemany(
-                    f'INSERT INTO tasks VALUES ({q})',
-                    (Task.fromdict(dct, root).to_sql()
-                     for dct in data['tasks']))
-            jsonfile.with_suffix('.old.json').write_text(text)
-            jsonfile.unlink()
-            print(' done')
 
     def __exit__(self,
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        if self.changed and not self.dry_run:
-            assert self.lock.locked
-            self._write()
+        self.con.close()
         self.lock.release()
+
+    def get_tasks(self, selection: Selection = None) -> list[Task]:
+        with self.con:
+            root = self.folder.parent
+            tasks = []
+            for row in self.con.execute(
+                'SELECT * FROM tasks'):
+                tasks.append(Task.from_sql_row(row, root))
+        return tasks
+
+    def _make_connection(self) -> None:
+        sqlfile = self.folder / 'queue.sqlite3'
+        self.con = sqlite3.connect(sqlfile)
+        cur = self.con.execute(
+            'SELECT COUNT(*) FROM sqlite_master WHERE name="tasks"')
+
+        if cur.fetchone()[0] == 0:
+            self._initialize_db()
+        else:
+            version = int(
+                self.con.execute(
+                    'SELECT value FROM information WHERE name="version"')
+                .fetchone()[0])
+            assert version <= VERSION
+
+    def _initialize_db(self) -> None:
+        assert self.lock.locked
+        with self.con:
+            for statement in INIT.split(';'):
+                self.con.execute(statement)
+            self.con.execute('INSERT INTO information VALUES (?)', [VERSION])
+
+        jsonfile = self.folder / 'queue.json'
+        if jsonfile.is_file():
+            print(f'Converting {jsonfile} to SQLite3 file ...',
+                  end='', flush=True)
+            text = jsonfile.read_text()
+            data = json.loads(text)
+            root = self.folder.parent
+            with self.con:
+                q = ', '.join('?' * 16)
+                self.con.executemany(
+                    f'INSERT INTO tasks VALUES ({q})',
+                    [Task.fromdict(dct, root).to_sql(root)
+                     for dct in data['tasks']])
+            jsonfile.with_suffix('.old.json').write_text(text)
+            jsonfile.unlink()
+            print(' done')
 
     def find_depending(self, tasks: list[Task]) -> list[Task]:
         """Generate list of tasks including dependencies."""
