@@ -6,7 +6,7 @@ File format versions:
 6)  Relative paths.
 8)  Type of Task.id changed from int to str.
 9)  Added "user".
-10) ...
+10) Switched to sqlite3.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import Lock, cached_property
+from myqueue.selection import Selection
 
 VERSION = 10
 
@@ -44,8 +45,9 @@ CREATE TABLE tasks (
   tstop REAL,
   error TEXT,
   user TEXT);
-CREATE TABLE information (
-    version INTEGER);
+CREATE TABLE meta (
+    key TEXT,
+    value TEXT);
 CREATE INDEX folder_index on tasks(folder);
 CREATE INDEX state_index on tasks(state)
 """
@@ -64,7 +66,7 @@ class Queue:
         self.folder = self.config.home / '.myqueue'
         self.lock = Lock(self.folder / 'queue.sqlite3.myqueue.lock',
                          timeout=10.0)
-        self.con: sqlite3.Connection | None = None
+        self._connection: sqlite3.Connection | None = None
 
     @cached_property
     def scheduler(self) -> Scheduler:
@@ -80,47 +82,58 @@ class Queue:
             except PermissionError:
                 pass  # it's OK to try to read without beeing able to write
 
-        self._make_connection()
-
         return self
 
     def __exit__(self,
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        self.con.close()
+        if self._connection:
+            self._connection.close()
         self.lock.release()
 
-    def get_tasks(self, selection: Selection = None) -> list[Task]:
-        with self.con:
-            root = self.folder.parent
-            tasks = []
-            for row in self.con.execute(
-                'SELECT * FROM tasks'):
-                tasks.append(Task.from_sql_row(row, root))
-        return tasks
-
-    def _make_connection(self) -> None:
+    @property
+    def connection(self) -> sqlite3.Connection:
+        if self._connection:
+            return self._connection
         sqlfile = self.folder / 'queue.sqlite3'
-        self.con = sqlite3.connect(sqlfile)
-        cur = self.con.execute(
+        self._connection = sqlite3.connect(sqlfile)
+        cur = self._connection.execute(
             'SELECT COUNT(*) FROM sqlite_master WHERE name="tasks"')
 
         if cur.fetchone()[0] == 0:
             self._initialize_db()
         else:
             version = int(
-                self.con.execute(
-                    'SELECT value FROM information WHERE name="version"')
+                self._connection.execute(
+                    'SELECT value FROM meta where key="version"')
                 .fetchone()[0])
             assert version <= VERSION
+        return self._connection
+
+    def get_tasks(self, selection: Selection = None) -> list[Task]:
+        root = self.folder.parent
+        sql = 'SELECT * FROM tasks'
+        if selection:
+            where, args = selection.sql_where_statement(root)
+            if where:
+                sql += f' WHERE {where}'
+        else:
+            args = []
+        print(sql, args)
+        with self.connection:
+            tasks = []
+            for row in self.connection.execute(sql, args):
+                tasks.append(Task.from_sql_row(row, root))
+        return tasks
 
     def _initialize_db(self) -> None:
         assert self.lock.locked
-        with self.con:
+        with self.connection:
             for statement in INIT.split(';'):
-                self.con.execute(statement)
-            self.con.execute('INSERT INTO information VALUES (?)', [VERSION])
+                self.connection.execute(statement)
+            self.connection.execute('INSERT INTO meta VALUES (?, ?)',
+                                    ['version', str(VERSION)])
 
         jsonfile = self.folder / 'queue.json'
         if jsonfile.is_file():
@@ -129,9 +142,9 @@ class Queue:
             text = jsonfile.read_text()
             data = json.loads(text)
             root = self.folder.parent
-            with self.con:
+            with self.connection:
                 q = ', '.join('?' * 16)
-                self.con.executemany(
+                self.connection.executemany(
                     f'INSERT INTO tasks VALUES ({q})',
                     [Task.fromdict(dct, root).to_sql(root)
                      for dct in data['tasks']])
@@ -139,27 +152,10 @@ class Queue:
             jsonfile.unlink()
             print(' done')
 
-    def find_depending(self, tasks: list[Task]) -> list[Task]:
-        """Generate list of tasks including dependencies."""
-        map = {task.dname: task for task in self.tasks}
-        d: dict[Task, list[Task]] = defaultdict(list)
-        for task in self.tasks:
-            for dname in task.deps:
-                tsk = map.get(dname)
-                if tsk:
-                    d[tsk].append(task)
-
-        removed = []
-
-        def remove(task: Task) -> None:
-            removed.append(task)
-            for j in d[task]:
-                remove(j)
-
-        for task in tasks:
-            remove(task)
-
-        return sorted(set(removed), key=lambda task: task.id)
+    def find_dependents(self, id: int) -> Iterator[Task]:
+        """Yield dependents."""
+        yield task ...
+        yield from task.find_dependents(tasks)
 
     def _read_tasks(self) -> list[Task]:
         if self.lock.locked and not self.dry_run:

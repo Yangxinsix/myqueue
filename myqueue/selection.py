@@ -1,6 +1,5 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Pattern
 
 from myqueue.task import Task
 from myqueue.states import State
@@ -10,12 +9,12 @@ class Selection:
     """Object used for selecting tasks."""
 
     def __init__(self,
-                 ids: set[str] | None = None,
-                 name: Pattern[str] | None = None,
+                 ids: set[int] | None = None,
+                 name: str | None = None,
                  states: set[State] = set(),
                  folders: list[Path] = [],
                  recursive: bool = True,
-                 error: Pattern[str] | None = None):
+                 error: str | None = None):
         """Selection.
 
         Selections is based on:
@@ -40,34 +39,34 @@ class Selection:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive}, {self.error})')
 
-    def sql_statement(self) -> tuple[str, list[str]]:
+    def sql_where_statement(self, root: Path) -> tuple[str, list[str | int]]:
+        print(self)
         if self.ids is not None:
-            return ('id IN (?' + ', ?' * (len(self.ids) - 1) + ')',
-                    list(self.ids))
+            q = ', '.join('?' * len(self.ids))
+            return (f'id IN ({q})', list(id for id in self.ids))
 
         parts = []
         args = []
-        if self.states:
-            parts.append('state IN (?' + ', ?' * (len(self.states) - 1) + ')')
-            args += self.states
+        if len(self.states) < 8:
+            q = ', '.join('?' * len(self.states))
+            parts.append(f'state IN ({q})')
+            args += [state.value for state in self.states]
+
+        for folder in self.folders:
+            folder = folder.relative_to(root)
+            if self.recursive:
+                parts.append('folder GLOB ?')
+                args.append(f'{folder}/*')
+            else:
+                parts.append('folder = ?')
+                args.append(f'{folder}/')
+
+        if self.name:
+            parts.append('name GLOB ?')
+            args.append(self.name)
+
+        if self.error:
+            parts.append('error GLOB ?')
+            args.append(self.error)
 
         return ' AND '.join(f'({part})' for part in parts), args
-
-    def select(self, tasks: list[Task]) -> list[Task]:
-        """Filter tasks acording to selection object."""
-        if self.ids is not None:
-            return [task for task in tasks if task.id in self.ids]
-
-        newtasks = []
-        for task in tasks:
-            if task.state not in self.states:
-                continue
-            if self.name and not self.name.fullmatch(task.cmd.name):
-                continue
-            if not any(task.infolder(f, self.recursive) for f in self.folders):
-                continue
-            if self.error and not self.error.fullmatch(task.error):
-                continue
-            newtasks.append(task)
-
-        return newtasks

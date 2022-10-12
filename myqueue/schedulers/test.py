@@ -22,7 +22,7 @@ class TestScheduler(Scheduler):
                dry_run: bool = False,
                verbose: bool = False) -> None:
         if dry_run:
-            task.id = '1'
+            task.id = 1
             return
         if task.cmd.args == ['FAIL']:
             raise RuntimeError
@@ -31,7 +31,7 @@ class TestScheduler(Scheduler):
             for t in task.dtasks:
                 assert t.id in ids
         self.number += 1
-        task.id = str(self.number)
+        task.id = self.number
         self.tasks.append(task)
 
     def cancel(self, task: Task) -> None:
@@ -61,7 +61,7 @@ class TestScheduler(Scheduler):
             raise ValueError('No such task!')
         j.state = State.queued
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         return {task.id for task in self.tasks}
 
     def kick(self) -> bool:

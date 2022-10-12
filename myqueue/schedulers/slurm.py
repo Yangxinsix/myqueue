@@ -42,7 +42,7 @@ class SLURM(Scheduler):
             sbatch.append(f'--reservation={reservation}')
 
         if task.dtasks:
-            ids = ':'.join(tsk.id for tsk in task.dtasks)
+            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
 
         env = []
@@ -83,7 +83,7 @@ class SLURM(Scheduler):
             if verbose:
                 print(' \\\n    '.join(sbatch))
                 print(script)
-            task.id = '1'
+            task.id = 1
             return
 
         # Use a clean set of environment variables without any MPI stuff:
@@ -95,29 +95,29 @@ class SLURM(Scheduler):
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
 
-        task.id = p.stdout.split()[-1].decode()
+        task.id = int(p.stdout.split()[-1].decode())
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['scancel', task.id])
+        subprocess.run(['scancel', str(task.id)])
 
     def hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'hold', task.id])
+        subprocess.run(['scontrol', 'hold', str(task.id)])
 
     def release_hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'release', task.id])
+        subprocess.run(['scontrol', 'release', str(task.id)])
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         user = os.environ.get('USER', 'test')
         cmd = ['squeue', '--user', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {line.split()[0].decode()
+        queued = {int(line.split()[0].decode())
                   for line in p.stdout.splitlines()[1:]}
         return queued
 
-    def maxrss(self, id: str) -> int:
+    def maxrss(self, id: int) -> int:
         assert '.' not in id
         cmd = ['sacct',
-               '-j', id,
+               '-j', str(id),
                '-n',
                '--units=K',
                '-o', 'MaxRSS']

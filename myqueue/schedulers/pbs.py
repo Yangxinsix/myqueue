@@ -40,7 +40,7 @@ class PBS(Scheduler):
         qsub += self.config.extra_args + nodedct.get('extra_args', [])
 
         if task.dtasks:
-            ids = ':'.join(tsk.id for tsk in task.dtasks)
+            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             qsub.extend(['-W', f'depend=afterok:{ids}'])
 
         cmd = str(task.cmd)
@@ -76,20 +76,20 @@ class PBS(Scheduler):
                            capture_output=True)
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
-        id = p.stdout.split(b'.')[0].decode()
+        id = int(p.stdout.split(b'.')[0].decode())
         task.id = id
 
     def error_file(self, task: Task) -> Path:
         return task.folder / f'{task.cmd.short_name}.e{task.id}'
 
     def cancel(self, task: Task) -> None:
-        subprocess.run(['qdel', task.id])
+        subprocess.run(['qdel', str(task.id)])
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         user = os.environ.get('USER', 'test')
         cmd = ['qstat', '-u', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {line.split()[0].split(b'.')[0].decode()
+        queued = {int(line.split()[0].split(b'.')[0].decode())
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued

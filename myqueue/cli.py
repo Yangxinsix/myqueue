@@ -504,7 +504,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                   if args.states is not None
                                   else default)
 
-        ids: set[str] | None = None
+        ids: set[int] | None = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -512,20 +512,20 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
-                ids = {line.split()[0] for line in sys.stdin}
+                ids = {int(line.split()[0]) for line in sys.stdin}
             else:
-                ids = {id for id in args.id.split(',')}
+                ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
         selection = Selection(ids,
-                              regex(args.name),
+                              args.name,
                               states,
                               folders,
                               getattr(args, 'recursive',
                                       not getattr(args, 'not_recursive',
                                                   False)),
-                              regex(args.error))
+                              args.error)
 
     dry_run = getattr(args, 'dry_run', False)
     need_lock = args.command not in ['list', 'info'] and not dry_run
@@ -542,7 +542,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'remove':
             from myqueue.remove import remove
-            tasks = selection.select(queue.tasks)
+            tasks = queue.get_tasks(selection)
             tasks = queue.find_depending(tasks)
             remove(queue, tasks, verbosity, args.force)
 
@@ -592,23 +592,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             from myqueue.info import info
             assert args.command == 'info'
             info(queue, args.id, verbosity)
-
-
-def regex(pattern: str | None) -> Pattern[str] | None:
-    r"""Convert string to regex pattern.
-
-    Examples:
-
-    >>> regex('*-abc.py')
-    re.compile('.*\\-abc\\.py')
-    >>> regex(None) is None
-    True
-    """
-    if pattern:
-        return re.compile(re.escape(pattern)
-                          .replace('\\*', '.*')
-                          .replace('\\?', '.'))
-    return None
 
 
 class Formatter(argparse.HelpFormatter):

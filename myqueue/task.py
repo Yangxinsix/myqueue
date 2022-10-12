@@ -54,7 +54,7 @@ class Task:
                  creates: list[str],
                  notifications: str = '',
                  state: State = State.undefined,
-                 id: str = '0',
+                 id: int = 0,
                  error: str = '',
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
@@ -93,10 +93,6 @@ class Task:
     def name(self) -> str:
         return f'{self.cmd.name}.{self.id}'
 
-    @property
-    def int_id(self) -> int:
-        return int(self.id.split('.')[0])
-
     def running_time(self, t: float = None) -> float:
         if self.state in ['CANCELED', 'queued', 'hold']:
             dt = 0.0
@@ -124,7 +120,7 @@ class Task:
         if self.notifications:
             info.append(self.notifications)
 
-        return [self.id,
+        return [str(self.id),
                 str(self.folder) + '/',
                 self.cmd.short_name,
                 ' '.join(self.cmd.args),
@@ -188,9 +184,11 @@ class Task:
             'error': self.error,
             'user': self.user}
 
-    def to_sql(self, root: Path):
-        return (int(self.id),
-                str(self.folder.relative_to(root)),
+    def to_sql(self, root: Path) -> tuple[int, str, str, str, str,
+                                          int, bool, str, int, str, str,
+                                          float, float, float, str, str]:
+        return (self.id,
+                str(self.folder.relative_to(root)) + '/',
                 self.state.name[0],
                 json.dumps(self.cmd.todict()),
                 json.dumps(self.resources.todict()),
@@ -211,15 +209,15 @@ class Task:
         (id, folder, state, cmd, resources, restart, workflow, deps,
          diskspace, notifications, creates, tqueued, trunning, tstop,
          error, user) = row
-        return Task(id=str(id),
-                    folder = root / folder,
+        return Task(id=id,
+                    folder=root / folder,
                     state=State(state),
                     cmd=create_command(**json.loads(cmd)),
                     resources=Resources(**json.loads(resources)),
                     restart=restart,
                     workflow=bool(workflow),
                     deps=[root / dep for dep in deps.split(',')],
-                    diskspace= diskspace,
+                    diskspace=diskspace,
                     notifications=notifications,
                     creates=creates.split(','),
                     tqueued=tqueued,
@@ -253,7 +251,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        id = str(dct.pop('id'))
+        id = dct.pop('id')
 
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
@@ -318,14 +316,6 @@ class Task:
         config = Configuration.read()
         with Queue(config, dry_run=dry_run) as queue:
             submit(queue, [self], verbosity=verbosity)
-
-    def find_dependents(self,
-                        tasks: Sequence[Task]) -> Iterator[Task]:
-        """Yield dependents."""
-        for task in tasks:
-            if self.dname in task.deps and self is not task:
-                yield task
-                yield from task.find_dependents(tasks)
 
     def cancel_dependents(self,
                           tasks: Sequence[Task],

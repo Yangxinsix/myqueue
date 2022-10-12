@@ -39,7 +39,7 @@ class LocalScheduler(Scheduler):
     def release_hold(self, task: Task) -> None:
         self.send('release', task.id)
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         ids = self.send('list')
         return ids
 
@@ -78,12 +78,12 @@ class Server:
         self.port = port
 
         with Queue(config) as queue:
-            self.next_id = 1 + max((task.int_id for task in queue.tasks),
-                                   default=0)
+            self.next_id = 1 + queue.connection.execute(
+                'SELECT MAX(id) FROM tasks').fetchone()[0] or 0
 
-        self.tasks: dict[str, Task] = {}
-        self.processes: dict[str, asyncio.subprocess.Process] = {}
-        self.aiotasks: dict[str, asyncio.Task] = {}
+        self.tasks: dict[int, Task] = {}
+        self.processes: dict[int, asyncio.subprocess.Process] = {}
+        self.aiotasks: dict[int, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
     def start(self) -> None:
@@ -126,7 +126,7 @@ class Server:
             result = None
         elif cmd == 'submit':
             task = args[0]
-            task.id = str(self.next_id)
+            task.id = self.next_id
             task.state = State.queued
             if all(t.id in self.tasks for t in task.dtasks):
                 task.deps = [t.dname for t in task.dtasks]
@@ -224,7 +224,7 @@ class Server:
 
         self.kick()
 
-    def terminate(self, id: str, state: State = State.TIMEOUT) -> None:
+    def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
         """Terminate a task."""
         print('Terminate', id)
         proc = self.processes.get(id)

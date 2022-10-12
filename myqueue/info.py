@@ -13,6 +13,7 @@ from myqueue import __version__
 from myqueue.config import Configuration
 from myqueue.queue import Queue
 from myqueue.selection import Selection
+from myqueue.states import State
 
 
 def info(queue: Queue,
@@ -48,7 +49,7 @@ def info(queue: Queue,
 
         return
 
-    task = Selection({id}).select(queue.tasks)[0]
+    task = queue.select(Selection({id}))[0]
     print(json.dumps(task.todict(), indent='    '))
     if verbosity > 1:
         path = queue.scheduler.error_file(task)
@@ -89,9 +90,11 @@ def info_all(start: Path) -> None:
             with Queue(config, need_lock=False) as queue:
                 from collections import defaultdict
                 count: dict[str, int] = defaultdict(int)
-                for task in queue.tasks:
-                    count[task.state.name] += 1
-                count['total'] = len(queue.tasks)
+                sql = 'SELECT state FROM tasks'
+                for state, in queue.connection.execute(sql):
+                    state = State(state).name
+                    count[state] += 1
+                count['total'] = sum(count.values())
                 states = []
                 for state, n in count.items():
                     if state == 'done':
