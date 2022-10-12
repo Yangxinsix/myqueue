@@ -6,13 +6,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .task import Task  # noqa  # pragma: no cover
+    from myqueue.task import Task
 
 
 __version__ = '22.9.1b1'
 
 
-def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:
+def submit(*tasks: Task, verbosity: int = 1, dry_run: bool = False) -> None:
     """Submit tasks.
 
     Parameters
@@ -24,9 +24,10 @@ def submit(*tasks: 'Task', verbosity: int = 1, dry_run: bool = False) -> None:
     dry_run: bool
         Don't actually submit the task.
     """
-    from .queue import Queue
-    from .config import Configuration
+    from myqueue.queue import Queue
+    from myqueue.config import Configuration
+    from myqueue.submitting import submit as _submit
 
     config = Configuration.read()
-    with Queue(config, verbosity, dry_run=dry_run) as queue:
-        queue.submit(tasks)
+    with Queue(config, dry_run=dry_run) as queue:
+        _submit(queue, tasks, verbosity=verbosity)

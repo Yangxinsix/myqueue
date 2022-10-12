@@ -9,7 +9,7 @@ from myqueue.cli import _main
 from myqueue.config import Configuration
 from myqueue.queue import Queue
 from myqueue.task import Task
-from myqueue.test.scheduler import TestScheduler
+from myqueue.schedulers.test import TestScheduler
 
 
 @pytest.fixture(scope='function')
@@ -66,6 +66,5 @@ class MQ:
 
 
 def mqlist(config) -> list[Task]:
-    with Queue(config, verbosity=0) as q:
-        q._read()
+    with Queue(config) as q:
         return q.tasks

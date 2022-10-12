@@ -10,7 +10,7 @@ from typing import Any, Type, Callable
 from pathlib import Path
 from shlex import quote
 
-from .resources import Resources
+from myqueue.resources import Resources
 
 
 class Command:

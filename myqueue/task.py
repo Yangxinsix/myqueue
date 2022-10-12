@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-import json
 import os
-import sys
 import time
-from datetime import datetime
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Iterator, Sequence
 from warnings import warn
 
-from myqueue.commands import Command, WorkflowTask, create_command
+from myqueue.commands import Command, create_command
 from myqueue.resources import Resources, T
 from myqueue.states import State
 from myqueue.errors import parse_stderr
 
 if TYPE_CHECKING:
-    from .scheduler import Scheduler
+    from myqueue.schedulers import Scheduler
 
 UNSPECIFIED = 'hydelifytskibadut'
 
@@ -58,7 +55,6 @@ class Task:
                  state: State = State.undefined,
                  id: str = '0',
                  error: str = '',
-                 memory_usage: int = 0,
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
                  tstop: float = 0.0,
@@ -85,8 +81,6 @@ class Task:
         self.tstop = tstop
 
         self.user = user or os.environ.get('USER', 'root')
-
-        self.memory_usage = memory_usage
 
         self.dname = folder / cmd.name
         self.dtasks: list[Task] = []
@@ -146,7 +140,7 @@ class Task:
     def __repr__(self) -> str:
         return f'Task({self.cmd.name})'
 
-    def order(self, column: str) -> Any:
+    def order_key(self, column: str) -> Any:
         """ifnAraste"""
         if column == 'i':
             return self.id
@@ -193,61 +187,6 @@ class Task:
             'error': self.error,
             'user': self.user}
 
-    def tocsv(self,
-              fd: IO[str] = sys.stdout,
-              write_header: bool = False) -> None:
-        if write_header:
-            print('# id,folder,cmd,resources,state,restart,workflow,'
-                  'diskspace,deps,creates,tqueued,trunning,tstop,error,momory',
-                  file=fd)
-        t1, t2, t3 = (datetime.fromtimestamp(t).strftime('"%Y-%m-%d %H:%M:%S"')
-                      for t in [self.tqueued, self.trunning, self.tstop])
-        deps = ','.join(str(dep) for dep in self.deps)
-        creates = ','.join(self.creates)
-        error = self.error.replace('"', '""')
-        print(f'{self.id},'
-              f'"{self.folder}",'
-              f'"{self.cmd.name}",'
-              f'{self.resources},'
-              f'{self.state},'
-              f'{self.restart},'
-              f'{int(self.workflow)},'
-              f'{self.diskspace},'
-              f'"{deps}",'
-              f'"{creates}",'
-              f'{t1},{t2},{t3},'
-              f'"{error}",'
-              f'{self.memory_usage},'
-              f'"{self.notifications}"',
-              file=fd)
-
-    @staticmethod
-    def fromcsv(row: list[str]) -> Task:
-        (id, folder, name, resources, state, restart, workflow, diskspace,
-         deps, creates, t1, t2, t3, error) = row[:14]
-        try:
-            memory_usage = 0 if len(row) == 14 else int(row[14])
-        except ValueError:  # read old corrupted log.csv files
-            memory_usage = 0
-        notifications = '' if len(row) < 16 else row[15]
-        tqueued, trunning, tstop = (
-            datetime.strptime(t, '%Y-%m-%d %H:%M:%S').timestamp()
-            for t in (t1, t2, t3))
-        return Task(create_command(name),
-                    Resources.from_string(resources),
-                    [Path(dep) for dep in deps.split(',')] if deps else [],
-                    int(restart),
-                    bool(workflow),
-                    int(diskspace),
-                    Path(folder),
-                    creates.split(','),
-                    notifications,
-                    State[state],
-                    id,
-                    error,
-                    memory_usage,
-                    tqueued, trunning, tstop)
-
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
         dct = dct.copy()
@@ -289,40 +228,14 @@ class Task:
         return folder == self.folder or (recursive and
                                          folder in self.folder.parents)
 
-    def read_state_file(self) -> State:
+    def check_creates_files(self) -> bool:
         """Read state file."""
-        if (self.folder / f'{self.cmd.fname}.FAILED').is_file():
-            return State.FAILED
         if self.creates:
             for pattern in self.creates:
                 if not any(self.folder.glob(pattern)):
-                    return State.undefined
-            return State.done
-        if (self.folder / f'{self.cmd.fname}.done').is_file():
-            return State.done
-        state_file = self.folder / f'{self.cmd.fname}.state'
-        try:
-            return State[json.loads(state_file.read_text())['state']]
-        except (FileNotFoundError, KeyError):
-            return State.undefined
-
-    def write_state_file(self) -> None:
-        """Write state file for workflows."""
-        if not self.workflow:
-            return
-        if self.state == State.done and isinstance(self.cmd, WorkflowTask):
-            # Already done when writing results of function call
-            return
-        if not self.folder.is_dir():
-            return
-        state_file = self.folder / f'{self.cmd.fname}.state'
-        state_file.write_text(f'{{"state": "{self.state}"}}\n')
-
-    def remove_state_file(self) -> None:
-        """Remove state file if it is there."""
-        p = self.folder / f'{self.cmd.fname}.state'
-        if p.is_file():
-            p.unlink()
+                    return False
+            return True
+        return False
 
     def read_error(self, scheduler: 'Scheduler') -> bool:
         """Check error message.
@@ -358,11 +271,12 @@ class Task:
         dry_run: bool
             Don't actually submit the task.
         """
-        from .queue import Queue
-        from .config import Configuration
+        from myqueue.queue import Queue
+        from myqueue.config import Configuration
+        from myqueue.submitting import submit
         config = Configuration.read()
-        with Queue(config, verbosity, dry_run=dry_run) as queue:
-            queue.submit([self])
+        with Queue(config, dry_run=dry_run) as queue:
+            submit(queue, [self], verbosity=verbosity)
 
     def find_dependents(self,
                         tasks: Sequence[Task]) -> Iterator[Task]:

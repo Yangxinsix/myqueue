@@ -8,7 +8,6 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Callable, Sequence, Type, Union
 
-import rich.progress as progress
 from myqueue.caching import CachedFunction, create_cached_function
 from myqueue.cli import MQError
 from myqueue.commands import (Command, PythonModule, PythonScript,
@@ -16,8 +15,8 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
 from myqueue.resources import Resources
 from myqueue.states import State
 
-from .task import UNSPECIFIED, Task
-from .utils import chdir
+from myqueue.task import UNSPECIFIED, Task
+from myqueue.utils import chdir
 
 DEFAULT_VERBOSITY = 1
 
@@ -81,6 +80,8 @@ def workflow_from_scripts(
         folders: list[Path],
         verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Generate tasks from workflows defined by '**/*{script}'."""
+    import rich.progress as progress
+
     tasks: list[Task] = []
     paths = [path
              for folder in folders
@@ -103,6 +104,8 @@ def workflow_from_script(script: Path,
                          folders: list[Path],
                          verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow defined in python script."""
+    import rich.progress as progress
+
     func = get_workflow_function(script, kwargs)
 
     tasks: list[Task] = []

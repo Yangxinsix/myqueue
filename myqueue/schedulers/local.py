@@ -5,10 +5,10 @@ import socket
 from functools import partial
 from typing import Any
 
-from .scheduler import Scheduler
-from .task import Task
-from .config import Configuration
-from .states import State
+from myqueue.schedulers import Scheduler
+from myqueue.task import Task
+from myqueue.config import Configuration
+from myqueue.states import State
 from myqueue.queue import Queue
 
 
@@ -50,7 +50,8 @@ class LocalScheduler(Scheduler):
             except ConnectionRefusedError:
                 raise ConnectionRefusedError(
                     'Local scheduler not responding.  '
-                    'Please start it with: "python3 -m myqueue.local"')
+                    'Please start it with:\n\n'
+                    '    python3 -m myqueue.schedulers.local')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
@@ -77,7 +78,6 @@ class Server:
         self.port = port
 
         with Queue(config) as queue:
-            queue._read()
             self.next_id = 1 + max((task.int_id for task in queue.tasks),
                                    default=0)
 

@@ -94,14 +94,6 @@ The script(s) must define a workflow() function as shown here:
             run(<task2>)
     $ mq workflow flow.py F1/ F2/  # submit tasks in F1 and F2 folders
 """),
-    ('run',
-     'Run task(s) on local computer.', """
-Remove task(s) from queue and run locally.
-
-Example:
-
-    $ mq run script.py f1/ f2/
-"""),
     ('kick',
      'Restart T and M tasks (timed-out and out-of-memory).', """
 The queue is kicked automatically every ten minutes - so you don't have
@@ -226,14 +218,6 @@ def _main(arguments: list[str] = None) -> int:
               help='Submit tasks in this folder.  '
               'Defaults to current folder.')
 
-        elif cmd == 'run':
-            a('task', help='Task to run locally.')
-            a('-n', '--name', help='Name used for task.')
-            a('folder',
-              nargs='*',
-              help='Submit tasks in this folder.  '
-              'Defaults to current folder.')
-
         elif cmd == 'config':
             a('scheduler', choices=['local', 'slurm', 'pbs', 'lsf'], nargs='?',
               help='Name of scheduler.  Will be guessed if not supplied.')
@@ -248,6 +232,14 @@ def _main(arguments: list[str] = None) -> int:
             a('--max-tasks', type=int, default=1_000_000_000,
               help='Maximum number of tasks to submit.')
 
+        if cmd == 'resubmit':
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
+
+        if cmd == 'remove':
+            a('-f', '--force', action='store_true',
+              help='Remove also workflow tasks.')
+
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
               help='Examples: "8:1h", 8 cores for 1 hour. '
@@ -255,8 +247,6 @@ def _main(arguments: list[str] = None) -> int:
               '"h" for hours and "d" for days. '
               '"16:1:30m": 16 cores, 1 process, half an hour. '
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
-
-        if cmd in ['resubmit', 'submit', 'run']:
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
 
@@ -309,8 +299,6 @@ def _main(arguments: list[str] = None) -> int:
               'Use "-S c-" for a descending sort.')
             a('-C', '--count', action='store_true',
               help='Just show the number of tasks.')
-            a('-L', '--use-log-file', action='store_true',
-              help='List tasks from logfile (~/.myqueue/log.csv).')
             a('--not-recursive', action='store_true',
               help='Do not list subfolders.')
             a('folder',
@@ -383,7 +371,7 @@ def _main(arguments: list[str] = None) -> int:
         return 0
 
     if args.command == 'config':
-        from .config import guess_configuration
+        from myqueue.config import guess_configuration
         guess_configuration(args.scheduler, args.queue_name, args.in_place)
         return 0
 
@@ -433,7 +421,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.workflow import workflow
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
-    from myqueue.info import info, info_all
+    from myqueue.ls import ls
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -465,6 +453,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             raise MQError('No such folder:', folder)
 
     if args.command == 'info' and args.all:
+        from myqueue.info import info_all
         info_all(folders[0])
         return
 
@@ -538,9 +527,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                                   False)),
                               regex(args.error))
 
-    need_lock = args.command not in ['list', 'info']
     dry_run = getattr(args, 'dry_run', False)
-    with Queue(config, verbosity, need_lock, dry_run) as queue:
+    need_lock = args.command not in ['list', 'info'] and not dry_run
+    with Queue(config, need_lock=need_lock, dry_run=dry_run) as queue:
         if args.command == 'list':
             if args.sort:
                 reverse = args.sort.endswith('-')
@@ -548,21 +537,26 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 reverse = False
                 column = None
-            queue.ls(selection, args.columns, column, reverse,
-                     args.count, args.use_log_file)
+            ls(queue, selection, args.columns, column, reverse,
+               args.count, verbosity)
 
         elif args.command == 'remove':
-            queue.remove(selection)
+            from myqueue.remove import remove
+            tasks = selection.select(queue.tasks)
+            tasks = queue.find_depending(tasks)
+            remove(queue, tasks, verbosity, args.force)
 
         elif args.command == 'resubmit':
+            from myqueue.resubmit import resubmit
             resources: Resources | None
             if args.resources:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            queue.resubmit(selection, resources)
+            resubmit(queue, selection, resources, force=args.force)
 
         elif args.command == 'submit':
+            from myqueue.submitting import submit
             newtasks = [task(args.task,
                              resources=args.resources,
                              name=args.name,
@@ -572,33 +566,32 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                              restart=args.restart)
                         for folder in folders]
 
-            queue.submit(newtasks, args.force, args.max_tasks)
-
-        elif args.command == 'run':
-            newtasks = [task(args.task,
-                             name=args.name,
-                             workflow=args.workflow,
-                             folder=str(folder))
-                        for folder in folders]
-            queue.run(newtasks)
+            submit(queue, newtasks,
+                   force=args.force,
+                   max_tasks=args.max_tasks)
 
         elif args.command == 'modify':
+            from myqueue.modify import modify
             state = State(args.new_state)
-            queue.modify(selection, state, State.str2states(args.email))
+            modify(queue, selection, state, State.str2states(args.email))
 
         elif args.command == 'workflow':
+            from myqueue.submitting import submit
             tasks = workflow(args, folders, verbosity)
-            queue.submit(tasks, args.force, args.max_tasks)
+            submit(queue, tasks, force=args.force, max_tasks=args.max_tasks)
 
         elif args.command == 'sync':
-            queue.sync()
+            from myqueue.syncronize import sync
+            sync(queue)
 
         elif args.command == 'kick':
-            queue.kick()
+            from myqueue.kick import kick
+            kick(queue, verbosity)
 
         else:
+            from myqueue.info import info
             assert args.command == 'info'
-            info(queue, args.id)
+            info(queue, args.id, verbosity)
 
 
 def regex(pattern: str | None) -> Pattern[str] | None:

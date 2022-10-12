@@ -17,19 +17,11 @@ def test_task(tmp_path):
     assert repr(t) == 'Task(x)'
 
     for c in 'ifnAraste':
-        x = t.order(c)
+        x = t.order_key(c)
         assert not (x < x)
 
     with pytest.raises(ValueError):
-        t.order('x')
-
-    # id, folder, name, resources, state, restart, workflow, diskspace,
-    # deps, creates, t1, t2, t3, error, memory_usage
-    line = ('0,/home/jensj/,x.py,1:1h,done,'
-            '0,1,0,,,'
-            '2021-07-09 17:04:52,2021-07-09 17:25:16,2021-07-09 17:39:44,'
-            ',10MB')
-    assert t.fromcsv(line.split(',')).memory_usage == 0
+        t.order_key('x')
 
     dct = {'id': '0',
            'folder': str(tmp_path),
@@ -54,11 +46,6 @@ def test_task(tmp_path):
     del dct['restart']
     t.fromdict(dct, Path())
 
-    (t.folder / f'{t.cmd.fname}.done').write_text('')
-    assert t.read_state_file() == State.done
-    (t.folder / f'{t.cmd.fname}.FAILED').write_text('')
-    assert t.read_state_file() == State.FAILED
-
     err = tmp_path / 'x.err'
 
     def oom():
@@ -78,6 +65,3 @@ def test_task(tmp_path):
     assert oom()
     err.write_text('... some other error ...')
     assert not oom()
-
-    t.folder = t.folder / 'missing'
-    t.write_state_file()

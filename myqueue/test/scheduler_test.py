@@ -1,7 +1,7 @@
 import subprocess
 
 import pytest
-from myqueue.scheduler import SchedulerError
+from myqueue.schedulers import SchedulerError
 from myqueue.task import task as create_task
 
 
@@ -53,8 +53,8 @@ def run(commands,
 
 @pytest.mark.parametrize('name', ['slurm', 'pbs', 'lsf'])
 def test_scheduler_subprocess(monkeypatch, name):
-    from ..config import Configuration
-    from ..scheduler import get_scheduler
+    from myqueue.config import Configuration
+    from myqueue.schedulers import get_scheduler
 
     monkeypatch.setattr(subprocess, 'run', run)
 

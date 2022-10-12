@@ -8,7 +8,7 @@ import pytest
 from myqueue.queue import Queue
 from myqueue.task import task
 from myqueue.states import State
-from ..utils import chdir
+from myqueue.utils import chdir, get_states_of_active_tasks
 from myqueue.cli import _main
 
 LOCAL = True
@@ -32,6 +32,7 @@ def test_submit(mq):
     mq('sync')
     assert mq.states() == 'dd'
     mq('daemon status')
+    assert get_states_of_active_tasks() == {}
 
 
 def test_fail(mq):
@@ -42,7 +43,6 @@ def test_fail(mq):
     mq('info')
     mq('info -i1 -v')
     mq('ls -S t')
-    mq('ls -L')
     assert mq.states() == 'FCC', mq.states()
     mq('resubmit -sF . -z')
     assert mq.states() == 'FCC'
@@ -60,7 +60,7 @@ def test_fail2(mq):
     mq('remove --states F .')
     mq('submit time@sleep+a --workflow')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'F'
 
 
 def test_timeout(mq):
@@ -115,15 +115,6 @@ def test_check_dependency_order(mq):
     mq('kick')
     mq.wait()
     assert mq.states() == 'dd'
-
-
-def test_run(mq):
-    mq('run "math@sin 3.14" . -z')
-    mq('run "math@sin 3.14" .')
-    mq('submit "time@sleep 1"')
-    mq('run "time@sleep 1" .')
-    mq.wait()
-    assert mq.states() == ''
 
 
 def test_misc(mq):
@@ -191,7 +182,7 @@ def test_ctrl_c(mq):
 
 
 def test_sync_cancel(mq):
-    with Queue(mq.config, verbosity=0) as q:
+    with Queue(mq.config) as q:
         t = task('shell:echo')
         t.state = State.running
         t.trunning = time.time()
@@ -207,6 +198,8 @@ def test_hold_release(mq):
     mq('modify -s q -N h .')
     mq.wait()
     assert mq.states() == 'h'
+    assert get_states_of_active_tasks() == {'1': 'hold'}
+
     mq('modify -s h -N q . -z')
     mq('modify -s h -N q .')
     mq.wait()
@@ -216,7 +209,7 @@ def test_hold_release(mq):
 
 
 def test_clean_up(mq):
-    with Queue(mq.config, verbosity=0) as q:
+    with Queue(mq.config) as q:
         t1 = task('shell:echo')
         t1.state = State.running
         t1.trunning = 0.0  # very old

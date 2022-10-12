@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 from myqueue.config import Configuration
-from myqueue.scheduler import Scheduler
+from myqueue.schedulers import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
 
@@ -34,7 +34,7 @@ class TestScheduler(Scheduler):
         task.id = str(self.number)
         self.tasks.append(task)
 
-    def cancel(self, task):
+    def cancel(self, task: Task) -> None:
         assert task.state == 'queued', task
         for i, j in enumerate(self.tasks):
             if task.id == j.id:
@@ -43,7 +43,7 @@ class TestScheduler(Scheduler):
             return
         del self.tasks[i]
 
-    def hold(self, task):
+    def hold(self, task: Task) -> None:
         assert task.state == 'queued', task
         for i, j in enumerate(self.tasks):
             if task.id == j.id:
@@ -52,7 +52,7 @@ class TestScheduler(Scheduler):
             raise ValueError('No such task!')
         j.state = State.hold
 
-    def release_hold(self, task):
+    def release_hold(self, task: Task) -> None:
         assert task.state == 'hold', task
         for i, j in enumerate(self.tasks):
             if task.id == j.id:
@@ -61,7 +61,7 @@ class TestScheduler(Scheduler):
             raise ValueError('No such task!')
         j.state = State.queued
 
-    def get_ids(self):
+    def get_ids(self) -> set[str]:
         return {task.id for task in self.tasks}
 
     def kick(self) -> bool:
@@ -74,7 +74,7 @@ class TestScheduler(Scheduler):
         self.run(task)
         return False
 
-    def run(self, task):
+    def run(self, task: Task) -> None:
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
 

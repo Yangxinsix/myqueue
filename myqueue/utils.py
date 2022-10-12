@@ -1,6 +1,8 @@
 """Useful utilities."""
 from __future__ import annotations
+
 import errno
+import json
 import os
 import re
 import sys
@@ -10,7 +12,21 @@ from io import StringIO
 from math import inf
 from pathlib import Path
 from types import TracebackType
-from typing import IO, Generator, Any
+from typing import IO, Any, Generator
+
+from myqueue.config import Configuration
+
+
+def cached_property(method):  # type: ignore
+    """Quick'n'dirty implementation of cached_property coming in Python 3.8."""
+    name = f'__{method.__name__}'
+
+    def new_method(self):  # type: ignore
+        if not hasattr(self, name):
+            setattr(self, name, method(self))
+        return getattr(self, name)
+
+    return property(new_method)
 
 
 def mqhome() -> Path:
@@ -139,7 +155,8 @@ def update_readme_and_completion(test: bool = False) -> None:
 
     import argparse
     import textwrap
-    from myqueue.cli import _main, commands, aliases
+
+    from myqueue.cli import _main, aliases, commands
 
     aliases = {command: alias for alias, command in aliases.items()}
 
@@ -281,6 +298,15 @@ def convert_done_files() -> None:
             out = '{"state": "done"}\n'
         path.with_suffix('.state').write_text(out)
         os.unlink(path)
+
+
+def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
+    """Get tasks with given id's from folder."""
+    config = Configuration.read(folder)
+    mq = config.home / '.myqueue'
+    with Lock(mq / 'queue.json.lock',
+              timeout=10.0):
+        return json.loads((mq / 'active.json').read_text())
 
 
 if __name__ == '__main__':  # pragma: no cover

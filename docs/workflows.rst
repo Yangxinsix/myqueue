@@ -128,10 +128,8 @@ to mark that these tasks have been completed::
     -rw-rw-r-- 1 jensj jensj 24 Jun 24 22:33 factors.json
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.err
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.check.state
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.err
     -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.out
-    -rw-rw-r-- 1 jensj jensj 18 Jun 24 22:33 prime.factor.state
 
 Now, add another number::
 
@@ -158,7 +156,6 @@ Turns out, there were two prime numbers::
     $ ls */PRIME
     36791/PRIME
     8069/PRIME
-    $ mq rm -sd */ -q
 
 
 Handling many tasks
@@ -254,7 +251,7 @@ Here are three equivalent ways to set the ``cores`` resource::
 Functions
 ---------
 
-A task that call a Python function will make sure the function caches its
+A task that calls a Python function will make sure the function caches its
 result. If the function ``f`` has an attribute ``has`` that is a callable
 that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
 to check if the function has been called with a given set of arguments.  If a
@@ -268,6 +265,7 @@ object.
 Helper wrapper for working with functions:
 
 .. autofunction:: myqueue.workflow.wrap
+
 
 .. _dependencies:
 

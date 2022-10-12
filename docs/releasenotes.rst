@@ -9,7 +9,15 @@ Release notes
 Next release
 ============
 
-* ...
+* Removed *mq run* command.
+* No more ``<task-name>.state`` files.
+* Calling a Python function from a workflow (``run(function=...)``)
+  will now write the return value to a file called ``<task-name>.result``
+  in the JSON format.  Previously the return value was written to the
+  ``.state`` file.
+* Removing tasks part of a workflow now needs a ``--force``
+  (as MyQueue will no longer know the states of such tasks).
+* Speed up most commands by delaying import of ``rich`` and ``networkx``.
 
 
 Version 22.9.0

@@ -5,16 +5,17 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
-from typing import Sequence, TypeVar
+from typing import Sequence, TypeVar, TYPE_CHECKING
 
-import networkx as nx  # type: ignore
-import rich.progress as progress
-
-from myqueue.scheduler import Scheduler
+from myqueue.pretty import pprint
+from myqueue.queue import Queue
+from myqueue.schedulers import Scheduler
+from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import plural
 
-from .states import State
+if TYPE_CHECKING:
+    import rich.progress as progress
 
 TaskName = Path
 
@@ -63,6 +64,57 @@ def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
     return [task for task in tasks if not task.state.is_bad()]
 
 
+def submit(queue: Queue,
+           tasks: Sequence[Task],
+           *,
+           force: bool = False,
+           max_tasks: int = 1_000_000_000,
+           verbosity: int = 1) -> None:
+    """Submit tasks to queue.
+
+    Parameters
+    ==========
+    force: bool
+        Ignore and remove name.FAILED files.
+    """
+
+    current = {task.dname: task for task in queue.tasks}
+
+    submitted, skipped, ex = submit_tasks(
+        queue.scheduler, tasks, current,
+        force, max_tasks,
+        verbosity, queue.dry_run)
+
+    for task in submitted:
+        if task.workflow:
+            oldtask = current.get(task.dname)
+            if oldtask:
+                queue.tasks.remove(oldtask)
+                queue.changed.add(oldtask)
+
+    if 'MYQUEUE_TESTING' in os.environ:
+        if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
+            raise KeyboardInterrupt
+
+    queue.tasks += submitted
+    queue.changed.update(submitted)
+
+    if ex:
+        print()
+        print('Skipped', plural(len(skipped), 'task'))
+
+    pprint(submitted, 0, 'ifnaIr',
+           maxlines=10 if verbosity < 2 else 99999999999999)
+    if submitted:
+        if queue.dry_run:
+            print(plural(len(submitted), 'task'), 'to submit')
+        else:
+            print(plural(len(submitted), 'task'), 'submitted')
+
+    if ex:
+        raise ex
+
+
 def submit_tasks(scheduler: Scheduler,
                  tasks: Sequence[Task],
                  current: dict[Path, Task],
@@ -73,6 +125,7 @@ def submit_tasks(scheduler: Scheduler,
                                          list[Task],
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
+    import rich.progress as progress
 
     new = {task.dname: task for task in tasks}
 
@@ -84,8 +137,8 @@ def submit_tasks(scheduler: Scheduler,
                 task.state = current[task.dname].state
             else:
                 if task.state == State.undefined:
-                    task.state = task.read_state_file()
-
+                    if task.check_creates_files():
+                        task.state = State.done
         count[task.state] += 1
 
         if task.state == State.undefined:
@@ -151,8 +204,6 @@ def submit_tasks(scheduler: Scheduler,
                     dry_run,
                     verbosity >= 2)
                 submitted.append(task)
-                if not dry_run:
-                    task.remove_state_file()
                 pb.advance(id)
         except (Exception, KeyboardInterrupt) as x:
             ex = x
@@ -169,6 +220,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
     >>> order({1: [2], 2: [], 3: [4], 4: []})
     [2, 1, 4, 3]
     """
+    import networkx as nx  # type: ignore
     result: list[T] = []
     g = nx.Graph(nodes)
     for component in nx.connected_components(g):
@@ -181,6 +233,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
 
 
 class NoProgressBar:
+    """Dummy progress-bar."""
     def __enter__(self) -> NoProgressBar:
         return self
 
@@ -191,6 +244,7 @@ class NoProgressBar:
         pass
 
     def add_task(self, text: str, total: int) -> progress.TaskID:
+        import rich.progress as progress
         return progress.TaskID(0)
 
     def advance(self, id: progress.TaskID) -> None:

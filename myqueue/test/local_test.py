@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from myqueue.config import Configuration
-from myqueue.local import LocalScheduler, Server
+from myqueue.schedulers.local import LocalScheduler, Server
 from myqueue.submitting import submit_tasks
 from myqueue.task import task as create_task
 from myqueue.workflow import collect, run

@@ -51,25 +51,23 @@ commands = {
     'list':
         ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
          '-c', '--columns', '-S', '--sort', '-C', '--count',
-         '-L', '--use-log-file', '--not-recursive', '-v',
-         '--verbose', '-q', '--quiet', '-T', '--traceback'],
+         '--not-recursive', '-v', '--verbose', '-q', '--quiet',
+         '-T', '--traceback'],
     'modify':
         ['-E', '--email', '-N', '--new-state', '-s', '--states', '-i',
          '--id', '-n', '--name', '-e', '--error', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback', '-r', '--recursive'],
     'remove':
-        ['-s', '--states', '-i', '--id', '-n', '--name', '-e', '--error',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback', '-r', '--recursive'],
+        ['-f', '--force', '-s', '--states', '-i', '--id', '-n', '--name',
+         '-e', '--error', '-z', '--dry-run', '-v', '--verbose',
+         '-q', '--quiet', '-T', '--traceback', '-r',
+         '--recursive'],
     'resubmit':
-        ['-R', '--resources', '-w', '--workflow', '-s', '--states', '-i',
-         '--id', '-n', '--name', '-e', '--error', '-z',
-         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
-         '--traceback', '-r', '--recursive'],
-    'run':
-        ['-n', '--name', '-w', '--workflow', '-z', '--dry-run', '-v',
-         '--verbose', '-q', '--quiet', '-T', '--traceback'],
+        ['-f', '--force', '-R', '--resources', '-w', '--workflow', '-s',
+         '--states', '-i', '--id', '-n', '--name', '-e',
+         '--error', '-z', '--dry-run', '-v', '--verbose', '-q',
+         '--quiet', '-T', '--traceback', '-r', '--recursive'],
     'submit':
         ['-d', '--dependencies', '-n', '--name', '--restart', '-f',
          '--force', '--max-tasks', '-R', '--resources', '-w',

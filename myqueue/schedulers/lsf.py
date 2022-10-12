@@ -2,7 +2,7 @@ from __future__ import annotations
 import subprocess
 
 from myqueue.task import Task
-from myqueue.scheduler import Scheduler, SchedulerError
+from myqueue.schedulers import Scheduler, SchedulerError
 from myqueue.utils import str2number
 
 
@@ -100,7 +100,7 @@ class LSF(Scheduler):
     def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         from collections import defaultdict
-        from .utils import str2number
+        from myqueue.utils import str2number
 
         cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)

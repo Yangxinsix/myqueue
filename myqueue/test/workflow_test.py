@@ -11,12 +11,31 @@ from myqueue.test.hello import workflow as hello
 
 def test_flow1(mq):
     script = Path(__file__).with_name('flow1.py')
+
     mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'ddddddd'
+
     mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'dddddddd'
+
+    mq('rm -sd')
+    mq.wait()
+    assert mq.states() == 'dddddddd'
+
+    mq('rm -sd --force')
+    mq.wait()
+    assert mq.states() == ''
+
+    mq(f'workflow {script}')
+    mq.wait()
+    assert mq.states() == ''
+
+    Path('builtins.print.result').unlink()
+    mq(f'workflow {script}')
+    mq.wait()
+    assert mq.states() == 'd'
 
 
 def test_direct_cached_flow1(tmp_path, capsys):
@@ -52,7 +71,7 @@ def test_flow2(mq):
     mq(f'workflow {script}')
     mq.wait()
     assert mq.states() == 'MCCC'
-    mq('rm -sC .')
+    mq('rm -sC . --force')
     mq(f'workflow {script}')
     assert mq.states() == 'M'
     mq(f'workflow {script} --force')
@@ -78,17 +97,18 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
-    mq('rm -s d . -z')
-    mq('rm -s d .')
-    Path('shell:touch+hello.state').unlink()
+    mq('rm -i 2 -z')  # dry-run
+    mq('rm -i 2')  # needs --force
+    assert mq.states() == 'dd'
+    mq('rm -i 2 --force')
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'd'
     hello = Path('hello')
     hello.unlink()
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == 'd'
+    assert mq.states() == 'dd'
     assert hello.is_file()
 
 
@@ -100,22 +120,21 @@ def test_workflow_running_only_with_targets(mq):
 
 
 def test_workflow_with_failed_job(mq):
-    Path('wf.py').write_text(wf)
-    failed = Path('shell:sleep+3.state')
-    failed.write_text('{"state": "FAILED"}\n')
+    # Introduce bug in workflow task:
+    Path('wf.py').write_text(wf.replace('+3', '+a'))
     mq('workflow wf.py .')
     mq.wait()
-    assert mq.states() == ''
+    assert mq.states() == 'FC'
 
+    # Fix bug:
+    Path('wf.py').write_text(wf)
     mq('workflow wf.py . --force --dry-run')
     mq.wait()
-    assert mq.states() == ''
-    assert failed.read_text() == '{"state": "FAILED"}\n'
+    assert mq.states() == 'FC'
 
     mq('workflow wf.py . --force')
     mq.wait()
-    assert mq.states() == 'dd'
-    assert failed.read_text() == '{"state": "done"}\n'
+    assert mq.states() == 'Fdd'
 
 
 wf2 = """
