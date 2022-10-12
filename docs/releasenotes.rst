@@ -16,7 +16,7 @@ Next release
   in the JSON format.  Previously the return value was written to the
   ``.state`` file.
 * Removing tasks part of a workflow now needs a ``--force``
-  (as myqueue will no longer know the states of such tasks).
+  (as MyQueue will no longer know the states of such tasks).
 * Speed up most commands by delaying import of ``rich`` and ``networkx``.
 
 

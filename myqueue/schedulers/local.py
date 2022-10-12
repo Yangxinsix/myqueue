@@ -51,7 +51,7 @@ class LocalScheduler(Scheduler):
                 raise ConnectionRefusedError(
                     'Local scheduler not responding.  '
                     'Please start it with:\n\n'
-                    'python3 -m myqueue.schedulers.local')
+                    '    python3 -m myqueue.schedulers.local')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
