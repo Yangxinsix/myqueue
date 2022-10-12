@@ -187,6 +187,27 @@ class Task:
             'error': self.error,
             'user': self.user}
 
+    def to_sql(self, root: Path):
+        dct = self.todict(root)
+        return (int(dct['id']),
+                dct['folder'],
+                dct['state'][0],
+                dct['cmd'],
+                dct['resources'],
+                dct['restart'],
+                dct['workflow'],
+                dct['deps'],
+                dct['diskspace'],
+                dct['notifications'],
+                dct['creates'],
+                dct['tqueued'],
+                dct['trunning'],
+                dct['tstop'],
+                dct['error'],
+                dct['user'])
+
+
+
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
         dct = dct.copy()
