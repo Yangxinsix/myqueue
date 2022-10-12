@@ -14,9 +14,9 @@ import sqlite3
 import json
 import sys
 import time
-from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
+from typing import Iterator
 
 from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
@@ -111,6 +111,11 @@ class Queue:
             assert version <= VERSION
         return self._connection
 
+    def sql(self,
+            statement: str,
+            args: list[str | int]) -> Iterator[tuple[int | str | float, ...]]:
+        return self.connection.execute(statement, args)
+
     def get_tasks(self, selection: Selection = None) -> list[Task]:
         root = self.folder.parent
         sql = 'SELECT * FROM tasks'
@@ -123,7 +128,7 @@ class Queue:
         print(sql, args)
         with self.connection:
             tasks = []
-            for row in self.connection.execute(sql, args):
+            for row in self.sql(sql, args):
                 tasks.append(Task.from_sql_row(row, root))
         return tasks
 
@@ -132,8 +137,8 @@ class Queue:
         with self.connection:
             for statement in INIT.split(';'):
                 self.connection.execute(statement)
-            self.connection.execute('INSERT INTO meta VALUES (?, ?)',
-                                    ['version', str(VERSION)])
+            self.sql('INSERT INTO meta VALUES (?, ?)',
+                     ['version', str(VERSION)])
 
         jsonfile = self.folder / 'queue.json'
         if jsonfile.is_file():
@@ -152,10 +157,28 @@ class Queue:
             jsonfile.unlink()
             print(' done')
 
-    def find_dependents(self, id: int) -> Iterator[Task]:
+    def find_dependents(self, id: int) -> Iterator[int]:
         """Yield dependents."""
-        yield task ...
-        yield from task.find_dependents(tasks)
+        (deps,), = self.sql('SELECT deps FROM task WHERE id = ?', [id])
+        dependencies = deps.split(',')
+        q = ', '.join('?' * len(dependencies))
+        for id in self.sql(f'Select id FROM tasks name IN ({q})',
+                           dependencies):
+            yield id
+            yield from self.find_dependents(id)
+
+    def remove(self, ids):
+        with self.connection:
+            self.connection.executemany(
+                'DELETE FROM tasks WHERE id = ?',
+                [[id] for id in ids])
+        cancel = set()
+        for id in ids:
+            cancel.update(self.find_dependents(id))
+        with self.connection:
+            self.connection.executemany(
+                'UPDATE tasks SET state = ? WHERE id  ?',
+                [['C', id] for id in cancel])
 
     def _read_tasks(self) -> list[Task]:
         if self.lock.locked and not self.dry_run:
