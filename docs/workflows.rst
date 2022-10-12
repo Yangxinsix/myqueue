@@ -251,7 +251,7 @@ Here are three equivalent ways to set the ``cores`` resource::
 Functions
 ---------
 
-A task that call a Python function will make sure the function caches its
+A task that calls a Python function will make sure the function caches its
 result. If the function ``f`` has an attribute ``has`` that is a callable
 that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
 to check if the function has been called with a given set of arguments.  If a
@@ -265,6 +265,7 @@ object.
 Helper wrapper for working with functions:
 
 .. autofunction:: myqueue.workflow.wrap
+
 
 .. _dependencies:
 
