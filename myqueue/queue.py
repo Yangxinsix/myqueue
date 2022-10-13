@@ -188,7 +188,7 @@ class Queue:
             cancel.update(self.find_dependents(id))
         with self.connection:
             self.connection.executemany(
-                'UPDATE tasks SET state = ? WHERE id  ?',
+                'UPDATE tasks SET state = ? WHERE id = ?',
                 [['C', id] for id in cancel])
 
 
@@ -252,20 +252,23 @@ def update(tasks: list[Task],
     return task
 
 
-def check(tasks: list[Task], scheduler: Scheduler) -> set[Task]:
+def check(queue: Queue, scheduler: Scheduler) -> set[Task]:
     t = time.time()
 
-    changed = set()
+    timeouts = []
+    for task in queue.tasks('state = "r"'):
+        delta = t - task.trunning - task.resources.tmax
+        if delta > 0:
+            if scheduler.has_timed_out(task) or delta > 1800:
+                timeouts.append(task)
 
-    for task in tasks:
-        if task.state == 'running':
-            delta = t - task.trunning - task.resources.tmax
-            if delta > 0:
-                if scheduler.has_timed_out(task) or delta > 1800:
-                    task.state = State.TIMEOUT
-                    task.tstop = t
-                    task.cancel_dependents(tasks, t)
-                    changed.add(task)
+    with self.connection:
+        self.connection.executemany(
+            'UPDATE tasks SET state = "T", tstop = ? WHERE id = ?',
+            [(t, task.id) for task in timeouts])
+
+    ???task.cancel_dependents(tasks, t)
+    ???changed.add(task)
 
     bad = {task.dname for task in tasks if task.state.is_bad()}
     for task in tasks:
