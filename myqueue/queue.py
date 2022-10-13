@@ -29,27 +29,33 @@ VERSION = 10
 
 INIT = """\
 CREATE TABLE tasks (
-  id INTEGER PRIMARY KEY,
-  folder TEXT,
-  state CHARCTER,
-  cmd TEXT,
-  resources TEXT,
-  restart INTEGER,
-  workflow INTEGER,
-  deps TEXT,
-  diskspace INTEGER,
-  notifications TEXT,
-  creates TEXT,
-  tqueued REAL,
-  trunning REAL,
-  tstop REAL,
-  error TEXT,
-  user TEXT);
+    id INTEGER PRIMARY KEY,
+    folder TEXT,
+    state CHARCTER,
+    cmd TEXT,
+    resources TEXT,
+    restart INTEGER,
+    workflow INTEGER,
+    deps TEXT,
+    diskspace INTEGER,
+    notifications TEXT,
+    creates TEXT,
+    tqueued REAL,
+    trunning REAL,
+    tstop REAL,
+    error TEXT,
+    user TEXT);
+CREATE TABLE dependencies (
+    id INTEGER,
+    did INTEGER,
+    FOREIGN KEY (id) REFERENCES tasks(id),
+    FOREIGN KEY (did) REFERENCES tasks(id));
 CREATE TABLE meta (
     key TEXT,
     value TEXT);
 CREATE INDEX folder_index on tasks(folder);
-CREATE INDEX state_index on tasks(state)
+CREATE INDEX state_index on tasks(state);
+CREATE INDEX dependincies_index on dependencies(id)
 """
 
 
@@ -109,11 +115,16 @@ class Queue:
                     'SELECT value FROM meta where key="version"')
                 .fetchone()[0])
             assert version <= VERSION
+
+        if self.lock.locked and not self.dry_run:
+            read_change_files(self.folder, self.config.user)
+            check(self.scheduler)
+
         return self._connection
 
     def sql(self,
             statement: str,
-            args: list[str | int]) -> Iterator[tuple[int | str | float, ...]]:
+            args: list[str | int]) -> Iterator[tuple]:
         return self.connection.execute(statement, args)
 
     def get_tasks(self, selection: Selection = None) -> list[Task]:
@@ -162,8 +173,8 @@ class Queue:
         (deps,), = self.sql('SELECT deps FROM task WHERE id = ?', [id])
         dependencies = deps.split(',')
         q = ', '.join('?' * len(dependencies))
-        for id in self.sql(f'Select id FROM tasks name IN ({q})',
-                           dependencies):
+        for id, in self.sql(f'Select id FROM tasks name IN ({q})',
+                            dependencies):
             yield id
             yield from self.find_dependents(id)
 
@@ -180,11 +191,6 @@ class Queue:
                 'UPDATE tasks SET state = ? WHERE id  ?',
                 [['C', id] for id in cancel])
 
-    def _read_tasks(self) -> list[Task]:
-        if self.lock.locked and not self.dry_run:
-            read_change_files(self.folder, self.config.user)
-            check(self.scheduler)
-
 
 def read_change_files(folder: Path,
                       tasks: list[Task],
@@ -192,8 +198,8 @@ def read_change_files(folder: Path,
     paths = list(folder.glob('*-*-*'))
     files = []
     for path in paths:
-        _, id, state = path.name.split('-')
-        files.append((path.stat().st_ctime, id, state, path))
+        _, sid, state = path.name.split('-')
+        files.append((path.stat().st_ctime, int(sid), state, path))
     states = {'0': State.running,
               '1': State.done,
               '2': State.FAILED,
@@ -207,7 +213,7 @@ def read_change_files(folder: Path,
 
 
 def update(tasks: list[Task],
-           id: str,
+           id: int,
            state: State,
            t: float,
            path: Path,

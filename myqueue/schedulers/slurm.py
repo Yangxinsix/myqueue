@@ -115,7 +115,6 @@ class SLURM(Scheduler):
         return queued
 
     def maxrss(self, id: int) -> int:
-        assert '.' not in id
         cmd = ['sacct',
                '-j', str(id),
                '-n',

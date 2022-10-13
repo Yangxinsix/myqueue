@@ -43,7 +43,7 @@ class Selection:
         print(self)
         if self.ids is not None:
             q = ', '.join('?' * len(self.ids))
-            return (f'id IN ({q})', list(id for id in self.ids))
+            return (f'id IN ({q})', list(self.ids))
 
         parts = []
         args = []

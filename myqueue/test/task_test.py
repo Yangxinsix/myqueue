@@ -9,7 +9,7 @@ from myqueue.task import task as create_task
 def test_task(tmp_path):
     t = create_task('x', folder=tmp_path)
     assert t.name == 'x.0'
-    assert t.int_id == 0
+    assert t.id == 0
 
     t.state = State.running
     assert t.running_time(1.0) == 1.0

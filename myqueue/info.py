@@ -49,7 +49,7 @@ def info(queue: Queue,
 
         return
 
-    task = queue.select(Selection({id}))[0]
+    task = queue.get_tasks(Selection({id}))[0]
     print(json.dumps(task.todict(), indent='    '))
     if verbosity > 1:
         path = queue.scheduler.error_file(task)
