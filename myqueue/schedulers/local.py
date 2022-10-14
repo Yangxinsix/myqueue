@@ -223,7 +223,7 @@ class Server:
 
         self.kick()
 
-    def cancel_dependents(self, task):
+    def cancel_dependents(self, task: Task) -> None:
         for job in self.tasks.values():
             if task.dname in job.deps:
                 job.state = State.CANCELED

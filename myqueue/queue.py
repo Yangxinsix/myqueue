@@ -11,12 +11,11 @@ File format versions:
 from __future__ import annotations
 
 import sqlite3
-import json
 import sys
 import time
 from pathlib import Path
 from types import TracebackType
-from typing import Iterator, Sequence
+from typing import Iterator, Iterable
 
 from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
@@ -24,6 +23,7 @@ from myqueue.states import State
 from myqueue.task import Task
 from myqueue.utils import Lock, cached_property
 from myqueue.selection import Selection
+from myqueue.migration import migrate
 
 VERSION = 10
 
@@ -32,6 +32,7 @@ CREATE TABLE tasks (
     id INTEGER PRIMARY KEY,
     folder TEXT,
     state CHARCTER,
+    name TEXT,
     cmd TEXT,
     resources TEXT,
     restart INTEGER,
@@ -161,23 +162,10 @@ class Queue:
 
         jsonfile = self.folder / 'queue.json'
         if jsonfile.is_file():
-            print(f'Converting {jsonfile} to SQLite3 file ...',
-                  end='', flush=True)
-            text = jsonfile.read_text()
-            data = json.loads(text)
-            root = self.folder.parent
-            with self.connection:
-                q = ', '.join('?' * 16)
-                self.connection.executemany(
-                    f'INSERT INTO tasks VALUES ({q})',
-                    [Task.fromdict(dct, root).to_sql(root)
-                     for dct in data['tasks']])
-            jsonfile.with_suffix('.old.json').write_text(text)
-            jsonfile.unlink()
-            print(' done')
+            migrate(jsonfile, self.connection)
 
     def find_dependents(self,
-                        ids: Sequence[int],
+                        ids: Iterable[int],
                         known: dict[int, list[int]] = None) -> Iterator[int]:
         """Yield dependents."""
         if known is None:
@@ -196,14 +184,14 @@ class Queue:
             yield from result
             yield from self.find_dependents(result, known)
 
-    def cancel_dependents(self, ids: Sequence[int]) -> None:
+    def cancel_dependents(self, ids: Iterable[int]) -> None:
         t = time.time()
         with self.connection as con:
             con.executemany(
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
                 [(t, id) for id in self.find_dependents(ids)])
 
-    def remove(self, ids: Sequence[int]) -> None:
+    def remove(self, ids: Iterable[int]) -> None:
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:

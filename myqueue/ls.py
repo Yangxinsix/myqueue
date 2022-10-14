@@ -13,7 +13,7 @@ def ls(queue: Queue,
        short: bool = False,
        verbosity: int = 1) -> list[Task]:
     """Pretty-print list of tasks."""
-    tasks = queue.get_tasks(selection)
+    tasks = queue.select(selection)
     if isinstance(sort, str):
         tasks.sort(key=lambda task: task.order_key(sort),  # type: ignore
                    reverse=reverse)

@@ -185,11 +185,13 @@ class Task:
             'user': self.user}
 
     def to_sql(self, root: Path) -> tuple[int, str, str, str, str,
-                                          int, bool, str, int, str, str,
-                                          float, float, float, str, str]:
+                                          str, int, bool, str, int,
+                                          str, str, float, float, float,
+                                          str, str]:
         return (self.id,
                 str(self.folder.relative_to(root)) + '/',
                 self.state.name[0],
+                self.dname,
                 json.dumps(self.cmd.todict()),
                 json.dumps(self.resources.todict()),
                 self.restart,
@@ -206,10 +208,10 @@ class Task:
 
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
-        (id, folder, state, cmd, resources,
-         restart, workflow, deps, diskspace, notifications,
-         creates, tqueued, trunning, tstop, error,
-         user) = row
+        (id, folder, state, name, cmd,
+         resources, restart, workflow, deps, diskspace,
+         notifications, creates, tqueued, trunning, tstop,
+         error, user) = row
         return Task(id=id,
                     folder=root / folder,
                     state=State(state),
