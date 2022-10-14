@@ -55,12 +55,13 @@ CREATE TABLE meta (
     value TEXT);
 CREATE INDEX folder_index on tasks(folder);
 CREATE INDEX state_index on tasks(state);
-CREATE INDEX dependincies_index on dependencies(id)
+CREATE INDEX dependincies_index1 on dependencies(id);
+CREATE INDEX dependincies_index2 on dependencies(id)
 """
 
 
 class Queue:
-    """Object for interacting with your .myqueue/queue.json file"""
+    """Object for interacting with your .myqueue/queue.sqlite3 file"""
     def __init__(self,
                  config: Configuration = None,
                  *,
@@ -117,8 +118,9 @@ class Queue:
             assert version <= VERSION
 
         if self.lock.locked and not self.dry_run:
-            read_change_files(self.folder, self.config.user)
-            check(self.scheduler)
+            self.process_change_files()
+            self.check_for_timeout()
+            self.check_for_oom()
 
         return self._connection
 
@@ -129,17 +131,23 @@ class Queue:
 
     def get_tasks(self, selection: Selection = None) -> list[Task]:
         root = self.folder.parent
-        sql = 'SELECT * FROM tasks'
         if selection:
             where, args = selection.sql_where_statement(root)
-            if where:
-                sql += f' WHERE {where}'
         else:
+            where = ''
             args = []
+        return self.tasks(where, args)
+
+    def tasks(self, where: str, args: list[str | int] = None) -> list[Task]:
+        root = self.folder.parent
+        if where:
+            sql = f'SELECT * FROM tasks WHERE {where}'
+        else:
+            sql = 'SELECT * FROM tasks'
         print(sql, args)
         with self.connection:
             tasks = []
-            for row in self.sql(sql, args):
+            for row in self.sql(sql, args or []):
                 tasks.append(Task.from_sql_row(row, root))
         return tasks
 
@@ -168,123 +176,136 @@ class Queue:
             jsonfile.unlink()
             print(' done')
 
-    def find_dependents(self, id: int) -> Iterator[int]:
+    def find_dependents(self, ids: int, known=None) -> Iterator[int]:
         """Yield dependents."""
-        (deps,), = self.sql('SELECT deps FROM task WHERE id = ?', [id])
-        dependencies = deps.split(',')
-        q = ', '.join('?' * len(dependencies))
-        for id, in self.sql(f'Select id FROM tasks name IN ({q})',
-                            dependencies):
-            yield id
-            yield from self.find_dependents(id)
+        if known is None:
+            known = {}
+        result = set()
+        for id in ids:
+            if id in known:
+                result.update(known[id])
+            else:
+                dependents = self.sql(
+                    'SELECT id FROM dependencies WHERE did = ?', [id])
+                known[id] = dependents
+                result.update(dependents)
+        if result:
+            yield from result
+            yield from self.find_dependents(result, known)
+
+    def cancel_dependents(self, ids):
+        t = time.time()
+        with self.connection as con:
+            con.executemany(
+                'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
+                [(t, id) for id in self.find_dependents(ids)])
 
     def remove(self, ids):
+        self.cancel_dependents(ids)
+        args = [[id] for id in ids]
+        with self.connection as con:
+            con.executemany('DELETE FROM dependencies WHERE id = ?', args)
+            con.executemany('DELETE FROM dependencies WHERE did = ?', args)
+            con.executemany('DELETE FROM tasks WHERE id = ?', args)
+
+    def check_for_timeout(self) -> None:
+        t = time.time()
+
+        timeouts = []
+        for task in self.tasks('state = "r"'):
+            delta = t - task.trunning - task.resources.tmax
+            if delta > 0:
+                if self.scheduler.has_timed_out(task) or delta > 1800:
+                    timeouts.append(task)
+
         with self.connection:
             self.connection.executemany(
-                'DELETE FROM tasks WHERE id = ?',
-                [[id] for id in ids])
-        cancel = set()
-        for id in ids:
-            cancel.update(self.find_dependents(id))
+                'UPDATE tasks SET state = "T", tstop = ? WHERE id = ?',
+                [(t, task.id) for task in timeouts])
+        self.cancel_dependents(timeouts)
+
+    def check_for_oom(self) -> None:
+        ooms = []
+        for task in self.tasks('state = "F" AND error = ""'):
+            if task.read_error(self.scheduler):
+                ooms.append(id)
         with self.connection:
             self.connection.executemany(
-                'UPDATE tasks SET state = ? WHERE id = ?',
-                [['C', id] for id in cancel])
+                'UPDATE tasks SET state = "M" WHERE id = ?',
+                [(id,) for id in ooms])
 
+    def process_change_files(self) -> None:
+        paths = list(self.folder.glob('*-*-*'))
+        states = {'0': State.running,
+                  '1': State.done,
+                  '2': State.FAILED,
+                  '3': State.TIMEOUT}
+        files = []
+        for path in paths:
+            id, state = (int(x) for x in path.name.split('-')[1:])
+            files.append((path.stat().st_ctime, id, state, path))
 
-def read_change_files(folder: Path,
-                      tasks: list[Task],
-                      user: str) -> set[Task]:
-    paths = list(folder.glob('*-*-*'))
-    files = []
-    for path in paths:
-        _, sid, state = path.name.split('-')
-        files.append((path.stat().st_ctime, int(sid), state, path))
-    states = {'0': State.running,
-              '1': State.done,
-              '2': State.FAILED,
-              '3': State.TIMEOUT}
-    changed = set()
-    for t, id, state, path in sorted(files):
-        task = update(tasks, id, states[state], t, path, user)
-        if task:
-            changed.add(task)
-    return changed
+        for ctime, id, state, path in sorted(files):
+            self.update_one_task(id, states[state], ctime, path)
 
+    def update_one_task(self,
+                        id: int,
+                        newstate: State,
+                        ctime: float,
+                        path: Path) -> None:
+        try:
+            user, = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
+        except ValueError:
+            print(f'No such task: {id}, {newstate}', file=sys.stderr)
+            path.unlink()
+            return None
 
-def update(tasks: list[Task],
-           id: int,
-           state: State,
-           t: float,
-           path: Path,
-           user: str) -> None | Task:
+        if user != self.config.user:
+            return
 
-    for task in tasks:
-        if task.id == id:
-            break
-    else:  # no break
-        print(f'No such task: {id}, {state}', file=sys.stderr)
+        if newstate == 'done':
+            with self.connection as con:
+                con.execute('DELETE FROM dependencies WHERE did = ?', [id])
+            with self.connection as con:
+                con.execute(
+                    'UPDATE tasks SET state = "d", tstop = ? WHERE id = ?',
+                    [ctime, id])
+
+        elif newstate == 'running':
+            with self.connection as con:
+                con.execute(
+                    'UPDATE tasks SET state = "r", trunning = ? WHERE id = ?',
+                    [ctime, id])
+
+        else:
+            assert newstate in ['FAILED', 'TIMEOUT', 'MEMORY']
+            self.cancel_dependents([id])
+            with self.connection as con:
+                con.execute(
+                    'UPDATE tasks SET state = ?, tstop = ? WHERE id = ?',
+                    [newstate.value, ctime, id])
+
         path.unlink()
-        return None
-
-    if task.user != user:
-        return None
-
-    t = t or time.time()
-
-    task.state = state
-
-    if state == 'done':
-        for tsk in tasks:
-            if task.dname in tsk.deps:
-                tsk.deps.remove(task.dname)
-        task.tstop = t
-
-    elif state == 'running':
-        task.trunning = t
-
-    else:
-        assert state in ['FAILED', 'TIMEOUT', 'MEMORY']
-        task.cancel_dependents(tasks, t)
-        task.tstop = t
-
-    path.unlink()
-    return task
 
 
-def check(queue: Queue, scheduler: Scheduler) -> set[Task]:
-    t = time.time()
+if __name__ == '__main__':
+    from rich.table import Table
+    from rich.console import Console
+    print = Console().print
+    name = sys.argv[1]
+    db = sqlite3.connect(name)
+    table = Table(title=name)
+    columns = [line.strip().split()[0]
+               for line in INIT.split(';')[0].splitlines()[1:]]
+    for name in columns:
+        table.add_column(name)
+    for row in db.execute('SELECT * from tasks'):
+        table.add_row(*[str(x) for x in row])
+    print(table)
 
-    timeouts = []
-    for task in queue.tasks('state = "r"'):
-        delta = t - task.trunning - task.resources.tmax
-        if delta > 0:
-            if scheduler.has_timed_out(task) or delta > 1800:
-                timeouts.append(task)
-
-    with self.connection:
-        self.connection.executemany(
-            'UPDATE tasks SET state = "T", tstop = ? WHERE id = ?',
-            [(t, task.id) for task in timeouts])
-
-    ???task.cancel_dependents(tasks, t)
-    ???changed.add(task)
-
-    bad = {task.dname for task in tasks if task.state.is_bad()}
-    for task in tasks:
-        if task.state == 'queued':
-            for dep in task.deps:
-                if dep in bad:
-                    task.state = State.CANCELED
-                    task.tstop = t
-                    changed.add(task)
-                    break
-
-    for task in tasks:
-        if task.state == 'FAILED':
-            if not task.error:
-                oom = task.read_error(scheduler)
-                if oom:
-                    task.state = State.MEMORY
-                changed.add(task)
-    return changed
+    table = Table(title='dependencies')
+    table.add_column('id')
+    table.add_column('did')
+    for row in db.execute('SELECT * from dependencies'):
+        table.add_row(*[str(x) for x in row])
+    print(table)

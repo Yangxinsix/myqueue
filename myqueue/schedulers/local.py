@@ -123,7 +123,6 @@ class Server:
             self.server.close()
             print('BYE')
             return
-            result = None
         elif cmd == 'submit':
             task = args[0]
             task.id = self.next_id
