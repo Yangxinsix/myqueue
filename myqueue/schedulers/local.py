@@ -215,13 +215,19 @@ class Server:
                 state = 3
             else:
                 state = 2
-            task.cancel_dependents(list(self.tasks.values()))
+            self.cancel_dependents(task)
             self.tasks = {id: task for id, task in self.tasks.items()
                           if task.state != 'CANCELED'}
 
         (self.folder / f'local-{task.id}-{state}').write_text('')
 
         self.kick()
+
+    def cancel_dependents(self, task):
+        for job in self.tasks.values():
+            if task.dname in job.deps:
+                job.state = State.CANCELED
+                self.cancel_dependents(job)
 
     def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
         """Terminate a task."""

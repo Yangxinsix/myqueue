@@ -540,8 +540,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'remove':
             from myqueue.remove import remove
-            tasks = queue.get_tasks(selection)
-            tasks = queue.find_depending(tasks)
+            tasks = queue.select(selection)
             remove(queue, tasks, verbosity, args.force)
 
         elif args.command == 'resubmit':

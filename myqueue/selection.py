@@ -39,8 +39,7 @@ class Selection:
         return (f'Selection({self.ids}, {self.name}, {self.states}, '
                 f'{self.folders}, {self.recursive}, {self.error})')
 
-    def sql_where_statement(self, root: Path) -> tuple[str, list[str | int]]:
-        print(self)
+    def sql_where_statement(self, root: Path) -> tuple[str, list]:
         if self.ids is not None:
             q = ', '.join('?' * len(self.ids))
             return (f'id IN ({q})', list(self.ids))

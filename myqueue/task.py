@@ -4,7 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Iterator
 from warnings import warn
 
 from myqueue.commands import Command, create_command
@@ -206,9 +206,10 @@ class Task:
 
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
-        (id, folder, state, cmd, resources, restart, workflow, deps,
-         diskspace, notifications, creates, tqueued, trunning, tstop,
-         error, user) = row
+        (id, folder, state, cmd, resources,
+         restart, workflow, deps, diskspace, notifications,
+         creates, tqueued, trunning, tstop, error,
+         user) = row
         return Task(id=id,
                     folder=root / folder,
                     state=State(state),
@@ -276,7 +277,7 @@ class Task:
             return True
         return False
 
-    def read_error(self, scheduler: 'Scheduler') -> bool:
+    def read_error_and_check_for_oom(self, scheduler: 'Scheduler') -> bool:
         """Check error message.
 
         Return True if out of memory.
@@ -316,17 +317,6 @@ class Task:
         config = Configuration.read()
         with Queue(config, dry_run=dry_run) as queue:
             submit(queue, [self], verbosity=verbosity)
-
-    def cancel_dependents(self,
-                          tasks: Sequence[Task],
-                          t: float = 0.0) -> int:
-        """Cancel dependents."""
-        ncancel = 0
-        for task in self.find_dependents(tasks):
-            task.state = State.CANCELED
-            task.tstop = t
-            ncancel += 1
-        return ncancel
 
     def run(self) -> None:
         self.result = self.cmd.run()

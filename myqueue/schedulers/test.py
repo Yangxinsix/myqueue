@@ -120,6 +120,12 @@ class TestScheduler(Scheduler):
             self.tasks = tasks
         else:
             task.state = State.CANCELED
-            task.cancel_dependents(self.tasks, 0)
+            self.cancel_dependents(task)
             self.tasks = [task for task in self.tasks
                           if task.state != 'CANCELED']
+
+    def cancel_dependents(self, task: Task) -> None:
+        for job in self.tasks:
+            if task.dname in job.deps:
+                job.state = State.CANCELED
+                self.cancel_dependents(job)

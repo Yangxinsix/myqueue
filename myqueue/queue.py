@@ -16,7 +16,7 @@ import sys
 import time
 from pathlib import Path
 from types import TracebackType
-from typing import Iterator
+from typing import Iterator, Sequence
 
 from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
@@ -129,7 +129,7 @@ class Queue:
             args: list[str | int]) -> Iterator[tuple]:
         return self.connection.execute(statement, args)
 
-    def get_tasks(self, selection: Selection = None) -> list[Task]:
+    def select(self, selection: Selection = None) -> list[Task]:
         root = self.folder.parent
         if selection:
             where, args = selection.sql_where_statement(root)
@@ -176,7 +176,9 @@ class Queue:
             jsonfile.unlink()
             print(' done')
 
-    def find_dependents(self, ids: int, known=None) -> Iterator[int]:
+    def find_dependents(self,
+                        ids: Sequence[int],
+                        known: dict[int, list[int]] = None) -> Iterator[int]:
         """Yield dependents."""
         if known is None:
             known = {}
@@ -185,22 +187,23 @@ class Queue:
             if id in known:
                 result.update(known[id])
             else:
-                dependents = self.sql(
-                    'SELECT id FROM dependencies WHERE did = ?', [id])
+                dependents = [
+                    id for id, in self.sql(
+                        'SELECT id FROM dependencies WHERE did = ?', [id])]
                 known[id] = dependents
                 result.update(dependents)
         if result:
             yield from result
             yield from self.find_dependents(result, known)
 
-    def cancel_dependents(self, ids):
+    def cancel_dependents(self, ids: Sequence[int]) -> None:
         t = time.time()
         with self.connection as con:
             con.executemany(
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
                 [(t, id) for id in self.find_dependents(ids)])
 
-    def remove(self, ids):
+    def remove(self, ids: Sequence[int]) -> None:
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:
@@ -216,30 +219,29 @@ class Queue:
             delta = t - task.trunning - task.resources.tmax
             if delta > 0:
                 if self.scheduler.has_timed_out(task) or delta > 1800:
-                    timeouts.append(task)
+                    timeouts.append(task.id)
 
         with self.connection:
             self.connection.executemany(
                 'UPDATE tasks SET state = "T", tstop = ? WHERE id = ?',
-                [(t, task.id) for task in timeouts])
+                [(t, id) for id in timeouts])
         self.cancel_dependents(timeouts)
 
     def check_for_oom(self) -> None:
-        ooms = []
+        args = []
         for task in self.tasks('state = "F" AND error = ""'):
-            if task.read_error(self.scheduler):
-                ooms.append(id)
+            oom = task.read_error_and_check_for_oom(self.scheduler)
+            args.append(('M' if oom else 'F', task.error, task.id))
         with self.connection:
             self.connection.executemany(
-                'UPDATE tasks SET state = "M" WHERE id = ?',
-                [(id,) for id in ooms])
+                'UPDATE tasks SET state = ?, error = ? WHERE id = ?', args)
 
     def process_change_files(self) -> None:
         paths = list(self.folder.glob('*-*-*'))
-        states = {'0': State.running,
-                  '1': State.done,
-                  '2': State.FAILED,
-                  '3': State.TIMEOUT}
+        states = {0: State.running,
+                  1: State.done,
+                  2: State.FAILED,
+                  3: State.TIMEOUT}
         files = []
         for path in paths:
             id, state = (int(x) for x in path.name.split('-')[1:])
@@ -291,7 +293,7 @@ class Queue:
 if __name__ == '__main__':
     from rich.table import Table
     from rich.console import Console
-    print = Console().print
+    prnt = Console().print
     name = sys.argv[1]
     db = sqlite3.connect(name)
     table = Table(title=name)
@@ -301,11 +303,11 @@ if __name__ == '__main__':
         table.add_column(name)
     for row in db.execute('SELECT * from tasks'):
         table.add_row(*[str(x) for x in row])
-    print(table)
+    prnt(table)
 
     table = Table(title='dependencies')
     table.add_column('id')
     table.add_column('did')
     for row in db.execute('SELECT * from dependencies'):
         table.add_row(*[str(x) for x in row])
-    print(table)
+    prnt(table)
