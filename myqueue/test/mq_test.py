@@ -186,8 +186,7 @@ def test_sync_cancel(mq):
         t = task('shell:echo')
         t.state = State.running
         t.trunning = time.time()
-        q.tasks.append(t)
-        q.changed.add(t)
+        q.add(t)
     mq('sync')
     assert mq.states() == 'C'
 
@@ -215,8 +214,7 @@ def test_clean_up(mq):
         t1.trunning = 0.0  # very old
         t2 = task('shell:echo', deps=[t1])
         t2.state = State.queued
-        q.tasks += [t1, t2]
-        q.changed.add(t1)
+        q.add(t1, t2)
     assert mq.states() == 'TC'
 
 

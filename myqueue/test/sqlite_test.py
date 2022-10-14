@@ -14,5 +14,5 @@ def test_migration(tmp_path):
     text = json.dumps(dct)
     (mq / 'queue.json').write_text(text)
     with Queue() as q:
-        tasks = q.get_tasks()
+        tasks = q.select()
         assert len(tasks) == 1

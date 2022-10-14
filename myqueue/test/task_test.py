@@ -49,7 +49,7 @@ def test_task(tmp_path):
     err = tmp_path / 'x.err'
 
     def oom():
-        return t.read_error(
+        return t.read_error_and_check_for_oom(
             SimpleNamespace(error_file=lambda _: err))  # type: ignore
 
     assert not oom()

@@ -67,4 +67,4 @@ class MQ:
 
 def mqlist(config) -> list[Task]:
     with Queue(config) as q:
-        return q.tasks
+        return q.select()

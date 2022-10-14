@@ -125,6 +125,19 @@ class Queue:
 
         return self._connection
 
+    def add(self, *tasks: Task) -> None:
+        root = self.folder.parent
+        q = ', '.join('?' * 17)
+        with self.connection as con:
+            con.executemany(
+                f'INSERT INTO tasks VALUES ({q})',
+                [task.to_sql(root) for task in tasks])
+        deps = []
+        for task in tasks:
+            for dep in task.dtasks:
+                deps.append((task.id, dep.id))
+        con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
+
     def sql(self,
             statement: str,
             args: list[str | int]) -> Iterator[tuple]:

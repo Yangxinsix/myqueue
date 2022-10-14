@@ -191,7 +191,7 @@ class Task:
         return (self.id,
                 str(self.folder.relative_to(root)) + '/',
                 self.state.name[0],
-                self.dname,
+                str(self.dname),
                 json.dumps(self.cmd.todict()),
                 json.dumps(self.resources.todict()),
                 self.restart,
