@@ -191,6 +191,24 @@ class Queue:
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
                 [(t, id) for id in self.find_dependents(ids)])
 
+    def find_dependency(dname: TaskName,
+                        current: dict[TaskName, Task],
+                        new: dict[TaskName, Task],
+                        force: bool = False) -> Task:
+        """Convert dependency name to task."""
+        if dname in current:
+            task = current[dname]
+            if task.state.is_bad():
+                if force:
+                    if dname not in new:
+                        raise DependencyError(dname)
+                    task = new[dname]
+        elif dname in new:
+            task = new[dname]
+        else:
+            raise DependencyError(dname)
+        return task
+
     def remove(self, ids: Iterable[int]) -> None:
         self.cancel_dependents(ids)
         args = [[id] for id in ids]

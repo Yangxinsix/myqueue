@@ -11,7 +11,7 @@ from myqueue.pretty import pprint
 from myqueue.queue import Queue
 from myqueue.schedulers import Scheduler
 from myqueue.states import State
-from myqueue.task import Task
+from myqueue.task import Task, task as create_task
 from myqueue.utils import plural
 
 if TYPE_CHECKING:
@@ -22,25 +22,6 @@ TaskName = Path
 
 class DependencyError(Exception):
     """Bad dependency."""
-
-
-def find_dependency(dname: TaskName,
-                    current: dict[TaskName, Task],
-                    new: dict[TaskName, Task],
-                    force: bool = False) -> Task:
-    """Convert dependency name to task."""
-    if dname in current:
-        task = current[dname]
-        if task.state.is_bad():
-            if force:
-                if dname not in new:
-                    raise DependencyError(dname)
-                task = new[dname]
-    elif dname in new:
-        task = new[dname]
-    else:
-        raise DependencyError(dname)
-    return task
 
 
 def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
@@ -64,6 +45,32 @@ def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
     return [task for task in tasks if not task.state.is_bad()]
 
 
+wf = """
+        if 0:  # task.workflow:
+            if task.dname in current:
+                task.state = current[task.dname].state
+            else:
+                if task.state == State.undefined:
+                    if task.check_creates_files():
+                        task.state = State.done
+        count[task.state] += 1
+
+        if task.state == State.undefined:
+            submit.append(task)
+        elif task.state.is_bad() and force:
+            task.state = State.undefined
+            submit.append(task)
+            1 / 0
+        else:
+            1 / 0
+    count.pop(State.undefined, None)
+    if count:
+        print(', '.join(f'{state}: {n}' for state, n in count.items()))
+    if any(state.is_bad() for state in count) and not force:
+        print('Use --force to ignore failed tasks.')
+"""
+
+
 def submit(queue: Queue,
            tasks: Sequence[Task],
            *,
@@ -78,30 +85,59 @@ def submit(queue: Queue,
         Ignore and remove name.FAILED files.
     """
 
-    current = {task.dname: task for task in queue.tasks}
-
-    submitted, skipped, ex = submit_tasks(
-        queue.scheduler, tasks, current,
-        force, max_tasks,
-        verbosity, queue.dry_run)
-
+    """
     for task in submitted:
         if task.workflow:
             oldtask = current.get(task.dname)
             if oldtask:
                 queue.tasks.remove(oldtask)
                 queue.changed.add(oldtask)
+    """
 
-    if 'MYQUEUE_TESTING' in os.environ:
-        if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
-            raise KeyboardInterrupt
+    name_to_task = {task.dname: task for task in tasks}
+    name_to_id_and_state = {}
+    for task in tasks:
+        task.dtasks = []
+        for dname in task.deps:
+            dtask = name_to_task.get(dname)
+            if dtask is None:
+                id, state = name_to_id_and_state.get(dname)
+                if id is None:
+                    rows = queue.sql(
+                        'SELECT id, state FROM tasks WHERE name = ?',
+                        [task.id])
+                    if not rows:
+                        raise DependencyError(f'Can not find {dname}')
+                    id, state = max(rows)
+                    name_to_id_and_state[dname] = id, state
+                if state in 'qhr':
+                    dtask = create_task()
+                    task.id = id
+                elif state == 'd':
+                    continue
+                else:
+                    raise DependencyError(f'Bad state ({state}): {dname}')
 
-    queue.tasks += submitted
-    queue.changed.update(submitted)
+            task.dtasks.append(dtask)
+
+    tasks = [task for task in order({task: task.dtasks for task in submit})]
+
+    tasks = tasks[:max_tasks]
+
+    ids, ex = submit_tasks(queue.scheduler, tasks, verbosity, queue.dry_run)
+    submitted = tasks[:len(ids)]
 
     if ex:
+        nskip = len(tasks) - len(submitted)
         print()
-        print('Skipped', plural(len(skipped), 'task'))
+        print('Skipped', plural(nskip, 'task'))
+
+    t = time.time()
+    for task, id in zip(submitted, ids):
+        task.id = id
+        task.state = State.queued
+        task.tqueued = t
+        # task.deps = [dep.dname for dep in task.dtasks]
 
     pprint(submitted, 0, 'ifnaIr',
            maxlines=10 if verbosity < 2 else 99999999999999)
@@ -109,74 +145,11 @@ def submit(queue: Queue,
         if queue.dry_run:
             print(plural(len(submitted), 'task'), 'to submit')
         else:
+            queue.add(*submitted)
             print(plural(len(submitted), 'task'), 'submitted')
 
     if ex:
         raise ex
-
-
-def submit_tasks(scheduler: Scheduler,
-                 tasks: Sequence[Task],
-                 current: dict[Path, Task],
-                 force: bool,
-                 max_tasks: int,
-                 verbosity: int,
-                 dry_run: bool) -> tuple[list[Task],
-                                         list[Task],
-                                         Exception | KeyboardInterrupt | None]:
-    """Submit tasks."""
-
-    new = {task.dname: task for task in tasks}
-
-    count: dict[State, int] = defaultdict(int)
-    submit = []
-    for task in tasks:
-        if task.workflow:
-            if task.dname in current:
-                task.state = current[task.dname].state
-            else:
-                if task.state == State.undefined:
-                    if task.check_creates_files():
-                        task.state = State.done
-        count[task.state] += 1
-
-        if task.state == State.undefined:
-            submit.append(task)
-        elif task.state.is_bad() and force:
-            task.state = State.undefined
-            submit.append(task)
-
-    count.pop(State.undefined, None)
-    if count:
-        print(', '.join(f'{state}: {n}' for state, n in count.items()))
-    if any(state.is_bad() for state in count) and not force:
-        print('Use --force to ignore failed tasks.')
-
-    for task in submit:
-        task.dtasks = []
-        for dname in task.deps:
-            dep = find_dependency(dname, current, new, force)
-            if dep.state != 'done':
-                task.dtasks.append(dep)
-
-    n = len(submit)
-    submit = remove_bad_tasks(submit)
-    n = n - len(submit)
-    if n > 0:
-        print('Skipping', plural(n, 'task'), '(bad dependency)')
-
-    submit = [task for task in order({task: task.dtasks for task in submit})
-              if task.state == State.undefined]
-
-    submit = submit[:max_tasks]
-
-    ids, ex = submit_tasks(queue.scheduler, submit, verbosity, dry_run)
-
-    t = time.time()
-    for task, id in zip(submit, ids):
-        task.state = State.queued
-        task.tqueued = t
-        task.deps = [dep.dname for dep in task.dtasks]
 
 
 def submit_tasks(scheduler: Scheduler,
