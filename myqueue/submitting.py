@@ -125,7 +125,6 @@ def submit_tasks(scheduler: Scheduler,
                                          list[Task],
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
-    import rich.progress as progress
 
     new = {task.dname: task for task in tasks}
 
@@ -171,19 +170,29 @@ def submit_tasks(scheduler: Scheduler,
 
     submit = submit[:max_tasks]
 
+    ids, ex = submit_tasks(queue.scheduler, submit, verbosity, dry_run)
+
     t = time.time()
-    for task in submit:
+    for task, id in zip(submit, ids):
         task.state = State.queued
         task.tqueued = t
         task.deps = [dep.dname for dep in task.dtasks]
 
+
+def submit_tasks(scheduler: Scheduler,
+                 tasks: Sequence[Task],
+                 verbosity: int,
+                 dry_run: bool) -> tuple[list[int],
+                                         Exception | KeyboardInterrupt | None]:
+    """Submit tasks."""
+    import rich.progress as progress
     venv = os.environ.get('VIRTUAL_ENV')
     if venv:
         activation_script = Path(venv) / 'bin/activate'
         for task in submit:
             task.activation_script = activation_script
 
-    submitted = []
+    ids = []
     ex = None
 
     pb: progress.Progress | NoProgressBar
@@ -197,18 +206,18 @@ def submit_tasks(scheduler: Scheduler,
 
     with pb:
         try:
-            id = pb.add_task('Submitting tasks:', total=len(submit))
+            pid = pb.add_task('Submitting tasks:', total=len(submit))
             for task in submit:
-                scheduler.submit(
+                id = scheduler.submit(
                     task,
                     dry_run,
                     verbosity >= 2)
-                submitted.append(task)
-                pb.advance(id)
+                ids.append(id)
+                pb.advance(pid)
         except (Exception, KeyboardInterrupt) as x:
             ex = x
 
-    return submitted, submit[len(submitted):], ex
+    return ids, ex
 
 
 T = TypeVar('T')
