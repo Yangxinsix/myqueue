@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -95,32 +94,35 @@ def submit(queue: Queue,
     """
 
     name_to_task = {task.dname: task for task in tasks}
-    name_to_id_and_state = {}
+    name_to_id_and_state: dict[str, tuple[int, str]] = {}
     for task in tasks:
         task.dtasks = []
         for dname in task.deps:
-            dtask = name_to_task.get(dname)
+            name = str(dname)
+            dtask = name_to_task.get(name)
             if dtask is None:
-                id, state = name_to_id_and_state.get(dname)
-                if id is None:
+                id, state = name_to_id_and_state.get(name, (-1, ''))
+                if id == -1:
                     rows = queue.sql(
                         'SELECT id, state FROM tasks WHERE name = ?',
-                        [task.id])
-                    if not rows:
-                        raise DependencyError(f'Can not find {dname}')
-                    id, state = max(rows)
-                    name_to_id_and_state[dname] = id, state
+                        [name])
+                    id, state = max(rows, default=(-1, ''))
+                    if id == -1:
+                        raise DependencyError(f'Can not find {name}')
+                    name_to_id_and_state[name] = id, state
                 if state in 'qhr':
-                    dtask = create_task()
-                    task.id = id
+                    dtask = create_task('dummy')
+                    dtask.id = id
+                    dtask.state = State(state)
                 elif state == 'd':
                     continue
                 else:
-                    raise DependencyError(f'Bad state ({state}): {dname}')
+                    raise DependencyError(f'Bad state ({state}): {name}')
 
             task.dtasks.append(dtask)
 
-    tasks = [task for task in order({task: task.dtasks for task in submit})]
+    tasks = [task for task in order({task: task.dtasks for task in tasks})
+             if task.state == State.undefined]
 
     tasks = tasks[:max_tasks]
 
@@ -159,18 +161,13 @@ def submit_tasks(scheduler: Scheduler,
                                          Exception | KeyboardInterrupt | None]:
     """Submit tasks."""
     import rich.progress as progress
-    venv = os.environ.get('VIRTUAL_ENV')
-    if venv:
-        activation_script = Path(venv) / 'bin/activate'
-        for task in submit:
-            task.activation_script = activation_script
 
     ids = []
     ex = None
 
     pb: progress.Progress | NoProgressBar
 
-    if verbosity and len(submit) > 1:
+    if verbosity and len(tasks) > 1:
         pb = progress.Progress('[progress.description]{task.description}',
                                progress.BarColumn(),
                                progress.MofNCompleteColumn())
@@ -179,8 +176,8 @@ def submit_tasks(scheduler: Scheduler,
 
     with pb:
         try:
-            pid = pb.add_task('Submitting tasks:', total=len(submit))
-            for task in submit:
+            pid = pb.add_task('Submitting tasks:', total=len(tasks))
+            for task in tasks:
                 id = scheduler.submit(
                     task,
                     dry_run,

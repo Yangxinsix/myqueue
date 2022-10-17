@@ -10,7 +10,7 @@ class LSF(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -53,7 +53,7 @@ class LSF(Scheduler):
             'id=$LSB_JOBID\n'
             f'mq={home}/.myqueue/lsf-$id\n')
 
-        script += task.get_venv_activation_line()
+        script += self.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -67,7 +67,7 @@ class LSF(Scheduler):
         if dry_run:
             print(' \\\n    '.join(bsub))
             print(script)
-            return
+            return 1
 
         p = subprocess.run(bsub,
                            input=script.encode(),
@@ -75,7 +75,7 @@ class LSF(Scheduler):
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
         id = int(p.stdout.split()[1][1:-1].decode())
-        task.id = id
+        return id
 
     def has_timed_out(self, task: Task) -> bool:
         path = self.error_file(task).expanduser()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from myqueue.config import Configuration
@@ -10,13 +11,21 @@ class Scheduler:
     def __init__(self, config: Configuration):
         self.config = config
         self.name = config.scheduler.lower()
+        venv = os.environ.get('VIRTUAL_ENV')
+        self.activation_script = Path(venv) / 'bin/activate' if venv is not None else None
+
+    def get_venv_activation_line(self) -> str:
+        if self.activation_script:
+            return (f'source {self.activation_script}\n'
+                    f'echo "venv: {self.activation_script}"\n')
+        return ''
 
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         """Submit a task."""
-        pass
+        raise NotImplementedError
 
     def cancel(self, task: Task) -> None:
         """Cancel a task."""

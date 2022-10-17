@@ -96,6 +96,7 @@ class Queue:
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
+        print('EXIT', self._connection)
         if self._connection:
             self._connection.close()
         self.lock.release()
@@ -137,6 +138,7 @@ class Queue:
             for dep in task.dtasks:
                 deps.append((task.id, dep.id))
         con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
+        print(deps, [task.to_sql(root) for task in tasks])
 
     def sql(self,
             statement: str,
@@ -204,24 +206,6 @@ class Queue:
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
                 [(t, id) for id in self.find_dependents(ids)])
 
-    def find_dependency(dname: TaskName,
-                        current: dict[TaskName, Task],
-                        new: dict[TaskName, Task],
-                        force: bool = False) -> Task:
-        """Convert dependency name to task."""
-        if dname in current:
-            task = current[dname]
-            if task.state.is_bad():
-                if force:
-                    if dname not in new:
-                        raise DependencyError(dname)
-                    task = new[dname]
-        elif dname in new:
-            task = new[dname]
-        else:
-            raise DependencyError(dname)
-        return task
-
     def remove(self, ids: Iterable[int]) -> None:
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
@@ -275,12 +259,13 @@ class Queue:
                         ctime: float,
                         path: Path) -> None:
         try:
-            user, = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
+            (user,), = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
         except ValueError:
             print(f'No such task: {id}, {newstate}', file=sys.stderr)
             path.unlink()
             return None
 
+        print('UPDATE', id, newstate, user, self.config.user)
         if user != self.config.user:
             return
 
@@ -328,5 +313,12 @@ if __name__ == '__main__':
     table.add_column('id')
     table.add_column('did')
     for row in db.execute('SELECT * from dependencies'):
+        table.add_row(*[str(x) for x in row])
+    prnt(table)
+
+    table = Table(title='meta')
+    table.add_column('key')
+    table.add_column('value')
+    for row in db.execute('SELECT * from meta'):
         table.add_row(*[str(x) for x in row])
     prnt(table)

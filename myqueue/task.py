@@ -85,7 +85,6 @@ class Task:
 
         self.dname = folder / cmd.name
         self.dtasks: list[Task] = []
-        self.activation_script: Path | None = None
         self._done: bool | None = None
         self.result = UNSPECIFIED
 
@@ -322,12 +321,6 @@ class Task:
 
     def run(self) -> None:
         self.result = self.cmd.run()
-
-    def get_venv_activation_line(self) -> str:
-        if self.activation_script:
-            return (f'source {self.activation_script}\n'
-                    f'echo "venv: {self.activation_script}"\n')
-        return ''
 
 
 def task(cmd: str,

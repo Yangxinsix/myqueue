@@ -12,7 +12,7 @@ class SLURM(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -70,7 +70,7 @@ class SLURM(Scheduler):
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
-        script += task.get_venv_activation_line()
+        script += self.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -83,8 +83,7 @@ class SLURM(Scheduler):
             if verbose:
                 print(' \\\n    '.join(sbatch))
                 print(script)
-            task.id = 1
-            return
+            return 1
 
         # Use a clean set of environment variables without any MPI stuff:
         p = subprocess.run(sbatch,
@@ -95,7 +94,7 @@ class SLURM(Scheduler):
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
 
-        task.id = int(p.stdout.split()[-1].decode())
+        return int(p.stdout.split()[-1].decode())
 
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])

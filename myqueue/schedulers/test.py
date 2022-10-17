@@ -20,10 +20,9 @@ class TestScheduler(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         if dry_run:
-            task.id = 1
-            return
+            return 1
         if task.cmd.args == ['FAIL']:
             raise RuntimeError
         if task.dtasks:
@@ -31,8 +30,8 @@ class TestScheduler(Scheduler):
             for t in task.dtasks:
                 assert t.id in ids
         self.number += 1
-        task.id = self.number
         self.tasks.append(task)
+        return self.number
 
     def cancel(self, task: Task) -> None:
         assert task.state == 'queued', task
@@ -84,7 +83,7 @@ class TestScheduler(Scheduler):
             n = task.resources.processes
             cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
-        activation_script = task.activation_script
+        activation_script = self.activation_script
         if activation_script:
             cmd = f'. {activation_script} && ' + cmd
         (self.folder / f'test-{task.id}-0').write_text('')

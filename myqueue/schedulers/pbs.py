@@ -13,7 +13,7 @@ class PBS(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -57,7 +57,7 @@ class PBS(Scheduler):
 
         script = '#!/bin/bash -l\n'
 
-        script += task.get_venv_activation_line()
+        script += self.get_venv_activation_line()
 
         script += (
             '#!/bin/bash -l\n'
@@ -69,7 +69,7 @@ class PBS(Scheduler):
 
         if dry_run:
             print(qsub, script)
-            return
+            return 1
 
         p = subprocess.run(qsub,
                            input=script.encode(),
@@ -77,7 +77,7 @@ class PBS(Scheduler):
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
         id = int(p.stdout.split(b'.')[0].decode())
-        task.id = id
+        return id
 
     def error_file(self, task: Task) -> Path:
         return task.folder / f'{task.cmd.short_name}.e{task.id}'
