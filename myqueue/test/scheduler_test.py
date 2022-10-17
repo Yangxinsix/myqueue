@@ -64,14 +64,14 @@ def test_scheduler_subprocess(monkeypatch, name):
     scheduler = get_scheduler(config)
     t = create_task('x', resources='2:1h')
     scheduler.submit(t, dry_run=True, verbose=True)
-    scheduler.submit(t)
-    assert t.id == '42'
+    id = scheduler.submit(t)
+    assert id == 42
     if name == 'slurm':
         scheduler.hold(t)
         scheduler.release_hold(t)
         assert scheduler.maxrss(1) == 1000
     scheduler.cancel(t)
-    assert scheduler.get_ids() == {'1', '2'}
+    assert scheduler.get_ids() == {1, 2}
 
     t = create_task('FAIL', resources='2:1h')
     with pytest.raises(SchedulerError, match='FAIL'):

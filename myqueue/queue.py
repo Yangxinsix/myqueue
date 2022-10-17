@@ -142,8 +142,8 @@ class Queue:
 
     def sql(self,
             statement: str,
-            args: list[str | int]) -> Iterator[tuple]:
-        return self.connection.execute(statement, args)
+            args: list[str | int] = None) -> Iterator[tuple]:
+        return self.connection.execute(statement, args or [])
 
     def select(self, selection: Selection = None) -> list[Task]:
         root = self.folder.parent

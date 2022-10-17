@@ -214,6 +214,7 @@ def test_clean_up(mq):
         t1.trunning = 0.0  # very old
         t2 = task('shell:echo', deps=[t1])
         t2.state = State.queued
+        t2.id = 1
         q.add(t1, t2)
     assert mq.states() == 'TC'
 

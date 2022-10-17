@@ -77,8 +77,9 @@ class Server:
         self.port = port
 
         with Queue(config) as queue:
-            self.next_id = 1 + queue.connection.execute(
+            maxid = queue.connection.execute(
                 'SELECT MAX(id) FROM tasks').fetchone()[0] or 0
+            self.next_id = 1 + maxid
 
         self.tasks: dict[int, Task] = {}
         self.processes: dict[int, asyncio.subprocess.Process] = {}

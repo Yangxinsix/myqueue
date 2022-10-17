@@ -23,7 +23,7 @@ def test_task(tmp_path):
     with pytest.raises(ValueError):
         t.order_key('x')
 
-    dct = {'id': '0',
+    dct = {'id': 0,
            'folder': str(tmp_path),
            'cmd': {'args': [], 'type': 'python-module', 'cmd': 'x'},
            'state': 'running',

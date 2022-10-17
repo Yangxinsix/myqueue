@@ -60,14 +60,11 @@ def workflow():
                     reason='requires Python 3.8 or higher')
 def test_local_scheduler2(scheduler):
     tasks = collect(workflow, Path())
-    ok, ko, ex = submit_tasks(scheduler,
-                              tasks,
-                              current={},
-                              force=False,
-                              max_tasks=4,
-                              verbosity=2,
-                              dry_run=False)
-    assert len(ok) == 4
+    ids, ex = submit_tasks(scheduler,
+                           tasks,
+                           verbosity=2,
+                           dry_run=False)
+    assert len(ids) == 4
     assert ex is None
     for i in range(10):
         if len(scheduler.get_ids()) == 0:

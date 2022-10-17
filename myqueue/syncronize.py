@@ -6,7 +6,8 @@ def sync(queue: Queue) -> None:
     """Syncronize queue with the real world."""
     ids = queue.scheduler.get_ids()
     remove = []
-    for id, in queue.connection.execute('SELECT id FROM tasks'):
+    sql = 'SELECT id FROM tasks WHERE state IN ("q", "h", "r")'
+    for id, in queue.sql(sql):
         if id not in ids:
             remove.append(id)
 

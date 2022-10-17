@@ -93,7 +93,7 @@ def submit(queue: Queue,
                 queue.changed.add(oldtask)
     """
 
-    name_to_task = {task.dname: task for task in tasks}
+    name_to_task = {str(task.dname): task for task in tasks}
     name_to_id_and_state: dict[str, tuple[int, str]] = {}
     for task in tasks:
         task.dtasks = []
