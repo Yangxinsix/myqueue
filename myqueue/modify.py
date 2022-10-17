@@ -10,17 +10,18 @@ def modify(queue: Queue,
            newstate: State,
            email: set[State]) -> None:
     """Modify task(s)."""
-    tasks = selection.select(queue.tasks)
+    tasks = queue.select(selection)
 
     if email != {State.undefined}:
         configure_email(queue.config)
-        for task in tasks:
-            if queue.dry_run:
-                print(task, email)
-            else:
-                task.notifications = ''.join(state.value
-                                             for state in email)
-                queue.changed.add(task)
+        if queue.dry_run:
+            print(tasks, email)
+        else:
+            n = ''.join(state.value for state in email)
+            with queue.connection as con:
+                con.executemany(
+                    f'UPDATE tasks SET notifications = "{n}" WHERE id = ?',
+                    [(task.id,) for task in tasks])
 
     if newstate != State.undefined:
         for task in tasks:
