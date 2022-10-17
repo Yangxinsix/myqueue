@@ -23,4 +23,14 @@ The ``mq rm`` :ref:`command <remove>` can read task ID's from standard input::
 Start from scratch
 ------------------
 
-* Remove your ``.myqueue/queue.json`` file.
+* Remove your ``.myqueue/queue.sqlite3`` file.
+
+
+Hart surgery
+------------
+
+touch lockfile
+
+>>> import sqlite3
+>>> con = sqlite.connect('')
+>>> con.execute('UPDATE tasks SET state = "d" WHERE id = 543251')

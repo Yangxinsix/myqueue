@@ -99,7 +99,7 @@ to do it manually.
 """),
     ('modify',
      'Modify task(s).', """
-The following state changes are allowed: h->q, q->h, F->M and F->T.
+The following state changes are allowed: h->q or q->h.
 """),
     ('init',
      'Initialize new queue.', """
