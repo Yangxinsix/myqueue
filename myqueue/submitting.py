@@ -73,7 +73,6 @@ wf = """
 def submit(queue: Queue,
            tasks: Sequence[Task],
            *,
-           force: bool = False,
            max_tasks: int = 1_000_000_000,
            verbosity: int = 1) -> None:
     """Submit tasks to queue.

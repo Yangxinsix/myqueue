@@ -24,7 +24,6 @@ def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
     ndct = queue.config.notifications
     if ndct:
         notifications = send_notification(mytasks, **ndct)
-        queue.changed.update(task for task, statename in notifications)
         result['notifications'] = len(notifications)
 
     tasks = []

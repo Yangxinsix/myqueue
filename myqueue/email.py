@@ -9,26 +9,29 @@ from pathlib import Path
 from myqueue.config import Configuration
 from myqueue.task import Task
 from myqueue.utils import mqhome
+from myqueue.queue import Queue
 
 
-def send_notification(tasks: list[Task],
+def send_notification(queue: Queue,
                       email: str,
                       host: str,
                       username: str = None) -> list[tuple[Task, str]]:
     """Compose and send email."""
     notifications = []
-    for task in tasks:
+    for task in queue.tasks('state != "q" AND notifications != ""'):
         character = task.state.value
         if character in 'dMTFC' and 'r' in task.notifications:
-            task.notifications = task.notifications.replace('r', '')
             notifications.append((task, 'running'))
         if character in task.notifications:
             task.notifications = task.notifications.replace(character, '')
-            notifications.append((task, task.state.name))
+            notifications.append(task)
+        if character in 'dMTFC':
+            task.notifications = ''
     if notifications:
         count: dict[str, int] = defaultdict(int)
         lines = []
-        for task, name in notifications:
+        for task in notifications:
+            name = task.state.name
             count[name] += 1
             lines.append(f'{name}: {task}')
         subject = 'MyQueue: ' + ', '.join(f'{c} {name}'
@@ -42,6 +45,10 @@ def send_notification(tasks: list[Task],
                   host=host,
                   username=username or email,
                   password=password)
+        with queue.connection as con:
+            con.executemany('UPDATE tasks SET notifications = ? WHERE id = ?',
+                            [(task.notifications, task.id)
+                             for task in set(notifications)])
     return notifications
 
 

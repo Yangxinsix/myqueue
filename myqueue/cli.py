@@ -61,7 +61,7 @@ Example:
     $ mq submit script.py -R 24:1d  # 24 cores for 1 day
 """),
     ('resubmit',
-     'Resubmit failed or timed-out tasks.', """
+     'Resubmit done, failed or timed-out tasks.', """
 Example:
 
     $ mq resubmit -i 4321  # resubmit job with id=4321
@@ -225,14 +225,12 @@ def _main(arguments: list[str] = None) -> int:
               help='Overwrite ~/.myqueue/config.py file.')
 
         if cmd in ['submit', 'workflow']:
-            a('-f', '--force', action='store_true',
-              help='Submit also failed tasks.')
             a('--max-tasks', type=int, default=1_000_000_000,
               help='Maximum number of tasks to submit.')
 
         if cmd == 'resubmit':
-            a('-f', '--force', action='store_true',
-              help='Submit also failed tasks.')
+            a('--remove', action='store_true',
+              help='Remove old tasks.')
 
         if cmd == 'remove':
             a('-f', '--force', action='store_true',
@@ -257,6 +255,8 @@ def _main(arguments: list[str] = None) -> int:
 
         if cmd == 'workflow':
             a('script', help='Submit tasks from workflow script.')
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
@@ -550,7 +550,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            resubmit(queue, selection, resources, force=args.force)
+            resubmit(queue, selection, resources,
+                     remove=args.remove)
 
         elif args.command == 'submit':
             from myqueue.submitting import submit
@@ -564,7 +565,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                         for folder in folders]
 
             submit(queue, newtasks,
-                   force=args.force,
                    max_tasks=args.max_tasks)
 
         elif args.command == 'modify':
@@ -574,8 +574,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'workflow':
             from myqueue.submitting import submit
-            tasks = workflow(args, folders, verbosity)
-            submit(queue, tasks, force=args.force, max_tasks=args.max_tasks)
+            tasks = workflow(args, folders, verbosity, force=args.force)
+            submit(queue, tasks, max_tasks=args.max_tasks)
 
         elif args.command == 'sync':
             from myqueue.syncronize import sync

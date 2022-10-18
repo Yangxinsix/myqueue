@@ -18,6 +18,8 @@ Next release
 * Removing tasks part of a workflow now needs a ``--force``
   (as MyQueue will no longer know the states of such tasks).
 * Speed up most commands by delaying import of ``rich`` and ``networkx``.
+* The :ref:`resubmit` command will no longer remove the old task.
+  Use ``--remove`` to get the old behavior.
 
 
 Version 22.9.0
