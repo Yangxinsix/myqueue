@@ -47,6 +47,6 @@ def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
             submit(queue, tasks)
         result['restarts'] = len(tasks)
 
-    result.update(hold_or_release(queue, mytasks????))
+    result.update(hold_or_release(queue))
 
     return result
