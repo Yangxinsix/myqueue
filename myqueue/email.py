@@ -15,16 +15,17 @@ from myqueue.queue import Queue
 def send_notification(queue: Queue,
                       email: str,
                       host: str,
-                      username: str = None) -> list[tuple[Task, str]]:
+                      username: str = None) -> set[Task]:
     """Compose and send email."""
-    notifications = []
-    for task in queue.tasks('state != "q" AND notifications != ""'):
+    notifications = set()
+    sql = 'state != "q" AND notifications != "" AND user = ?'
+    for task in queue.tasks(sql, [queue.config.user]):
         character = task.state.value
         if character in 'dMTFC' and 'r' in task.notifications:
-            notifications.append((task, 'running'))
+            notifications.add(task)
         if character in task.notifications:
             task.notifications = task.notifications.replace(character, '')
-            notifications.append(task)
+            notifications.add(task)
         if character in 'dMTFC':
             task.notifications = ''
     if notifications:
@@ -48,7 +49,7 @@ def send_notification(queue: Queue,
         with queue.connection as con:
             con.executemany('UPDATE tasks SET notifications = ? WHERE id = ?',
                             [(task.notifications, task.id)
-                             for task in set(notifications)])
+                             for task in notifications])
     return notifications
 
 

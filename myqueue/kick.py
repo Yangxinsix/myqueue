@@ -11,45 +11,42 @@ from myqueue.hold import hold_or_release
 def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
     """Kick the system.
 
-    * Send email notifications
+    * send email notifications
     * restart timed-out tasks
     * restart out-of-memory tasks
     * release/hold tasks to stay under *maximum_diskspace*
     """
-    mytasks = [task for task in queue.tasks
-               if task.user == queue.config.user]
-
     result = {}
 
     ndct = queue.config.notifications
     if ndct:
-        notifications = send_notification(mytasks, **ndct)
+        notifications = send_notification(queue, **ndct)
         result['notifications'] = len(notifications)
 
     tasks = []
-    for task in mytasks:
-        if task.state in ['TIMEOUT', 'MEMORY'] and task.restart:
-            nodes = queue.config.nodes or [('', {'cores': 1})]
-            if not queue.dry_run:
-                task.resources = task.resources.bigger(task.state, nodes)
-                task.restart -= 1
-            tasks.append(task)
+    sql = 'state IN ("T", "M") AND restart != 0 AND user = ?'
+    for task in queue.tasks(sql, [queue.config.user]):
+        nodes = queue.config.nodes or [('', {'cores': 1})]
+        task.resources = task.resources.bigger(task.state, nodes)
+        task.restart -= 1
+        tasks.append(task)
 
     if tasks:
-        tasks = queue.find_depending(tasks)
+        ids = list(queue.find_dependents(task.id for task in tasks))
+        queue.cancel_dependents(ids)
+        tasks += queue.tasks('id = ?', [(id,) for id in ids])
+
         if queue.dry_run:
             pprint(tasks)
         else:
             if verbosity > 0:
                 print('Restarting', plural(len(tasks), 'task'))
             for task in tasks:
-                queue.tasks.remove(task)
                 task.error = ''
-                task.id = '0'
                 task.state = State.undefined
             submit(queue, tasks)
         result['restarts'] = len(tasks)
 
-    result.update(hold_or_release(queue, mytasks))
+    result.update(hold_or_release(queue, mytasks????))
 
     return result

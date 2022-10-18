@@ -200,6 +200,8 @@ class Queue:
             yield from self.find_dependents(result, known)
 
     def cancel_dependents(self, ids: Iterable[int]) -> None:
+        if self.dry_run:
+            return
         t = time.time()
         with self.connection as con:
             con.executemany(
@@ -207,6 +209,8 @@ class Queue:
                 [(t, id) for id in self.find_dependents(ids)])
 
     def remove(self, ids: Iterable[int]) -> None:
+        if self.dry_run:
+            return
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:
