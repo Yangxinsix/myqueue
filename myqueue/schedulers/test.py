@@ -42,23 +42,21 @@ class TestScheduler(Scheduler):
             return
         del self.tasks[i]
 
-    def hold(self, task: Task) -> None:
-        assert task.state == 'queued', task
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
+    def hold(self, id: int) -> None:
+        for task in self.tasks:
+            if task.id == id:
                 break
         else:
             raise ValueError('No such task!')
-        j.state = State.hold
+        task.state = State.hold
 
-    def release_hold(self, task: Task) -> None:
-        assert task.state == 'hold', task
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
+    def release_hold(self, id: int) -> None:
+        for task in self.tasks:
+            if task.id == id:
                 break
         else:
             raise ValueError('No such task!')
-        j.state = State.queued
+        task.state = State.queued
 
     def get_ids(self) -> set[int]:
         return {task.id for task in self.tasks}

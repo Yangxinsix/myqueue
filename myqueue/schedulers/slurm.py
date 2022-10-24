@@ -99,11 +99,11 @@ class SLURM(Scheduler):
     def cancel(self, task: Task) -> None:
         subprocess.run(['scancel', str(task.id)])
 
-    def hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'hold', str(task.id)])
+    def hold(self, id: int) -> None:
+        subprocess.run(['scontrol', 'hold', str(id)])
 
-    def release_hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'release', str(task.id)])
+    def release_hold(self, id: int) -> None:
+        subprocess.run(['scontrol', 'release', str(id)])
 
     def get_ids(self) -> set[int]:
         user = os.environ.get('USER', 'test')

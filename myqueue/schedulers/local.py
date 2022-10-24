@@ -32,11 +32,11 @@ class LocalScheduler(Scheduler):
     def cancel(self, task: Task) -> None:
         self.send('cancel', task.id)
 
-    def hold(self, task: Task) -> None:
-        self.send('hold', task.id)
+    def hold(self, id: int) -> None:
+        self.send('hold', id)
 
-    def release_hold(self, task: Task) -> None:
-        self.send('release', task.id)
+    def release_hold(self, id: int) -> None:
+        self.send('release', id)
 
     def get_ids(self) -> set[int]:
         ids = self.send('list')

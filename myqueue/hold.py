@@ -1,38 +1,39 @@
 from __future__ import annotations
-from myqueue.task import Task
-from myqueue.states import State
 from myqueue.queue import Queue
 
 
-def hold_or_release(queue: Queue,
-                    tasks: list[Task]) -> dict[str, int]:
+def hold_or_release(queue: Queue) -> dict[str, int]:
     maxmem = queue.config.maximum_diskspace
     mem = 0
-    for task in tasks:
-        if task.state in {'queued', 'running',
-                          'FAILED', 'TIMEOUT', 'MEMORY'}:
-            mem += task.diskspace
+    queued = []
+    held = []
+    sql = (
+        'SELECT id, state, diskspace FROM tasks '
+        'WHERE diskspace != 0 AND user = ?')
+    for id, state, diskspace in queue.sql(sql, [queue.config.user]):
+        if state in 'qrFMT':
+            mem += diskspace
+        if state == 'q':
+            queued.append((id, diskspace))
+        elif state == 'h':
+            held.append((id, diskspace))
 
     changes: list[tuple[str, int]] = []
 
     if mem > maxmem:
-        for task in tasks:
-            if task.state == 'queued' and task.diskspace > 0:
-                queue.scheduler.hold(task)
-                changes.append(('h', task.id))
-                task.state = State.hold
-                mem -= task.diskspace
-                if mem < maxmem:
-                    break
+        for id, diskspace in queued:
+            queue.scheduler.hold(id)
+            changes.append(('h', id))
+            mem -= diskspace
+            if mem < maxmem:
+                break
     elif mem < maxmem:
-        for task in tasks[::-1]:
-            if task.state == 'hold' and task.diskspace > 0:
-                queue.scheduler.release_hold(task)
-                changes.append(('q', task.id))
-                task.state = State.queued
-                mem += task.diskspace
-                if mem > maxmem:
-                    break
+        for id, diskspace in held[::-1]:
+            queue.scheduler.release_hold(id)
+            changes.append(('q', id))
+            mem += diskspace
+            if mem > maxmem:
+                break
 
     if not changes:
         return {}

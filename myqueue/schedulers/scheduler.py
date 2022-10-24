@@ -35,10 +35,10 @@ class Scheduler:
         """Get ids for all tasks the scheduler knows about."""
         raise NotImplementedError
 
-    def hold(self, task: Task) -> None:
+    def hold(self, id: int) -> None:
         raise NotImplementedError
 
-    def release_hold(self, task: Task) -> None:
+    def release_hold(self, id: int) -> None:
         raise NotImplementedError
 
     def error_file(self, task: Task) -> Path:

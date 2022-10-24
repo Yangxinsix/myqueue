@@ -67,8 +67,8 @@ def test_scheduler_subprocess(monkeypatch, name):
     id = scheduler.submit(t)
     assert id == 42
     if name == 'slurm':
-        scheduler.hold(t)
-        scheduler.release_hold(t)
+        scheduler.hold(42)
+        scheduler.release_hold(42)
         assert scheduler.maxrss(1) == 1000
     scheduler.cancel(t)
     assert scheduler.get_ids() == {1, 2}
