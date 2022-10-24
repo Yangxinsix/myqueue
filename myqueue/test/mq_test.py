@@ -158,6 +158,7 @@ def test_more_homes(mq):
 
 
 def test_permission_error(mq):
+    mq('ls')
     try:
         (mq.config.home / '.myqueue').chmod(0o500)  # r-x
         mq('ls')

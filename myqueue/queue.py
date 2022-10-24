@@ -106,7 +106,11 @@ class Queue:
         if self._connection:
             return self._connection
         sqlfile = self.folder / 'queue.sqlite3'
-        self._connection = sqlite3.connect(sqlfile)
+        if self.lock.locked:
+            self._connection = sqlite3.connect(sqlfile)
+        else:
+            self._connection = sqlite3.connect(f'file:{sqlfile}?mode=ro',
+                                               uri=True)
         cur = self._connection.execute(
             'SELECT COUNT(*) FROM sqlite_master WHERE name="tasks"')
 
