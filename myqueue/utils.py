@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import errno
-import json
 import os
 import re
 import sys
@@ -301,12 +300,13 @@ def convert_done_files() -> None:
 
 
 def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
-    """Get tasks with given id's from folder."""
+    """Get states of active tasks."""
+    from myqueue.queue import Queue
     config = Configuration.read(folder)
-    mq = config.home / '.myqueue'
-    with Lock(mq / 'queue.json.lock',
-              timeout=10.0):
-        return json.loads((mq / 'active.json').read_text())
+    with Queue(config, need_lock=False) as queue:
+        active = queue.sql(
+            'SELECT state, name FROM tasks WHERE state IN ("q", "h", "r")')
+        return dict(active)
 
 
 if __name__ == '__main__':  # pragma: no cover
