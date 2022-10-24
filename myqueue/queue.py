@@ -154,7 +154,9 @@ class Queue:
             args = []
         return self.tasks(where, args)
 
-    def tasks(self, where: str, args: list[str | int] = None) -> list[Task]:
+    def tasks(self,
+              where: str,
+              args: list[str | int] = None) -> list[Task]:
         root = self.folder.parent
         if where:
             sql = f'SELECT * FROM tasks WHERE {where}'

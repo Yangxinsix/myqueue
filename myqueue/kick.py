@@ -34,7 +34,8 @@ def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
     if tasks:
         ids = list(queue.find_dependents(task.id for task in tasks))
         queue.cancel_dependents(ids)
-        tasks += queue.tasks('id = ?', [(id,) for id in ids])
+        for id in ids:
+            tasks.append(queue.tasks('id = ?', [id])[0])
 
         if queue.dry_run:
             pprint(tasks)
