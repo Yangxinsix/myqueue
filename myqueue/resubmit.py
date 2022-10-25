@@ -12,12 +12,12 @@ def resubmit(queue: Queue,
              remove: bool = False) -> None:
     """Resubmit tasks."""
     tasks = []
-
     ids = []
     for task in queue.select(selection):
         if task.state in {'queued', 'hold', 'running'}:
             continue
 
+        ids.append(task.id)
         task = Task(task.cmd,
                     deps=task.deps,
                     resources=resources or task.resources,
@@ -27,7 +27,6 @@ def resubmit(queue: Queue,
                     creates=task.creates,
                     diskspace=0)
         tasks.append(task)
-        ids.append(task.id)
 
     if remove and not queue.dry_run:
         queue.remove(ids)

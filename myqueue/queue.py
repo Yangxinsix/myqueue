@@ -218,6 +218,7 @@ class Queue:
     def remove(self, ids: Iterable[int]) -> None:
         if self.dry_run:
             return
+        ids = list(ids)
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:

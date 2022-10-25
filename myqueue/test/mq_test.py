@@ -46,18 +46,16 @@ def test_fail(mq):
     assert mq.states() == 'FCC', mq.states()
     mq('resubmit -sF . -z')
     assert mq.states() == 'FCC'
-    mq('resubmit -sF .')
+    mq('resubmit -sF . --remove')
     mq.wait()
     assert mq.states() == 'CCF'
-    mq('modify -s F -N T .')
-    assert mq.states() == 'CCT'
 
 
 def test_fail2(mq):
     mq('submit time@sleep+a --workflow')
     mq.wait()
     assert mq.states() == 'F'
-    mq('remove --states F .')
+    mq('remove --states F --force .')
     mq('submit time@sleep+a --workflow')
     mq.wait()
     assert mq.states() == 'F'
@@ -68,7 +66,7 @@ def test_timeout(mq):
     mq(f'submit -n zzz "shell:sleep {t}" -R 1:1s')
     mq('submit "shell:echo hello" -d zzz')
     mq.wait()
-    mq('resubmit -sT . -R 1:5m')
+    mq('resubmit -sT . -R 1:5m --remove')
     mq.wait()
     assert mq.states() == 'Cd'
 

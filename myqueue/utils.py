@@ -306,7 +306,7 @@ def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
     with Queue(config, need_lock=False) as queue:
         active = queue.sql(
             'SELECT state, name FROM tasks WHERE state IN ("q", "h", "r")')
-        return dict(active)
+        return dict(active)  # type: ignore
 
 
 if __name__ == '__main__':  # pragma: no cover
