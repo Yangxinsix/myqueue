@@ -33,10 +33,9 @@ class TestScheduler(Scheduler):
         self.tasks.append(task)
         return self.number
 
-    def cancel(self, task: Task) -> None:
-        assert task.state == 'queued', task
-        for i, j in enumerate(self.tasks):
-            if task.id == j.id:
+    def cancel(self, id: int) -> None:
+        for i, task in enumerate(self.tasks):
+            if task.id == id:
                 break
         else:
             return

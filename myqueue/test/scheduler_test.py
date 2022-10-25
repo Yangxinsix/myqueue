@@ -70,7 +70,7 @@ def test_scheduler_subprocess(monkeypatch, name):
         scheduler.hold(42)
         scheduler.release_hold(42)
         assert scheduler.maxrss(1) == 1000
-    scheduler.cancel(t)
+    scheduler.cancel(42)
     assert scheduler.get_ids() == {1, 2}
 
     t = create_task('FAIL', resources='2:1h')

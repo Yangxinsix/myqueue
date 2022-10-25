@@ -218,10 +218,11 @@ class Task:
                     resources=Resources(**json.loads(resources)),
                     restart=restart,
                     workflow=bool(workflow),
-                    deps=[root / dep for dep in deps.split(',')],
+                    deps=[] if not deps else [root / dep
+                                              for dep in deps.split(',')],
                     diskspace=diskspace,
                     notifications=notifications,
-                    creates=creates.split(','),
+                    creates=[] if not creates else creates.split(','),
                     tqueued=tqueued,
                     trunning=trunning,
                     tstop=tstop,

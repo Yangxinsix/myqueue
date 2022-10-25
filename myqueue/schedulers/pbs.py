@@ -82,8 +82,8 @@ class PBS(Scheduler):
     def error_file(self, task: Task) -> Path:
         return task.folder / f'{task.cmd.short_name}.e{task.id}'
 
-    def cancel(self, task: Task) -> None:
-        subprocess.run(['qdel', str(task.id)])
+    def cancel(self, id: int) -> None:
+        subprocess.run(['qdel', str(id)])
 
     def get_ids(self) -> set[int]:
         user = os.environ.get('USER', 'test')

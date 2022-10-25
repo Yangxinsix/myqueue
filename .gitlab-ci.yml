@@ -21,6 +21,7 @@ tests:
     paths:
       - htmlcov
     expire_in: 1 week
+  when: manual
 
 
 oldtests:
@@ -29,3 +30,4 @@ oldtests:
     - pip install pytest numpy
     - pip install -e .
     - pytest
+  when: manual

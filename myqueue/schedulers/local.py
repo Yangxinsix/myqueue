@@ -29,8 +29,8 @@ class LocalScheduler(Scheduler):
         id = self.send('submit', task)
         return id
 
-    def cancel(self, task: Task) -> None:
-        self.send('cancel', task.id)
+    def cancel(self, id: int) -> None:
+        self.send('cancel', id)
 
     def hold(self, id: int) -> None:
         self.send('hold', id)
@@ -141,9 +141,7 @@ class Server:
             elif id in self.tasks:
                 task = self.tasks[id]
                 task.state = State.CANCELED
-                task.cancel_dependents(list(self.tasks.values()))
-                self.tasks = {id: task for id, task in self.tasks.items()
-                              if task.state != State.CANCELED}
+                self.cancel_dependents(task)
             result = None
         else:
             1 / 0
@@ -216,18 +214,22 @@ class Server:
             else:
                 state = 2
             self.cancel_dependents(task)
-            self.tasks = {id: task for id, task in self.tasks.items()
-                          if task.state != 'CANCELED'}
 
         (self.folder / f'local-{task.id}-{state}').write_text('')
 
         self.kick()
 
-    def cancel_dependents(self, task: Task) -> None:
+    def _cancel_dependents(self, task: Task) -> None:
         for job in self.tasks.values():
+            print('CANCEL', task.dname, job.deps)
             if task.dname in job.deps:
                 job.state = State.CANCELED
-                self.cancel_dependents(job)
+                self._cancel_dependents(job)
+
+    def cancel_dependents(self, task: Task) -> None:
+        self._cancel_dependents(task)
+        self.tasks = {id: task for id, task in self.tasks.items()
+                      if task.state != State.CANCELED}
 
     def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
         """Terminate a task."""

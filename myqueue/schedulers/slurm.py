@@ -96,8 +96,8 @@ class SLURM(Scheduler):
 
         return int(p.stdout.split()[-1].decode())
 
-    def cancel(self, task: Task) -> None:
-        subprocess.run(['scancel', str(task.id)])
+    def cancel(self, id: int) -> None:
+        subprocess.run(['scancel', str(id)])
 
     def hold(self, id: int) -> None:
         subprocess.run(['scontrol', 'hold', str(id)])

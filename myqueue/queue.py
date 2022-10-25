@@ -133,15 +133,16 @@ class Queue:
     def add(self, *tasks: Task) -> None:
         root = self.folder.parent
         q = ', '.join('?' * 17)
-        with self.connection as con:
-            con.executemany(
-                f'INSERT INTO tasks VALUES ({q})',
-                [task.to_sql(root) for task in tasks])
         deps = []
         for task in tasks:
             for dep in task.dtasks:
                 deps.append((task.id, dep.id))
-        con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
+
+        with self.connection as con:
+            con.executemany(
+                f'INSERT INTO tasks VALUES ({q})',
+                [task.to_sql(root) for task in tasks])
+            con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
         print(deps, [task.to_sql(root) for task in tasks])
 
     def sql(self,

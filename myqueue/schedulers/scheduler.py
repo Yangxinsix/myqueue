@@ -27,7 +27,7 @@ class Scheduler:
         """Submit a task."""
         raise NotImplementedError
 
-    def cancel(self, task: Task) -> None:
+    def cancel(self, id: int) -> None:
         """Cancel a task."""
         raise NotImplementedError
 

@@ -87,8 +87,8 @@ class LSF(Scheduler):
                     return True
         return False
 
-    def cancel(self, task: Task) -> None:
-        subprocess.run(['bkill', str(task.id)])
+    def cancel(self, id: int) -> None:
+        subprocess.run(['bkill', str(id)])
 
     def get_ids(self) -> set[int]:
         p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
