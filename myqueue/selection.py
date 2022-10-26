@@ -1,7 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
 
-from myqueue.task import Task
 from myqueue.states import State
 
 
@@ -17,7 +16,7 @@ class Selection:
                  error: str | None = None):
         """Selection.
 
-        Selections is based on:
+        Selection is based on:
 
             ids
 

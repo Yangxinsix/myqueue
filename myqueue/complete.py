@@ -134,4 +134,5 @@ def main(environ: Mapping[str, str], word: str, previous: str) -> None:
 
 
 if __name__ == '__main__':
-    main(os.environ, *sys.argv[2:])  # pragma: no cover
+    word, previous = sys.argv[2:]
+    main(os.environ, word, previous)  # pragma: no cover

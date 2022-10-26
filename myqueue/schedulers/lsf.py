@@ -100,14 +100,13 @@ class LSF(Scheduler):
     def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         from collections import defaultdict
-        from myqueue.utils import str2number
 
         cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         cores: dict[str, int] = {}
         memory: dict[str, list[str]] = defaultdict(list)
         for line in p.stdout.decode().splitlines():
-            id, state, procs, load, name, mem, unit, *_ = line.split()
+            _, state, procs, _, name, mem, unit, *_ = line.split()
             if state == 'State':
                 continue  # skip header
             if state == 'Down':
@@ -115,8 +114,8 @@ class LSF(Scheduler):
             cores[name] = int(procs.split(':')[1])
             memory[name].append(mem + unit)
         nodes = [
-            (name, cores[name], min(memory[name], key=str2number))
-            for name in cores]
+            (name, n, min(memory[name], key=str2number))
+            for name, n in cores.items()]
         if queue:
             extra_args = ['-q', queue]
         else:

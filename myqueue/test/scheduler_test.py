@@ -2,7 +2,7 @@ import subprocess
 
 import pytest
 from myqueue.schedulers import SchedulerError
-from myqueue.task import task as create_task
+from myqueue.task import create_task
 
 
 class Result:

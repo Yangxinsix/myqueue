@@ -12,7 +12,8 @@ class Scheduler:
         self.config = config
         self.name = config.scheduler.lower()
         venv = os.environ.get('VIRTUAL_ENV')
-        self.activation_script = Path(venv) / 'bin/activate' if venv is not None else None
+        self.activation_script = (Path(venv) / 'bin/activate'
+                                  if venv is not None else None)
 
     def get_venv_activation_line(self) -> str:
         if self.activation_script:

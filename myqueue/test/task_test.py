@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 from myqueue.states import State
-from myqueue.task import task as create_task
+from myqueue.task import create_task
 
 
 def test_task(tmp_path):

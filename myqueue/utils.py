@@ -15,17 +15,19 @@ from typing import IO, Any, Generator
 
 from myqueue.config import Configuration
 
+try:
+    from functools import cached_property
+except ImportError:
+    def cached_property(method):  # type: ignore
+        """Quick'n'dirty implementation of cached_property coming in 3.8."""
+        name = f'__{method.__name__}'
 
-def cached_property(method):  # type: ignore
-    """Quick'n'dirty implementation of cached_property coming in Python 3.8."""
-    name = f'__{method.__name__}'
+        def new_method(self):  # type: ignore
+            if not hasattr(self, name):
+                setattr(self, name, method(self))
+            return getattr(self, name)
 
-    def new_method(self):  # type: ignore
-        if not hasattr(self, name):
-            setattr(self, name, method(self))
-        return getattr(self, name)
-
-    return property(new_method)
+        return property(new_method)
 
 
 def mqhome() -> Path:
@@ -305,7 +307,7 @@ def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
     config = Configuration.read(folder)
     with Queue(config, need_lock=False) as queue:
         active = queue.sql(
-            'SELECT state, name FROM tasks WHERE state IN ("q", "h", "r")')
+            'SELECT name, state FROM tasks WHERE state IN ("q", "h", "r")')
         return dict(active)  # type: ignore
 
 

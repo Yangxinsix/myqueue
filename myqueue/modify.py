@@ -40,7 +40,7 @@ def modify(queue: Queue,
 
     if not queue.dry_run:
         for task in tasks:
-            operation(task)
+            operation(task.id)
 
         with queue.connection as con:
             con.executemany(

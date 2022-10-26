@@ -2,7 +2,7 @@ import json
 import os
 
 from myqueue.queue import Queue
-from myqueue.task import task as create_task
+from myqueue.task import create_task
 
 
 def test_migration(tmp_path):

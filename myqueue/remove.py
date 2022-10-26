@@ -25,7 +25,7 @@ def remove(queue: Queue,
     else:
         for task in tasks:
             if task.state in ['running', 'hold', 'queued']:
-                queue.scheduler.cancel(task)
+                queue.scheduler.cancel(task.id)
         queue.remove((task.id for task in tasks))
         if verbosity > 0:
             if tasks:

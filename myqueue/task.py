@@ -190,7 +190,7 @@ class Task:
         return (self.id,
                 str(self.folder.relative_to(root)) + '/',
                 self.state.name[0],
-                str(self.dname),
+                str(self.dname.relative_to(root)),
                 json.dumps(self.cmd.todict()),
                 json.dumps(self.resources.todict()),
                 self.restart,
@@ -324,21 +324,22 @@ class Task:
         self.result = self.cmd.run()
 
 
-def task(cmd: str,
-         args: list[str] = [],
-         *,
-         resources: str = '',
-         workflow: bool = False,
-         name: str = '',
-         deps: str | list[str] | Task | list[Task] = '',
-         cores: int = 0,
-         nodename: str = '',
-         processes: int = 0,
-         tmax: str = '',
-         folder: str = '',
-         restart: int = 0,
-         diskspace: float = 0.0,
-         creates: list[str] = []) -> Task:
+def create_task(
+    cmd: str,
+    args: list[str] = [],
+    *,
+    resources: str = '',
+    workflow: bool = False,
+    name: str = '',
+    deps: str | list[str] | Task | list[Task] = '',
+    cores: int = 0,
+    nodename: str = '',
+    processes: int = 0,
+    tmax: str = '',
+    folder: str = '',
+    restart: int = 0,
+    diskspace: float = 0.0,
+    creates: list[str] = []) -> Task:
     """Create a Task object.
 
     ::
@@ -437,6 +438,9 @@ def task(cmd: str,
                 int(diskspace),
                 path,
                 creates)
+
+
+task = create_task
 
 
 def seconds_to_time_string(n: float) -> str:

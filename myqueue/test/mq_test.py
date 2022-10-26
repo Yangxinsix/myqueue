@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import pytest
-from myqueue.queue import Queue
+from myqueue.queue import Queue, sort_out_dependencies
 from myqueue.task import task
 from myqueue.states import State
 from myqueue.utils import chdir, get_states_of_active_tasks
@@ -92,7 +92,7 @@ def test_oom(mq):
     assert mq.states() == 'M'
     mq('kick')
     mq.wait()
-    assert mq.states() == 'd'
+    assert mq.states() == 'Md'
 
 
 def test_cancel(mq):
@@ -101,7 +101,7 @@ def test_cancel(mq):
     mq('submit shell:echo+hello -d shell:sleep+999')
     mq('rm -n shell:sleep+999 -srq .')
     mq.wait()
-    assert mq.states() == 'd'
+    assert mq.states() == 'dC'
 
 
 def test_check_dependency_order(mq):
@@ -112,7 +112,7 @@ def test_check_dependency_order(mq):
     mq('kick -z')
     mq('kick')
     mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.states() == 'TCdd'
 
 
 def test_misc(mq):
@@ -187,7 +187,7 @@ def test_sync_cancel(mq):
         t.trunning = time.time()
         q.add(t)
     mq('sync')
-    assert mq.states() == 'C'
+    assert mq.states() == ''
 
 
 def test_hold_release(mq):
@@ -196,7 +196,9 @@ def test_hold_release(mq):
     mq('modify -s q -N h .')
     mq.wait()
     assert mq.states() == 'h'
-    assert get_states_of_active_tasks() == {'1': 'hold'}
+    (name, state), = get_states_of_active_tasks().items()
+    assert state == 'h'
+    assert name.endswith('shell:echo+hello')
 
     mq('modify -s h -N q . -z')
     mq('modify -s h -N q .')
@@ -208,12 +210,14 @@ def test_hold_release(mq):
 
 def test_clean_up(mq):
     with Queue(mq.config) as q:
-        t1 = task('shell:echo')
+        t1 = task('shell:echo+1')
+        t1.id = 1
         t1.state = State.running
         t1.trunning = 0.0  # very old
-        t2 = task('shell:echo', deps=[t1])
+        t2 = task('shell:echo+2', deps=[t1])
         t2.state = State.queued
-        t2.id = 1
+        t2.id = 2
+        sort_out_dependencies([t1, t2], q)
         q.add(t1, t2)
     assert mq.states() == 'TC'
 

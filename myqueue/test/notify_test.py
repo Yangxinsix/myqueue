@@ -36,4 +36,4 @@ def test_notify(mq, monkeypatch):
     mq('kick')
     test, notification = smtp.emails
     assert 'Subject: Test email from myqueue' in test
-    assert 'Subject: MyQueue: 1 running, 1 done' in notification
+    assert 'Subject: MyQueue: 1 done' in notification

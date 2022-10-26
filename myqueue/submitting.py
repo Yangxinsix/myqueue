@@ -7,20 +7,16 @@ from types import TracebackType
 from typing import Sequence, TypeVar, TYPE_CHECKING
 
 from myqueue.pretty import pprint
-from myqueue.queue import Queue
+from myqueue.queue import Queue, sort_out_dependencies
 from myqueue.schedulers import Scheduler
 from myqueue.states import State
-from myqueue.task import Task, task as create_task
+from myqueue.task import Task
 from myqueue.utils import plural
 
 if TYPE_CHECKING:
     import rich.progress as progress
 
 TaskName = Path
-
-
-class DependencyError(Exception):
-    """Bad dependency."""
 
 
 def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
@@ -91,34 +87,7 @@ def submit(queue: Queue,
                 queue.tasks.remove(oldtask)
                 queue.changed.add(oldtask)
     """
-
-    name_to_task = {str(task.dname): task for task in tasks}
-    name_to_id_and_state: dict[str, tuple[int, str]] = {}
-    for task in tasks:
-        task.dtasks = []
-        for dname in task.deps:
-            name = str(dname)
-            dtask = name_to_task.get(name)
-            if dtask is None:
-                id, state = name_to_id_and_state.get(name, (-1, ''))
-                if id == -1:
-                    rows = queue.sql(
-                        'SELECT id, state FROM tasks WHERE name = ?',
-                        [name])
-                    id, state = max(rows, default=(-1, ''))
-                    if id == -1:
-                        raise DependencyError(f'Can not find {name}')
-                    name_to_id_and_state[name] = id, state
-                if state in 'qhr':
-                    dtask = create_task('dummy')
-                    dtask.id = id
-                    dtask.state = State(state)
-                elif state == 'd':
-                    continue
-                else:
-                    raise DependencyError(f'Bad state ({state}): {name}')
-
-            task.dtasks.append(dtask)
+    sort_out_dependencies(tasks, queue)
 
     tasks = [task for task in order({task: task.dtasks for task in tasks})
              if task.state == State.undefined]

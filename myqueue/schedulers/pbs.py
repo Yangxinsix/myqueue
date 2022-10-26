@@ -61,11 +61,10 @@ class PBS(Scheduler):
 
         script += (
             '#!/bin/bash -l\n'
-            'id=${{PBS_JOBID%.*}}\n'
-            'mq={home}/.myqueue/pbs-$id\n'
-            '(touch $mq-0 && cd {dir} && {cmd} && touch $mq-1) || '
-            'touch $mq-2\n'
-            .format(home=home, dir=task.folder, cmd=cmd))
+            'id=${PBS_JOBID%.*}\n'
+            f'mq={home}/.myqueue/pbs-$id\n'
+            f'(touch $mq-0 && cd {task.folder} && {cmd} && touch $mq-1) || '
+            'touch $mq-2\n')
 
         if dry_run:
             print(qsub, script)

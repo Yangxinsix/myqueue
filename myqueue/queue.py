@@ -15,12 +15,12 @@ import sys
 import time
 from pathlib import Path
 from types import TracebackType
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Sequence
 
 from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.states import State
-from myqueue.task import Task
+from myqueue.task import Task, create_task
 from myqueue.utils import Lock, cached_property
 from myqueue.selection import Selection
 from myqueue.migration import migrate
@@ -59,6 +59,10 @@ CREATE INDEX state_index on tasks(state);
 CREATE INDEX dependincies_index1 on dependencies(id);
 CREATE INDEX dependincies_index2 on dependencies(id)
 """
+
+
+class DependencyError(Exception):
+    """Bad dependency."""
 
 
 class Queue:
@@ -103,6 +107,7 @@ class Queue:
 
     @property
     def connection(self) -> sqlite3.Connection:
+        print('GET CONNECTION', self._connection)
         if self._connection:
             return self._connection
         sqlfile = self.folder / 'queue.sqlite3'
@@ -131,13 +136,13 @@ class Queue:
         return self._connection
 
     def add(self, *tasks: Task) -> None:
-        root = self.folder.parent
-        q = ', '.join('?' * 17)
         deps = []
         for task in tasks:
             for dep in task.dtasks:
                 deps.append((task.id, dep.id))
 
+        root = self.folder.parent
+        q = ', '.join('?' * 17)
         with self.connection as con:
             con.executemany(
                 f'INSERT INTO tasks VALUES ({q})',
@@ -167,11 +172,11 @@ class Queue:
             sql = f'SELECT * FROM tasks WHERE {where}'
         else:
             sql = 'SELECT * FROM tasks'
-        print(sql, args)
         with self.connection:
             tasks = []
             for row in self.sql(sql, args or []):
                 tasks.append(Task.from_sql_row(row, root))
+        print(sql, args, tasks)
         return tasks
 
     def _initialize_db(self) -> None:
@@ -210,15 +215,17 @@ class Queue:
         if self.dry_run:
             return
         t = time.time()
+        args = [(t, id) for id in self.find_dependents(ids)]
+        print('CANCEL DEPENDENTS', args)
         with self.connection as con:
             con.executemany(
-                'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?',
-                [(t, id) for id in self.find_dependents(ids)])
+                'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?', args)
 
     def remove(self, ids: Iterable[int]) -> None:
         if self.dry_run:
             return
         ids = list(ids)
+        print('REMOVE', ids)
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:
@@ -304,6 +311,37 @@ class Queue:
                     [newstate.value, ctime, id])
 
         path.unlink()
+
+
+def sort_out_dependencies(tasks: Sequence[Task], queue: Queue) -> None:
+    root = queue.config.home
+    name_to_task = {str(task.dname.relative_to(root)): task for task in tasks}
+    name_to_id_and_state: dict[str, tuple[int, str]] = {}
+    for task in tasks:
+        task.dtasks = []
+        for dname in task.deps:
+            name = str(dname.relative_to(root))
+            dtask = name_to_task.get(name)
+            if dtask is None:
+                id, state = name_to_id_and_state.get(name, (-1, ''))
+                if id == -1:
+                    rows = queue.sql(
+                        'SELECT id, state FROM tasks WHERE name = ?',
+                        [name])
+                    id, state = max(rows, default=(-1, ''))
+                    if id == -1:
+                        raise DependencyError(f"Can't find {name}")
+                    name_to_id_and_state[name] = id, state
+                if state in 'qhr':
+                    dtask = create_task('dummy')
+                    dtask.id = id
+                    dtask.state = State(state)
+                elif state == 'd':
+                    continue
+                else:
+                    raise DependencyError(f'Bad state ({state}): {name}')
+
+            task.dtasks.append(dtask)
 
 
 if __name__ == '__main__':
