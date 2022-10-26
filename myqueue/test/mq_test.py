@@ -80,10 +80,9 @@ def test_timeout2(mq):
     mq('kick')
     mq('ls')
     mq.wait()
-    if mq.states() != 'dd':
-        mq('kick')
-        mq.wait()
-        assert mq.states() == 'dd'
+    mq('kick')
+    mq.wait()
+    assert mq.states() == 'TCTCdd'
 
 
 def test_oom(mq):

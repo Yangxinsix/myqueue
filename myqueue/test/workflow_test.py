@@ -72,11 +72,11 @@ def test_flow2(mq):
     mq.wait()
     assert mq.states() == 'MCCC'
     mq('rm -sC . --force')
-    mq(f'workflow {script}')
+    mq(f'workflow {script}', error=1)
     assert mq.states() == 'M'
     mq(f'workflow {script} --force')
     mq.wait()
-    assert mq.states() == 'MCCC'
+    assert mq.states() == 'MMCCC'
 
 
 wf = """

@@ -27,7 +27,7 @@ Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
 """
 
-_help = [
+HELP = [
     ('help',
      'Show how to use this tool.', """
 More help can be found here: https://myqueue.readthedocs.io/.
@@ -140,9 +140,9 @@ aliases = {'rm': 'remove',
 
 
 commands: dict[str, tuple[str, str]] = {}
-for cmd, help, description in _help:
-    description = help + '\n\n' + description[1:]
-    commands[cmd] = (help, description)
+for _cmd, _help, _description in HELP:
+    _description = _help + '\n\n' + _description[1:]
+    commands[_cmd] = (_help, _description)
 
 
 def main(arguments: list[str] = None) -> None:
@@ -416,7 +416,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.queue import Queue
     from myqueue.selection import Selection
     from myqueue.utils import mqhome
-    from myqueue.workflow import workflow
+    from myqueue.workflow import workflow, prune
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
     from myqueue.ls import ls
@@ -574,8 +574,12 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
 
         elif args.command == 'workflow':
             from myqueue.submitting import submit
-            tasks = workflow(args, folders, verbosity)  # , force=args.force)
-            submit(queue, tasks, max_tasks=args.max_tasks)
+            tasks = workflow(args, folders, verbosity)
+            tasks = prune(tasks, queue, args.force)
+            try:
+                submit(queue, tasks, max_tasks=args.max_tasks)
+            except Exception as ex:
+                raise MQError(ex.args)
 
         elif args.command == 'sync':
             from myqueue.syncronize import sync

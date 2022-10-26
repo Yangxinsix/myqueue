@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import runpy
 from argparse import Namespace
+from collections import defaultdict
 from functools import partial
 from pathlib import Path
 from types import TracebackType
@@ -14,16 +15,16 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
 from myqueue.states import State
-
 from myqueue.task import UNSPECIFIED, Task
 from myqueue.utils import chdir
+from myqueue.queue import Queue
 
 DEFAULT_VERBOSITY = 1
 
 
 # force??????????????????????
 
-def workflow(args: Namespace,
+def workflow(args: Namespace,  # from argparse
              folders: list[Path],
              verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow script(s) and folders."""
@@ -56,6 +57,26 @@ def workflow(args: Namespace,
         dnames.add(task.dname)
 
     return tasks
+
+
+def prune(tasks: Sequence[Task],
+          queue: Queue = None,
+          force: bool = False) -> list[Task]:
+    root = queue.config.home
+    ok = []
+    count = defaultdict(int)
+    for task in tasks:
+        name = str(task.dname.relative_to(root))
+        rows = queue.sql(
+            'SELECT id, state FROM tasks WHERE name = ?',
+            [name])
+
+        id, state = max(rows, default=(-1, ''))
+        if id == -1 or force and state in 'FTMC':
+            ok.append(task)
+        count[state] += 1
+    print(count)
+    return ok
 
 
 WorkflowFunction = Callable[[], None]

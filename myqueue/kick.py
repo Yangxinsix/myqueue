@@ -32,6 +32,10 @@ def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
         tasks.append(task)
 
     if tasks:
+        if not queue.dry_run:
+            with queue.connection as con:
+                con.executemany('UPDATE tasks SET restart = 0 WHERE id = ?',
+                                [(task.id,) for task in tasks])
         ids = list(queue.find_dependents(task.id for task in tasks))
         queue.cancel_dependents(ids)
         for id in ids:

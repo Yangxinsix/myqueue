@@ -313,8 +313,8 @@ class Queue:
         path.unlink()
 
 
-def sort_out_dependencies(tasks: Sequence[Task], queue: Queue) -> None:
-    root = queue.config.home
+def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
+    root = queue.config.home if queue is not None else Path('.').absolute()
     name_to_task = {str(task.dname.relative_to(root)): task for task in tasks}
     name_to_id_and_state: dict[str, tuple[int, str]] = {}
     for task in tasks:
@@ -325,6 +325,7 @@ def sort_out_dependencies(tasks: Sequence[Task], queue: Queue) -> None:
             if dtask is None:
                 id, state = name_to_id_and_state.get(name, (-1, ''))
                 if id == -1:
+                    assert queue is not None
                     rows = queue.sql(
                         'SELECT id, state FROM tasks WHERE name = ?',
                         [name])

@@ -115,7 +115,9 @@ class Server:
         """Recieve command from client."""
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
-        print('COMMAND:', cmd, *args)
+        print('COMMAND:', cmd, *args, [(task.id,
+                                        [d.id for d in task.dtasks])
+                                       for task in self.tasks.values()])
         result: Any
         if cmd == 'stop':
             for aiotask in self.aiotasks.values():
@@ -127,6 +129,7 @@ class Server:
             task = args[0]
             task.id = self.next_id
             task.state = State.queued
+            print([d.id for d in task.dtasks])
             if all(t.id in self.tasks for t in task.dtasks):
                 task.deps = [t.dname for t in task.dtasks]
                 self.tasks[task.id] = task
@@ -221,7 +224,7 @@ class Server:
 
     def _cancel_dependents(self, task: Task) -> None:
         for job in self.tasks.values():
-            print('CANCEL', task.dname, job.deps)
+            print('CANCEL', len(self.tasks), task.dname, job, job.deps)
             if task.dname in job.deps:
                 job.state = State.CANCELED
                 self._cancel_dependents(job)

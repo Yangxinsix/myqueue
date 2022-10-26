@@ -12,6 +12,7 @@ from myqueue.schedulers.local import LocalScheduler, Server
 from myqueue.submitting import submit_tasks
 from myqueue.task import create_task
 from myqueue.workflow import collect, run
+from myqueue.queue import sort_out_dependencies
 
 
 @pytest.fixture(scope='function')
@@ -61,6 +62,7 @@ def workflow():
                     reason='requires Python 3.8 or higher')
 def test_local_scheduler2(scheduler):
     tasks = collect(workflow, Path())
+    sort_out_dependencies(tasks)
     ids, ex = submit_tasks(scheduler,
                            tasks,
                            verbosity=2,
