@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 import runpy
-from argparse import Namespace
+import argparse
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
@@ -22,9 +22,7 @@ from myqueue.queue import Queue
 DEFAULT_VERBOSITY = 1
 
 
-# force??????????????????????
-
-def workflow(args: Namespace,  # from argparse
+def workflow(args: argparse.Namespace,
              folders: list[Path],
              verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow script(s) and folders."""
@@ -63,7 +61,8 @@ def prune(tasks: Sequence[Task],
           queue: Queue = None,
           force: bool = False) -> list[Task]:
     root = queue.config.home
-    ok = []
+    ok: list[Task] = []
+    remove: list[int] = []
     count = defaultdict(int)
     for task in tasks:
         name = str(task.dname.relative_to(root))
@@ -72,10 +71,21 @@ def prune(tasks: Sequence[Task],
             [name])
 
         id, state = max(rows, default=(-1, ''))
-        if id == -1 or force and state in 'FTMC':
+        if id == -1:
             ok.append(task)
+        elif force and state in 'FTMC':
+            ok.append(task)
+            remove.append(id)
+
         count[state] += 1
-    print(count)
+
+    queue.remove(remove)
+
+    if count:
+        print(', '.join(f'{state}: {n}' for state, n in count.items()))
+    if not force and any(state in 'FTMC' for state in count):
+        print('Use --force to ignore failed tasks.')
+
     return ok
 
 

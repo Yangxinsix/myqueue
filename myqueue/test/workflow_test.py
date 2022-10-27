@@ -76,7 +76,7 @@ def test_flow2(mq):
     assert mq.states() == 'M'
     mq(f'workflow {script} --force')
     mq.wait()
-    assert mq.states() == 'MMCCC'
+    assert mq.states() == 'MCCC'
 
 
 wf = """
@@ -175,8 +175,7 @@ def create_tasks():
 
 def test_workflow3(mq):
     Path('wf3.py').write_text(wf3)
-    with pytest.raises(RuntimeError):
-        mq('workflow wf3.py')
+    mq('workflow wf3.py', error=1)
     mq.wait()
     assert mq.states() == 'd'
 
