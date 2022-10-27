@@ -24,8 +24,7 @@ def test_api(mq):
     simple_submit(task('myqueue.test@timeout_once', tmax='1s'))
     mq.wait()
     simple_submit(task('myqueue.test@timeout_once'))
-    mq.wait()
-    assert mq.states() == 'MTd'
+    assert mq.wait() == 'MTd'
 
 
 def test_backends(mq):

@@ -58,11 +58,12 @@ class MQ:
         return ''.join(task.state.value
                        for task in mqlist(self.scheduler.config))
 
-    def wait(self) -> None:
+    def wait(self) -> str:
         while True:
             done = self.scheduler.kick()
             if done:
                 break
+        return self.states()
 
 
 def mqlist(config) -> list[Task]:
