@@ -146,7 +146,6 @@ class Queue:
                 f'INSERT INTO tasks VALUES ({q})',
                 [task.to_sql(root) for task in tasks])
             con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
-        print(deps, [task.to_sql(root) for task in tasks])
 
     def sql(self,
             statement: str,
@@ -174,7 +173,6 @@ class Queue:
             tasks = []
             for row in self.sql(sql, args or []):
                 tasks.append(Task.from_sql_row(row, root))
-        print(sql, args, tasks)
         return tasks
 
     def _initialize_db(self) -> None:
@@ -214,7 +212,6 @@ class Queue:
             return
         t = time.time()
         args = [(t, id) for id in self.find_dependents(ids)]
-        print('CANCEL DEPENDENTS', args)
         with self.connection as con:
             con.executemany(
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?', args)
@@ -223,7 +220,6 @@ class Queue:
         if self.dry_run:
             return
         ids = list(ids)
-        print('REMOVE', ids)
         self.cancel_dependents(ids)
         args = [[id] for id in ids]
         with self.connection as con:
@@ -282,7 +278,6 @@ class Queue:
             path.unlink()
             return None
 
-        print('UPDATE', id, newstate, user, self.config.user)
         if user != self.config.user:
             return
 
@@ -317,6 +312,7 @@ def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
     name_to_id_and_state: dict[str, tuple[int, str]] = {}
     for task in tasks:
         task.dtasks = []
+        deps = []
         for dname in task.deps:
             name = str(dname.relative_to(root))
             dtask = name_to_task.get(name)
@@ -341,6 +337,8 @@ def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
                     raise DependencyError(f'Bad state ({state}): {name}')
 
             task.dtasks.append(dtask)
+            deps.append(dname)
+        task.deps = deps
 
 
 if __name__ == '__main__':

@@ -70,9 +70,11 @@ def prune(tasks: Sequence[Task],
             'SELECT id, state FROM tasks WHERE name = ?',
             [name])
         id, state = max(rows, default=(-1, 'u'))
-        print('****', name, id, state, task.check_creates_files())
-        if id == -1 and not task.check_creates_files():
-            ok.append(task)
+        if id == -1:
+            if task.check_creates_files():
+                state = 'd*'
+            else:
+                ok.append(task)
         elif force and state in 'FTMC':
             ok.append(task)
             remove.append(id)
@@ -82,7 +84,14 @@ def prune(tasks: Sequence[Task],
     queue.remove(remove)
 
     if count:
-        print(', '.join(f'{state}: {n}' for state, n in count.items()))
+        for state, n in count.items():
+            if state == 'u':
+                state = 'new'
+            elif state == 'd*':
+                state = 'done*'
+            else:
+                state = State(state).name
+            print(f'{state:9}: {n}')
     if not force and any(state in 'FTMC' for state in count):
         print('Use --force to submit failed tasks.')
 

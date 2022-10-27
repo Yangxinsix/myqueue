@@ -30,6 +30,7 @@ class TestScheduler(Scheduler):
             for t in task.dtasks:
                 assert t.id in ids
         self.number += 1
+        task.state = State.queued
         self.tasks.append(task)
         return self.number
 

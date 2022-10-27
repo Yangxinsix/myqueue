@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
 from typing import Sequence, TypeVar, TYPE_CHECKING
@@ -17,27 +16,6 @@ if TYPE_CHECKING:
     import rich.progress as progress
 
 TaskName = Path
-
-
-def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
-    """Mark children of task as FAILED."""
-    for child in children[task]:
-        child.state = State.FAILED
-        mark_children(child, children)
-
-
-def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
-    """Create list without bad dependencies."""
-    children = defaultdict(list)
-    for task in tasks:
-        for dep in task.dtasks:
-            children[dep].append(task)
-
-    for task in list(children):
-        if task.state.is_bad():
-            mark_children(task, children)
-
-    return [task for task in tasks if not task.state.is_bad()]
 
 
 wf = """
@@ -107,7 +85,6 @@ def submit(queue: Queue,
         task.id = id
         task.state = State.queued
         task.tqueued = t
-        # task.deps = [dep.dname for dep in task.dtasks]
 
     pprint(submitted, 0, 'ifnaIr',
            maxlines=10 if verbosity < 2 else 99999999999999)
