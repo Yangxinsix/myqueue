@@ -70,7 +70,7 @@ def prune(tasks: Sequence[Task],
             'SELECT id, state FROM tasks WHERE name = ?',
             [name])
 
-        id, state = max(rows, default=(-1, ''))
+        id, state = max(rows, default=(-1, 'u'))
         if id == -1:
             ok.append(task)
         elif force and state in 'FTMC':
@@ -84,7 +84,7 @@ def prune(tasks: Sequence[Task],
     if count:
         print(', '.join(f'{state}: {n}' for state, n in count.items()))
     if not force and any(state in 'FTMC' for state in count):
-        print('Use --force to ignore failed tasks.')
+        print('Use --force to submit failed tasks.')
 
     return ok
 
