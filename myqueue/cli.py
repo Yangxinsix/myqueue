@@ -291,7 +291,7 @@ def _main(arguments: list[str] = None) -> int:
             a('-c', '--columns', metavar='ifnaIrAste', default='ifnaIrAste',
               help='Select columns to show.  Use "-c a-" to remove the '
               '"a" column.')
-            a('-S', '--sort', metavar='c',
+            a('-S', '--sort', metavar='c', default='i',
               help='Sort rows using column c, where c must be one of '
               'i, f, n, a, r, A, s, t or e.  '
               'Use "-S c-" for a descending sort.')
@@ -529,12 +529,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     need_lock = args.command not in ['list', 'info'] and not dry_run
     with Queue(config, need_lock=need_lock, dry_run=dry_run) as queue:
         if args.command == 'list':
-            if args.sort:
-                reverse = args.sort.endswith('-')
-                column = args.sort.rstrip('-')
-            else:
-                reverse = False
-                column = None
+            reverse = args.sort.endswith('-')
+            column = args.sort.rstrip('-')
             ls(queue, selection, args.columns, column, reverse,
                args.count, verbosity)
 

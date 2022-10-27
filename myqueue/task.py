@@ -187,8 +187,13 @@ class Task:
                                           str, int, bool, str, int,
                                           str, str, float, float, float,
                                           str, str]:
+        folder = str(self.folder.relative_to(root))
+        if folder == '.':
+            folder = './'
+        else:
+            folder = f'./{folder}/'
         return (self.id,
-                str(self.folder.relative_to(root)) + '/',
+                folder,
                 self.state.name[0],
                 str(self.dname.relative_to(root)),
                 json.dumps(self.cmd.todict()),

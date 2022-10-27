@@ -50,14 +50,20 @@ class Selection:
             parts.append(f'state IN ({q})')
             args += [state.value for state in self.states]
 
-        for folder in self.folders:
-            folder = folder.relative_to(root)
-            if self.recursive:
-                parts.append('folder GLOB ?')
-                args.append(f'{folder}/*')
-            else:
-                parts.append('folder = ?')
-                args.append(f'{folder}/')
+        if self.folders:
+            part = []
+            for folder in self.folders:
+                folder = str(folder.relative_to(root))
+                if folder != '.':
+                    folder = './' + folder
+                #print(f'{folder=}')
+                if self.recursive:
+                    part.append('folder GLOB ?')
+                    args.append(f'{folder}/*')
+                else:
+                    part.append('folder = ?')
+                    args.append(f'{folder}/')
+            parts.append(f'({" OR ".join(part)})')
 
         if self.name:
             parts.append('name GLOB ?')
