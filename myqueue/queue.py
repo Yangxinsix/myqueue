@@ -100,14 +100,12 @@ class Queue:
                  type: Exception,
                  value: Exception,
                  tb: TracebackType) -> None:
-        print('EXIT', self._connection)
         if self._connection:
             self._connection.close()
         self.lock.release()
 
     @property
     def connection(self) -> sqlite3.Connection:
-        print('GET CONNECTION', self._connection)
         if self._connection:
             return self._connection
         sqlfile = self.folder / 'queue.sqlite3'

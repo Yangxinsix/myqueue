@@ -324,22 +324,21 @@ class Task:
         self.result = self.cmd.run()
 
 
-def create_task(
-    cmd: str,
-    args: list[str] = [],
-    *,
-    resources: str = '',
-    workflow: bool = False,
-    name: str = '',
-    deps: str | list[str] | Task | list[Task] = '',
-    cores: int = 0,
-    nodename: str = '',
-    processes: int = 0,
-    tmax: str = '',
-    folder: str = '',
-    restart: int = 0,
-    diskspace: float = 0.0,
-    creates: list[str] = []) -> Task:
+def create_task(cmd: str,
+                args: list[str] = [],
+                *,
+                resources: str = '',
+                workflow: bool = False,
+                name: str = '',
+                deps: str | list[str] | Task | list[Task] = '',
+                cores: int = 0,
+                nodename: str = '',
+                processes: int = 0,
+                tmax: str = '',
+                folder: str = '',
+                restart: int = 0,
+                diskspace: float = 0.0,
+                creates: list[str] = []) -> Task:
     """Create a Task object.
 
     ::

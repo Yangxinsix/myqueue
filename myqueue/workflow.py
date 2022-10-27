@@ -58,20 +58,20 @@ def workflow(args: argparse.Namespace,
 
 
 def prune(tasks: Sequence[Task],
-          queue: Queue = None,
+          queue: Queue,
           force: bool = False) -> list[Task]:
     root = queue.config.home
     ok: list[Task] = []
     remove: list[int] = []
-    count = defaultdict(int)
+    count: defaultdict[str, int] = defaultdict(int)
     for task in tasks:
         name = str(task.dname.relative_to(root))
         rows = queue.sql(
             'SELECT id, state FROM tasks WHERE name = ?',
             [name])
-
         id, state = max(rows, default=(-1, 'u'))
-        if id == -1:
+        print('****', name, id, state, task.check_creates_files())
+        if id == -1 and not task.check_creates_files():
             ok.append(task)
         elif force and state in 'FTMC':
             ok.append(task)
@@ -208,12 +208,12 @@ class StopRunning(Exception):
 
 class RunHandle:
     """Result of calling run().  Can be used as a context manager."""
-    def __init__(self, task: Task, runner: 'Runner'):
+    def __init__(self, task: Task, runner: Runner):
         self.task = task
         self.runner = runner
 
     @property
-    def result(self) -> 'Result':
+    def result(self) -> Result:
         """Result from Python-function tasks."""
         result = self.task.result
         if result is UNSPECIFIED:
@@ -226,7 +226,7 @@ class RunHandle:
         """Has task been successfully finished?"""
         return self.task.state == State.done
 
-    def __enter__(self) -> 'RunHandle':
+    def __enter__(self) -> RunHandle:
         self.runner.dependencies.append(self.task)
         return self
 
@@ -243,7 +243,7 @@ class Result:
     def __init__(self, task: Task):
         self.task = task
 
-    def __getattr__(self, attr: str) -> 'Result':
+    def __getattr__(self, attr: str) -> Result:
         return self
 
     def __lt__(self, other: Any) -> bool:
@@ -270,7 +270,7 @@ def get_name(func: Callable) -> str:
 
 class ResourceHandler:
     """Resource decorator and context manager."""
-    def __init__(self, kwargs: dict[str, Any], runner: 'Runner'):
+    def __init__(self, kwargs: dict[str, Any], runner: Runner):
         self.kwargs = kwargs
         self.runner = runner
         self.old_kwargs: dict
