@@ -128,6 +128,7 @@ def submit_tasks(scheduler: Scheduler,
                     dry_run,
                     verbosity >= 2)
                 ids.append(id)
+                task.id = id
                 pb.advance(pid)
         except (Exception, KeyboardInterrupt) as x:
             ex = x
