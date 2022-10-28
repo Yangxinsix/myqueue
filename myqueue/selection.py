@@ -53,16 +53,15 @@ class Selection:
         if self.folders:
             part = []
             for folder in self.folders:
-                folder = str(folder.relative_to(root))
-                if folder != '.':
-                    folder = './' + folder
-                #print(f'{folder=}')
+                f = str(folder.relative_to(root))
+                if f != '.':
+                    f = './' + f
                 if self.recursive:
                     part.append('folder GLOB ?')
-                    args.append(f'{folder}/*')
+                    args.append(f'{f}/*')
                 else:
                     part.append('folder = ?')
-                    args.append(f'{folder}/')
+                    args.append(f'{f}/')
             parts.append(f'({" OR ".join(part)})')
 
         if self.name:

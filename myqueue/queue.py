@@ -372,4 +372,4 @@ def dump_db(path: Path) -> None:
 
 
 if __name__ == '__main__':
-    dump_db()
+    dump_db(Path(sys.argv[1]))
