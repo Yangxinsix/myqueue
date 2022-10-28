@@ -255,13 +255,9 @@ Here are three equivalent ways to set the ``cores`` resource::
 Functions
 ---------
 
-A task that calls a Python function will make sure the function caches its
-result. If the function ``f`` has an attribute ``has`` that is a callable
-that can be called like ``f.has(*args, **kwargs)`` then MyQueue will use that
-to check if the function has been called with a given set of arguments.  If a
-function doesn't have a ``has`` attribute then MyQueue will wrap it in a
-function that does using the :class:`~myqueue.caching.CachedFunction`
-object.
+A task that calls a Python function will caches its
+result by writing the return value as JSON to a file.  MyQueue does this
+using the :class:`~myqueue.caching.CachedFunction` object:
 
 .. autoclass:: myqueue.caching.CachedFunction
     :members:
