@@ -168,15 +168,18 @@ Handling many tasks
 In the case where you have a workflow script with many tasks combined with
 many folders, it can happen that ``mq workflow ... */`` will try to submit
 more tasks than allowed by the scheduler.  In that case, you will have to
-submit the tasks in batches::
+submit the tasks in batches.  Say you have 300 tasks from 150 folders::
 
-    $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
-    done     : 14
+    $ mq workflow ../prime/workflow.py */ --max-tasks=200
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150/150
+    new      : 200
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 200/200
     $ # wait ten days ...
-    $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
-    done     : 14
+    $ mq workflow ../prime/workflow.py */ --max-tasks=200
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150/150
+    new      : 100
+    done     : 200
+    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100/100
 
 
 .. _workflow script:

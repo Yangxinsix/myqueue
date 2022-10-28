@@ -106,6 +106,7 @@ class Queue:
 
     @property
     def connection(self) -> sqlite3.Connection:
+        """Get or create a connection object."""
         if self._connection:
             return self._connection
         sqlfile = self.folder / 'queue.sqlite3'
@@ -134,6 +135,7 @@ class Queue:
         return self._connection
 
     def add(self, *tasks: Task) -> None:
+        """Add tasks to database."""
         deps = []
         for task in tasks:
             for dep in task.dtasks:
@@ -150,9 +152,11 @@ class Queue:
     def sql(self,
             statement: str,
             args: list[str | int] = None) -> Iterator[tuple]:
+        """Raw SQL execution."""
         return self.connection.execute(statement, args or [])
 
     def select(self, selection: Selection = None) -> list[Task]:
+        """Create tasks from selection object."""
         root = self.folder.parent
         if selection:
             where, args = selection.sql_where_statement(root)
@@ -164,6 +168,7 @@ class Queue:
     def tasks(self,
               where: str,
               args: list[str | int] = None) -> list[Task]:
+        """Create tasks from SQL WHERE statement."""
         root = self.folder.parent
         if where:
             sql = f'SELECT * FROM tasks WHERE {where}'
@@ -176,6 +181,7 @@ class Queue:
         return tasks
 
     def _initialize_db(self) -> None:
+        """Initialize tables and write version number."""
         assert self.lock.locked
         with self.connection:
             for statement in INIT.split(';'):
@@ -208,6 +214,7 @@ class Queue:
             yield from self.find_dependents(result, known)
 
     def cancel_dependents(self, ids: Iterable[int]) -> None:
+        """Set state of dependents to CANCELED."""
         if self.dry_run:
             return
         t = time.time()
@@ -217,6 +224,7 @@ class Queue:
                 'UPDATE tasks SET state = "C", tstop = ? WHERE id = ?', args)
 
     def remove(self, ids: Iterable[int]) -> None:
+        """Remove tasks."""
         if self.dry_run:
             return
         ids = list(ids)
@@ -228,6 +236,7 @@ class Queue:
             con.executemany('DELETE FROM tasks WHERE id = ?', args)
 
     def check_for_timeout(self) -> None:
+        """Find "running" tasks that are actually timed out."""
         t = time.time()
 
         timeouts = []
@@ -244,6 +253,7 @@ class Queue:
         self.cancel_dependents(timeouts)
 
     def check_for_oom(self) -> None:
+        """Fin out-of-memory tasks."""
         args = []
         for task in self.tasks('state = "F" AND error = ""'):
             oom = task.read_error_and_check_for_oom(self.scheduler)
@@ -253,6 +263,7 @@ class Queue:
                 'UPDATE tasks SET state = ?, error = ? WHERE id = ?', args)
 
     def process_change_files(self) -> None:
+        """Process state-change files from running tasks."""
         paths = list(self.folder.glob('*-*-*'))
         states = {0: State.running,
                   1: State.done,
@@ -271,6 +282,7 @@ class Queue:
                         newstate: State,
                         ctime: float,
                         path: Path) -> None:
+        """Update single task."""
         try:
             (user,), = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
         except ValueError:
@@ -307,6 +319,7 @@ class Queue:
 
 
 def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
+    """Get dependencies ready for submitting."""
     root = queue.config.home if queue is not None else Path('.').absolute()
     name_to_task = {str(task.dname.relative_to(root)): task for task in tasks}
     name_to_id_and_state: dict[str, tuple[int, str]] = {}
