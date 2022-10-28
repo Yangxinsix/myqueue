@@ -31,4 +31,3 @@ oldtests:
     - pip install -e .
     - pytest
   when: manual
-'
