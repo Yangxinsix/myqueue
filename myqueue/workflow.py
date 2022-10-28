@@ -325,6 +325,7 @@ class Runner:
             args: Sequence[Any] = [],
             kwargs: dict[str, Any] = {},
             deps: list[RunHandle] = [],
+            creates: list[str] = [],
             tmax: str = None,
             cores: int = None,
             nodename: str = None,
@@ -353,6 +354,8 @@ class Runner:
             or shell command.
         deps: list of run handle objects
             Dependencies.
+        creates: list of filenames
+            Files created by task.
         cores: int
             Number of cores (default is 1).
         nodename: str
@@ -390,6 +393,7 @@ class Runner:
                            self.workflow_script,
                            Path(folder).absolute(),
                            resource_kwargs.pop('restart'),  # type: ignore
+                           creates=creates,
                            **resource_kwargs)
 
         if self.target:
@@ -484,6 +488,7 @@ def create_task(function: Callable = None,
                 workflow_script: Path = None,
                 folder: Path = Path('.'),
                 restart: int = 0,
+                creates: list[str] = [],
                 **resource_kwargs: Any) -> Task:
     """Create a Task object."""
     if sum(arg is not None
@@ -497,6 +502,7 @@ def create_task(function: Callable = None,
         cached_function = create_cached_function(function, name, args, kwargs)
         command = WorkflowTask(f'{workflow_script}:{name}', [],
                                cached_function)
+        creates = creates + [f'{name}.result']
     elif module:
         assert not kwargs
         command = PythonModule(module, [str(arg) for arg in args])
@@ -524,7 +530,7 @@ def create_task(function: Callable = None,
                 restart=restart,
                 workflow=True,
                 diskspace=0,
-                creates=[])
+                creates=creates)
 
     if function and not any(isinstance(thing, Result)
                             for thing in list(args) + list(kwargs.values())):

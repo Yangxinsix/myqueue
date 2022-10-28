@@ -276,7 +276,7 @@ class Task:
                                          folder in self.folder.parents)
 
     def check_creates_files(self) -> bool:
-        """Read state file."""
+        """Check if all files have been created."""
         if self.creates:
             for pattern in self.creates:
                 if not any(self.folder.glob(pattern)):
@@ -284,7 +284,7 @@ class Task:
             return True
         return False
 
-    def read_error_and_check_for_oom(self, scheduler: 'Scheduler') -> bool:
+    def read_error_and_check_for_oom(self, scheduler: Scheduler) -> bool:
         """Check error message.
 
         Return True if out of memory.
