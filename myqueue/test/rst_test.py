@@ -19,7 +19,7 @@ def skip(line: str) -> bool:
     return False
 
 
-def run_document(mq, path: Path, test=False, update=not False) -> None:
+def run_document(mq, path: Path, test=False, update=False) -> None:
     assert path.is_file()
     lines = path.read_text().splitlines()
     blocks: list[tuple[str, list[str], int]] = []

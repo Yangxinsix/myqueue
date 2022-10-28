@@ -1,7 +1,7 @@
 import json
 import os
 
-from myqueue.queue import Queue
+from myqueue.queue import Queue, dump_db
 from myqueue.task import create_task
 
 
@@ -16,3 +16,4 @@ def test_migration(tmp_path):
     with Queue() as q:
         tasks = q.select()
         assert len(tasks) == 1
+    dump_db(mq / 'queue.sqlite3')

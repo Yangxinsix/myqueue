@@ -26,11 +26,14 @@ Start from scratch
 * Remove your ``.myqueue/queue.sqlite3`` file.
 
 
-Hart surgery
-------------
-
-touch lockfile
+See what's in your ``.myqueue/queue.sqlite3`` file
+--------------------------------------------------
 
 >>> import sqlite3
->>> con = sqlite.connect('')
->>> con.execute('UPDATE tasks SET state = "d" WHERE id = 543251')
+>>> con = sqlite.connect('path/to/.myqueue/queue.sqlite3')
+>>> for row in con.execute('SELECT * FROM tasks'):
+...     print(row)
+
+Or use::
+
+    $ python -m myqueue.queue path/to/.myqueue/queue.sqlite3

@@ -11,7 +11,7 @@ tests:
     - export COVERAGE_PROCESS_START=$PWD/cov.cfg
     - coverage run -p --source=myqueue -m pytest -v
     - coverage combine -a .coverage.*
-    - coverage report -i --precision=2 --fail-under=90.46
+    - coverage report -i --precision=2 --fail-under=90.16
     - coverage html
     - mypy -p myqueue
     - flake8 myqueue
@@ -31,3 +31,4 @@ oldtests:
     - pip install -e .
     - pytest
   when: manual
+'

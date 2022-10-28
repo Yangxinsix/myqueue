@@ -341,13 +341,13 @@ def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
         task.deps = deps
 
 
-if __name__ == '__main__':
+def dump_db(path: Path) -> None:
+    """Pretty-print content of sqlite3 db file."""
     from rich.table import Table
     from rich.console import Console
     prnt = Console().print
-    name = sys.argv[1]
-    db = sqlite3.connect(name)
-    table = Table(title=name)
+    db = sqlite3.connect(path)
+    table = Table(title=str(path))
     columns = [line.strip().split()[0]
                for line in INIT.split(';')[0].splitlines()[1:]]
     for name in columns:
@@ -369,3 +369,7 @@ if __name__ == '__main__':
     for row in db.execute('SELECT * from meta'):
         table.add_row(*[str(x) for x in row])
     prnt(table)
+
+
+if __name__ == '__main__':
+    dump_db()
