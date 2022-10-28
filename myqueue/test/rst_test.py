@@ -19,7 +19,7 @@ def skip(line: str) -> bool:
     return False
 
 
-def run_document(mq, path: Path, test=False, update=False) -> None:
+def run_document(mq, path: Path, test=False, update=not False) -> None:
     assert path.is_file()
     lines = path.read_text().splitlines()
     blocks: list[tuple[str, list[str], int]] = []
@@ -132,6 +132,7 @@ def test_docs_workflows(mq, monkeypatch):
     bin.mkdir()
     (bin / 'activate').write_text(
         f'export PYTHONPATH={venv.parent}\n')
+    mq.scheduler.activation_script = bin / 'activate'
     run_document(mq, docs / 'workflows.rst', test=True)
 
 

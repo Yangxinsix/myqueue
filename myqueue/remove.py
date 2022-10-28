@@ -20,7 +20,7 @@ def remove(queue: Queue,
 
     if queue.dry_run:
         if tasks:
-            pprint(tasks, 0)
+            pprint(tasks, verbosity=0, sort='i')
             print(plural(len(tasks), 'task'), 'to be removed')
     else:
         for task in tasks:
@@ -29,5 +29,5 @@ def remove(queue: Queue,
         queue.remove((task.id for task in tasks))
         if verbosity > 0:
             if tasks:
-                pprint(tasks, 0)
+                pprint(tasks, verbosity=0, sort='i')
                 print(plural(len(tasks), 'task'), 'removed')

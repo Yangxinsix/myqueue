@@ -86,7 +86,7 @@ def submit(queue: Queue,
         task.state = State.queued
         task.tqueued = t
 
-    pprint(submitted, 0, 'ifnaIr',
+    pprint(submitted, verbosity=0, columns='ifnaIr',
            maxlines=10 if verbosity < 2 else 99999999999999)
     if submitted:
         if queue.dry_run:

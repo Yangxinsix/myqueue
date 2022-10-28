@@ -419,7 +419,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.workflow import workflow, prune
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
-    from myqueue.ls import ls
+    from myqueue.pretty import pprint
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -531,8 +531,13 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         if args.command == 'list':
             reverse = args.sort.endswith('-')
             column = args.sort.rstrip('-')
-            ls(queue, selection, args.columns, column, reverse,
-               args.count, verbosity)
+            tasks = queue.select(selection)
+            pprint(tasks,
+                   verbosity=verbosity,
+                   columns=args.columns,
+                   short=args.count,
+                   sort=column,
+                   reverse=reverse)
 
         elif args.command == 'remove':
             from myqueue.remove import remove

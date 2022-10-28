@@ -20,10 +20,13 @@ def colored(state: str) -> str:
 
 
 def pprint(tasks: list[Task],
+           *,
            verbosity: int = 1,
            columns: str = 'ifnaIrAste',
            short: bool = False,
-           maxlines: int = 9999999999) -> None:
+           maxlines: int = 9999999999,
+           sort: str | None = None,
+           reverse: bool = False) -> None:
     """Pretty-print tasks.
 
     Use short=True to get only a summary.
@@ -33,6 +36,11 @@ def pprint(tasks: list[Task],
 
     if not tasks:
         return
+
+    if isinstance(sort, str):
+        tasks = sorted(tasks,
+                       key=lambda task: task.order_key(sort),  # type: ignore
+                       reverse=reverse)
 
     home = str(mqhome()) + '/'
     cwd = str(Path.cwd()) + '/'
