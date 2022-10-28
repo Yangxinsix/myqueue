@@ -246,8 +246,8 @@ The output files from a task will look like this::
 
     $ ls -l f2
     total 4
-    -rw-rw-r-- 1 jensj jensj 0 Jun 24 22:33 shell:echo.3.err
-    -rw-rw-r-- 1 jensj jensj 6 Jun 24 22:33 shell:echo.3.out
+    -rw-rw-r-- 1 jensj jensj 0 Oct 28 10:46 shell:echo.3.err
+    -rw-rw-r-- 1 jensj jensj 6 Oct 28 10:46 shell:echo.3.out
     $ cat f2/shell:echo.3.out
     hello
 

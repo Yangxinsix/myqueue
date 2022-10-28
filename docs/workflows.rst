@@ -42,9 +42,9 @@ We put the three Python files in a ``prime/`` folder::
 
     $ ls -l prime/
     total 12
-    -rw-rw-r-- 1 jensj jensj 190 Jun 24 22:33 check.py
-    -rw-rw-r-- 1 jensj jensj 398 Jun 24 22:33 factor.py
-    -rw-rw-r-- 1 jensj jensj 164 Jun 24 22:33 workflow.py
+    -rw-rw-r-- 1 jensj jensj 190 Oct 28 10:46 check.py
+    -rw-rw-r-- 1 jensj jensj 398 Oct 28 10:46 factor.py
+    -rw-rw-r-- 1 jensj jensj 164 Oct 28 10:46 workflow.py
 
 Make sure Python can find the files by adding this line::
 
@@ -62,12 +62,14 @@ and start the workflow in one of the folders::
 
     $ mq workflow ../prime/workflow.py 1001/ --dry-run
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+    new      : 2
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     1 ./1001/ prime.factor    1:2s
     1 ./1001/ prime.check  d1 1:2s
     2 tasks to submit
     $ mq workflow ../prime/workflow.py 1001/
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1/1
+    new      : 2
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     1 ./1001/ prime.factor    1:2s
     2 ./1001/ prime.check  d1 1:2s
@@ -77,15 +79,16 @@ and start the workflow in one of the folders::
 and now in all subfolders::
 
     $ mq ls
-    id folder  name         res.  age state time
-    ── ─────── ──────────── ──── ──── ───── ────
-    1  ./1001/ prime.factor 1:2s 0:02 done  0:00
-    2  ./1001/ prime.check  1:2s 0:02 done  0:00
-    ── ─────── ──────────── ──── ──── ───── ────
+    id folder  name         info res.  age state time
+    ── ─────── ──────────── ──── ──── ──── ───── ────
+    1  ./1001/ prime.factor      1:2s 0:02 done  0:00
+    2  ./1001/ prime.check  d1   1:2s 0:02 done  0:00
+    ── ─────── ──────────── ──── ──── ──── ───── ────
     done: 2, total: 2
     $ mq workflow ../prime/workflow.py */
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6/6
-    done: 2
+    new      : 10
+    done     : 2
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/10
     3  ./100007/ prime.factor    1:2s
     4  ./100007/ prime.check  d1 1:2s
@@ -103,40 +106,41 @@ and now in all subfolders::
 
     $ sleep 2  # wait for tasks to finish
     $ mq ls
-    id folder    name         res.  age state time
-    ── ───────── ──────────── ──── ──── ───── ────
-    1  ./1001/   prime.factor 1:2s 0:04 done  0:00
-    2  ./1001/   prime.check  1:2s 0:04 done  0:00
-    3  ./100007/ prime.factor 1:2s 0:02 done  0:00
-    4  ./100007/ prime.check  1:2s 0:02 done  0:00
-    5  ./36791/  prime.factor 1:2s 0:02 done  0:00
-    6  ./36791/  prime.check  1:2s 0:02 done  0:00
-    7  ./8069/   prime.factor 1:2s 0:02 done  0:00
-    8  ./8069/   prime.check  1:2s 0:02 done  0:00
-    9  ./98769/  prime.factor 1:2s 0:02 done  0:00
-    10 ./98769/  prime.check  1:2s 0:02 done  0:00
-    11 ./99/     prime.factor 1:2s 0:02 done  0:00
-    12 ./99/     prime.check  1:2s 0:02 done  0:00
-    ── ───────── ──────────── ──── ──── ───── ────
+    id folder    name         info res.  age state time
+    ── ───────── ──────────── ──── ──── ──── ───── ────
+    1  ./1001/   prime.factor      1:2s 0:04 done  0:00
+    2  ./1001/   prime.check  d1   1:2s 0:04 done  0:00
+    3  ./100007/ prime.factor      1:2s 0:02 done  0:00
+    4  ./100007/ prime.check  d1   1:2s 0:02 done  0:00
+    5  ./36791/  prime.factor      1:2s 0:02 done  0:00
+    6  ./36791/  prime.check  d1   1:2s 0:02 done  0:00
+    7  ./8069/   prime.factor      1:2s 0:02 done  0:00
+    8  ./8069/   prime.check  d1   1:2s 0:02 done  0:00
+    9  ./98769/  prime.factor      1:2s 0:02 done  0:00
+    10 ./98769/  prime.check  d1   1:2s 0:02 done  0:00
+    11 ./99/     prime.factor      1:2s 0:02 done  0:00
+    12 ./99/     prime.check  d1   1:2s 0:02 done  0:00
+    ── ───────── ──────────── ──── ──── ──── ───── ────
     done: 12, total: 12
 
 Note that ``prime.check.done`` and ``prime.factor.done`` files are created
 to mark that these tasks have been completed::
 
     $ ls -l 1001/
-    total 12
-    -rw-rw-r-- 1 jensj jensj 24 Jun 24 22:33 factors.json
-    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.err
-    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.check.2.out
-    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.err
-    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 prime.factor.1.out
+    total 4
+    -rw-rw-r-- 1 jensj jensj 24 Oct 28 10:46 factors.json
+    -rw-rw-r-- 1 jensj jensj  0 Oct 28 10:46 prime.check.2.err
+    -rw-rw-r-- 1 jensj jensj  0 Oct 28 10:46 prime.check.2.out
+    -rw-rw-r-- 1 jensj jensj  0 Oct 28 10:46 prime.factor.1.err
+    -rw-rw-r-- 1 jensj jensj  0 Oct 28 10:46 prime.factor.1.out
 
 Now, add another number::
 
     $ mkdir 42
     $ mq workflow ../prime/workflow.py */
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
-    done: 12
+    done     : 12
+    new      : 2
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
     13 ./42/ prime.factor    1:2s
     14 ./42/ prime.check  d1 1:2s
@@ -167,15 +171,12 @@ more tasks than allowed by the scheduler.  In that case, you will have to
 submit the tasks in batches::
 
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1500/1500
-    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2000/2000
-    ...
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
+    done     : 14
     $ # wait ten days ...
     $ mq workflow ../prime/workflow.py */ --max-tasks=2000
-    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1500/1500
-    done: 2000
-    Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1000/1000
-    ...
+    Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7/7
+    done     : 14
 
 
 .. _workflow script:
