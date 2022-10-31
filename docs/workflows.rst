@@ -174,12 +174,14 @@ submit the tasks in batches.  Say you have 300 tasks from 150 folders::
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150/150
     new      : 200
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 200/200
+    ...
     $ # wait ten days ...
     $ mq workflow ../prime/workflow.py */ --max-tasks=200
     Scanning folders: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150/150
     new      : 100
     done     : 200
     Submitting tasks: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100/100
+    ...
 
 
 .. _workflow script:
