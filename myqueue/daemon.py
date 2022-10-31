@@ -35,19 +35,12 @@ def is_running(pidfile: Path) -> bool:
 
 def start_daemon(config: Configuration) -> bool:
     """Fork a daemon process."""
-    err = config.home / f'.myqueue/daemon-{config.user}.err'
-    out = config.home / f'.myqueue/daemon-{config.user}.out'
     pidfile = config.home / f'.myqueue/daemon-{config.user}.pid'
-
-    if err.is_file():
-        msg = (f'Something wrong.  See {err}.  '
-               'Fix the problem and remove the daemon.err file.')
-        raise RuntimeError(msg)
 
     if is_running(pidfile):
         return False
 
-    out.touch()
+    pidfile.touch()
 
     pid = os.fork()
     if pid == 0:
