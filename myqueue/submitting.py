@@ -18,32 +18,6 @@ if TYPE_CHECKING:
 TaskName = Path
 
 
-wf = """
-        if 0:  # task.workflow:
-            if task.dname in current:
-                task.state = current[task.dname].state
-            else:
-                if task.state == State.undefined:
-                    if task.check_creates_files():
-                        task.state = State.done
-        count[task.state] += 1
-
-        if task.state == State.undefined:
-            submit.append(task)
-        elif task.state.is_bad() and force:
-            task.state = State.undefined
-            submit.append(task)
-            1 / 0
-        else:
-            1 / 0
-    count.pop(State.undefined, None)
-    if count:
-        print(', '.join(f'{state}: {n}' for state, n in count.items()))
-    if any(state.is_bad() for state in count) and not force:
-        print('Use --force to ignore failed tasks.')
-"""
-
-
 def submit(queue: Queue,
            tasks: Sequence[Task],
            *,
@@ -57,14 +31,6 @@ def submit(queue: Queue,
         Ignore and remove name.FAILED files.
     """
 
-    """
-    for task in submitted:
-        if task.workflow:
-            oldtask = current.get(task.dname)
-            if oldtask:
-                queue.tasks.remove(oldtask)
-                queue.changed.add(oldtask)
-    """
     sort_out_dependencies(tasks, queue)
 
     tasks = [task for task in order({task: task.dtasks for task in tasks})
@@ -152,8 +118,7 @@ def order(nodes: dict[T, list[T]]) -> list[T]:
         dg = nx.DiGraph({node: nodes[node]
                          for node in component
                          if node in nodes})
-        order = nx.topological_sort(dg)
-        result += reversed(list(order))
+        result += reversed(list(nx.topological_sort(dg)))
     return result
 
 

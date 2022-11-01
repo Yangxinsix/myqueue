@@ -288,7 +288,7 @@ class Queue:
         except ValueError:
             print(f'No such task: {id}, {newstate}', file=sys.stderr)
             path.unlink()
-            return None
+            return
 
         if user != self.config.user:
             return
@@ -362,7 +362,7 @@ def dump_db(path: Path) -> None:
     db = sqlite3.connect(path)
     table = Table(title=str(path))
     columns = [line.strip().split()[0]
-               for line in INIT.split(';')[0].splitlines()[1:]]
+               for line in INIT.split(';', maxsplit=1)[0].splitlines()[1:]]
     for name in columns:
         table.add_column(name)
     for row in db.execute('SELECT * from tasks'):
