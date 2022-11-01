@@ -36,7 +36,7 @@ Next release
   it is now in a :mod:`sqlite3` file in ``.myqueue/queue.sqlite3``.
   Your old JSON file will automatically be migrated to the new format.
 
-* Removed the *mq run* command.
+* Removed the *mq run* command (it may return later: :issue:`44`).
 
 * Calling a Python function from a workflow (``run(function=...)``)
   will now write the return value to a file called ``<task-name>.result``
@@ -49,7 +49,7 @@ Next release
 * Most commands have been sped up by delaying import of ``rich``
   and ``networkx``.
 
-* The :ref:`resubmit` command will no longer remove the old task.
+* The :ref:`resubmit <resubmit>` command will no longer remove the old task.
   Use ``--remove`` to get the old behavior.
 
 
