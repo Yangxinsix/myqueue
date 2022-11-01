@@ -9,15 +9,48 @@ Release notes
 Next release
 ============
 
-* Removed *mq run* command.
-* No more ``<task-name>.state`` files.
+.. important::
+
+   No more ``<task-name>.state`` files.  MyQueue will only know the state
+   af a task if it is listed in your queue.  There are two exceptions to
+   this rule:
+
+   1) If a task is set to create some files like here::
+
+        def workflow():
+            run(..., creates=['file1.abc', 'file2.xyz'], ...)
+
+      then MyQueue will consider the task done if those files exist.
+      See :func:`myqueue.workflows.run`.
+
+   2) If a task is a Python function like here::
+
+        def workflow():
+            run(function=func, args=[...], name='abc', ...)
+
+      then MyQueue will consider the task done if the result file exists
+      (in this case ``abc.result``).  See
+      :class:`myqueue.caching.CachedFunction`.
+
+* Your queue is no longer stored in a ``.myqueue/queue.json`` file.  Instead,
+  it is now in a :mod:`sqlite3` file in ``.myqueue/queue.sqlite3``.
+  Your old JSON file will automatically be migrated to the new format.
+
+* Removed the *mq run* command.
+
 * Calling a Python function from a workflow (``run(function=...)``)
   will now write the return value to a file called ``<task-name>.result``
   in the JSON format.  Previously the return value was written to the
   ``.state`` file.
+
 * Removing tasks part of a workflow now needs a ``--force``
   (as MyQueue will no longer know the states of such tasks).
-* Speed up most commands by delaying import of ``rich`` and ``networkx``.
+
+* Most commands have been sped up by delaying import of ``rich``
+  and ``networkx``.
+
+* The :ref:`resubmit` command will no longer remove the old task.
+  Use ``--remove`` to get the old behavior.
 
 
 Version 22.9.0

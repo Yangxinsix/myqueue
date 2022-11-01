@@ -12,7 +12,7 @@ class SLURM(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -42,7 +42,7 @@ class SLURM(Scheduler):
             sbatch.append(f'--reservation={reservation}')
 
         if task.dtasks:
-            ids = ':'.join(tsk.id for tsk in task.dtasks)
+            ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
 
         env = []
@@ -70,7 +70,7 @@ class SLURM(Scheduler):
             'id=$SLURM_JOB_ID\n'
             f'mq={home}/.myqueue/slurm-$id\n')
 
-        script += task.get_venv_activation_line()
+        script += self.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -83,8 +83,7 @@ class SLURM(Scheduler):
             if verbose:
                 print(' \\\n    '.join(sbatch))
                 print(script)
-            task.id = '1'
-            return
+            return 1
 
         # Use a clean set of environment variables without any MPI stuff:
         p = subprocess.run(sbatch,
@@ -95,29 +94,28 @@ class SLURM(Scheduler):
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
 
-        task.id = p.stdout.split()[-1].decode()
+        return int(p.stdout.split()[-1].decode())
 
-    def cancel(self, task: Task) -> None:
-        subprocess.run(['scancel', task.id])
+    def cancel(self, id: int) -> None:
+        subprocess.run(['scancel', str(id)])
 
-    def hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'hold', task.id])
+    def hold(self, id: int) -> None:
+        subprocess.run(['scontrol', 'hold', str(id)])
 
-    def release_hold(self, task: Task) -> None:
-        subprocess.run(['scontrol', 'release', task.id])
+    def release_hold(self, id: int) -> None:
+        subprocess.run(['scontrol', 'release', str(id)])
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         user = os.environ.get('USER', 'test')
         cmd = ['squeue', '--user', user]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
-        queued = {line.split()[0].decode()
+        queued = {int(line.split()[0].decode())
                   for line in p.stdout.splitlines()[1:]}
         return queued
 
-    def maxrss(self, id: str) -> int:
-        assert '.' not in id
+    def maxrss(self, id: int) -> int:
         cmd = ['sacct',
-               '-j', id,
+               '-j', str(id),
                '-n',
                '--units=K',
                '-o', 'MaxRSS']

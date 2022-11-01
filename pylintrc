@@ -1,0 +1,11 @@
+[BASIC]
+argument-rgx=[a-z][a-z_0-9]*
+variable-rgx=[a-z][a-z_0-9]*
+
+[MESSAGES CONTROL]
+disable=C0114,
+        C0116,
+        R0402,
+        W0622,
+        C0415,
+        W0613

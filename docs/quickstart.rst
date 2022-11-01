@@ -34,9 +34,9 @@ There is now an output file and an empty error file in the folder::
 
     $ ls -l
     total 8
-    -rw-rw-r-- 1 jensj jensj 21 Jun 24 22:33 hello.py
-    -rw-rw-r-- 1 jensj jensj  0 Jun 24 22:33 hello.py.1.err
-    -rw-rw-r-- 1 jensj jensj 12 Jun 24 22:33 hello.py.1.out
+    -rw-rw-r-- 1 jensj jensj 21 Oct 28 10:46 hello.py
+    -rw-rw-r-- 1 jensj jensj  0 Oct 28 10:46 hello.py.1.err
+    -rw-rw-r-- 1 jensj jensj 12 Oct 28 10:46 hello.py.1.out
     $ cat hello.py.1.out
     Hello world
 

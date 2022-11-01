@@ -10,8 +10,9 @@ import pytest
 from myqueue.config import Configuration
 from myqueue.schedulers.local import LocalScheduler, Server
 from myqueue.submitting import submit_tasks
-from myqueue.task import task as create_task
+from myqueue.task import create_task
 from myqueue.workflow import collect, run
+from myqueue.queue import sort_out_dependencies
 
 
 @pytest.fixture(scope='function')
@@ -39,14 +40,15 @@ def scheduler(tmpdir):
                     reason='requires Python 3.8 or higher')
 def test_local_scheduler(scheduler):
     task1 = create_task('shell:sleep+10', tmax='1s')
-    scheduler.submit(task1)
+    i1 = scheduler.submit(task1)
+    assert i1 == 1
     task2 = create_task('shell:sleep+5')
     scheduler.submit(task2)
     ids = scheduler.get_ids()
-    assert ids == ['1', '2']
-    scheduler.cancel(task2)
+    assert ids == [1, 2]
+    scheduler.cancel(2)
     ids = scheduler.get_ids()
-    assert ids == ['1']
+    assert ids == [1]
 
 
 def workflow():
@@ -60,14 +62,12 @@ def workflow():
                     reason='requires Python 3.8 or higher')
 def test_local_scheduler2(scheduler):
     tasks = collect(workflow, Path())
-    ok, ko, ex = submit_tasks(scheduler,
-                              tasks,
-                              current={},
-                              force=False,
-                              max_tasks=4,
-                              verbosity=2,
-                              dry_run=False)
-    assert len(ok) == 4
+    sort_out_dependencies(tasks)
+    ids, ex = submit_tasks(scheduler,
+                           tasks,
+                           verbosity=2,
+                           dry_run=False)
+    assert len(ids) == 4
     assert ex is None
     for i in range(10):
         if len(scheduler.get_ids()) == 0:

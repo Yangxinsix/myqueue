@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Iterator
 from warnings import warn
 
 from myqueue.commands import Command, create_command
+from myqueue.errors import parse_stderr
 from myqueue.resources import Resources, T
 from myqueue.states import State
-from myqueue.errors import parse_stderr
 
 if TYPE_CHECKING:
     from myqueue.schedulers import Scheduler
@@ -53,7 +54,7 @@ class Task:
                  creates: list[str],
                  notifications: str = '',
                  state: State = State.undefined,
-                 id: str = '0',
+                 id: int = 0,
                  error: str = '',
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
@@ -84,17 +85,12 @@ class Task:
 
         self.dname = folder / cmd.name
         self.dtasks: list[Task] = []
-        self.activation_script: Path | None = None
         self._done: bool | None = None
         self.result = UNSPECIFIED
 
     @property
     def name(self) -> str:
         return f'{self.cmd.name}.{self.id}'
-
-    @property
-    def int_id(self) -> int:
-        return int(self.id.split('.')[0])
 
     def running_time(self, t: float = None) -> float:
         if self.state in ['CANCELED', 'queued', 'hold']:
@@ -123,7 +119,7 @@ class Task:
         if self.notifications:
             info.append(self.notifications)
 
-        return [self.id,
+        return [str(self.id),
                 str(self.folder) + '/',
                 self.cmd.short_name,
                 ' '.join(self.cmd.args),
@@ -187,6 +183,57 @@ class Task:
             'error': self.error,
             'user': self.user}
 
+    def to_sql(self, root: Path) -> tuple[int, str, str, str, str,
+                                          str, int, bool, str, int,
+                                          str, str, float, float, float,
+                                          str, str]:
+        folder = str(self.folder.relative_to(root))
+        if folder == '.':
+            folder = './'
+        else:
+            folder = f'./{folder}/'
+        return (self.id,
+                folder,
+                self.state.name[0],
+                str(self.dname.relative_to(root)),
+                json.dumps(self.cmd.todict()),
+                json.dumps(self.resources.todict()),
+                self.restart,
+                self.workflow,
+                ','.join(str(dep.relative_to(root)) for dep in self.deps),
+                self.diskspace,
+                self.notifications,
+                ','.join(self.creates),
+                self.tqueued,
+                self.trunning,
+                self.tstop,
+                self.error,
+                self.user)
+
+    @staticmethod
+    def from_sql_row(row: tuple, root: Path) -> Task:
+        (id, folder, state, name, cmd,
+         resources, restart, workflow, deps, diskspace,
+         notifications, creates, tqueued, trunning, tstop,
+         error, user) = row
+        return Task(id=id,
+                    folder=root / folder,
+                    state=State(state),
+                    cmd=create_command(**json.loads(cmd)),
+                    resources=Resources(**json.loads(resources)),
+                    restart=restart,
+                    workflow=bool(workflow),
+                    deps=[] if not deps else [root / dep
+                                              for dep in deps.split(',')],
+                    diskspace=diskspace,
+                    notifications=notifications,
+                    creates=[] if not creates else creates.split(','),
+                    tqueued=tqueued,
+                    trunning=trunning,
+                    tstop=tstop,
+                    error=error,
+                    user=user)
+
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
         dct = dct.copy()
@@ -212,7 +259,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        id = str(dct.pop('id'))
+        id = dct.pop('id')
 
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
@@ -229,7 +276,7 @@ class Task:
                                          folder in self.folder.parents)
 
     def check_creates_files(self) -> bool:
-        """Read state file."""
+        """Check if all files have been created."""
         if self.creates:
             for pattern in self.creates:
                 if not any(self.folder.glob(pattern)):
@@ -237,7 +284,7 @@ class Task:
             return True
         return False
 
-    def read_error(self, scheduler: 'Scheduler') -> bool:
+    def read_error_and_check_for_oom(self, scheduler: Scheduler) -> bool:
         """Check error message.
 
         Return True if out of memory.
@@ -271,57 +318,32 @@ class Task:
         dry_run: bool
             Don't actually submit the task.
         """
-        from myqueue.queue import Queue
         from myqueue.config import Configuration
+        from myqueue.queue import Queue
         from myqueue.submitting import submit
         config = Configuration.read()
         with Queue(config, dry_run=dry_run) as queue:
             submit(queue, [self], verbosity=verbosity)
 
-    def find_dependents(self,
-                        tasks: Sequence[Task]) -> Iterator[Task]:
-        """Yield dependents."""
-        for task in tasks:
-            if self.dname in task.deps and self is not task:
-                yield task
-                yield from task.find_dependents(tasks)
-
-    def cancel_dependents(self,
-                          tasks: Sequence[Task],
-                          t: float = 0.0) -> int:
-        """Cancel dependents."""
-        ncancel = 0
-        for task in self.find_dependents(tasks):
-            task.state = State.CANCELED
-            task.tstop = t
-            ncancel += 1
-        return ncancel
-
     def run(self) -> None:
         self.result = self.cmd.run()
 
-    def get_venv_activation_line(self) -> str:
-        if self.activation_script:
-            return (f'source {self.activation_script}\n'
-                    f'echo "venv: {self.activation_script}"\n')
-        return ''
 
-
-def task(cmd: str,
-         args: list[str] = [],
-         *,
-         resources: str = '',
-         workflow: bool = False,
-         name: str = '',
-         deps: str | list[str] | Task | list[Task] = '',
-         cores: int = 0,
-         nodename: str = '',
-         processes: int = 0,
-         tmax: str = '',
-         folder: str = '',
-         restart: int = 0,
-         diskspace: float = 0.0,
-         creates: list[str] = []) -> Task:
+def create_task(cmd: str,
+                args: list[str] = [],
+                *,
+                resources: str = '',
+                workflow: bool = False,
+                name: str = '',
+                deps: str | list[str] | Task | list[Task] = '',
+                cores: int = 0,
+                nodename: str = '',
+                processes: int = 0,
+                tmax: str = '',
+                folder: str = '',
+                restart: int = 0,
+                diskspace: float = 0.0,
+                creates: list[str] = []) -> Task:
     """Create a Task object.
 
     ::
@@ -420,6 +442,9 @@ def task(cmd: str,
                 int(diskspace),
                 path,
                 creates)
+
+
+task = create_task
 
 
 def seconds_to_time_string(n: float) -> str:

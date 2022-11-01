@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import ast
 import runpy
-from argparse import Namespace
+import argparse
+from collections import defaultdict
 from functools import partial
 from pathlib import Path
 from types import TracebackType
@@ -14,14 +15,14 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
 from myqueue.resources import Resources
 from myqueue.states import State
-
 from myqueue.task import UNSPECIFIED, Task
 from myqueue.utils import chdir
+from myqueue.queue import Queue
 
 DEFAULT_VERBOSITY = 1
 
 
-def workflow(args: Namespace,
+def workflow(args: argparse.Namespace,
              folders: list[Path],
              verbosity: int = DEFAULT_VERBOSITY) -> list[Task]:
     """Collect tasks from workflow script(s) and folders."""
@@ -54,6 +55,47 @@ def workflow(args: Namespace,
         dnames.add(task.dname)
 
     return tasks
+
+
+def prune(tasks: Sequence[Task],
+          queue: Queue,
+          force: bool = False) -> list[Task]:
+    root = queue.config.home
+    ok: list[Task] = []
+    remove: list[int] = []
+    count: defaultdict[str, int] = defaultdict(int)
+    for task in tasks:
+        name = str(task.dname.relative_to(root))
+        rows = queue.sql(
+            'SELECT id, state FROM tasks WHERE name = ?',
+            [name])
+        id, state = max(rows, default=(-1, 'u'))
+        if id == -1:
+            if task.check_creates_files():
+                state = 'd*'
+            else:
+                ok.append(task)
+        elif force and state in 'FTMC':
+            ok.append(task)
+            remove.append(id)
+
+        count[state] += 1
+
+    queue.remove(remove)
+
+    if count:
+        for state, n in count.items():
+            if state == 'u':
+                state = 'new'
+            elif state == 'd*':
+                state = 'done*'
+            else:
+                state = State(state).name
+            print(f'{state:9}: {n}')
+    if not force and any(state in 'FTMC' for state in count):
+        print('Use --force to submit failed tasks.')
+
+    return ok
 
 
 WorkflowFunction = Callable[[], None]
@@ -175,12 +217,12 @@ class StopRunning(Exception):
 
 class RunHandle:
     """Result of calling run().  Can be used as a context manager."""
-    def __init__(self, task: Task, runner: 'Runner'):
+    def __init__(self, task: Task, runner: Runner):
         self.task = task
         self.runner = runner
 
     @property
-    def result(self) -> 'Result':
+    def result(self) -> Result:
         """Result from Python-function tasks."""
         result = self.task.result
         if result is UNSPECIFIED:
@@ -193,7 +235,7 @@ class RunHandle:
         """Has task been successfully finished?"""
         return self.task.state == State.done
 
-    def __enter__(self) -> 'RunHandle':
+    def __enter__(self) -> RunHandle:
         self.runner.dependencies.append(self.task)
         return self
 
@@ -210,7 +252,7 @@ class Result:
     def __init__(self, task: Task):
         self.task = task
 
-    def __getattr__(self, attr: str) -> 'Result':
+    def __getattr__(self, attr: str) -> Result:
         return self
 
     def __lt__(self, other: Any) -> bool:
@@ -237,7 +279,7 @@ def get_name(func: Callable) -> str:
 
 class ResourceHandler:
     """Resource decorator and context manager."""
-    def __init__(self, kwargs: dict[str, Any], runner: 'Runner'):
+    def __init__(self, kwargs: dict[str, Any], runner: Runner):
         self.kwargs = kwargs
         self.runner = runner
         self.old_kwargs: dict
@@ -283,6 +325,7 @@ class Runner:
             args: Sequence[Any] = [],
             kwargs: dict[str, Any] = {},
             deps: list[RunHandle] = [],
+            creates: list[str] = [],
             tmax: str = None,
             cores: int = None,
             nodename: str = None,
@@ -311,6 +354,8 @@ class Runner:
             or shell command.
         deps: list of run handle objects
             Dependencies.
+        creates: list of filenames
+            Files created by task.
         cores: int
             Number of cores (default is 1).
         nodename: str
@@ -348,6 +393,7 @@ class Runner:
                            self.workflow_script,
                            Path(folder).absolute(),
                            resource_kwargs.pop('restart'),  # type: ignore
+                           creates=creates,
                            **resource_kwargs)
 
         if self.target:
@@ -442,6 +488,7 @@ def create_task(function: Callable = None,
                 workflow_script: Path = None,
                 folder: Path = Path('.'),
                 restart: int = 0,
+                creates: list[str] = [],
                 **resource_kwargs: Any) -> Task:
     """Create a Task object."""
     if sum(arg is not None
@@ -455,6 +502,7 @@ def create_task(function: Callable = None,
         cached_function = create_cached_function(function, name, args, kwargs)
         command = WorkflowTask(f'{workflow_script}:{name}', [],
                                cached_function)
+        creates = creates + [f'{name}.result']
     elif module:
         assert not kwargs
         command = PythonModule(module, [str(arg) for arg in args])
@@ -482,7 +530,7 @@ def create_task(function: Callable = None,
                 restart=restart,
                 workflow=True,
                 diskspace=0,
-                creates=[])
+                creates=creates)
 
     if function and not any(isinstance(thing, Result)
                             for thing in list(args) + list(kwargs.values())):

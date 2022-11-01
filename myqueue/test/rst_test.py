@@ -132,6 +132,7 @@ def test_docs_workflows(mq, monkeypatch):
     bin.mkdir()
     (bin / 'activate').write_text(
         f'export PYTHONPATH={venv.parent}\n')
+    mq.scheduler.activation_script = bin / 'activate'
     run_document(mq, docs / 'workflows.rst', test=True)
 
 

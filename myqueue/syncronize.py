@@ -1,35 +1,26 @@
-from myqueue.utils import plural
-from myqueue.states import State
 from myqueue.queue import Queue
+from myqueue.utils import plural
 
 
 def sync(queue: Queue) -> None:
     """Syncronize queue with the real world."""
-    in_the_queue = {'running', 'hold', 'queued'}
     ids = queue.scheduler.get_ids()
-    cancel = []
     remove = []
-    for task in queue.tasks:
-        if task.id not in ids:
-            if task.state in in_the_queue:
-                cancel.append(task)
-            if not task.folder.is_dir():
-                remove.append(task)
 
-    if cancel:
-        if queue.dry_run:
-            print(plural(len(cancel), 'job'), 'to be canceled')
-        else:
-            for task in cancel:
-                task.state = State.CANCELED
-                queue.changed.add(task)
-            print(plural(len(cancel), 'job'), 'canceled')
+    sql = 'SELECT id FROM tasks WHERE state IN ("q", "h", "r")'
+    for id, in queue.sql(sql):
+        if id not in ids:
+            remove.append(id)
 
+    root = queue.folder.parent
+    for id, folder in queue.sql('SELECT id, folder FROM tasks'):
+        if not (root / folder).is_dir():
+            remove.append(id)
+
+    print('REMOVE', remove)
     if remove:
         if queue.dry_run:
             print(plural(len(remove), 'job'), 'to be removed')
         else:
-            for task in remove:
-                queue.tasks.remove(task)
-                queue.changed.add(task)
+            queue.remove(remove)
             print(plural(len(remove), 'job'), 'removed')

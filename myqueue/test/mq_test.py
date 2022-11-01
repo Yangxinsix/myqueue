@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import pytest
-from myqueue.queue import Queue
+from myqueue.queue import Queue, sort_out_dependencies
 from myqueue.task import task
 from myqueue.states import State
 from myqueue.utils import chdir, get_states_of_active_tasks
@@ -25,8 +25,7 @@ def test_submit(mq):
     f.mkdir()
     mq('submit time@sleep+0.1 . folder --max-tasks=9')
     mq('submit shell:echo+hello -d time@sleep+0.1')
-    mq.wait()
-    assert mq.states() == 'ddd'
+    assert mq.wait() == 'ddd'
     shutil.rmtree(f)
     mq('sync -z')
     mq('sync')
@@ -46,21 +45,17 @@ def test_fail(mq):
     assert mq.states() == 'FCC', mq.states()
     mq('resubmit -sF . -z')
     assert mq.states() == 'FCC'
-    mq('resubmit -sF .')
-    mq.wait()
-    assert mq.states() == 'CCF'
-    mq('modify -s F -N T .')
-    assert mq.states() == 'CCT'
+    mq('resubmit -sF . --remove')
+    assert mq.wait() == 'CCF'
 
 
 def test_fail2(mq):
     mq('submit time@sleep+a --workflow')
     mq.wait()
     assert mq.states() == 'F'
-    mq('remove --states F .')
+    mq('remove --states F --force .')
     mq('submit time@sleep+a --workflow')
-    mq.wait()
-    assert mq.states() == 'F'
+    assert mq.wait() == 'F'
 
 
 def test_timeout(mq):
@@ -68,9 +63,8 @@ def test_timeout(mq):
     mq(f'submit -n zzz "shell:sleep {t}" -R 1:1s')
     mq('submit "shell:echo hello" -d zzz')
     mq.wait()
-    mq('resubmit -sT . -R 1:5m')
-    mq.wait()
-    assert mq.states() == 'Cd'
+    mq('resubmit -sT . -R 1:5m --remove')
+    assert mq.wait() == 'Cd'
 
 
 def test_timeout2(mq):
@@ -82,19 +76,15 @@ def test_timeout2(mq):
     mq('kick')
     mq('ls')
     mq.wait()
-    if mq.states() != 'dd':
-        mq('kick')
-        mq.wait()
-        assert mq.states() == 'dd'
+    mq('kick')
+    assert mq.wait() == 'TCTCdd'
 
 
 def test_oom(mq):
     mq(f'submit "myqueue.test@oom {LOCAL}" --restart 2')
-    mq.wait()
-    assert mq.states() == 'M'
+    assert mq.wait() == 'M'
     mq('kick')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'Md'
 
 
 def test_cancel(mq):
@@ -102,19 +92,16 @@ def test_cancel(mq):
     mq('submit shell:sleep+999')
     mq('submit shell:echo+hello -d shell:sleep+999')
     mq('rm -n shell:sleep+999 -srq .')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'dC'
 
 
 def test_check_dependency_order(mq):
     mq('submit myqueue.test@timeout_once -R 1:1s --restart 1')
     mq('submit shell:echo+ok -d myqueue.test@timeout_once --restart 1')
-    mq.wait()
-    assert mq.states() == 'TC'
+    assert mq.wait() == 'TC'
     mq('kick -z')
     mq('kick')
-    mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.wait() == 'TCdd'
 
 
 def test_misc(mq):
@@ -141,8 +128,7 @@ def test_sync_kick(mq):
 def test_slash(mq):
     mq('submit "shell:echo a/b"')
     mq('submit "shell:echo a/c" -w')
-    mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.wait() == 'dd'
 
 
 def test_config(mq):
@@ -158,6 +144,7 @@ def test_more_homes(mq):
 
 
 def test_permission_error(mq):
+    mq('ls')
     try:
         (mq.config.home / '.myqueue').chmod(0o500)  # r-x
         mq('ls')
@@ -169,16 +156,14 @@ def test_failing_scheduler(mq):
     with pytest.raises(RuntimeError):
         # Special argument that makes test-scheduler raise an error:
         mq('submit "time.sleep FAIL"')
-    mq.wait()
-    assert mq.states() == ''
+    assert mq.wait() == ''
 
 
 @pytest.mark.xfail
 def test_ctrl_c(mq):
     # Special argument that makes test-scheduler raise an error:
     mq('submit "time.sleep SIMULATE-CTRL-C"')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'd'
 
 
 def test_sync_cancel(mq):
@@ -186,37 +171,38 @@ def test_sync_cancel(mq):
         t = task('shell:echo')
         t.state = State.running
         t.trunning = time.time()
-        q.tasks.append(t)
-        q.changed.add(t)
+        q.add(t)
     mq('sync')
-    assert mq.states() == 'C'
+    assert mq.states() == ''
 
 
 def test_hold_release(mq):
     mq('submit shell:echo+hello')
     mq('modify -s q -N h . -z')
     mq('modify -s q -N h .')
-    mq.wait()
-    assert mq.states() == 'h'
-    assert get_states_of_active_tasks() == {'1': 'hold'}
+    assert mq.wait() == 'h'
+    (name, state), = get_states_of_active_tasks().items()
+    assert state == 'h'
+    assert name.endswith('shell:echo+hello')
 
     mq('modify -s h -N q . -z')
     mq('modify -s h -N q .')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'd'
     with pytest.raises(ValueError):
         mq('modify -s d -N q .')
 
 
 def test_clean_up(mq):
     with Queue(mq.config) as q:
-        t1 = task('shell:echo')
+        t1 = task('shell:echo+1')
+        t1.id = 1
         t1.state = State.running
         t1.trunning = 0.0  # very old
-        t2 = task('shell:echo', deps=[t1])
+        t2 = task('shell:echo+2', deps=[t1])
         t2.state = State.queued
-        q.tasks += [t1, t2]
-        q.changed.add(t1)
+        t2.id = 2
+        sort_out_dependencies([t1, t2], q)
+        q.add(t1, t2)
     assert mq.states() == 'TC'
 
 

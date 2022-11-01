@@ -13,29 +13,23 @@ def test_flow1(mq):
     script = Path(__file__).with_name('flow1.py')
 
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == 'ddddddd'
+    assert mq.wait() == 'ddddddd'
 
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == 'dddddddd'
+    assert mq.wait() == 'dddddddd'
 
     mq('rm -sd')
-    mq.wait()
-    assert mq.states() == 'dddddddd'
+    assert mq.wait() == 'dddddddd'
 
     mq('rm -sd --force')
-    mq.wait()
-    assert mq.states() == ''
+    assert mq.wait() == ''
 
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == ''
+    assert mq.wait() == ''
 
     Path('builtins.print.result').unlink()
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'd'
 
 
 def test_direct_cached_flow1(tmp_path, capsys):
@@ -56,8 +50,7 @@ def test_hello(mq):
     Path('hello.sh').write_text('echo $@')
     script = Path(__file__).with_name('hello.py')
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == 'dddddd'
+    assert mq.wait() == 'dddddd'
 
 
 def test_direct_hello(tmp_path):
@@ -69,14 +62,12 @@ def test_direct_hello(tmp_path):
 def test_flow2(mq):
     script = Path(__file__).with_name('flow2.py')
     mq(f'workflow {script}')
-    mq.wait()
-    assert mq.states() == 'MCCC'
+    assert mq.wait() == 'MCCC'
     mq('rm -sC . --force')
-    mq(f'workflow {script}')
+    mq(f'workflow {script}', error=1)
     assert mq.states() == 'M'
     mq(f'workflow {script} --force')
-    mq.wait()
-    assert mq.states() == 'MCCC'
+    assert mq.wait() == 'MCCC'
 
 
 wf = """
@@ -93,8 +84,7 @@ def test_workflow(mq):
     time.sleep(2)
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . -t shell:touch+hello')
-    mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.wait() == 'dd'
     mq('workflow wf.py .')
     assert mq.states() == 'dd'
     mq('rm -i 2 -z')  # dry-run
@@ -102,39 +92,33 @@ def test_workflow(mq):
     assert mq.states() == 'dd'
     mq('rm -i 2 --force')
     mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == 'd'
+    assert mq.wait() == 'd'
     hello = Path('hello')
     hello.unlink()
     mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.wait() == 'dd'
     assert hello.is_file()
 
 
 def test_workflow_running_only_with_targets(mq):
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . -t shell:touch+hello')
-    mq.wait()
-    assert mq.states() == 'dd'
+    assert mq.wait() == 'dd'
 
 
 def test_workflow_with_failed_job(mq):
     # Introduce bug in workflow task:
     Path('wf.py').write_text(wf.replace('+3', '+a'))
     mq('workflow wf.py .')
-    mq.wait()
-    assert mq.states() == 'FC'
+    assert mq.wait() == 'FC'
 
     # Fix bug:
     Path('wf.py').write_text(wf)
     mq('workflow wf.py . --force --dry-run')
-    mq.wait()
-    assert mq.states() == 'FC'
+    assert mq.wait() == 'FC'
 
     mq('workflow wf.py . --force')
-    mq.wait()
-    assert mq.states() == 'Fdd'
+    assert mq.wait() == 'Fdd'
 
 
 wf2 = """
@@ -153,16 +137,14 @@ def test_workflow2(mq):
     assert mq.states() == 'hhqq'
     mq.wait()
     mq('kick')
-    mq.wait()
-    assert mq.states() == 'dddd'
+    assert mq.wait() == 'dddd'
 
 
 def test_failing_scheduler(mq):
     with pytest.raises(RuntimeError):
         # Special argument that makes test-scheduler raise an error:
         mq('submit "time.sleep FAIL"')
-    mq.wait()
-    assert mq.states() == ''
+    assert mq.wait() == ''
 
 
 wf3 = """
@@ -175,10 +157,8 @@ def create_tasks():
 
 def test_workflow3(mq):
     Path('wf3.py').write_text(wf3)
-    with pytest.raises(RuntimeError):
-        mq('workflow wf3.py')
-    mq.wait()
-    assert mq.states() == 'd'
+    mq('workflow wf3.py', error=1)
+    assert mq.wait() == 'd'
 
 
 wf4 = """
@@ -195,8 +175,7 @@ def test_workflow_depth_first(mq):
     Path('1').mkdir()
     Path('2').mkdir()
     mq('workflow wf4.py 1 2')
-    mq.wait()
-    assert mq.states() == 'dddd'
+    assert mq.wait() == 'dddd'
     assert Path('1/B.2.out').is_file()
 
 

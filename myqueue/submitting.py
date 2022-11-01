@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import os
 import time
-from collections import defaultdict
 from pathlib import Path
 from types import TracebackType
 from typing import Sequence, TypeVar, TYPE_CHECKING
 
 from myqueue.pretty import pprint
-from myqueue.queue import Queue
+from myqueue.queue import Queue, sort_out_dependencies
 from myqueue.schedulers import Scheduler
 from myqueue.states import State
 from myqueue.task import Task
@@ -20,119 +18,8 @@ if TYPE_CHECKING:
 TaskName = Path
 
 
-class DependencyError(Exception):
-    """Bad dependency."""
-
-
-def find_dependency(dname: TaskName,
-                    current: dict[TaskName, Task],
-                    new: dict[TaskName, Task],
-                    force: bool = False) -> Task:
-    """Convert dependency name to task."""
-    if dname in current:
-        task = current[dname]
-        if task.state.is_bad():
-            if force:
-                if dname not in new:
-                    raise DependencyError(dname)
-                task = new[dname]
-    elif dname in new:
-        task = new[dname]
-    else:
-        raise DependencyError(dname)
-    return task
-
-
-def mark_children(task: Task, children: dict[Task, list[Task]]) -> None:
-    """Mark children of task as FAILED."""
-    for child in children[task]:
-        child.state = State.FAILED
-        mark_children(child, children)
-
-
-def remove_bad_tasks(tasks: list[Task]) -> list[Task]:
-    """Create list without bad dependencies."""
-    children = defaultdict(list)
-    for task in tasks:
-        for dep in task.dtasks:
-            children[dep].append(task)
-
-    for task in list(children):
-        if task.state.is_bad():
-            mark_children(task, children)
-
-    return [task for task in tasks if not task.state.is_bad()]
-
-
-def submit(queue: Queue,
-           tasks: Sequence[Task],
-           *,
-           force: bool = False,
-           max_tasks: int = 1_000_000_000,
-           verbosity: int = 1) -> None:
-    """Submit tasks to queue.
-
-    Parameters
-    ==========
-    force: bool
-        Ignore and remove name.FAILED files.
-    """
-
-    current = {task.dname: task for task in queue.tasks}
-
-    submitted, skipped, ex = submit_tasks(
-        queue.scheduler, tasks, current,
-        force, max_tasks,
-        verbosity, queue.dry_run)
-
-    for task in submitted:
-        if task.workflow:
-            oldtask = current.get(task.dname)
-            if oldtask:
-                queue.tasks.remove(oldtask)
-                queue.changed.add(oldtask)
-
-    if 'MYQUEUE_TESTING' in os.environ:
-        if any(task.cmd.args == ['SIMULATE-CTRL-C'] for task in submitted):
-            raise KeyboardInterrupt
-
-    queue.tasks += submitted
-    queue.changed.update(submitted)
-
-    if ex:
-        print()
-        print('Skipped', plural(len(skipped), 'task'))
-
-    pprint(submitted, 0, 'ifnaIr',
-           maxlines=10 if verbosity < 2 else 99999999999999)
-    if submitted:
-        if queue.dry_run:
-            print(plural(len(submitted), 'task'), 'to submit')
-        else:
-            print(plural(len(submitted), 'task'), 'submitted')
-
-    if ex:
-        raise ex
-
-
-def submit_tasks(scheduler: Scheduler,
-                 tasks: Sequence[Task],
-                 current: dict[Path, Task],
-                 force: bool,
-                 max_tasks: int,
-                 verbosity: int,
-                 dry_run: bool) -> tuple[list[Task],
-                                         list[Task],
-                                         Exception | KeyboardInterrupt | None]:
-    """Submit tasks."""
-    import rich.progress as progress
-
-    new = {task.dname: task for task in tasks}
-
-    count: dict[State, int] = defaultdict(int)
-    submit = []
-    for task in tasks:
-        if task.workflow:
+wf = """
+        if 0:  # task.workflow:
             if task.dname in current:
                 task.state = current[task.dname].state
             else:
@@ -146,49 +33,86 @@ def submit_tasks(scheduler: Scheduler,
         elif task.state.is_bad() and force:
             task.state = State.undefined
             submit.append(task)
-
+            1 / 0
+        else:
+            1 / 0
     count.pop(State.undefined, None)
     if count:
         print(', '.join(f'{state}: {n}' for state, n in count.items()))
     if any(state.is_bad() for state in count) and not force:
         print('Use --force to ignore failed tasks.')
+"""
 
-    for task in submit:
-        task.dtasks = []
-        for dname in task.deps:
-            dep = find_dependency(dname, current, new, force)
-            if dep.state != 'done':
-                task.dtasks.append(dep)
 
-    n = len(submit)
-    submit = remove_bad_tasks(submit)
-    n = n - len(submit)
-    if n > 0:
-        print('Skipping', plural(n, 'task'), '(bad dependency)')
+def submit(queue: Queue,
+           tasks: Sequence[Task],
+           *,
+           max_tasks: int = 1_000_000_000,
+           verbosity: int = 1) -> None:
+    """Submit tasks to queue.
 
-    submit = [task for task in order({task: task.dtasks for task in submit})
-              if task.state == State.undefined]
+    Parameters
+    ==========
+    force: bool
+        Ignore and remove name.FAILED files.
+    """
 
-    submit = submit[:max_tasks]
+    """
+    for task in submitted:
+        if task.workflow:
+            oldtask = current.get(task.dname)
+            if oldtask:
+                queue.tasks.remove(oldtask)
+                queue.changed.add(oldtask)
+    """
+    sort_out_dependencies(tasks, queue)
+
+    tasks = [task for task in order({task: task.dtasks for task in tasks})
+             if task.state == State.undefined]
+
+    tasks = tasks[:max_tasks]
+
+    ids, ex = submit_tasks(queue.scheduler, tasks, verbosity, queue.dry_run)
+    submitted = tasks[:len(ids)]
+
+    if ex:
+        nskip = len(tasks) - len(submitted)
+        print()
+        print('Skipped', plural(nskip, 'task'))
 
     t = time.time()
-    for task in submit:
+    for task, id in zip(submitted, ids):
+        task.id = id
         task.state = State.queued
         task.tqueued = t
-        task.deps = [dep.dname for dep in task.dtasks]
 
-    venv = os.environ.get('VIRTUAL_ENV')
-    if venv:
-        activation_script = Path(venv) / 'bin/activate'
-        for task in submit:
-            task.activation_script = activation_script
+    pprint(submitted, verbosity=0, columns='ifnaIr',
+           maxlines=10 if verbosity < 2 else 99999999999999)
+    if submitted:
+        if queue.dry_run:
+            print(plural(len(submitted), 'task'), 'to submit')
+        else:
+            queue.add(*submitted)
+            print(plural(len(submitted), 'task'), 'submitted')
 
-    submitted = []
+    if ex:
+        raise ex
+
+
+def submit_tasks(scheduler: Scheduler,
+                 tasks: Sequence[Task],
+                 verbosity: int,
+                 dry_run: bool) -> tuple[list[int],
+                                         Exception | KeyboardInterrupt | None]:
+    """Submit tasks."""
+    import rich.progress as progress
+
+    ids = []
     ex = None
 
     pb: progress.Progress | NoProgressBar
 
-    if verbosity and len(submit) > 1:
+    if verbosity and len(tasks) > 1:
         pb = progress.Progress('[progress.description]{task.description}',
                                progress.BarColumn(),
                                progress.MofNCompleteColumn())
@@ -197,18 +121,19 @@ def submit_tasks(scheduler: Scheduler,
 
     with pb:
         try:
-            id = pb.add_task('Submitting tasks:', total=len(submit))
-            for task in submit:
-                scheduler.submit(
+            pid = pb.add_task('Submitting tasks:', total=len(tasks))
+            for task in tasks:
+                id = scheduler.submit(
                     task,
                     dry_run,
                     verbosity >= 2)
-                submitted.append(task)
-                pb.advance(id)
+                ids.append(id)
+                task.id = id
+                pb.advance(pid)
         except (Exception, KeyboardInterrupt) as x:
             ex = x
 
-    return submitted, submit[len(submitted):], ex
+    return ids, ex
 
 
 T = TypeVar('T')

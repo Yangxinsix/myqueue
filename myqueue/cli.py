@@ -1,12 +1,10 @@
 from __future__ import annotations
 import argparse
 import os
-import re
 import sys
 import textwrap
 from pathlib import Path
 from time import time
-from typing import Pattern
 
 
 class MQError(Exception):
@@ -29,7 +27,7 @@ Type "mq help <command>" for help.
 See https://myqueue.readthedocs.io/ for more information.
 """
 
-_help = [
+HELP = [
     ('help',
      'Show how to use this tool.', """
 More help can be found here: https://myqueue.readthedocs.io/.
@@ -63,7 +61,7 @@ Example:
     $ mq submit script.py -R 24:1d  # 24 cores for 1 day
 """),
     ('resubmit',
-     'Resubmit failed or timed-out tasks.', """
+     'Resubmit done, failed or timed-out tasks.', """
 Example:
 
     $ mq resubmit -i 4321  # resubmit job with id=4321
@@ -101,7 +99,7 @@ to do it manually.
 """),
     ('modify',
      'Modify task(s).', """
-The following state changes are allowed: h->q, q->h, F->M and F->T.
+The following state changes are allowed: h->q or q->h.
 """),
     ('init',
      'Initialize new queue.', """
@@ -142,9 +140,9 @@ aliases = {'rm': 'remove',
 
 
 commands: dict[str, tuple[str, str]] = {}
-for cmd, help, description in _help:
-    description = help + '\n\n' + description[1:]
-    commands[cmd] = (help, description)
+for _cmd, _help, _description in HELP:
+    _description = _help + '\n\n' + _description[1:]
+    commands[_cmd] = (_help, _description)
 
 
 def main(arguments: list[str] = None) -> None:
@@ -227,14 +225,12 @@ def _main(arguments: list[str] = None) -> int:
               help='Overwrite ~/.myqueue/config.py file.')
 
         if cmd in ['submit', 'workflow']:
-            a('-f', '--force', action='store_true',
-              help='Submit also failed tasks.')
             a('--max-tasks', type=int, default=1_000_000_000,
               help='Maximum number of tasks to submit.')
 
         if cmd == 'resubmit':
-            a('-f', '--force', action='store_true',
-              help='Submit also failed tasks.')
+            a('--remove', action='store_true',
+              help='Remove old tasks.')
 
         if cmd == 'remove':
             a('-f', '--force', action='store_true',
@@ -259,6 +255,8 @@ def _main(arguments: list[str] = None) -> int:
 
         if cmd == 'workflow':
             a('script', help='Submit tasks from workflow script.')
+            a('-f', '--force', action='store_true',
+              help='Submit also failed tasks.')
             a('-t', '--targets',
               help='Comma-separated target names.  Without any targets, '
               'all tasks will be submitted.')
@@ -293,7 +291,7 @@ def _main(arguments: list[str] = None) -> int:
             a('-c', '--columns', metavar='ifnaIrAste', default='ifnaIrAste',
               help='Select columns to show.  Use "-c a-" to remove the '
               '"a" column.')
-            a('-S', '--sort', metavar='c',
+            a('-S', '--sort', metavar='c', default='i',
               help='Sort rows using column c, where c must be one of '
               'i, f, n, a, r, A, s, t or e.  '
               'Use "-S c-" for a descending sort.')
@@ -418,10 +416,10 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.queue import Queue
     from myqueue.selection import Selection
     from myqueue.utils import mqhome
-    from myqueue.workflow import workflow
+    from myqueue.workflow import workflow, prune
     from myqueue.daemon import start_daemon, perform_daemon_action
     from myqueue.states import State
-    from myqueue.ls import ls
+    from myqueue.pretty import pprint
 
     verbosity = 1 - args.quiet + args.verbose
 
@@ -504,7 +502,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                                   if args.states is not None
                                   else default)
 
-        ids: set[str] | None = None
+        ids: set[int] | None = None
         if args.id:
             if args.states is not None:
                 raise MQError("You can't use both -i and -s!")
@@ -512,38 +510,38 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 raise ValueError("You can't use both -i and folder(s)!")
 
             if args.id == '-':
-                ids = {line.split()[0] for line in sys.stdin}
+                ids = {int(line.split()[0]) for line in sys.stdin}
             else:
-                ids = {id for id in args.id.split(',')}
+                ids = {int(id) for id in args.id.split(',')}
         elif args.command != 'list' and args.states is None:
             raise MQError('You must use "-i <id>" OR "-s <state(s)>"!')
 
         selection = Selection(ids,
-                              regex(args.name),
+                              args.name,
                               states,
                               folders,
                               getattr(args, 'recursive',
                                       not getattr(args, 'not_recursive',
                                                   False)),
-                              regex(args.error))
+                              args.error)
 
     dry_run = getattr(args, 'dry_run', False)
     need_lock = args.command not in ['list', 'info'] and not dry_run
     with Queue(config, need_lock=need_lock, dry_run=dry_run) as queue:
         if args.command == 'list':
-            if args.sort:
-                reverse = args.sort.endswith('-')
-                column = args.sort.rstrip('-')
-            else:
-                reverse = False
-                column = None
-            ls(queue, selection, args.columns, column, reverse,
-               args.count, verbosity)
+            reverse = args.sort.endswith('-')
+            column = args.sort.rstrip('-')
+            tasks = queue.select(selection)
+            pprint(tasks,
+                   verbosity=verbosity,
+                   columns=args.columns,
+                   short=args.count,
+                   sort=column,
+                   reverse=reverse)
 
         elif args.command == 'remove':
             from myqueue.remove import remove
-            tasks = selection.select(queue.tasks)
-            tasks = queue.find_depending(tasks)
+            tasks = queue.select(selection)
             remove(queue, tasks, verbosity, args.force)
 
         elif args.command == 'resubmit':
@@ -553,7 +551,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                 resources = Resources.from_string(args.resources)
             else:
                 resources = None
-            resubmit(queue, selection, resources, force=args.force)
+            resubmit(queue, selection, resources,
+                     remove=args.remove)
 
         elif args.command == 'submit':
             from myqueue.submitting import submit
@@ -567,7 +566,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                         for folder in folders]
 
             submit(queue, newtasks,
-                   force=args.force,
                    max_tasks=args.max_tasks)
 
         elif args.command == 'modify':
@@ -578,7 +576,11 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         elif args.command == 'workflow':
             from myqueue.submitting import submit
             tasks = workflow(args, folders, verbosity)
-            submit(queue, tasks, force=args.force, max_tasks=args.max_tasks)
+            tasks = prune(tasks, queue, args.force)
+            try:
+                submit(queue, tasks, max_tasks=args.max_tasks)
+            except Exception as ex:
+                raise MQError(ex.args)
 
         elif args.command == 'sync':
             from myqueue.syncronize import sync
@@ -592,23 +594,6 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             from myqueue.info import info
             assert args.command == 'info'
             info(queue, args.id, verbosity)
-
-
-def regex(pattern: str | None) -> Pattern[str] | None:
-    r"""Convert string to regex pattern.
-
-    Examples:
-
-    >>> regex('*-abc.py')
-    re.compile('.*\\-abc\\.py')
-    >>> regex(None) is None
-    True
-    """
-    if pattern:
-        return re.compile(re.escape(pattern)
-                          .replace('\\*', '.*')
-                          .replace('\\?', '.'))
-    return None
 
 
 class Formatter(argparse.HelpFormatter):

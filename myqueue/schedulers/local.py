@@ -22,24 +22,23 @@ class LocalScheduler(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         if dry_run:
-            id = '1'
-        else:
-            task.cmd.function = None
-            id = self.send('submit', task)
-        task.id = id
+            return 1
+        task.cmd.function = None
+        id = self.send('submit', task)
+        return id
 
-    def cancel(self, task: Task) -> None:
-        self.send('cancel', task.id)
+    def cancel(self, id: int) -> None:
+        self.send('cancel', id)
 
-    def hold(self, task: Task) -> None:
-        self.send('hold', task.id)
+    def hold(self, id: int) -> None:
+        self.send('hold', id)
 
-    def release_hold(self, task: Task) -> None:
-        self.send('release', task.id)
+    def release_hold(self, id: int) -> None:
+        self.send('release', id)
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         ids = self.send('list')
         return ids
 
@@ -78,12 +77,13 @@ class Server:
         self.port = port
 
         with Queue(config) as queue:
-            self.next_id = 1 + max((task.int_id for task in queue.tasks),
-                                   default=0)
+            maxid = queue.connection.execute(
+                'SELECT MAX(id) FROM tasks').fetchone()[0] or 0
+            self.next_id = 1 + maxid
 
-        self.tasks: dict[str, Task] = {}
-        self.processes: dict[str, asyncio.subprocess.Process] = {}
-        self.aiotasks: dict[str, asyncio.Task] = {}
+        self.tasks: dict[int, Task] = {}
+        self.processes: dict[int, asyncio.subprocess.Process] = {}
+        self.aiotasks: dict[int, asyncio.Task] = {}
         self.folder = self.config.home / '.myqueue'
 
     def start(self) -> None:
@@ -115,7 +115,9 @@ class Server:
         """Recieve command from client."""
         data = await reader.read(4096)
         cmd, *args = pickle.loads(data)
-        print('COMMAND:', cmd, *args)
+        print('COMMAND:', cmd, *args, [(task.id,
+                                        [d.id for d in task.dtasks])
+                                       for task in self.tasks.values()])
         result: Any
         if cmd == 'stop':
             for aiotask in self.aiotasks.values():
@@ -123,11 +125,11 @@ class Server:
             self.server.close()
             print('BYE')
             return
-            result = None
         elif cmd == 'submit':
             task = args[0]
-            task.id = str(self.next_id)
+            task.id = self.next_id
             task.state = State.queued
+            print([d.id for d in task.dtasks])
             if all(t.id in self.tasks for t in task.dtasks):
                 task.deps = [t.dname for t in task.dtasks]
                 self.tasks[task.id] = task
@@ -142,9 +144,7 @@ class Server:
             elif id in self.tasks:
                 task = self.tasks[id]
                 task.state = State.CANCELED
-                task.cancel_dependents(list(self.tasks.values()))
-                self.tasks = {id: task for id, task in self.tasks.items()
-                              if task.state != State.CANCELED}
+                self.cancel_dependents(task)
             result = None
         else:
             1 / 0
@@ -216,15 +216,25 @@ class Server:
                 state = 3
             else:
                 state = 2
-            task.cancel_dependents(list(self.tasks.values()))
-            self.tasks = {id: task for id, task in self.tasks.items()
-                          if task.state != 'CANCELED'}
+            self.cancel_dependents(task)
 
         (self.folder / f'local-{task.id}-{state}').write_text('')
 
         self.kick()
 
-    def terminate(self, id: str, state: State = State.TIMEOUT) -> None:
+    def _cancel_dependents(self, task: Task) -> None:
+        for job in self.tasks.values():
+            print('CANCEL', len(self.tasks), task.dname, job, job.deps)
+            if task.dname in job.deps:
+                job.state = State.CANCELED
+                self._cancel_dependents(job)
+
+    def cancel_dependents(self, task: Task) -> None:
+        self._cancel_dependents(task)
+        self.tasks = {id: task for id, task in self.tasks.items()
+                      if task.state != State.CANCELED}
+
+    def terminate(self, id: int, state: State = State.TIMEOUT) -> None:
         """Terminate a task."""
         print('Terminate', id)
         proc = self.processes.get(id)

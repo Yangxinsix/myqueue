@@ -9,17 +9,15 @@ from myqueue.submitting import submit
 def resubmit(queue: Queue,
              selection: Selection,
              resources: Resources | None,
-             force: bool = False) -> None:
+             remove: bool = False) -> None:
     """Resubmit tasks."""
     tasks = []
-
-    for task in selection.select(queue.tasks):
+    ids = []
+    for task in queue.select(selection):
         if task.state in {'queued', 'hold', 'running'}:
             continue
 
-        queue.tasks.remove(task)
-        queue.changed.add(task)
-
+        ids.append(task.id)
         task = Task(task.cmd,
                     deps=task.deps,
                     resources=resources or task.resources,
@@ -30,4 +28,7 @@ def resubmit(queue: Queue,
                     diskspace=0)
         tasks.append(task)
 
-    submit(queue, tasks, force=force)
+    if remove and not queue.dry_run:
+        queue.remove(ids)
+
+    submit(queue, tasks)

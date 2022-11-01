@@ -10,7 +10,7 @@ class LSF(Scheduler):
     def submit(self,
                task: Task,
                dry_run: bool = False,
-               verbose: bool = False) -> None:
+               verbose: bool = False) -> int:
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
@@ -53,7 +53,7 @@ class LSF(Scheduler):
             'id=$LSB_JOBID\n'
             f'mq={home}/.myqueue/lsf-$id\n')
 
-        script += task.get_venv_activation_line()
+        script += self.get_venv_activation_line()
 
         script += (
             '(touch $mq-0 && \\\n'
@@ -67,15 +67,15 @@ class LSF(Scheduler):
         if dry_run:
             print(' \\\n    '.join(bsub))
             print(script)
-            return
+            return 1
 
         p = subprocess.run(bsub,
                            input=script.encode(),
                            capture_output=True)
         if p.returncode:
             raise SchedulerError((p.stderr + p.stdout).decode())
-        id = p.stdout.split()[1][1:-1].decode()
-        task.id = id
+        id = int(p.stdout.split()[1][1:-1].decode())
+        return id
 
     def has_timed_out(self, task: Task) -> bool:
         path = self.error_file(task).expanduser()
@@ -87,12 +87,12 @@ class LSF(Scheduler):
                     return True
         return False
 
-    def cancel(self, task: Task) -> None:
-        subprocess.run(['bkill', task.id])
+    def cancel(self, id: int) -> None:
+        subprocess.run(['bkill', str(id)])
 
-    def get_ids(self) -> set[str]:
+    def get_ids(self) -> set[int]:
         p = subprocess.run(['bjobs'], stdout=subprocess.PIPE)
-        queued = {line.split()[0].decode()
+        queued = {int(line.split()[0].decode())
                   for line in p.stdout.splitlines()
                   if line[:1].isdigit()}
         return queued
@@ -100,14 +100,13 @@ class LSF(Scheduler):
     def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         from collections import defaultdict
-        from myqueue.utils import str2number
 
         cmd = ['nodestat', '-F', queue]
         p = subprocess.run(cmd, stdout=subprocess.PIPE)
         cores: dict[str, int] = {}
         memory: dict[str, list[str]] = defaultdict(list)
         for line in p.stdout.decode().splitlines():
-            id, state, procs, load, name, mem, unit, *_ = line.split()
+            _, state, procs, _, name, mem, unit, *_ = line.split()
             if state == 'State':
                 continue  # skip header
             if state == 'Down':
@@ -115,8 +114,8 @@ class LSF(Scheduler):
             cores[name] = int(procs.split(':')[1])
             memory[name].append(mem + unit)
         nodes = [
-            (name, cores[name], min(memory[name], key=str2number))
-            for name in cores]
+            (name, n, min(memory[name], key=str2number))
+            for name, n in cores.items()]
         if queue:
             extra_args = ['-q', queue]
         else:

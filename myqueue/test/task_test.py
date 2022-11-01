@@ -3,13 +3,13 @@ from types import SimpleNamespace
 
 import pytest
 from myqueue.states import State
-from myqueue.task import task as create_task
+from myqueue.task import create_task
 
 
 def test_task(tmp_path):
     t = create_task('x', folder=tmp_path)
     assert t.name == 'x.0'
-    assert t.int_id == 0
+    assert t.id == 0
 
     t.state = State.running
     assert t.running_time(1.0) == 1.0
@@ -23,7 +23,7 @@ def test_task(tmp_path):
     with pytest.raises(ValueError):
         t.order_key('x')
 
-    dct = {'id': '0',
+    dct = {'id': 0,
            'folder': str(tmp_path),
            'cmd': {'args': [], 'type': 'python-module', 'cmd': 'x'},
            'state': 'running',
@@ -49,7 +49,7 @@ def test_task(tmp_path):
     err = tmp_path / 'x.err'
 
     def oom():
-        return t.read_error(
+        return t.read_error_and_check_for_oom(
             SimpleNamespace(error_file=lambda _: err))  # type: ignore
 
     assert not oom()

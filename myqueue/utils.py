@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import errno
-import json
 import os
 import re
 import sys
@@ -16,17 +15,19 @@ from typing import IO, Any, Generator
 
 from myqueue.config import Configuration
 
+try:
+    from functools import cached_property
+except ImportError:
+    def cached_property(method):  # type: ignore
+        """Quick'n'dirty implementation of cached_property coming in 3.8."""
+        name = f'__{method.__name__}'
 
-def cached_property(method):  # type: ignore
-    """Quick'n'dirty implementation of cached_property coming in Python 3.8."""
-    name = f'__{method.__name__}'
+        def new_method(self):  # type: ignore
+            if not hasattr(self, name):
+                setattr(self, name, method(self))
+            return getattr(self, name)
 
-    def new_method(self):  # type: ignore
-        if not hasattr(self, name):
-            setattr(self, name, method(self))
-        return getattr(self, name)
-
-    return property(new_method)
+        return property(new_method)
 
 
 def mqhome() -> Path:
@@ -301,12 +302,13 @@ def convert_done_files() -> None:
 
 
 def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
-    """Get tasks with given id's from folder."""
+    """Get states of active tasks."""
+    from myqueue.queue import Queue
     config = Configuration.read(folder)
-    mq = config.home / '.myqueue'
-    with Lock(mq / 'queue.json.lock',
-              timeout=10.0):
-        return json.loads((mq / 'active.json').read_text())
+    with Queue(config, need_lock=False) as queue:
+        active = queue.sql(
+            'SELECT name, state FROM tasks WHERE state IN ("q", "h", "r")')
+        return dict(active)  # type: ignore
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -21,7 +21,7 @@ Sub-commands
     * - :ref:`submit <submit>`
       - Submit task(s) to queue
     * - :ref:`resubmit <resubmit>`
-      - Resubmit failed or timed-out tasks
+      - Resubmit done, failed or timed-out tasks
     * - :ref:`remove <remove>` (rm)
       - Remove or cancel task(s)
     * - :ref:`info <info>`
@@ -128,7 +128,7 @@ options:
 Submit: Submit task(s) to queue
 -------------------------------
 
-usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N] [-f]
+usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N]
                  [--max-tasks MAX_TASKS] [-R RESOURCES] [-w] [-z] [-v] [-q]
                  [-T]
                  task [folder ...]
@@ -153,7 +153,6 @@ options:
                         memory. Time-limit will be doubled for a timed out
                         task and number of cores will be increased to the next
                         number of nodes for a task that runs out of memory.
-  -f, --force           Submit also failed tasks.
   --max-tasks MAX_TASKS
                         Maximum number of tasks to submit.
   -R RESOURCES, --resources RESOURCES
@@ -170,14 +169,14 @@ options:
 
 .. _resubmit:
 
-Resubmit: Resubmit failed or timed-out tasks
---------------------------------------------
+Resubmit: Resubmit done, failed or timed-out tasks
+--------------------------------------------------
 
-usage: mq resubmit [-h] [-f] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID]
+usage: mq resubmit [-h] [--remove] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID]
                    [-n NAME] [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder ...]
 
-Resubmit failed or timed-out tasks.
+Resubmit done, failed or timed-out tasks.
 
 Example::
 
@@ -188,7 +187,7 @@ folder:
 
 options:
   -h, --help            show this help message and exit
-  -f, --force           Submit also failed tasks.
+  --remove              Remove old tasks.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":
@@ -286,7 +285,7 @@ options:
 Workflow: Submit tasks from Python script or several scripts matching pattern
 -----------------------------------------------------------------------------
 
-usage: mq workflow [-h] [-f] [--max-tasks MAX_TASKS] [-t TARGETS] [-p]
+usage: mq workflow [-h] [--max-tasks MAX_TASKS] [-f] [-t TARGETS] [-p]
                    [-a ARGUMENTS] [-z] [-v] [-q] [-T]
                    script [folder ...]
 
@@ -308,9 +307,9 @@ folder:
 
 options:
   -h, --help            show this help message and exit
-  -f, --force           Submit also failed tasks.
   --max-tasks MAX_TASKS
                         Maximum number of tasks to submit.
+  -f, --force           Submit also failed tasks.
   -t TARGETS, --targets TARGETS
                         Comma-separated target names. Without any targets, all
                         tasks will be submitted.
@@ -359,7 +358,7 @@ usage: mq modify [-h] [-E STATES] [-N NEW_STATE] [-s qhrdFCTMaA] [-i ID]
 
 Modify task(s).
 
-The following state changes are allowed: h->q, q->h, F->M and F->T.
+The following state changes are allowed: h->q or q->h.
 
 folder:
     Task-folder. Use --recursive (or -r) to include subfolders.

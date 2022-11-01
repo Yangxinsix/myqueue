@@ -12,7 +12,7 @@ from rich.console import Console
 from myqueue import __version__
 from myqueue.config import Configuration
 from myqueue.queue import Queue
-from myqueue.selection import Selection
+from myqueue.states import State
 
 
 def info(queue: Queue,
@@ -20,7 +20,7 @@ def info(queue: Queue,
          verbosity: int = 1) -> None:
     """Print information about MyQueue or a single task."""
 
-    print = Console().print
+    prnt = Console().print
 
     if id is None:
         table = Table(title=f'MyQueue-{__version__}')
@@ -28,7 +28,7 @@ def info(queue: Queue,
         table.add_column('Path', style='cyan')
         table.add_row('Code', str(Path(__file__).parent))
         table.add_row('Root', str(queue.config.home / '.myqueue'))
-        print(table)
+        prnt(table)
 
         table = Table(title='Configuration')
         table.add_column('Key', style='green')
@@ -37,19 +37,19 @@ def info(queue: Queue,
             if key == 'nodes':
                 continue
             table.add_row(key, str(value))
-        print(table)
+        prnt(table)
 
         table = Table(title='Nodes')
         table.add_column('Name', style='green')
         table.add_column('Values', style='yellow')
         for name, dct in queue.config.nodes:
             table.add_row(name, str(dct))
-        print(table)
+        prnt(table)
 
         return
 
-    task = Selection({id}).select(queue.tasks)[0]
-    print(json.dumps(task.todict(), indent='    '))
+    task = queue.tasks('id = ?', [id])[0]
+    prnt(json.dumps(task.todict(), indent='    '))
     if verbosity > 1:
         path = queue.scheduler.error_file(task)
         try:
@@ -61,10 +61,10 @@ def info(queue: Queue,
                 N = os.get_terminal_size().columns - 1
             except OSError:
                 N = 70
-            print(f'\nError file: {path}')
-            print('v' * N)
-            print(err)
-            print('^' * N)
+            prnt(f'\nError file: {path}')
+            prnt('v' * N)
+            prnt(err)
+            prnt('^' * N)
 
 
 def info_all(start: Path) -> None:
@@ -89,9 +89,11 @@ def info_all(start: Path) -> None:
             with Queue(config, need_lock=False) as queue:
                 from collections import defaultdict
                 count: dict[str, int] = defaultdict(int)
-                for task in queue.tasks:
-                    count[task.state.name] += 1
-                count['total'] = len(queue.tasks)
+                sql = 'SELECT state FROM tasks'
+                for state, in queue.connection.execute(sql):
+                    state = State(state).name
+                    count[state] += 1
+                count['total'] = sum(count.values())
                 states = []
                 for state, n in count.items():
                     if state == 'done':

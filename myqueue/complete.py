@@ -64,20 +64,20 @@ commands = {
          '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
     'resubmit':
-        ['-f', '--force', '-R', '--resources', '-w', '--workflow', '-s',
+        ['--remove', '-R', '--resources', '-w', '--workflow', '-s',
          '--states', '-i', '--id', '-n', '--name', '-e',
          '--error', '-z', '--dry-run', '-v', '--verbose', '-q',
          '--quiet', '-T', '--traceback', '-r', '--recursive'],
     'submit':
-        ['-d', '--dependencies', '-n', '--name', '--restart', '-f',
-         '--force', '--max-tasks', '-R', '--resources', '-w',
-         '--workflow', '-z', '--dry-run', '-v', '--verbose',
-         '-q', '--quiet', '-T', '--traceback'],
+        ['-d', '--dependencies', '-n', '--name', '--restart',
+         '--max-tasks', '-R', '--resources', '-w', '--workflow',
+         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
+         '-T', '--traceback'],
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
     'workflow':
-        ['-f', '--force', '--max-tasks', '-t', '--targets', '-p',
+        ['--max-tasks', '-f', '--force', '-t', '--targets', '-p',
          '--pattern', '-a', '--arguments', '-z', '--dry-run',
          '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback']}
@@ -134,4 +134,5 @@ def main(environ: Mapping[str, str], word: str, previous: str) -> None:
 
 
 if __name__ == '__main__':
-    main(os.environ, *sys.argv[2:])  # pragma: no cover
+    word, previous = sys.argv[2:]
+    main(os.environ, word, previous)  # pragma: no cover
