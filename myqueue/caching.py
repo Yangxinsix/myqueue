@@ -7,44 +7,22 @@ from typing import Any, Callable, Sequence
 from functools import lru_cache, partial, wraps
 
 
-class CachedFunction:
-    """A caching function."""
+def json_cached_function(name: str):
+    path = Path(f'{name}.result')
 
-    __name__ = 'func'
+    def wrapper(func):
+        def new_func():
+            """A caching function."""
+            if path.is_file():
+                return decode(path.read_text(encoding='utf-8'))
+            result = func()
+            if mpi_world().rank == 0:
+                path.write_text(encode(result), encoding='utf-8')
+            return result
 
-    def __init__(self,
-                 function: Callable[[], Any],
-                 has: Callable[..., bool]):
-        self.function = function
-        self._has = has
+        return new_func
 
-    def has(self, *args: Any, **kwargs: Any) -> bool:
-        """Check if function has been called."""
-        return self._has(*args, **kwargs)
-
-    def __call__(self) -> Any:
-        """Call function (if needed)."""
-        return self.function()
-
-
-class JSONCachedFunction(CachedFunction):
-    """A caching function."""
-    def __init__(self, function: Callable, name: str):
-        self.function = function
-        self.path = Path(f'{name}.result')
-
-    def has(self, *args: Any, **kwargs: Any) -> bool:
-        """Check if function has been called."""
-        return self.path.is_file()
-
-    def __call__(self) -> Any:
-        """Call function (if needed)."""
-        if self.has():
-            return decode(self.path.read_text())
-        result = self.function()
-        if mpi_world().rank == 0:
-            self.path.write_text(encode(result))
-        return result
+    return wrapper
 
 
 class MPIWorld:
@@ -71,13 +49,10 @@ def mpi_world() -> MPIWorld:
 def create_cached_function(function: Callable,
                            name: str,
                            args: Sequence[Any],
-                           kwargs: dict[str, Any]) -> CachedFunction:
-    """Wrap function if needed."""
+                           kwargs: dict[str, Any]) -> Callable:
+    """Wrap function."""
     func_no_args = wraps(function)(partial(function, *args, **kwargs))
-    if hasattr(function, 'has'):
-        has = function.has  # type: ignore
-        return CachedFunction(func_no_args, has)
-    return JSONCachedFunction(func_no_args, name)
+    return json_cached_function(name)(func_no_args)
 
 
 class Encoder(json.JSONEncoder):
