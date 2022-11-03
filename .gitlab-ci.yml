@@ -21,7 +21,6 @@ tests:
     paths:
       - htmlcov
     expire_in: 1 week
-  when: manual
 
 
 oldtests:
