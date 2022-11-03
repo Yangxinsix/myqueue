@@ -7,14 +7,21 @@ from typing import Any, Callable, Sequence
 from functools import lru_cache, partial, wraps
 
 
+class CacheFileNotFoundError(FileNotFoundError):
+    """JSON cache file not found."""
+
+
 def json_cached_function(name: str):
     path = Path(f'{name}.result')
 
     def wrapper(func):
-        def new_func():
+        @wraps(func)
+        def new_func(only_read_from_cache=False):
             """A caching function."""
             if path.is_file():
                 return decode(path.read_text(encoding='utf-8'))
+            if only_read_from_cache:
+                raise CacheFileNotFoundError
             result = func()
             if mpi_world().rank == 0:
                 path.write_text(encode(result), encoding='utf-8')
