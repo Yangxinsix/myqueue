@@ -307,8 +307,10 @@ def get_states_of_active_tasks(folder: Path = None) -> dict[str, str]:
     config = Configuration.read(folder)
     with Queue(config, need_lock=False) as queue:
         active = queue.sql(
-            'SELECT name, state FROM tasks WHERE state IN ("q", "h", "r")')
-        return dict(active)  # type: ignore
+            'SELECT folder, name, state FROM tasks '
+            'WHERE state IN ("q", "h", "r")')
+        return {folder + name: state
+                for folder, name, state in active}
 
 
 if __name__ == '__main__':  # pragma: no cover

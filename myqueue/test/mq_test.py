@@ -183,7 +183,7 @@ def test_hold_release(mq):
     assert mq.wait() == 'h'
     (name, state), = get_states_of_active_tasks().items()
     assert state == 'h'
-    assert name.endswith('shell:echo+hello')
+    assert name == './shell:echo+hello'
 
     mq('modify -s h -N q . -z')
     mq('modify -s h -N q .')
