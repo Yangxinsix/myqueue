@@ -40,8 +40,6 @@ def start_daemon(config: Configuration) -> bool:
     if is_running(pidfile):
         return False
 
-    pidfile.touch()
-
     pid = os.fork()
     if pid == 0:
         if os.getenv('MYQUEUE_TESTING'):
