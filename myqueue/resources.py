@@ -11,6 +11,9 @@ from myqueue.states import State
 
 Node = Tuple[str, Dict[str, Any]]
 
+RESOURCES_URL = (
+    'https://myqueue.readthedocs.io/en/latest/documentation.html#resources')
+
 
 def seconds_to_short_time_string(n: float) -> str:
     """Convert seconds to time string.
@@ -64,7 +67,11 @@ class Resources:
         >>> Resources.from_string('16:1m')
         Resources(cores=16, tmax=60)
         """
-        cores, s = s.split(':', 1)
+        try:
+            cores, s = s.split(':', 1)
+        except ValueError:
+            raise ValueError(
+                f'Bad resource string: {s!r}.  See {RESOURCES_URL}')
         nodename = ''
         processes = 0
         tmax = 600
