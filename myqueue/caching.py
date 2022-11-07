@@ -14,7 +14,7 @@ class CacheFileNotFoundError(FileNotFoundError):
     """JSON cache file not found."""
 
 
-def json_cached_function(name: str) -> Callable[Callable[[], T],
+def json_cached_function(name: str) -> Callable[[Callable[[], T]],
                                                 Callable[[bool], T]]:
     path = Path(f'{name}.result')
 
@@ -22,7 +22,6 @@ def json_cached_function(name: str) -> Callable[Callable[[], T],
         @wraps(func)
         def new_func(only_read_from_cache: bool = False) -> T:
             """A caching function."""
-            print(only_read_from_cache, path, path.is_file())
             if path.is_file():
                 return decode(path.read_text(encoding='utf-8'))
             if only_read_from_cache:
@@ -58,10 +57,10 @@ def mpi_world() -> MPIWorld:
     return MPIWorld()
 
 
-def create_cached_function(function: Callable[Any, T],
+def create_cached_function(function: Callable[..., T],
                            name: str,
                            args: Sequence[Any],
-                           kwargs: dict[str, Any]) -> Callable[[bool], T]:
+                           kwargs: dict[str, Any]) -> Callable[..., T]:
     """Wrap function."""
     func_no_args = wraps(function)(partial(function, *args, **kwargs))
     return json_cached_function(name)(func_no_args)

@@ -157,7 +157,7 @@ class WorkflowTask(Command):
     def __init__(self,
                  cmd: str,
                  args: list[str],
-                 function: Callable[[], Any] = None):
+                 function: Callable[..., Any] = None):
         script, name = cmd.split(':')
         self.script = Path(script)
         Command.__init__(self, name, args)
