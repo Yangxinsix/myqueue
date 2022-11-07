@@ -66,7 +66,7 @@ def mpi_world() -> MPIWorld:
 
 
 class Encoder(json.JSONEncoder):
-    """Encode complex, datetime and ndarray objects.
+    """Encode complex, datetime, Path and ndarray objects.
 
     >>> import numpy as np
     >>> Encoder().encode(1+2j)
@@ -107,7 +107,7 @@ encode = Encoder().encode
 
 
 def object_hook(dct: dict[str, Any]) -> Any:
-    """Decode complex, datetime and ndarray representations.
+    """Decode complex, datetime, Path and ndarray representations.
 
     >>> object_hook({'__complex__': [1.0, 2.0]})
     (1+2j)
