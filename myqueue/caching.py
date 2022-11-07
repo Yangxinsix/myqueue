@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Sequence, TypeVar
-from functools import lru_cache, partial, wraps
+from functools import lru_cache, wraps
 
 
 T = TypeVar('T')
@@ -14,26 +14,34 @@ class CacheFileNotFoundError(FileNotFoundError):
     """JSON cache file not found."""
 
 
-def json_cached_function(name: str) -> Callable[[Callable[[], T]],
-                                                Callable[[bool], T]]:
+def json_cached_function(function: Callable[..., T],
+                         name: str,
+                         args: Sequence[Any],
+                         kwargs: dict[str, Any]) -> Callable[..., T]:
+    """Add file-caching to function.
+
+    The decorated function will write its result in JSON format to a
+    file called <name>.result.
+    """
     path = Path(f'{name}.result')
 
-    def wrapper(func: Callable[[], T]) -> Callable[[bool], T]:
-        @wraps(func)
-        def new_func(only_read_from_cache: bool = False) -> T:
-            """A caching function."""
-            if path.is_file():
-                return decode(path.read_text(encoding='utf-8'))
-            if only_read_from_cache:
-                raise CacheFileNotFoundError
-            result = func()
-            if mpi_world().rank == 0:
-                path.write_text(encode(result), encoding='utf-8')
-            return result
+    @wraps(function)
+    def new_func(only_read_from_cache: bool = False) -> T:
+        """A caching function.
 
-        return new_func
+        If *only_read_from_cache* is True then an CacheFileNotFoundError
+        exception will be raised if the file does not exist.
+        """
+        if path.is_file():
+            return decode(path.read_text(encoding='utf-8'))
+        if only_read_from_cache:
+            raise CacheFileNotFoundError
+        result = function(*args, **kwargs)
+        if mpi_world().rank == 0:
+            path.write_text(encode(result), encoding='utf-8')
+        return result
 
-    return wrapper
+    return new_func
 
 
 class MPIWorld:
@@ -55,15 +63,6 @@ def mpi_world() -> MPIWorld:
     if hasattr(mod, 'Communicator'):
         return mod.Communicator()  # type: ignore
     return MPIWorld()
-
-
-def create_cached_function(function: Callable[..., T],
-                           name: str,
-                           args: Sequence[Any],
-                           kwargs: dict[str, Any]) -> Callable[..., T]:
-    """Wrap function."""
-    func_no_args = wraps(function)(partial(function, *args, **kwargs))
-    return json_cached_function(name)(func_no_args)
 
 
 class Encoder(json.JSONEncoder):

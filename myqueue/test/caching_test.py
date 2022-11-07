@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from myqueue.caching import (CacheFileNotFoundError, create_cached_function,
-                             decode, encode)
+from myqueue.caching import (CacheFileNotFoundError, decode, encode,
+                             json_cached_function)
 
 objects = [
     [27, 1.4, {'a': 7, 'b': [1, 2]}, inf, -inf],
@@ -47,7 +47,7 @@ def func(a: int, b: int) -> int:
 def test_no_cache(tmp_path):
     """Test function that returns non-jsonable object."""
     os.chdir(tmp_path)
-    function = create_cached_function(func, 'add', [1], {'b': 2})
+    function = json_cached_function(func, 'add', [1], {'b': 2})
     with pytest.raises(CacheFileNotFoundError):
         function(only_read_from_cache=True)
 

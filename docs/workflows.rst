@@ -257,16 +257,28 @@ Here are three equivalent ways to set the ``cores`` resource::
 Functions
 ---------
 
-A task that calls a Python function will caches its
+A task that calls a Python function will cache its
 result by writing the return value as JSON to a file.  MyQueue does this
-using the :class:`~myqueue.caching.CachedFunction` object:
+using the :func:`~myqueue.caching.json_cached_function` function:
 
-.. autoclass:: myqueue.caching.CachedFunction
-    :members:
+.. autofunction:: myqueue.caching.json_cached_function
 
 Helper wrapper for working with functions:
 
 .. autofunction:: myqueue.workflow.wrap
+
+Return values that can be written to a JSON file include everything that
+the Python standard library :mod:`json` module supports and in addition also
+the following types:
+
+* :class:`numpy.ndarray`
+* :class:`datetime.datetime`
+* :class:`complex`
+* :class:`pathlib.Path`
+
+.. autoclass:: myqueue.caching.Encoder
+.. autofunction:: myqueue.caching.object_hook
+.. autofunction:: myqueue.caching.decode
 
 
 .. _dependencies:
