@@ -59,7 +59,7 @@ CREATE TABLE meta (
 CREATE INDEX folder_index on tasks(folder);
 CREATE INDEX state_index on tasks(state);
 CREATE INDEX dependincies_index1 on dependencies(id);
-CREATE INDEX dependincies_index2 on dependencies(id)
+CREATE INDEX dependincies_index2 on dependencies(did)
 """
 
 
@@ -127,7 +127,7 @@ class Queue:
                 self._connection.execute(
                     'SELECT value FROM meta where key="version"')
                 .fetchone()[0])
-            assert version <= VERSION
+            assert 11 <= version <= VERSION
 
         if self.lock.locked and not self.dry_run:
             self.process_change_files()

@@ -48,15 +48,26 @@ class Resources:
                  cores: int = 0,
                  nodename: str = '',
                  processes: int = 0,
-                 tmax: int = 0):
+                 tmax: int = 0,
+                 weight: float = -1.0):
+        """...
+
+        weight: float
+            Weight of task.  See :ref:`task_weight`.
+        """
         self.cores = cores or 1
         self.nodename = nodename
         self.tmax = tmax or 600  # seconds
+        self.weight = weight
 
         if processes == 0:
             self.processes = self.cores
         else:
             self.processes = processes
+
+    def set_default_weight(self, weight: float) -> None:
+        if self.weight == -1.0:
+            self.weight = weight
 
     @staticmethod
     def from_string(s: str) -> Resources:
@@ -67,33 +78,41 @@ class Resources:
         >>> Resources.from_string('16:1m')
         Resources(cores=16, tmax=60)
         """
-        try:
-            cores, s = s.split(':', 1)
-        except ValueError:
-            raise ValueError(
-                f'Bad resource string: {s!r}.  See {RESOURCES_URL}')
         nodename = ''
         processes = 0
-        tmax = 600
-        for x in s.split(':'):
-            if x[0].isdigit():
-                if x[-1].isdigit():
-                    processes = int(x)
+        weight = -1.0
+        try:
+            p1, *parts = s.split(':')
+            cores = int(p1)
+            if parts[-1][-1] not in 'smhd':
+                weight = float(parts.pop())
+            tmax = T(parts.pop())
+            for p in parts:
+                if p.isdigit():
+                    processes = int(p)
                 else:
-                    tmax = T(x)
-            else:
-                nodename = x
-        return Resources(int(cores), nodename, processes, tmax)
+                    nodename = p
+        except ValueError as ex:
+            raise ValueError(
+                f'Bad resource string: {s!r}.  See {RESOURCES_URL}') from ex
+
+        return Resources(cores, nodename, processes, tmax, weight)
 
     @staticmethod
     def from_args_and_command(cores: int = 0,
                               nodename: str = '',
                               processes: int = 0,
                               tmax: str = '',
+                              weight: float = -1.0,
                               resources: str = '',
                               command: Command = None,
                               path: Path = None) -> Resources:
-        if cores == 0 and nodename == '' and processes == 0 and tmax == '':
+        all_defaults = (cores == 0 and
+                        nodename == ''
+                        and processes == 0
+                        and tmax == '' and
+                        weight == -1.0)
+        if all_defaults:
             if resources:
                 return Resources.from_string(resources)
             assert command is not None and path is not None
@@ -103,7 +122,7 @@ class Resources:
         else:
             assert resources == ''
 
-        return Resources(cores, nodename, processes, T(tmax or '10m'))
+        return Resources(cores, nodename, processes, T(tmax or '10m'), weight)
 
     def __str__(self) -> str:
         s = str(self.cores)
@@ -111,7 +130,10 @@ class Resources:
             s += ':' + self.nodename
         if self.processes != self.cores:
             s += ':' + str(self.processes)
-        return s + ':' + seconds_to_short_time_string(self.tmax)
+        s += ':' + seconds_to_short_time_string(self.tmax)
+        if self.weight != -1.0:
+            s += f':{int(self.weight)}'
+        return s
 
     def __repr__(self) -> str:
         args = ', '.join(f'{key}={value!r}'
@@ -120,13 +142,15 @@ class Resources:
 
     def todict(self) -> dict[str, Any]:
         """Convert to dict."""
-        dct: dict[str, int | str] = {'cores': self.cores}
+        dct: dict[str, float | int | str] = {'cores': self.cores}
         if self.processes != self.cores:
             dct['processes'] = self.processes
         if self.tmax != 600:
             dct['tmax'] = self.tmax
         if self.nodename:
             dct['nodename'] = self.nodename
+        if self.weight != -1.0:
+            dct['weight'] = self.weight
         return dct
 
     def bigger(self,

@@ -1,9 +1,12 @@
 from __future__ import annotations
 from myqueue.queue import Queue
+from math import inf
 
 
 def hold_or_release(queue: Queue) -> dict[str, int]:
     maxweight = queue.config.maximum_total_task_weight
+    if maxweight == inf:
+        return {}
     totweight = 0
     queued = []
     held = []
