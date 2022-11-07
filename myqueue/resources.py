@@ -131,7 +131,7 @@ class Resources:
         if self.processes != self.cores:
             s += ':' + str(self.processes)
         s += ':' + seconds_to_short_time_string(self.tmax)
-        if self.weight != -1.0:
+        if self.weight > 0.0:
             s += f':{int(self.weight)}'
         return s
 

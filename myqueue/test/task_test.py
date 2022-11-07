@@ -31,7 +31,6 @@ def test_task(tmp_path):
            'restart': 0,
            'workflow': False,
            'deps': [],
-           'weight': 0,
            'notifications': '',
            'creates': [],
            'tqueued': 0.0,

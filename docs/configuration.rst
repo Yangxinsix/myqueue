@@ -27,17 +27,18 @@ Here is an example configuration file:
 The configuration file uses Python syntax to define a dictionary called
 ``config``.  The dictionary can have the following key-value pairs:
 
-=====================  ======================  ========
-Key                    Description
-=====================  ======================  ========
-``scheduler``          :ref:`scheduler`        required
-``nodes``              :ref:`nodes`            optional
-``mpiexec``            :ref:`mpiexec`          optional
-``parallel_python``    :ref:`parallel_python`  optional
-``extra_args``         :ref:`extra_args`       optional
-``maximum_diskspace``  :ref:`max_disk`         optional
-``notifications``      :ref:`notifications`    optional
-=====================  ======================  ========
+=============================  ======================  ========
+Key                            Description
+=============================  ======================  ========
+``scheduler``                  :ref:`scheduler`        required
+``nodes``                      :ref:`nodes`            optional
+``mpiexec``                    :ref:`mpiexec`          optional
+``parallel_python``            :ref:`parallel_python`  optional
+``extra_args``                 :ref:`extra_args`       optional
+``maximum_total_task_weight``  :ref:`task_weight`      optional
+``default_task_weight``        :ref:`task_weight`      optional
+``notifications``              :ref:`notifications`    optional
+=============================  ======================  ========
 
 See details below.
 
@@ -182,25 +183,30 @@ would give ``<submit command> arg1 arg2 arg3 arg4``.
 Task weight
 ===========
 
-Some tasks may use a lot of disk-space while running.  In order to limit the
-number of such task running at the same time, you can mark them in your
-workflow script like this::
+In order to limit the number of tasks running at the same time, you can
+submit them like this::
 
-    task(..., diskspace=10)
+    $ mq submit ... -R 24:2h:5  # sets weight to 5
 
-and set a global maximum (note that the units are arbitrary)::
+or mark them in your workflow script like this::
+
+    run(..., weight=5)
+
+and set a global maximum::
 
     config = {
         ...,
-        'maximum_diskspace': 200,
+        'maximum_total_task_weight': 100,
         ...}
 
-This will allow only 200 / 10 = 20 tasks in the ``running`` or ``queued``
+This will allow only 100 / 5 = 20 tasks in the ``running`` or ``queued``
 state. If you submit more that 20 tasks then some of them will be put in the
 ``hold`` state.  As tasks finish successfully (``done`` state), tasks will be
-moved from ``hold`` to ``queued``.  Tasks that fail will be counted as still
-running, so you will have to ``mq rm`` those and also remember to remove big
-files left behind.
+moved from ``hold`` to ``queued``.
+
+One use case would be to limit the disk-space used by running tasks. Not that
+tasks that fail will be counted as still running, so you will have to ``mq
+rm`` those and also remember to remove big files left behind.
 
 
 .. _notifications:
