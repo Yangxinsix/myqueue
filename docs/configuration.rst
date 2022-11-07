@@ -188,7 +188,7 @@ submit them like this::
 
     $ mq submit ... -R 24:2h:5  # sets weight to 5
 
-or mark them in your workflow script like this::
+(see :ref:`resources`) or mark them in your workflow script like this::
 
     run(..., weight=5)
 
@@ -207,6 +207,9 @@ moved from ``hold`` to ``queued``.
 One use case would be to limit the disk-space used by running tasks. Not that
 tasks that fail will be counted as still running, so you will have to ``mq
 rm`` those and also remember to remove big files left behind.
+
+One can also changed the default task weight of 0 to something else by
+setting the ``default_task_weight`` configuration variable.
 
 
 .. _notifications:

@@ -133,14 +133,22 @@ Resources
 
 A resource specification has the form::
 
-    cores[:nodename][:processes]:tmax
+    cores[:nodename][:processes]:tmax[:weight]
 
-* ``cores``: number of cores to reserve
-* ``nodename``: node-name
-  (defaults to best match in :ref:`the list of node-types <nodes>`)
-* ``processes``: number of MPI processes to start (defaults to number of cores)
-* ``tmax``: maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
-  hours and days respectively)
+* ``cores``: Number of cores to reserve.
+
+* ``nodename``: Node-name
+  (defaults to best match in :ref:`the list of node-types <nodes>`).
+
+* ``processes``: Number of MPI processes to start
+  (defaults to number of cores).
+
+* ``tmax``: Maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
+  hours and days respectively).
+
+* ``weight``: weight of a task.  Can be used to limit the number of
+  simultaneously running tasks.  See :ref:`task_limit`.
+  Defaults to 0.
 
 Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands
 as well as the :func:`myqueue.task.task` function, take
