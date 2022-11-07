@@ -15,7 +15,7 @@ tests:
     - coverage html
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 53.2 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 52.8 myqueue -e myqueue/test
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
