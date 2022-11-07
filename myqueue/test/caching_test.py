@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from math import inf
 from pathlib import Path
 
 import numpy as np
 import pytest
+
 from myqueue.caching import (CacheFileNotFoundError, create_cached_function,
                              decode, encode)
 
@@ -44,13 +46,13 @@ def func(a: int, b: int) -> int:
 
 def test_no_cache(tmp_path):
     """Test function that returns non-jsonable object."""
+    os.chdir(tmp_path)
     function = create_cached_function(func, 'add', [1], {'b': 2})
     with pytest.raises(CacheFileNotFoundError):
-        function()
+        function(only_read_from_cache=True)
 
     assert function() == 3
 
     assert Path('add.result').read_text() == '3'
     Path('add.result').write_text('4')
-    assert function() == 3
-    
+    assert function() == 4
