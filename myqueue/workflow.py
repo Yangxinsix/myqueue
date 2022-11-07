@@ -9,7 +9,7 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Callable, Sequence, Type, Union
 
-from myqueue.caching import CachedFunction, create_cached_function
+from myqueue.caching import json_cached_function, CacheFileNotFoundError
 from myqueue.cli import MQError
 from myqueue.commands import (Command, PythonModule, PythonScript,
                               ShellCommand, ShellScript, WorkflowTask)
@@ -317,7 +317,7 @@ class Runner:
 
     def run(self,
             *,
-            function: Union[Callable | CachedFunction] = None,
+            function: Callable = None,
             script: Union[Path, str] = None,
             module: str = None,
             shell: str = None,
@@ -499,7 +499,7 @@ def create_task(function: Callable = None,
 
     if function:
         name = name or get_name(function)
-        cached_function = create_cached_function(function, name, args, kwargs)
+        cached_function = json_cached_function(function, name, args, kwargs)
         command = WorkflowTask(f'{workflow_script}:{name}', [],
                                cached_function)
         creates = creates + [f'{name}.result']
@@ -534,9 +534,11 @@ def create_task(function: Callable = None,
 
     if function and not any(isinstance(thing, Result)
                             for thing in list(args) + list(kwargs.values())):
-        if cached_function.has(*args, **kwargs):
-            task.result = cached_function()
+        try:
+            task.result = cached_function(only_read_from_cache=True)
             task.state = State.done
+        except CacheFileNotFoundError:
+            pass
 
     return task
 

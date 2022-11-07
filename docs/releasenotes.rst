@@ -30,7 +30,7 @@ Next release
 
       then MyQueue will consider the task done if the result file exists
       (in this case ``abc.result``).  See
-      :class:`myqueue.caching.CachedFunction`.
+      :class:`myqueue.caching.json_cached_function`.
 
 * Your queue is no longer stored in a ``.myqueue/queue.json`` file.  Instead,
   it is now in a :mod:`sqlite3` file in ``.myqueue/queue.sqlite3``.

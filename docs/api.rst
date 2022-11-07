@@ -90,12 +90,12 @@ Queue
 Schedulers
 ..........
 
-.. module:: myqueue.slurm
-.. autoclass:: myqueue.slurm.SLURM
+.. module:: myqueue.schedulers.slurm
+.. autoclass:: myqueue.schedulers.slurm.SLURM
    :members:
-.. module:: myqueue.lsf
-.. autoclass:: myqueue.lsf.LSF
+.. module:: myqueue.schedulers.lsf
+.. autoclass:: myqueue.schedulers.lsf.LSF
    :members:
-.. module:: myqueue.pbs
-.. autoclass:: myqueue.pbs.PBS
+.. module:: myqueue.schedulers.pbs
+.. autoclass:: myqueue.schedulers.pbs.PBS
    :members:

@@ -1,10 +1,15 @@
 from __future__ import annotations
-import pytest
-import numpy as np
-from myqueue.caching import encode, decode, CachedFunction
+
+import os
 from datetime import datetime
 from math import inf
-from myqueue.workflow import create_task
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from myqueue.caching import (CacheFileNotFoundError, decode, encode,
+                             json_cached_function)
 
 objects = [
     [27, 1.4, {'a': 7, 'b': [1, 2]}, inf, -inf],
@@ -34,10 +39,20 @@ def test_encoding(obj1):
         assert obj1 == obj2
 
 
-def test_has():
+def func(a: int, b: int) -> int:
+    """Test function."""
+    return a + b
+
+
+def test_no_cache(tmp_path):
     """Test function that returns non-jsonable object."""
-    function = CachedFunction(
-        function=lambda: Exception,
-        has=lambda *args, **kwargs: True)
-    task = create_task(function=function)
-    task.cmd.run()
+    os.chdir(tmp_path)
+    function = json_cached_function(func, 'add', [1], {'b': 2})
+    with pytest.raises(CacheFileNotFoundError):
+        function(only_read_from_cache=True)
+
+    assert function() == 3
+
+    assert Path('add.result').read_text() == '3'
+    Path('add.result').write_text('4')
+    assert function() == 4

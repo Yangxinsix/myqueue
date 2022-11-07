@@ -3,48 +3,45 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Sequence
-from functools import lru_cache, partial, wraps
+from typing import Any, Callable, Sequence, TypeVar
+from functools import lru_cache, wraps
 
 
-class CachedFunction:
-    """A caching function."""
-
-    __name__ = 'func'
-
-    def __init__(self,
-                 function: Callable[[], Any],
-                 has: Callable[..., bool]):
-        self.function = function
-        self._has = has
-
-    def has(self, *args: Any, **kwargs: Any) -> bool:
-        """Check if function has been called."""
-        return self._has(*args, **kwargs)
-
-    def __call__(self) -> Any:
-        """Call function (if needed)."""
-        return self.function()
+T = TypeVar('T')
 
 
-class JSONCachedFunction(CachedFunction):
-    """A caching function."""
-    def __init__(self, function: Callable, name: str):
-        self.function = function
-        self.path = Path(f'{name}.result')
+class CacheFileNotFoundError(FileNotFoundError):
+    """JSON cache file not found."""
 
-    def has(self, *args: Any, **kwargs: Any) -> bool:
-        """Check if function has been called."""
-        return self.path.is_file()
 
-    def __call__(self) -> Any:
-        """Call function (if needed)."""
-        if self.has():
-            return decode(self.path.read_text())
-        result = self.function()
+def json_cached_function(function: Callable[..., T],
+                         name: str,
+                         args: Sequence[Any],
+                         kwargs: dict[str, Any]) -> Callable[..., T]:
+    """Add file-caching to function.
+
+    The decorated function will write its result in JSON format to a
+    file called <name>.result.
+    """
+    path = Path(f'{name}.result')
+
+    @wraps(function)
+    def new_func(only_read_from_cache: bool = False) -> T:
+        """A caching function.
+
+        If *only_read_from_cache* is True then an CacheFileNotFoundError
+        exception will be raised if the file does not exist.
+        """
+        if path.is_file():
+            return decode(path.read_text(encoding='utf-8'))
+        if only_read_from_cache:
+            raise CacheFileNotFoundError
+        result = function(*args, **kwargs)
         if mpi_world().rank == 0:
-            self.path.write_text(encode(result))
+            path.write_text(encode(result), encoding='utf-8')
         return result
+
+    return new_func
 
 
 class MPIWorld:
@@ -68,20 +65,8 @@ def mpi_world() -> MPIWorld:
     return MPIWorld()
 
 
-def create_cached_function(function: Callable,
-                           name: str,
-                           args: Sequence[Any],
-                           kwargs: dict[str, Any]) -> CachedFunction:
-    """Wrap function if needed."""
-    func_no_args = wraps(function)(partial(function, *args, **kwargs))
-    if hasattr(function, 'has'):
-        has = function.has  # type: ignore
-        return CachedFunction(func_no_args, has)
-    return JSONCachedFunction(func_no_args, name)
-
-
 class Encoder(json.JSONEncoder):
-    """Encode complex, datetime and ndarray objects.
+    """Encode complex, datetime, Path and ndarray objects.
 
     >>> import numpy as np
     >>> Encoder().encode(1+2j)
@@ -122,7 +107,7 @@ encode = Encoder().encode
 
 
 def object_hook(dct: dict[str, Any]) -> Any:
-    """Decode complex, datetime and ndarray representations.
+    """Decode complex, datetime, Path and ndarray representations.
 
     >>> object_hook({'__complex__': [1.0, 2.0]})
     (1+2j)
