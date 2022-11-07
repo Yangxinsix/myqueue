@@ -529,7 +529,6 @@ def create_task(function: Callable = None,
                 folder=folder,
                 restart=restart,
                 workflow=True,
-                diskspace=0,
                 creates=creates)
 
     if function and not any(isinstance(thing, Result)

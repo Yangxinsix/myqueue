@@ -177,10 +177,10 @@ Example::
 would give ``<submit command> arg1 arg2 arg3 arg4``.
 
 
-.. _max_disk:
+.. _task_weight:
 
-Maximum disk space
-==================
+Task weight
+===========
 
 Some tasks may use a lot of disk-space while running.  In order to limit the
 number of such task running at the same time, you can mark them in your

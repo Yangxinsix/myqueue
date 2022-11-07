@@ -3,36 +3,37 @@ from myqueue.queue import Queue
 
 
 def hold_or_release(queue: Queue) -> dict[str, int]:
-    maxmem = queue.config.maximum_diskspace
-    mem = 0
+    maxweight = queue.config.maximum_total_task_weight
+    totweight = 0
     queued = []
     held = []
     sql = (
-        'SELECT id, state, diskspace FROM tasks '
-        'WHERE diskspace != 0 AND user = ?')
-    for id, state, diskspace in queue.sql(sql, [queue.config.user]):
+        'SELECT id, state, weight FROM tasks '
+        'WHERE state IN ("q", "r", "h", "F", "M", "T") AND '
+        'weight != 0 AND user = ?')
+    for id, state, weight in queue.sql(sql, [queue.config.user]):
         if state in 'qrFMT':
-            mem += diskspace
+            totweight += weight
         if state == 'q':
-            queued.append((id, diskspace))
+            queued.append((id, weight))
         elif state == 'h':
-            held.append((id, diskspace))
+            held.append((id, weight))
 
     changes: list[tuple[str, int]] = []
 
-    if mem > maxmem:
-        for id, diskspace in queued:
+    if totweight > maxweight:
+        for id, weight in queued:
             queue.scheduler.hold(id)
             changes.append(('h', id))
-            mem -= diskspace
-            if mem < maxmem:
+            totweight -= weight
+            if totweight < maxweight:
                 break
-    elif mem < maxmem:
-        for id, diskspace in held[::-1]:
+    elif totweight < maxweight:
+        for id, weight in held[::-1]:
             queue.scheduler.release_hold(id)
             changes.append(('q', id))
-            mem += diskspace
-            if mem > maxmem:
+            totweight += weight
+            if totweight > maxweight:
                 break
 
     if not changes:

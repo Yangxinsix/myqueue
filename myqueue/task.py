@@ -35,8 +35,8 @@ class Task:
         How many times to restart task.
     workflow: bool
         Task is part of a workflow.
-    diskspace: float
-        Disk-space used.  See :ref:`max_disk`.
+    weight: float
+        Weight of task.  See :ref:`task_weight`.
     folder: Path
         Folder where task should run.
     creates: list of str
@@ -45,13 +45,14 @@ class Task:
 
     def __init__(self,
                  cmd: Command,
+                 *,
                  resources: Resources,
                  deps: list[Path],
                  restart: int,
                  workflow: bool,
-                 diskspace: int,
                  folder: Path,
                  creates: list[str],
+                 weight: float = 0.0,
                  notifications: str = '',
                  state: State = State.undefined,
                  id: int = 0,
@@ -66,7 +67,7 @@ class Task:
         self.deps = deps
         self.restart = restart
         self.workflow = workflow
-        self.diskspace = diskspace
+        self.weight = weight
         self.folder = folder
         self.notifications = notifications
         self.creates = creates
@@ -114,8 +115,8 @@ class Task:
             info.append(f'd{len(self.deps)}')
         if self.cmd.args:
             info.append(f'+{len(self.cmd.args)}')
-        if self.diskspace:
-            info.append('D')
+        if self.weight:
+            info.append('W')
         if self.notifications:
             info.append(self.notifications)
 
@@ -174,7 +175,7 @@ class Task:
             'restart': self.restart,
             'workflow': self.workflow,
             'deps': [str(dep) for dep in deps],
-            'diskspace': self.diskspace,
+            'weight': self.weight,
             'notifications': self.notifications,
             'creates': self.creates,
             'tqueued': self.tqueued,
@@ -201,7 +202,7 @@ class Task:
                 self.restart,
                 self.workflow,
                 ','.join(str(dep.relative_to(root)) for dep in self.deps),
-                self.diskspace,
+                self.weight,
                 self.notifications,
                 ','.join(self.creates),
                 self.tqueued,
@@ -213,7 +214,7 @@ class Task:
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
         (id, folder, state, name, cmd,
-         resources, restart, workflow, deps, diskspace,
+         resources, restart, workflow, deps, weight,
          notifications, creates, tqueued, trunning, tstop,
          error, user) = row
         return Task(id=id,
@@ -225,7 +226,7 @@ class Task:
                     workflow=bool(workflow),
                     deps=[] if not deps else [root / dep
                                               for dep in deps.split(',')],
-                    diskspace=diskspace,
+                    weight=weight,
                     notifications=notifications,
                     creates=[] if not creates else creates.split(','),
                     tqueued=tqueued,
@@ -243,8 +244,8 @@ class Task:
             dct['restart'] = 0
         else:
             dct['restart'] = int(dct['restart'])
-        if 'diskspace' not in dct:
-            dct['diskspace'] = 0
+        if 'diskspace' in dct:
+            dct['weight'] = dct.pop('diskspace')
 
         # Backwards compatibility:
         if 'creates' not in dct:
@@ -259,7 +260,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        id = dct.pop('id')
+        id = int(dct.pop('id'))
 
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
@@ -342,7 +343,7 @@ def create_task(cmd: str,
                 tmax: str = '',
                 folder: str = '',
                 restart: int = 0,
-                diskspace: float = 0.0,
+                weight: float = 0.0,
                 creates: list[str] = []) -> Task:
     """Create a Task object.
 
@@ -381,8 +382,8 @@ def create_task(cmd: str,
         Folder where task should run (default is current folder).
     restart: int
         How many times to restart task.
-    diskspace: float
-        Diskspace used.  See :ref:`max_disk`.
+    weight: float
+        Weight of task.  See :ref:`task_weight`.
     creates: list of str
         Name of files created by task
         (can be both full filenames or patterns matching filenames).
@@ -435,13 +436,13 @@ def create_task(cmd: str,
         res = Resources(cores, nodename, processes, T(tmax or '10m'))
 
     return Task(command,
-                res,
-                dpaths,
-                restart,
-                workflow,
-                int(diskspace),
-                path,
-                creates)
+                resources=res,
+                deps=dpaths,
+                restart=restart,
+                workflow=workflow,
+                weight=weight,
+                folder=path,
+                creates=creates)
 
 
 task = create_task

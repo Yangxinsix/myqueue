@@ -14,7 +14,7 @@ def kick(queue: Queue, verbosity: int = 1) -> dict[str, int]:
     * send email notifications
     * restart timed-out tasks
     * restart out-of-memory tasks
-    * release/hold tasks to stay under *maximum_diskspace*
+    * release/hold tasks to stay under *maximum_tatal_task_weight*
     """
     result = {}
 

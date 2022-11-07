@@ -31,7 +31,7 @@ def test_task(tmp_path):
            'restart': 0,
            'workflow': False,
            'deps': [],
-           'diskspace': 0,
+           'weight': 0,
            'notifications': '',
            'creates': [],
            'tqueued': 0.0,
@@ -41,7 +41,6 @@ def test_task(tmp_path):
            'user': t.user}
     assert t.todict() == dct
 
-    del dct['diskspace']
     del dct['creates']
     del dct['restart']
     t.fromdict(dct, Path())
