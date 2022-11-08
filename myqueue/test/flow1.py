@@ -33,7 +33,7 @@ def workflow():
     b = wrap(max)(*A)
 
     if b > 2:
-        with resources(tmax='1s'):
+        with resources(tmax='10s'):
             wrap(print)(b)
 
     return b

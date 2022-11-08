@@ -13,13 +13,13 @@ def test_flow1(mq):
     script = Path(__file__).with_name('flow1.py')
 
     mq(f'workflow {script}')
-    assert mq.wait() == 'ddddddd'
+    assert mq.wait() == 'd' * 7
 
     mq(f'workflow {script}')
-    assert mq.wait() == 'dddddddd'
+    assert mq.wait() == 'd' * 8
 
     mq('rm -sd')
-    assert mq.wait() == 'dddddddd'
+    assert mq.wait() == 'd' * 8
 
     mq('rm -sd --force')
     assert mq.wait() == ''
