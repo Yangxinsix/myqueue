@@ -43,7 +43,10 @@ def test_backends(mq):
         with Queue(config, dry_run=True) as q:
             submit(q, [task('shell:echo hello', cores=24)])
 
-    guess_scheduler()
+    try:
+        guess_scheduler()
+    except ValueError:
+        pass  # can happen if more than one out of sbatch, bsub and qsub exist
     guess_configuration('local')
 
 

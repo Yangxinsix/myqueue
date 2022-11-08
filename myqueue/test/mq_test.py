@@ -69,7 +69,7 @@ def test_timeout(mq):
 
 def test_timeout2(mq):
     t = 3 if LOCAL else 120
-    mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 2')
+    mq(f'submit "shell:sleep {t}" -R1:{t // 3}s --restart 3')
     mq(f'submit "shell:echo hello" -d shell:sleep+{t}')
     mq.wait()
     mq('ls')
@@ -77,7 +77,12 @@ def test_timeout2(mq):
     mq('ls')
     mq.wait()
     mq('kick')
-    assert mq.wait() == 'TCTCdd'
+    q = mq.wait()
+    if q == 'TCTCTC':
+        # on slow systems we need another kick:
+        mq('kick')
+        q = mq.wait()[2:]
+    assert q == 'TCTCdd'
 
 
 def test_oom(mq):
@@ -96,7 +101,7 @@ def test_cancel(mq):
 
 
 def test_check_dependency_order(mq):
-    mq('submit myqueue.test@timeout_once -R 1:1s --restart 1')
+    mq('submit myqueue.test@timeout_once -R 1:5s --restart 1')
     mq('submit shell:echo+ok -d myqueue.test@timeout_once --restart 1')
     assert mq.wait() == 'TC'
     mq('kick -z')
