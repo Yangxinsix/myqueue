@@ -38,6 +38,10 @@ def submit(queue: Queue,
 
     tasks = tasks[:max_tasks]
 
+    default_weight = queue.config.default_task_weight
+    for task in tasks:
+        task.resources.set_default_weight(default_weight)
+
     ids, ex = submit_tasks(queue.scheduler, tasks, verbosity, queue.dry_run)
     submitted = tasks[:len(ids)]
 

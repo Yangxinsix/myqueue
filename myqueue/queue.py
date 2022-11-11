@@ -7,6 +7,7 @@ File format versions:
 8)  Type of Task.id changed from int to str.
 9)  Added "user".
 10) Switched to sqlite3.
+11) Renamed diskspace to weight.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ import time
 from pathlib import Path
 from types import TracebackType
 from typing import Iterator, Iterable, Sequence
+from typing_extensions import LiteralString
 
 from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
@@ -25,7 +27,7 @@ from myqueue.utils import Lock, cached_property
 from myqueue.selection import Selection
 from myqueue.migration import migrate
 
-VERSION = 10
+VERSION = 11
 
 INIT = """\
 CREATE TABLE tasks (
@@ -38,7 +40,7 @@ CREATE TABLE tasks (
     restart INTEGER,
     workflow INTEGER,
     deps TEXT,
-    diskspace INTEGER,
+    weight REAL,
     notifications TEXT,
     creates TEXT,
     tqueued REAL,
@@ -57,7 +59,7 @@ CREATE TABLE meta (
 CREATE INDEX folder_index on tasks(folder);
 CREATE INDEX state_index on tasks(state);
 CREATE INDEX dependincies_index1 on dependencies(id);
-CREATE INDEX dependincies_index2 on dependencies(id)
+CREATE INDEX dependincies_index2 on dependencies(did)
 """
 
 
@@ -125,7 +127,7 @@ class Queue:
                 self._connection.execute(
                     'SELECT value FROM meta where key="version"')
                 .fetchone()[0])
-            assert version <= VERSION
+            assert 11 <= version <= VERSION
 
         if self.lock.locked and not self.dry_run:
             self.process_change_files()
@@ -150,7 +152,7 @@ class Queue:
             con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
 
     def sql(self,
-            statement: str,
+            statement: LiteralString,
             args: list[str | int] = None) -> Iterator[tuple]:
         """Raw SQL execution."""
         return self.connection.execute(statement, args or [])
@@ -166,7 +168,7 @@ class Queue:
         return self.tasks(where, args)
 
     def tasks(self,
-              where: str,
+              where: LiteralString,
               args: list[str | int] = None) -> list[Task]:
         """Create tasks from SQL WHERE statement."""
         root = self.folder.parent

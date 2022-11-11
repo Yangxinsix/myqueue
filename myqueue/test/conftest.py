@@ -28,7 +28,7 @@ config = {
         'host': 'smtp.myqueue.org',
         'username': 'me'},
     'mpiexec': 'echo',
-    'maximum_diskspace': 2.5}
+    'maximum_total_task_weight': 2.5}
 """
 
 

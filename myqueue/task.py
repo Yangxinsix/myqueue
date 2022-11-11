@@ -9,7 +9,7 @@ from warnings import warn
 
 from myqueue.commands import Command, create_command
 from myqueue.errors import parse_stderr
-from myqueue.resources import Resources, T
+from myqueue.resources import Resources
 from myqueue.states import State
 
 if TYPE_CHECKING:
@@ -35,8 +35,6 @@ class Task:
         How many times to restart task.
     workflow: bool
         Task is part of a workflow.
-    diskspace: float
-        Disk-space used.  See :ref:`max_disk`.
     folder: Path
         Folder where task should run.
     creates: list of str
@@ -45,11 +43,11 @@ class Task:
 
     def __init__(self,
                  cmd: Command,
+                 *,
                  resources: Resources,
                  deps: list[Path],
                  restart: int,
                  workflow: bool,
-                 diskspace: int,
                  folder: Path,
                  creates: list[str],
                  notifications: str = '',
@@ -66,7 +64,6 @@ class Task:
         self.deps = deps
         self.restart = restart
         self.workflow = workflow
-        self.diskspace = diskspace
         self.folder = folder
         self.notifications = notifications
         self.creates = creates
@@ -114,8 +111,6 @@ class Task:
             info.append(f'd{len(self.deps)}')
         if self.cmd.args:
             info.append(f'+{len(self.cmd.args)}')
-        if self.diskspace:
-            info.append('D')
         if self.notifications:
             info.append(self.notifications)
 
@@ -174,7 +169,6 @@ class Task:
             'restart': self.restart,
             'workflow': self.workflow,
             'deps': [str(dep) for dep in deps],
-            'diskspace': self.diskspace,
             'notifications': self.notifications,
             'creates': self.creates,
             'tqueued': self.tqueued,
@@ -183,10 +177,11 @@ class Task:
             'error': self.error,
             'user': self.user}
 
-    def to_sql(self, root: Path) -> tuple[int, str, str, str, str,
-                                          str, int, bool, str, int,
-                                          str, str, float, float, float,
-                                          str, str]:
+    def to_sql(self,
+               root: Path) -> tuple[int, str, str, str, str,
+                                    str, int, bool, str, float,
+                                    str, str, float, float, float,
+                                    str, str]:
         folder = str(self.folder.relative_to(root))
         if folder == '.':
             folder = './'
@@ -201,7 +196,7 @@ class Task:
                 self.restart,
                 self.workflow,
                 ','.join(str(dep.relative_to(root)) for dep in self.deps),
-                self.diskspace,
+                self.resources.weight,
                 self.notifications,
                 ','.join(self.creates),
                 self.tqueued,
@@ -213,19 +208,20 @@ class Task:
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
         (id, folder, state, name, cmd,
-         resources, restart, workflow, deps, diskspace,
+         resources, restart, workflow, deps, weight,
          notifications, creates, tqueued, trunning, tstop,
          error, user) = row
+        resources = Resources(**json.loads(resources))
+        assert resources.weight == weight
         return Task(id=id,
                     folder=root / folder,
                     state=State(state),
                     cmd=create_command(**json.loads(cmd)),
-                    resources=Resources(**json.loads(resources)),
+                    resources=resources,
                     restart=restart,
                     workflow=bool(workflow),
                     deps=[] if not deps else [root / dep
                                               for dep in deps.split(',')],
-                    diskspace=diskspace,
                     notifications=notifications,
                     creates=[] if not creates else creates.split(','),
                     tqueued=tqueued,
@@ -243,8 +239,8 @@ class Task:
             dct['restart'] = 0
         else:
             dct['restart'] = int(dct['restart'])
-        if 'diskspace' not in dct:
-            dct['diskspace'] = 0
+
+        dct.pop('diskspace', None)
 
         # Backwards compatibility:
         if 'creates' not in dct:
@@ -259,7 +255,7 @@ class Task:
             folder = root / f
             deps = [root / dep for dep in dct.pop('deps')]
 
-        id = dct.pop('id')
+        id = int(dct.pop('id'))
 
         return Task(cmd=create_command(**dct.pop('cmd')),
                     resources=Resources(**dct.pop('resources')),
@@ -340,9 +336,9 @@ def create_task(cmd: str,
                 nodename: str = '',
                 processes: int = 0,
                 tmax: str = '',
+                weight: float = -1.0,
                 folder: str = '',
                 restart: int = 0,
-                diskspace: float = 0.0,
                 creates: list[str] = []) -> Task:
     """Create a Task object.
 
@@ -381,8 +377,8 @@ def create_task(cmd: str,
         Folder where task should run (default is current folder).
     restart: int
         How many times to restart task.
-    diskspace: float
-        Diskspace used.  See :ref:`max_disk`.
+    weight: float
+        Weight of task.  See :ref:`task_weight`.
     creates: list of str
         Name of files created by task
         (can be both full filenames or patterns matching filenames).
@@ -421,27 +417,16 @@ def create_task(cmd: str,
 
     command = create_command(cmd, args, name=name)
 
-    res: Resources | None = None
-
-    if cores == 0 and nodename == '' and processes == 0 and tmax == '':
-        if resources:
-            res = Resources.from_string(resources)
-        else:
-            res = command.read_resources(path)
-    else:
-        assert resources == ''
-
-    if res is None:
-        res = Resources(cores, nodename, processes, T(tmax or '10m'))
+    res = Resources.from_args_and_command(
+        cores, nodename, processes, tmax, weight, resources, command, path)
 
     return Task(command,
-                res,
-                dpaths,
-                restart,
-                workflow,
-                int(diskspace),
-                path,
-                creates)
+                resources=res,
+                deps=dpaths,
+                restart=restart,
+                workflow=workflow,
+                folder=path,
+                creates=creates)
 
 
 task = create_task

@@ -24,8 +24,7 @@ def resubmit(queue: Queue,
                     folder=task.folder,
                     restart=task.restart,
                     workflow=task.workflow,
-                    creates=task.creates,
-                    diskspace=0)
+                    creates=task.creates)
         tasks.append(task)
 
     if remove and not queue.dry_run:

@@ -16,7 +16,8 @@ class Configuration:
                  parallel_python: str = 'python3',
                  mpiexec: str = 'mpiexec',
                  extra_args: list[str] = None,
-                 maximum_diskspace: float = inf,
+                 maximum_total_task_weight: float = inf,
+                 default_task_weight: float = 0.0,
                  notifications: dict[str, str] = None,
                  home: Path = None):
         """Configuration object.
@@ -27,7 +28,8 @@ class Configuration:
         self.parallel_python = parallel_python
         self.mpiexec = mpiexec
         self.extra_args = extra_args or []
-        self.maximum_diskspace = maximum_diskspace
+        self.maximum_total_task_weight = maximum_total_task_weight
+        self.default_task_weight = default_task_weight
         self.notifications = notifications or {}
         self.home = home or Path.cwd()
         self.user = os.environ.get('USER', 'root')
@@ -72,6 +74,13 @@ class Configuration:
                 f'deprecated. Please remove them from {config_file}')
             cfg.pop('mpi', None)
             cfg.pop('mpi_implementation', None)
+
+        if 'maximum_diskspace' in cfg:
+            warnings.warn(
+                'The "maximum_diskspace" keyword has been renamed to '
+                '"maximum_total_task_weight". '
+                f'Please change this in {config_file}')
+            cfg['maximum_total_task_weight'] = cfg.pop('maximum_diskspace')
 
         config = Configuration(**cfg, home=home)
         return config

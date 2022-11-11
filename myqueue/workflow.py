@@ -60,6 +60,12 @@ def workflow(args: argparse.Namespace,
 def prune(tasks: Sequence[Task],
           queue: Queue,
           force: bool = False) -> list[Task]:
+    """Only keep tasks that are not already done.
+
+    Will also skip tasks in a bad state (unless *force* is True).
+    Done means a task is marked as "done" in the queue or it has created
+    its files.
+    """
     root = queue.config.home
     ok: list[Task] = []
     remove: list[int] = []
@@ -529,7 +535,6 @@ def create_task(function: Callable = None,
                 folder=folder,
                 restart=restart,
                 workflow=True,
-                diskspace=0,
                 creates=creates)
 
     if function and not any(isinstance(thing, Result)
