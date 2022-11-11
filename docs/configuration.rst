@@ -25,20 +25,47 @@ Here is an example configuration file:
 .. literalinclude:: example_config.py
 
 The configuration file uses Python syntax to define a dictionary called
-``config``.  The dictionary can have the following key-value pairs:
+``config``.  The dictionary can have the following key-value pairs
+(``scheduler`` is requred, the rest are optional):
 
-=============================  ======================  ========
-Key                            Description
-=============================  ======================  ========
-``scheduler``                  :ref:`scheduler`        required
-``nodes``                      :ref:`nodes`            optional
-``mpiexec``                    :ref:`mpiexec`          optional
-``parallel_python``            :ref:`parallel_python`  optional
-``extra_args``                 :ref:`extra_args`       optional
-``maximum_total_task_weight``  :ref:`task_weight`      optional
-``default_task_weight``        :ref:`task_weight`      optional
-``notifications``              :ref:`notifications`    optional
-=============================  ======================  ========
+.. list-table::
+
+   * - Key
+     - Description
+     - type
+     - default
+   * - ``scheduler``
+     - :ref:`scheduler`
+     - ``str``
+     -
+   * - ``nodes``
+     - :ref:`nodes`
+     - ``list[tuple[str, dict[str, Any]]]``
+     - ``[]``
+   * - ``mpiexec``
+     - :ref:`mpiexec`
+     - ``str``
+     - ``'mpiexec'``
+   * - ``parallel_python``
+     - :ref:`parallel_python`
+     - ``str``
+     - ``'python3'``
+   * - ``extra_args``
+     - :ref:`extra_args`
+     - ``list[str]``
+     - ``[]``
+   * - ``maximum_total_task_weight``
+     - :ref:`task_weight`
+     - ``float``
+     - ``inf``
+   * - ``default_task_weight``
+     - :ref:`task_weight`
+     - ``float``
+     - ``0.0``
+   * - ``notifications``
+     - :ref:`notifications`
+     - ``dict[str, str]``
+     - ``{}``
 
 See details below.
 
@@ -184,11 +211,19 @@ Task weight
 ===========
 
 In order to limit the number of tasks running at the same time, you can
-submit them like this::
+submit them like this:
+
+.. highlight:: bash
+
+::
 
     $ mq submit ... -R 24:2h:5  # sets weight to 5
 
-(see :ref:`resources`) or mark them in your workflow script like this::
+(see :ref:`resources`) or mark them in your workflow script like this:
+
+.. highlight:: python
+
+::
 
     run(..., weight=5)
 
@@ -204,11 +239,11 @@ state. If you submit more that 20 tasks then some of them will be put in the
 ``hold`` state.  As tasks finish successfully (``done`` state), tasks will be
 moved from ``hold`` to ``queued``.
 
-One use case would be to limit the disk-space used by running tasks. Not that
+One use case would be to limit the disk-space used by running tasks. Note that
 tasks that fail will be counted as still running, so you will have to ``mq
 rm`` those and also remember to remove big files left behind.
 
-One can also changed the default task weight of 0 to something else by
+One can also change the default task weight of 0 to something else by
 setting the ``default_task_weight`` configuration variable.
 
 

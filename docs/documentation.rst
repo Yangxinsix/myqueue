@@ -147,7 +147,7 @@ A resource specification has the form::
   hours and days respectively).
 
 * ``weight``: weight of a task.  Can be used to limit the number of
-  simultaneously running tasks.  See :ref:`task_limit`.
+  simultaneously running tasks.  See :ref:`task_weight`.
   Defaults to 0.
 
 Both the :ref:`submit <submit>` and :ref:`resubmit <resubmit>` commands

@@ -52,6 +52,10 @@ Next release
 * The :ref:`resubmit <resubmit>` command will no longer remove the old task.
   Use ``--remove`` to get the old behavior.
 
+* The :ref:`resources` of a task now includes a *task-weight*.  This can be
+  used to limit the number of running tasks.  See more here:
+  :ref:`task_weight`.
+
 
 Version 22.9.0
 ==============
