@@ -9,6 +9,12 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 22.11.0
+===============
+
 .. important::
 
    No more ``<task-name>.state`` files.  MyQueue will only know the state
