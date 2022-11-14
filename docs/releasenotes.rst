@@ -4,6 +4,8 @@
 Release notes
 =============
 
+(version numbers can be interpreted as ``year.month.bug-fix-release-number``)
+
 .. highlight:: bash
 
 Next release
