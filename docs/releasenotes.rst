@@ -14,6 +14,12 @@ Next release
 * ...
 
 
+Version 22.11.1
+===============
+
+* Add missing ``weight`` argument to :func:`myqueue.workflows.run`.
+
+
 Version 22.11.0
 ===============
 
