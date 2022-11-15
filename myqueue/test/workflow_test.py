@@ -140,6 +140,24 @@ def test_workflow2(mq):
     assert mq.wait() == 'dddd'
 
 
+wf2_new = """
+from myqueue.workflow import run
+def workflow():
+    for i in range(4):
+        run(shell='echo', args=['hi'], name=f'x{i}', weight=1)
+"""
+
+
+def test_workflow2_new(mq):
+    Path('wf2.py').write_text(wf2_new)
+    mq('workflow wf2.py')
+    mq('kick')
+    assert mq.states() == 'hhqq'
+    mq.wait()
+    mq('kick')
+    assert mq.wait() == 'dddd'
+
+
 def test_failing_scheduler(mq):
     with pytest.raises(RuntimeError):
         # Special argument that makes test-scheduler raise an error:

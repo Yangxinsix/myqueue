@@ -50,8 +50,16 @@ class Resources:
                  processes: int = 0,
                  tmax: int = 0,
                  weight: float = -1.0):
-        """...
+        """Resource object.
 
+        cores: int
+            Number of cores.
+        nodename: str
+            Name of node.
+        processes: int
+            Number of processes to start.
+        tmax: str
+            Maximum time for task.  Examples: "40s", "30m", "20h" and "2d".
         weight: float
             Weight of task.  See :ref:`task_weight`.
         """
@@ -77,6 +85,11 @@ class Resources:
         Resources(cores=16, processes=1, tmax=7200, nodename='xeon8')
         >>> Resources.from_string('16:1m')
         Resources(cores=16, tmax=60)
+        >>> r = Resources.from_string('16:1m:25')
+        >>> r
+        Resources(cores=16, tmax=60, weight=25.0)
+        >>> print(r)
+        16:1m:25
         """
         nodename = ''
         processes = 0
