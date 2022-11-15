@@ -317,7 +317,8 @@ class Runner:
                                 'cores': 1,
                                 'nodename': '',
                                 'processes': 0,
-                                'restart': 0}
+                                'restart': 0,
+                                'weight': -1}
         self.target = ''
         self.workflow_script: Path | None = None
 
@@ -337,6 +338,7 @@ class Runner:
             nodename: str = None,
             processes: int = None,
             restart: int = None,
+            weight: float = None,
             folder: Path | str = '.') -> RunHandle:
         """Run or submit a task.
 
@@ -374,6 +376,8 @@ class Runner:
             Folder where task should run (default is current folder).
         restart: int
             How many times to restart task.
+        weight: float
+            Weight of task.  See :ref:`task_weight`.
 
         Returns
         -------
@@ -383,7 +387,7 @@ class Runner:
         dependencies = self.extract_dependencies(args, kwargs, deps)
 
         resource_kwargs = {}
-        values = [tmax, cores, nodename, processes, restart]
+        values = [tmax, cores, nodename, processes, restart, weight]
         for value, (key, default) in zip(values,
                                          self.resource_kwargs.items()):
             resource_kwargs[key] = value if value is not None else default
@@ -453,7 +457,8 @@ class Runner:
                   cores: int = None,
                   nodename: str = None,
                   processes: int = None,
-                  restart: int = None) -> ResourceHandler:
+                  restart: int = None,
+                  weight: float = None) -> ResourceHandler:
         """Resource decorator and context manager.
 
         Parameters
@@ -469,8 +474,8 @@ class Runner:
         restart: int
             How many times to restart task.
         """
-        keys = ['tmax', 'cores', 'nodename', 'processes', 'restart']
-        values = [tmax, cores, nodename, processes, restart]
+        keys = ['tmax', 'cores', 'nodename', 'processes', 'restart', 'weight']
+        values = [tmax, cores, nodename, processes, restart, weight]
         kwargs = {key: value
                   for key, value in zip(keys, values)
                   if value is not None}
@@ -524,6 +529,9 @@ def create_task(function: Callable = None,
         assert not kwargs
         assert isinstance(shell, str)
         command = ShellCommand('shell:' + shell, [str(arg) for arg in args])
+
+    if name:
+        command.set_non_standard_name(name)
 
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
