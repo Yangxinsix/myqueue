@@ -530,6 +530,9 @@ def create_task(function: Callable = None,
         assert isinstance(shell, str)
         command = ShellCommand('shell:' + shell, [str(arg) for arg in args])
 
+    if name:
+        command.set_non_standard_name(name)
+
     res = Resources.from_args_and_command(command=command,
                                           path=folder,
                                           **resource_kwargs)
