@@ -17,7 +17,7 @@ Next release
 Version 22.11.1
 ===============
 
-* Add missing ``weight`` argument to :func:`myqueue.workflows.run`.
+* Add missing ``weight`` argument to :func:`myqueue.workflow.run`.
 
 
 Version 22.11.0
@@ -35,7 +35,7 @@ Version 22.11.0
             run(..., creates=['file1.abc', 'file2.xyz'], ...)
 
       then MyQueue will consider the task done if those files exist.
-      See :func:`myqueue.workflows.run`.
+      See :func:`myqueue.workflow.run`.
 
    2) If a task is a Python function like here::
 
