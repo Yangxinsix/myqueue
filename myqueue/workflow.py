@@ -71,10 +71,14 @@ def prune(tasks: Sequence[Task],
     remove: list[int] = []
     count: defaultdict[str, int] = defaultdict(int)
     for task in tasks:
-        name = str(task.dname.relative_to(root))
+        # name = str(task.dname.relative_to(root))
+        name = task.dname.name
+        f = str(task.folder.relative_to(root))
+        if f != '.':
+            f = './' + f
         rows = queue.sql(
-            'SELECT id, state FROM tasks WHERE name = ?',
-            [name])
+            'SELECT id, state FROM tasks WHERE name = ? AND folder = ?',
+            [name, f + '/'])
         id, state = max(rows, default=(-1, 'u'))
         if id == -1:
             if task.check_creates_files():

@@ -116,7 +116,7 @@ class Task:
 
         return [str(self.id),
                 str(self.folder) + '/',
-                self.cmd.name,
+                self.cmd.name.split('+', 1)[0],
                 ' '.join(self.cmd.args),
                 ','.join(info),
                 str(self.resources),
