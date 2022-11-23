@@ -14,6 +14,12 @@ Next release
 * ...
 
 
+Version 22.11.2
+===============
+
+* Fix :issue:`48` and other regressions after move to :mod:`sqlite3`.
+
+
 Version 22.11.1
 ===============
 
