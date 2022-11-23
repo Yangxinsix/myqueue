@@ -23,7 +23,7 @@ from myqueue.config import Configuration
 from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.states import State
 from myqueue.task import Task, create_task
-from myqueue.utils import Lock, cached_property
+from myqueue.utils import Lock, cached_property, normalize_folder
 from myqueue.selection import Selection
 from myqueue.migration import migrate
 
@@ -336,8 +336,9 @@ def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
                 if id == -1:
                     assert queue is not None
                     rows = queue.sql(
-                        'SELECT id, state FROM tasks WHERE name = ?',
-                        [name])
+                        'SELECT id, state FROM tasks '
+                        'WHERE name = ? AND folder = ?',
+                        [dname.name, normalize_folder(task.folder, root)])
                     id, state = max(rows, default=(-1, ''))
                     if id == -1:
                         raise DependencyError(f"Can't find {name}")
