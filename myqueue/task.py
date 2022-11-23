@@ -116,7 +116,7 @@ class Task:
 
         return [str(self.id),
                 str(self.folder) + '/',
-                self.cmd.short_name,
+                self.cmd.name.split('+', 1)[0],
                 ' '.join(self.cmd.args),
                 ','.join(info),
                 str(self.resources),
@@ -190,7 +190,8 @@ class Task:
         return (self.id,
                 folder,
                 self.state.name[0],
-                str(self.dname.relative_to(root)),
+                # str(self.dname.relative_to(root)),
+                self.dname.name,
                 json.dumps(self.cmd.todict()),
                 json.dumps(self.resources.todict()),
                 self.restart,

@@ -145,6 +145,21 @@ def is_inside(path1: Path, path2: Path) -> bool:
     return True
 
 
+def normalize_folder(folder: Path, root: Path) -> str:
+    """Conver folder to string used in SQLite.
+
+    >>> root = Path('/home/user/a/b/')
+    >>> normalize_folder(root / 'c', root)
+    './c/'
+    >>> normalize_folder(root, root)
+    './'
+    """
+    f = str(folder.relative_to(root))
+    if f == '.':
+        return './'
+    return f'./{f}/'
+
+
 def update_readme_and_completion(test: bool = False) -> None:
     """Update README.rst and commands dict.
 

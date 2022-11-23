@@ -2,6 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from myqueue.states import State
+from myqueue.utils import normalize_folder
 
 
 class Selection:
@@ -53,15 +54,13 @@ class Selection:
         if self.folders:
             part = []
             for folder in self.folders:
-                f = str(folder.relative_to(root))
-                if f != '.':
-                    f = './' + f
+                f = normalize_folder(folder, root)
                 if self.recursive:
                     part.append('folder GLOB ?')
-                    args.append(f'{f}/*')
+                    args.append(f'{f}*')
                 else:
                     part.append('folder = ?')
-                    args.append(f'{f}/')
+                    args.append(f)
             parts.append(f'({" OR ".join(part)})')
 
         if self.name:

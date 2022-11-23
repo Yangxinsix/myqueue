@@ -16,7 +16,7 @@ from myqueue.commands import (Command, PythonModule, PythonScript,
 from myqueue.resources import Resources
 from myqueue.states import State
 from myqueue.task import UNSPECIFIED, Task
-from myqueue.utils import chdir
+from myqueue.utils import chdir, normalize_folder
 from myqueue.queue import Queue
 
 DEFAULT_VERBOSITY = 1
@@ -71,10 +71,12 @@ def prune(tasks: Sequence[Task],
     remove: list[int] = []
     count: defaultdict[str, int] = defaultdict(int)
     for task in tasks:
-        name = str(task.dname.relative_to(root))
+        # name = str(task.dname.relative_to(root))
+        name = task.dname.name
+        f = normalize_folder(task.folder, root)
         rows = queue.sql(
-            'SELECT id, state FROM tasks WHERE name = ?',
-            [name])
+            'SELECT id, state FROM tasks WHERE name = ? AND folder = ?',
+            [name, f])
         id, state = max(rows, default=(-1, 'u'))
         if id == -1:
             if task.check_creates_files():
