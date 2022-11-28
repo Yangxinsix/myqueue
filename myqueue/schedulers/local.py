@@ -24,6 +24,8 @@ class LocalScheduler(Scheduler):
                dry_run: bool = False,
                verbose: bool = False) -> int:
         if dry_run:
+            if verbose:
+                print(task)
             return 1
         task.cmd.function = None
         id = self.send('submit', task)

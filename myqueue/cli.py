@@ -566,7 +566,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                         for folder in folders]
 
             submit(queue, newtasks,
-                   max_tasks=args.max_tasks)
+                   max_tasks=args.max_tasks,
+                   verbosity=verbosity)
 
         elif args.command == 'modify':
             from myqueue.modify import modify
