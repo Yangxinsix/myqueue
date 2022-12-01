@@ -68,6 +68,7 @@ def prune(tasks: Sequence[Task],
     """
     root = queue.config.home
     ok: list[Task] = []
+    done: list[Task] = []
     remove: list[int] = []
     count: defaultdict[str, int] = defaultdict(int)
     for task in tasks:
@@ -81,6 +82,7 @@ def prune(tasks: Sequence[Task],
         if id == -1:
             if task.check_creates_files():
                 state = 'd*'
+                done.append(task)
             else:
                 ok.append(task)
         elif force and state in 'FTMC':
@@ -103,7 +105,7 @@ def prune(tasks: Sequence[Task],
     if not force and any(state in 'FTMC' for state in count):
         print('Use --force to submit failed tasks.')
 
-    return ok
+    return ok, done
 
 
 WorkflowFunction = Callable[[], None]

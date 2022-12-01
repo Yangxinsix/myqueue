@@ -222,3 +222,4 @@ def test_creates(mq):
     Path('wf.py').write_text(wf_creates)
     Path('out.txt').write_text('OK\n')
     mq('workflow wf.py')
+    assert mq.wait() == 'd'
