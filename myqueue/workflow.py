@@ -59,7 +59,7 @@ def workflow(args: argparse.Namespace,
 
 def prune(tasks: Sequence[Task],
           queue: Queue,
-          force: bool = False) -> list[Task]:
+          force: bool = False) -> tuple[list[Task], list[Task]]:
     """Only keep tasks that are not already done.
 
     Will also skip tasks in a bad state (unless *force* is True).
