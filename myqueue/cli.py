@@ -577,9 +577,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         elif args.command == 'workflow':
             from myqueue.submitting import submit
             tasks = workflow(args, folders, verbosity)
-            tasks = prune(tasks, queue, args.force)
+            tasks, done = prune(tasks, queue, args.force)
             try:
-                submit(queue, tasks, max_tasks=args.max_tasks)
+                submit(queue, tasks, done=done, max_tasks=args.max_tasks)
             except Exception as ex:
                 raise MQError(ex.args)
 

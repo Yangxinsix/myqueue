@@ -21,6 +21,7 @@ TaskName = Path
 def submit(queue: Queue,
            tasks: Sequence[Task],
            *,
+           done: list[Task] = None,
            max_tasks: int = 1_000_000_000,
            verbosity: int = 1) -> None:
     """Submit tasks to queue.
@@ -31,7 +32,7 @@ def submit(queue: Queue,
         Ignore and remove name.FAILED files.
     """
 
-    sort_out_dependencies(tasks, queue)
+    sort_out_dependencies(tasks, queue, done)
 
     tasks = [task for task in order({task: task.dtasks for task in tasks})
              if task.state == State.undefined]

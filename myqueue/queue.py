@@ -320,11 +320,21 @@ class Queue:
         path.unlink()
 
 
-def sort_out_dependencies(tasks: Sequence[Task], queue: Queue = None) -> None:
+def sort_out_dependencies(tasks: Sequence[Task],
+                          queue: Queue = None,
+                          done: list[Task] = None) -> None:
     """Get dependencies ready for submitting."""
     root = queue.config.home if queue is not None else Path('.').absolute()
-    name_to_task = {str(task.dname.relative_to(root)): task for task in tasks}
+
+    name_to_task = {str(task.dname.relative_to(root)): task
+                    for task in tasks}
+
     name_to_id_and_state: dict[str, tuple[int, str]] = {}
+
+    if done is not None:
+        for task in done:
+            name_to_id_and_state[str(task.dname.relative_to(root))] = (0, 'd')
+
     for task in tasks:
         task.dtasks = []
         deps = []
