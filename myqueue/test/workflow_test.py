@@ -208,3 +208,17 @@ def workflow():
 def test_workflow_repeated_name(mq):
     Path('wf5.py').write_text(wf5)
     mq('workflow wf5.py', error=1)
+
+
+wf_creates = """
+from myqueue.workflow import run
+def workflow():
+    with run(shell='echo', creates=['out.txt']):
+        run(function=print)
+"""
+
+
+def test_creates(mq):
+    Path('wf.py').write_text(wf_creates)
+    Path('out.txt').write_text('OK\n')
+    mq('workflow wf.py')
