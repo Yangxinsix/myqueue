@@ -14,6 +14,12 @@ Next release
 * ...
 
 
+Version 22.11.3
+===============
+
+* Fixed dependency bug (:mr:`128`).
+
+
 Version 22.11.2
 ===============
 

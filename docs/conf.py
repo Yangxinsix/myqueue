@@ -80,7 +80,10 @@ pygments_style = None
 
 extlinks = {'issue':
             ('https://gitlab.com/myqueue/myqueue/-/issues/%s',
-             'issue: #%s')}
+             'issue: #%s'),
+            'mr':
+            ('https://gitlab.com/myqueue/myqueue/-/merge_requests/%s',
+             'MR: !%s')}
 
 # -- Options for HTML output -------------------------------------------------
 
