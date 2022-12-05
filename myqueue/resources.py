@@ -133,7 +133,12 @@ class Resources:
             if res is not None:
                 return res
         else:
-            assert resources == ''
+            if resources != '':
+                url = 'https://myqueue.readthedocs.io/en/latest'
+                raise ValueError(
+                    f'resources={resources!r} can\'t be combined with '
+                    '"cores", "nodename", "processes", "tmax" or "weight". '
+                    f'See {url}/documentation.html#resources')
 
         return Resources(cores, nodename, processes, T(tmax or '10m'), weight)
 
