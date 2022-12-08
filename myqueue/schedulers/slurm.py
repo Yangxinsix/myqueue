@@ -1,7 +1,6 @@
 from __future__ import annotations
 import os
 import subprocess
-import warnings
 from math import ceil
 
 from myqueue.task import Task
@@ -28,18 +27,7 @@ class SLURM(Scheduler):
                   f'--error={name}.%j.err']
 
         extra_args = self.config.extra_args + nodedct.get('extra_args', [])
-        if extra_args:
-            sbatch += extra_args
-
-        features = nodedct.get('features')
-        if features:
-            warnings.warn('Please use extra_args instead of features!')
-            sbatch.append(f'--constraint={features}')
-
-        reservation = nodedct.get('reservation')
-        if reservation:
-            warnings.warn('Please use extra_args instead of reservation!')
-            sbatch.append(f'--reservation={reservation}')
+        sbatch += extra_args
 
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)

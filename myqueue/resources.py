@@ -233,6 +233,8 @@ class Resources:
                 raise ValueError(f'No such node: {self.nodename}')
         else:
             for name, dct in nodelist:
+                if dct.get('special'):
+                    continue
                 if self.cores % dct['cores'] == 0:
                     break
             else:  # no break

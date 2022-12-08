@@ -34,6 +34,12 @@ class Configuration:
         self.home = home or Path.cwd()
         self.user = os.environ.get('USER', 'root')
 
+        for name, dct in self.nodes:
+            if 'features' in dct or 'reservation' in dct:
+                raise ValueError(
+                    '"features" and "reservation" have been deprecated.  '
+                    'Please use "extra_args" instead.')
+
     def __repr__(self) -> str:
         args = ', '.join(f'{name.lstrip("_")}={getattr(self, name)!r}'
                          for name in self.__dict__)
