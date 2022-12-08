@@ -245,7 +245,7 @@ def _main(arguments: list[str] = None) -> int:
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
-            a('-X', '--extra-scheduler-args', action='append',
+            a('-X', '--extra-scheduler-args', action='append', default=[],
               help='Extra arguments for scheudler.  Example: '
               '-X "--gres=gpu:4".  Can be used multiple times.')
 

@@ -129,8 +129,8 @@ Submit: Submit task(s) to queue
 -------------------------------
 
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N]
-                 [--max-tasks MAX_TASKS] [-R RESOURCES] [-w] [-z] [-v] [-q]
-                 [-T]
+                 [--max-tasks MAX_TASKS] [-R RESOURCES] [-w]
+                 [-X EXTRA_SCHEDULER_ARGS] [-z] [-v] [-q] [-T]
                  task [folder ...]
 
 Submit task(s) to queue.
@@ -161,6 +161,9 @@ options:
                         16 cores, 1 process, half an hour. "1:xeon40:5m": 1
                         core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
+  -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
+                        Extra arguments for scheudler. Example: -X "--
+                        gres=gpu:4". Can be used multiple times.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -172,8 +175,9 @@ options:
 Resubmit: Resubmit done, failed or timed-out tasks
 --------------------------------------------------
 
-usage: mq resubmit [-h] [--remove] [-R RESOURCES] [-w] [-s qhrdFCTMaA] [-i ID]
-                   [-n NAME] [-e ERROR] [-z] [-v] [-q] [-T] [-r]
+usage: mq resubmit [-h] [--remove] [-R RESOURCES] [-w]
+                   [-X EXTRA_SCHEDULER_ARGS] [-s qhrdFCTMaA] [-i ID] [-n NAME]
+                   [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder ...]
 
 Resubmit done, failed or timed-out tasks.
@@ -194,6 +198,9 @@ options:
                         16 cores, 1 process, half an hour. "1:xeon40:5m": 1
                         core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
+  -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
+                        Extra arguments for scheudler. Example: -X "--
+                        gres=gpu:4". Can be used multiple times.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",

@@ -64,15 +64,16 @@ commands = {
          '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
     'resubmit':
-        ['--remove', '-R', '--resources', '-w', '--workflow', '-s',
-         '--states', '-i', '--id', '-n', '--name', '-e',
-         '--error', '-z', '--dry-run', '-v', '--verbose', '-q',
-         '--quiet', '-T', '--traceback', '-r', '--recursive'],
+        ['--remove', '-R', '--resources', '-w', '--workflow', '-X',
+         '--extra-scheduler-args', '-s', '--states', '-i',
+         '--id', '-n', '--name', '-e', '--error', '-z',
+         '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
+         '--traceback', '-r', '--recursive'],
     'submit':
         ['-d', '--dependencies', '-n', '--name', '--restart',
          '--max-tasks', '-R', '--resources', '-w', '--workflow',
-         '-z', '--dry-run', '-v', '--verbose', '-q', '--quiet',
-         '-T', '--traceback'],
+         '-X', '--extra-scheduler-args', '-z', '--dry-run', '-v',
+         '--verbose', '-q', '--quiet', '-T', '--traceback'],
     'sync':
         ['-z', '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',
          '--traceback'],
