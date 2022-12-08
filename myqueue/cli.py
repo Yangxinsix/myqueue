@@ -245,6 +245,9 @@ def _main(arguments: list[str] = None) -> int:
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
+            a('-X', '--extra-scheduler-args', action='append',
+              help='Extra arguments for scheudler.  Example: '
+              '-X "--gres=gpu:4".  Can be used multiple times.')
 
         if cmd == 'modify':
             a('-E', '--email', default='u', metavar='STATES',
@@ -495,6 +498,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             start_daemon(config)
         except PermissionError:
             pass
+
+    if args.command in ['submit', 'resubmit']:
+        config.extra_args += args.extra_scheduler_args
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''
