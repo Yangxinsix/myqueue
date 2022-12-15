@@ -11,7 +11,7 @@ Release notes
 Next release
 ============
 
-* Added ``--extra-scheduler-args`` option to :ref:`submit <sumbit>`
+* Added ``--extra-scheduler-args`` option to :ref:`submit <submit>`
   and :ref:`resubmit <resubmit>` commands.
 
 * Added ``special`` flag to node description.

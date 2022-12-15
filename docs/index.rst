@@ -41,12 +41,12 @@ system administrator or database required.
     configuration
     quickstart
     documentation
+    releasenotes
     howitworks
     howto
     cli
     workflows
     api
-    releasenotes
     development
 
 
