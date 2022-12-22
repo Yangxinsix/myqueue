@@ -11,16 +11,18 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 22.12.0
+===============
+
 * Added ``--extra-scheduler-args`` option to :ref:`submit <submit>`
   and :ref:`resubmit <resubmit>` commands.
 
 * Added ``special`` flag to node description.
 
-
-Version 22.11.4
-===============
-
-* Make sure old daemons from older versions stop running (:mr:``).
+* Make sure old daemons from older versions stop running (:mr:`130`).
 
 
 Version 22.11.3
