@@ -17,6 +17,12 @@ Next release
 * Added ``special`` flag to node description.
 
 
+Version 22.11.4
+===============
+
+* Make sure old daemons from older versions stop running (:mr:``).
+
+
 Version 22.11.3
 ===============
 
