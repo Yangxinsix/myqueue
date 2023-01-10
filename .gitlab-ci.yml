@@ -9,7 +9,7 @@ tests:
     - echo "import coverage; coverage.process_startup()" > venv/lib/python3.10/site-packages/cov.pth
     - touch cov.cfg
     - export COVERAGE_PROCESS_START=$PWD/cov.cfg
-    - coverage run -p --source=myqueue -m pytest -v
+    - coverage run -p --source=myqueue -m pytest -v --color=yes
     - coverage combine -a .coverage.*
     - coverage report -i --precision=2 --fail-under=90.8
     - coverage html
