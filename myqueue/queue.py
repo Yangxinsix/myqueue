@@ -348,7 +348,7 @@ def sort_out_dependencies(tasks: Sequence[Task],
                     rows = queue.sql(
                         'SELECT id, state FROM tasks '
                         'WHERE name = ? AND folder = ?',
-                        [dname.name, normalize_folder(task.folder, root)])
+                        [dname.name, normalize_folder(dname.parent, root)])
                     id, state = max(rows, default=(-1, ''))
                     if id == -1:
                         raise DependencyError(f"Can't find {name}")

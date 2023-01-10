@@ -14,6 +14,12 @@ Next release
 * ...
 
 
+Version 23.1.0
+==============
+
+* Fixed a problem with dependencies inside subfolders (:issue:`51`).
+
+
 Version 22.12.0
 ===============
 

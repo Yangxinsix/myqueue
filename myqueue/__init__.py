@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from myqueue.task import Task
 
 
-__version__ = '22.12.1b1'
+__version__ = '23.1.0'
 
 
 def submit(*tasks: Task, verbosity: int = 1, dry_run: bool = False) -> None:
