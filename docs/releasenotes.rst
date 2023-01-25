@@ -11,7 +11,8 @@ Release notes
 Next release
 ============
 
-* ...
+* Fixed broken tab-completion for names and ids: ``mq ls -i <tab>``
+  (:mr:`132`).
 
 
 Version 23.1.0
