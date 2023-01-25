@@ -17,7 +17,7 @@ setup(name='myqueue',
       packages=find_packages(),
       package_data={'myqueue': ['py.typed']},
       entry_points={'console_scripts': ['mq = myqueue.cli:main']},
-      install_requires=['rich', 'networkx'],
+      install_requires=['rich', 'networkx', 'typing_extensions'],
       python_requires='>=3.7',
       classifiers=[
           'Development Status :: 5 - Production/Stable',
