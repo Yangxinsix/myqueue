@@ -10,21 +10,21 @@ Put this in your .bashrc::
 from __future__ import annotations
 import os
 import sys
-from typing import Any, Iterable, Mapping
+from typing import Iterable, Mapping, TYPE_CHECKING
+if TYPE_CHECKING:
+    from myqueue.task import Task
 
 
-def read() -> dict[str, Any]:
+def read() -> list[Task]:
     """Read queue as a dict."""
     from pathlib import Path
-    import json
-    from myqueue.config import find_home_folder
-    home = find_home_folder(Path('.').resolve())
-    path = home / '.myqueue/queue.json'
-    try:
-        dct: dict[str, Any] = json.loads(path.read_text())
-        return dct
-    except Exception:
-        return {}
+    from myqueue.config import Configuration
+    from myqueue.queue import Queue
+    from myqueue.selection import Selection
+
+    config = Configuration.read()
+    with Queue(config, need_lock=False) as queue:
+        return queue.select(Selection(folders=[Path('.').resolve()]))
 
 
 # Beginning of computer generated data:
@@ -104,16 +104,13 @@ def complete(word: str, previous: str, line: str, point: int) -> Iterable[str]:
         return commands[command]
 
     if previous in ['-n', '--name']:
-        dct = read()
-        words = set()
-        for task in dct['tasks']:
-            cmd = task['cmd']
-            words.add((cmd['cmd'] + '+' + '_'.join(cmd['args'])).rstrip('+'))
+        tasks = read()
+        words = [task.cmd.name for task in tasks]
         return words
 
     if previous in ['-i', '--id']:
-        dct = read()
-        return {str(task['id']) for task in dct['tasks']}
+        tasks = read()
+        return {str(task.id) for task in tasks}
 
     if command == 'help':
         return [cmd for cmd in (list(commands) + list(aliases))

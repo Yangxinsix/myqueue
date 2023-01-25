@@ -3,6 +3,8 @@ import json
 import os
 
 from myqueue.complete import complete, main
+from myqueue.queue import Queue
+from myqueue.task import create_task
 
 
 def test_ls():
@@ -47,9 +49,12 @@ def test_read(tmp_path):
     os.chdir(tmp_path)
     mq = tmp_path / '.myqueue'
     mq.mkdir()
-    dct = {'tasks': [{'cmd': {'cmd': 'abc123', 'args': []}, 'id': 117}]}
-    (mq / 'queue.json').write_text(json.dumps(dct))
+    (mq / 'config.py').write_text('config = {"scheduler": "local"}\n')
+    task = create_task('abc123')
+    task.id = 117
+    with Queue() as queue:
+        queue.add(task)
     words = complete('', '-n', 'mq ls -n ', 9)
-    assert words == {'abc123'}
+    assert words == ['abc123']
     words = complete('', '-i', 'mq ls -i ', 9)
     assert words == {'117'}

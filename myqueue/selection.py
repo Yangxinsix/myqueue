@@ -11,7 +11,7 @@ class Selection:
     def __init__(self,
                  ids: set[int] | None = None,
                  name: str | None = None,
-                 states: set[State] = set(),
+                 states: set[State] = None,
                  folders: list[Path] = [],
                  recursive: bool = True,
                  error: str | None = None):
@@ -46,7 +46,7 @@ class Selection:
 
         parts = []
         args = []
-        if len(self.states) < 8:
+        if self.states is not None and len(self.states) < 8:
             q = ', '.join('?' * len(self.states))
             parts.append(f'state IN ({q})')
             args += [state.value for state in self.states]
