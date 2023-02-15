@@ -172,7 +172,7 @@ def _main(arguments: list[str] = None) -> int:
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
 
-        def a(*args, **kwargs):  # type: ignore
+        def a(*args: str, **kwargs: Any) -> None:
             """Wrapper for Parser.add_argument().
 
             Hack to fix argparse's handling of options.  See
