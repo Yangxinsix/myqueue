@@ -5,6 +5,7 @@ import sys
 import textwrap
 from pathlib import Path
 from time import time
+from typing import Any
 
 
 class MQError(Exception):
