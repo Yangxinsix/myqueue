@@ -81,9 +81,12 @@ class Resources:
     def from_string(s: str) -> Resources:
         """Create Resource object from string.
 
-        >>> Resources.from_string('16:1:xeon8:2h')
+        >>> r = Resources.from_string('16:1:xeon8:2h')
         Resources(cores=16, processes=1, tmax=7200, nodename='xeon8')
+        >>> r
         >>> Resources.from_string('16:1m')
+        >>> print(r)
+        ????
         Resources(cores=16, tmax=60)
         >>> r = Resources.from_string('16:1m:25')
         >>> r
