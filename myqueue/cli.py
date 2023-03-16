@@ -247,7 +247,9 @@ def _main(arguments: list[str] = None) -> int:
               help='Write <task-name>.state file when task has finished.')
             a('-X', '--extra-scheduler-args', action='append', default=[],
               help='Extra arguments for scheudler.  Example: '
-              '-X "--gres=gpu:4".  Can be used multiple times.')
+              '-X bla-bla.  For arguments that start with a dash, '
+              'leave out the space: -X--gres=gpu:4 or -X=--gres=gpu:4. '
+              'Can be used multiple times.')
 
         if cmd == 'modify':
             a('-E', '--email', default='u', metavar='STATES',
