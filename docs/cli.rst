@@ -162,8 +162,10 @@ options:
                         core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
-                        Extra arguments for scheudler. Example: -X "--
-                        gres=gpu:4". Can be used multiple times.
+                        Extra arguments for scheudler. Example: -X bla-bla.
+                        For arguments that start with a dash, leave out the
+                        space: -X--gres=gpu:4 or -X=--gres=gpu:4. Can be used
+                        multiple times.
   -z, --dry-run         Show what will happen without doing anything.
   -v, --verbose         More output.
   -q, --quiet           Less output.
@@ -199,8 +201,10 @@ options:
                         core on "xeon40" for 5 minutes.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
-                        Extra arguments for scheudler. Example: -X "--
-                        gres=gpu:4". Can be used multiple times.
+                        Extra arguments for scheudler. Example: -X bla-bla.
+                        For arguments that start with a dash, leave out the
+                        space: -X--gres=gpu:4 or -X=--gres=gpu:4. Can be used
+                        multiple times.
   -s qhrdFCTMaA, --states qhrdFCTMaA
                         Selection of states. First letters of "queued",
                         "hold", "running", "done", "FAILED", "CANCELED",
