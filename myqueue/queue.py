@@ -16,16 +16,16 @@ import sys
 import time
 from pathlib import Path
 from types import TracebackType
-from typing import Iterator, Iterable, Sequence
-from typing_extensions import LiteralString
+from typing import Iterable, Iterator, Sequence
 
 from myqueue.config import Configuration
+from myqueue.migration import migrate
 from myqueue.schedulers import Scheduler, get_scheduler
+from myqueue.selection import Selection
 from myqueue.states import State
 from myqueue.task import Task, create_task
-from myqueue.utils import Lock, cached_property, normalize_folder
-from myqueue.selection import Selection
-from myqueue.migration import migrate
+from myqueue.utils import Lock, cached_property, normalize_folder, plural
+from typing_extensions import LiteralString
 
 VERSION = 11
 
@@ -335,6 +335,7 @@ def sort_out_dependencies(tasks: Sequence[Task],
         for task in done:
             name_to_id_and_state[str(task.dname.relative_to(root))] = (0, 'd')
 
+    skipped = 0
     for task in tasks:
         task.dtasks = []
         deps = []
@@ -360,17 +361,23 @@ def sort_out_dependencies(tasks: Sequence[Task],
                 elif state == 'd':
                     continue
                 else:
-                    raise DependencyError(f'Bad state ({state}): {name}')
+                    task.state = State.CANCELED
+                    skipped += 1
+                    continue
 
             task.dtasks.append(dtask)
             deps.append(dname)
         task.deps = deps
 
+    if skipped:
+        print(f'Skipping {plural(skipped, "task")} '
+              'because of dependency in bad state')
+
 
 def dump_db(path: Path) -> None:
     """Pretty-print content of sqlite3 db file."""
-    from rich.table import Table
     from rich.console import Console
+    from rich.table import Table
     prnt = Console().print
     db = sqlite3.connect(path)
     table = Table(title=str(path))
