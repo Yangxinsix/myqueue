@@ -19,7 +19,7 @@ Version 23.4.0
 
 * Fixed broken tab-completion for names and ids: ``mq ls -i <tab>``
   (:mr:`132`).
-* Failed dependencies would black *everthing* in a workflow.  Should be
+* Failed dependencies would block *everthing* in a workflow.  Should be
   fixed in :mr:`135`.
 
 

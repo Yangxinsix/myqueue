@@ -132,7 +132,7 @@ def create_tasks():
 
 
 def test_workflow_with_failed_job_blocking(mq):
-    """Failefd dependency (t1) for t2 should not block t3."""
+    """Failed dependency (t1) for t2 should not block t3."""
     Path('wf.py').write_text(wf_block)
     mq('workflow wf.py . -t hello')  # submit t1 and t2
     assert mq.wait() == 'FC'
