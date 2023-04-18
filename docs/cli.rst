@@ -277,7 +277,7 @@ Show detailed information about MyQueue or a task.
 Example::
 
     $ mq info  # show information about MyQueue
-    $ mq info 12345  # show information about task with id=12345
+    $ mq info -i 12345  # show information about task with id=12345
 
 folder:
     Show information for queues in this folder and its subfolders. Defaults to current folder.
