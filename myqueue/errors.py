@@ -16,6 +16,7 @@ def parse_stderr(text: str) -> tuple[str, bool]:
     ('-', False)
     """
     lines = text.splitlines()
+    oom = False
     for line in lines[::-1]:
         ll = line.lower()
         if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
@@ -26,13 +27,13 @@ def parse_stderr(text: str) -> tuple[str, bool]:
                    line.startswith('MemoryError') or
                    'oom-kill' in ll or
                    line.endswith('out of memory'))
-            return line, oom
+            break
 
     for line in lines:
         ll = line.lower()
         if 'error' in ll:
-            return line, False
+            return line, oom
     if lines:
-        return lines[-1], False
+        return lines[-1], oom
 
     return '-', False
