@@ -105,7 +105,7 @@ class Resources:
                     processes = int(p)
                 else:
                     nodename = p
-        except ValueError as ex:
+        except (ValueError, KeyError, IndexError) as ex:
             raise ValueError(
                 f'Bad resource string: {s!r}.  See {RESOURCES_URL}') from ex
 
