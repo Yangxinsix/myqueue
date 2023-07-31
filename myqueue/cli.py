@@ -5,6 +5,7 @@ import sys
 import textwrap
 from pathlib import Path
 from time import time
+from typing import Any
 
 
 class MQError(Exception):
@@ -78,7 +79,7 @@ Examples:
 Example:
 
     $ mq info  # show information about MyQueue
-    $ mq info 12345  # show information about task with id=12345
+    $ mq info -i 12345  # show information about task with id=12345
 """),
     ('workflow',
      'Submit tasks from Python script or several scripts matching pattern.',
@@ -172,7 +173,7 @@ def _main(arguments: list[str] = None) -> int:
                                   aliases=[alias for alias in aliases
                                            if aliases[alias] == cmd])
 
-        def a(*args, **kwargs):  # type: ignore
+        def a(*args: str, **kwargs: Any) -> None:
             """Wrapper for Parser.add_argument().
 
             Hack to fix argparse's handling of options.  See
@@ -245,6 +246,11 @@ def _main(arguments: list[str] = None) -> int:
               '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
+            a('-X', '--extra-scheduler-args', action='append', default=[],
+              help='Extra arguments for scheudler.  Example: '
+              '-X bla-bla.  For arguments that start with a dash, '
+              'leave out the space: -X--gres=gpu:4 or -X=--gres=gpu:4. '
+              'Can be used multiple times.')
 
         if cmd == 'modify':
             a('-E', '--email', default='u', metavar='STATES',
@@ -495,6 +501,9 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             start_daemon(config)
         except PermissionError:
             pass
+
+    if args.command in ['submit', 'resubmit']:
+        config.extra_args += args.extra_scheduler_args
 
     if args.command in ['list', 'remove', 'resubmit', 'modify']:
         default = 'qhrdFCTM' if args.command == 'list' else ''

@@ -14,6 +14,32 @@ Next release
 * ...
 
 
+Version 23.4.0
+==============
+
+* Fixed broken tab-completion for names and ids: ``mq ls -i <tab>``
+  (:mr:`132`).
+* Failed dependencies would block *everthing* in a workflow.  Should be
+  fixed in :mr:`135`.
+
+
+Version 23.1.0
+==============
+
+* Fixed a problem with dependencies inside subfolders (:issue:`51`).
+
+
+Version 22.12.0
+===============
+
+* Added ``--extra-scheduler-args`` option to :ref:`submit <submit>`
+  and :ref:`resubmit <resubmit>` commands.
+
+* Added ``special`` flag to node description.
+
+* Make sure old daemons from older versions stop running (:mr:`130`).
+
+
 Version 22.11.3
 ===============
 

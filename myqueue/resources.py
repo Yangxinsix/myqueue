@@ -81,8 +81,11 @@ class Resources:
     def from_string(s: str) -> Resources:
         """Create Resource object from string.
 
-        >>> Resources.from_string('16:1:xeon8:2h')
+        >>> r = Resources.from_string('16:1:xeon8:2h')
+        >>> r
         Resources(cores=16, processes=1, tmax=7200, nodename='xeon8')
+        >>> print(r)
+        16:1:xeon8:2h
         >>> Resources.from_string('16:1m')
         Resources(cores=16, tmax=60)
         >>> r = Resources.from_string('16:1m:25')
@@ -133,16 +136,21 @@ class Resources:
             if res is not None:
                 return res
         else:
-            assert resources == ''
+            if resources != '':
+                url = 'https://myqueue.readthedocs.io/en/latest'
+                raise ValueError(
+                    f'resources={resources!r} can\'t be combined with '
+                    '"cores", "nodename", "processes", "tmax" or "weight". '
+                    f'See {url}/documentation.html#resources')
 
         return Resources(cores, nodename, processes, T(tmax or '10m'), weight)
 
     def __str__(self) -> str:
         s = str(self.cores)
-        if self.nodename:
-            s += ':' + self.nodename
         if self.processes != self.cores:
             s += ':' + str(self.processes)
+        if self.nodename:
+            s += ':' + self.nodename
         s += ':' + seconds_to_short_time_string(self.tmax)
         if self.weight > 0.0:
             s += f':{int(self.weight)}'
@@ -228,6 +236,8 @@ class Resources:
                 raise ValueError(f'No such node: {self.nodename}')
         else:
             for name, dct in nodelist:
+                if dct.get('special'):
+                    continue
                 if self.cores % dct['cores'] == 0:
                     break
             else:  # no break

@@ -121,6 +121,26 @@ def test_workflow_with_failed_job(mq):
     assert mq.wait() == 'Fdd'
 
 
+wf_block = """
+from myqueue.task import task
+def create_tasks():
+    t1 = task('shell:sleep+a')
+    t2 = task('shell:echo+hello', deps=[t1], name='hello')
+    t3 = task('shell:echo+bye')
+    return [t1, t2, t3]
+"""
+
+
+def test_workflow_with_failed_job_blocking(mq):
+    """Failed dependency (t1) for t2 should not block t3."""
+    Path('wf.py').write_text(wf_block)
+    mq('workflow wf.py . -t hello')  # submit t1 and t2
+    assert mq.wait() == 'FC'
+    mq('rm -sC . --force')
+    mq('workflow wf.py .')
+    assert mq.wait() == 'Fd'
+
+
 wf2 = """
 from myqueue.task import task
 def create_tasks(name, n):

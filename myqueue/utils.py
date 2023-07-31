@@ -146,7 +146,7 @@ def is_inside(path1: Path, path2: Path) -> bool:
 
 
 def normalize_folder(folder: Path, root: Path) -> str:
-    """Conver folder to string used in SQLite.
+    """Convert folder to string used in SQLite.
 
     >>> root = Path('/home/user/a/b/')
     >>> normalize_folder(root / 'c', root)
