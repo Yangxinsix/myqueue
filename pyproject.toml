@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "myqueue"
-description = "Simple job queue"
+version = "23.8.0"
+description = "Frontend for SLURM/LSF/PBS"
+
 readme = "README.rst"
 license = {file = "LICENSE"}
 dependencies = ["rich", "networkx", "typing_extensions"]
@@ -17,7 +19,6 @@ classifiers = [
     "Operating System :: Unix",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering"]
-dynamic = ["version"]
 # package_data={'myqueue': ['py.typed']}
 
 [project.optional-dependencies]
@@ -27,9 +28,9 @@ dev = ["pytest"]
 mq = "myqueue.cli:main"
 
 [project.urls]
-homepage = "https://myqueue.readthedocs.io/"
-repository = "https://gitlab.com/myqueue/myqueue/"
+homepage = "https://myqueue.readthedocs.io"
+repository = "https://gitlab.com/myqueue/myqueue"
 changelog = "https://myqueue.readthedocs.io/en/latest/releasenotes.html"
-docs = "https://myqueue.readthedocs.io/"
+docs = "https://myqueue.readthedocs.io"
 issues = "https://gitlab.com/myqueue/myqueue/-/issues"
 matrix = "https://matrix.to/#/#myqueue:matrix.org"
