@@ -41,7 +41,7 @@ ReStructuredText documentation-files with::
 Whenever changes are made to the command-line tool, please update the
 documentation and tab-completion script with::
 
-    $ python3 -m myqueue.utils
+    $ python -m myqueue.utils
 
 
 New release
@@ -49,5 +49,5 @@ New release
 
 ::
 
-    $ python3 setup.py sdist bdist_wheel
+    $ python -m build
     $ twine upload dist/*

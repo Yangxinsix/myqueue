@@ -177,9 +177,9 @@ options:
 Resubmit: Resubmit done, failed or timed-out tasks
 --------------------------------------------------
 
-usage: mq resubmit [-h] [--keep] [-R RESOURCES] [-w]
-                   [-X EXTRA_SCHEDULER_ARGS] [-s qhrdFCTMaA] [-i ID] [-n NAME]
-                   [-e ERROR] [-z] [-v] [-q] [-T] [-r]
+usage: mq resubmit [-h] [--keep] [-R RESOURCES] [-w] [-X EXTRA_SCHEDULER_ARGS]
+                   [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v] [-q]
+                   [-T] [-r]
                    [folder ...]
 
 Resubmit done, failed or timed-out tasks.
