@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 import datetime
-from myqueue import __version__ as version
+import importlib.metadata
 
 project = 'MyQueue'
 copyright = f'2018-{datetime.date.today().year}, J. J. Mortensen'
@@ -31,6 +31,7 @@ author = 'J. J. Mortensen'
 intersphinx_mapping = {'python': ('https://docs.python.org/3.10', None)}
 
 # The full version, including alpha/beta/rc tags
+version = importlib.metadata.version('myqueue')
 release = version
 
 

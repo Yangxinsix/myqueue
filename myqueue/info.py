@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import importlib.metadata
 import json
 import os
-from pathlib import Path
-from typing import Generator, Callable
 from math import inf
-import rich.progress as progress
-from rich.table import Table
-from rich.console import Console
+from pathlib import Path
+from typing import Callable, Generator
 
-from myqueue import __version__
+import rich.progress as progress
+from rich.console import Console
+from rich.table import Table
+
 from myqueue.config import Configuration
 from myqueue.queue import Queue
 from myqueue.states import State
@@ -23,7 +24,8 @@ def info(queue: Queue,
     prnt = Console().print
 
     if id is None:
-        table = Table(title=f'MyQueue-{__version__}')
+        version = importlib.metadata.version('myqueue')
+        table = Table(title=f'MyQueue-{version}')
         table.add_column(style='green')
         table.add_column('Path', style='cyan')
         table.add_row('Code', str(Path(__file__).parent))
