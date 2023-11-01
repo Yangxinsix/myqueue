@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import argparse
+import importlib.metadata
 import os
 import sys
 import textwrap
@@ -358,8 +360,7 @@ def _main(arguments: list[str] = None) -> int:
         f.mkdir()
 
     if args.version:
-        from myqueue import __version__
-        print('Version:', __version__)
+        print('Version:', importlib.metadata.version('myqueue'))
         print('Code:   ', Path(__file__).parent)
         return 0
 
@@ -417,15 +418,15 @@ def _main(arguments: list[str] = None) -> int:
 
 def run(args: argparse.Namespace, is_test: bool) -> None:
     from myqueue.config import Configuration, find_home_folder
-    from myqueue.resources import Resources
-    from myqueue.task import task
-    from myqueue.queue import Queue
-    from myqueue.selection import Selection
-    from myqueue.utils import mqhome
-    from myqueue.workflow import workflow, prune
-    from myqueue.daemon import start_daemon, perform_daemon_action
-    from myqueue.states import State
+    from myqueue.daemon import perform_daemon_action, start_daemon
     from myqueue.pretty import pprint
+    from myqueue.queue import Queue
+    from myqueue.resources import Resources
+    from myqueue.selection import Selection
+    from myqueue.states import State
+    from myqueue.task import task
+    from myqueue.utils import mqhome
+    from myqueue.workflow import prune, workflow
 
     verbosity = 1 - args.quiet + args.verbose
 

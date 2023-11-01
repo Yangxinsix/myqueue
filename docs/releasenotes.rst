@@ -11,7 +11,8 @@ Release notes
 Next release
 ============
 
-* ...
+* Drop support for Python 3.7.
+* Move from ``setup.py`` to ``pyproject.toml``.
 
 
 Version 23.4.0

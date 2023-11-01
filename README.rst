@@ -93,11 +93,14 @@ See more examples of use here:
 Installation
 ============
 
-MyQueue has only one dependency: Python_ version 3.7 or later.
+MyQueue needs Python_ version 3.8 or later.
 
 Install MyQueue from PyPI_ with *pip*::
 
     $ python3 -m pip install myqueue
+
+This will also install the rich_ and networkx_ packages that MyQueue
+depends on.
 
 Enable bash tab-completion for future terminal sessions like this::
 
@@ -109,6 +112,8 @@ Now, configure your system as described
 
 .. _Python: https://python.org/
 .. _PyPI: https://pypi.org/project/myqueue/
+.. _rich: https://pypi.org/project/rich/
+.. _networkx: https://pypi.org/project/networkx/
 
 
 Release notes

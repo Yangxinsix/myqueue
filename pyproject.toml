@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myqueue"
+version = "23.11.0"
+description = "Frontend for SLURM/LSF/PBS"
+
+readme = "README.rst"
+license = {file = "LICENSE"}
+dependencies = ["rich", "networkx", "typing_extensions"]
+requires-python = ">=3.8"
+maintainers = [{name = "Jens Jørgen Mortensen", email = "jjmo@dtu.dk"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering"]
+# package_data={'myqueue': ['py.typed']}
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+mq = "myqueue.cli:main"
+
+[project.urls]
+homepage = "https://myqueue.readthedocs.io"
+repository = "https://gitlab.com/myqueue/myqueue"
+changelog = "https://myqueue.readthedocs.io/en/latest/releasenotes.html"
+docs = "https://myqueue.readthedocs.io"
+issues = "https://gitlab.com/myqueue/myqueue/-/issues"
+matrix = "https://matrix.to/#/#myqueue:matrix.org"
