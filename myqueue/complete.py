@@ -64,7 +64,7 @@ commands = {
          '-q', '--quiet', '-T', '--traceback', '-r',
          '--recursive'],
     'resubmit':
-        ['--remove', '-R', '--resources', '-w', '--workflow', '-X',
+        ['--keep', '-R', '--resources', '-w', '--workflow', '-X',
          '--extra-scheduler-args', '-s', '--states', '-i',
          '--id', '-n', '--name', '-e', '--error', '-z',
          '--dry-run', '-v', '--verbose', '-q', '--quiet', '-T',

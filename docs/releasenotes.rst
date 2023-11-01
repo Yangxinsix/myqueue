@@ -13,6 +13,8 @@ Next release
 
 * Drop support for Python 3.7.
 * Move from ``setup.py`` to ``pyproject.toml``.
+* The :ref:`resubmit <resubmit>` command will now remove the old task.
+  Use ``--keep`` to get the old behavior.
 
 
 Version 23.4.0

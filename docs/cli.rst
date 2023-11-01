@@ -177,7 +177,7 @@ options:
 Resubmit: Resubmit done, failed or timed-out tasks
 --------------------------------------------------
 
-usage: mq resubmit [-h] [--remove] [-R RESOURCES] [-w]
+usage: mq resubmit [-h] [--keep] [-R RESOURCES] [-w]
                    [-X EXTRA_SCHEDULER_ARGS] [-s qhrdFCTMaA] [-i ID] [-n NAME]
                    [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder ...]
@@ -193,7 +193,7 @@ folder:
 
 options:
   -h, --help            show this help message and exit
-  --remove              Remove old tasks.
+  --keep                Do not remove old tasks.
   -R RESOURCES, --resources RESOURCES
                         Examples: "8:1h", 8 cores for 1 hour. Use "m" for
                         minutes, "h" for hours and "d" for days. "16:1:30m":

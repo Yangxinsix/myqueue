@@ -232,8 +232,8 @@ def _main(arguments: list[str] = None) -> int:
               help='Maximum number of tasks to submit.')
 
         if cmd == 'resubmit':
-            a('--remove', action='store_true',
-              help='Remove old tasks.')
+            a('--keep', action='store_true',
+              help='Do not remove old tasks.')
 
         if cmd == 'remove':
             a('-f', '--force', action='store_true',
@@ -562,7 +562,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
             else:
                 resources = None
             resubmit(queue, selection, resources,
-                     remove=args.remove)
+                     remove=not args.keep)
 
         elif args.command == 'submit':
             from myqueue.submitting import submit
