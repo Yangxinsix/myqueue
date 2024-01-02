@@ -11,10 +11,18 @@ Release notes
 Next release
 ============
 
+* ...
+
+
+Version 24.1.0
+==============
+
 * Drop support for Python 3.7.
 * Move from ``setup.py`` to ``pyproject.toml``.
 * The :ref:`resubmit <resubmit>` command will now remove the old task.
   Use ``--keep`` to get the old behavior.
+* Restarted (OOM'ed or timed out) tasks will now be cleared from the queue.
+* Improved parsing or ``.err`` files.
 
 
 Version 23.4.0
