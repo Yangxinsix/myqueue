@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 
 def parse_stderr(text: str) -> tuple[str, bool]:
     r"""Find error message in stderr text and check if it was an OOM error.
@@ -37,3 +40,9 @@ def parse_stderr(text: str) -> tuple[str, bool]:
         return lines[-1], oom
 
     return '-', False
+
+
+if __name__ == '__main__':
+    txt, err = parse_stderr(Path(sys.argv[1]).read_text())
+    print(txt)
+    print('OOM:', err)

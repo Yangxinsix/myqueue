@@ -80,18 +80,18 @@ def test_timeout2(mq):
     mq.wait()
     mq('kick')
     q = mq.wait()
-    if q == 'TCTCTC':
+    if q == 'TC':
         # on slow systems we need another kick:
         mq('kick')
-        q = mq.wait()[2:]
-    assert q == 'TCTCdd'
+        q = mq.wait()
+    assert q == 'dd'
 
 
 def test_oom(mq):
     mq(f'submit "myqueue.test@oom {LOCAL}" --restart 2')
     assert mq.wait() == 'M'
     mq('kick')
-    assert mq.wait() == 'Md'
+    assert mq.wait() == 'd'
 
 
 def test_cancel(mq):
@@ -108,7 +108,7 @@ def test_check_dependency_order(mq):
     assert mq.wait() == 'TC'
     mq('kick -z')
     mq('kick')
-    assert mq.wait() == 'TCdd'
+    assert mq.wait() == 'dd'
 
 
 def test_misc(mq):
