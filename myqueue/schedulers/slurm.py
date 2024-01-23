@@ -55,8 +55,8 @@ class SLURM(Scheduler):
 
         home = self.config.home
         script += (
-            'id=$SLURM_JOB_ID\n'
-            f'mq={home}/.myqueue/slurm-$id\n')
+            'export MYQUEUE_TASK_ID=$SLURM_JOB_ID\n'
+            f'mq={home}/.myqueue/slurm-$MYQUEUE_TASK_ID\n')
 
         script += self.get_venv_activation_line()
 
