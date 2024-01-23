@@ -50,8 +50,8 @@ class LSF(Scheduler):
 
         script = (
             '#!/bin/bash -l\n'
-            'id=$LSB_JOBID\n'
-            f'mq={home}/.myqueue/lsf-$id\n')
+            'export MYQUEUE_TASK_ID=$LSB_JOBID\n'
+            f'mq={home}/.myqueue/lsf-$MYQUEUE_TASK_ID\n')
 
         script += self.get_venv_activation_line()
 

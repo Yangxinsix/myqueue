@@ -61,8 +61,8 @@ class PBS(Scheduler):
 
         script += (
             '#!/bin/bash -l\n'
-            'id=${PBS_JOBID%.*}\n'
-            f'mq={home}/.myqueue/pbs-$id\n'
+            'export MYQUEUE_TASK_ID=${PBS_JOBID%.*}\n'
+            f'mq={home}/.myqueue/pbs-$MYQUEUE_TASK_ID\n'
             f'(touch $mq-0 && cd {task.folder} && {cmd} && touch $mq-1) || '
             'touch $mq-2\n')
 
