@@ -11,7 +11,8 @@ Release notes
 Next release
 ============
 
-* ...
+* The ``MYQUEUE_TASK_ID`` environment variable will now be set to
+  the task ID so that running tasks can inspect it.
 
 
 Version 24.1.0
