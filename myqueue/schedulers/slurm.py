@@ -15,12 +15,15 @@ class SLURM(Scheduler):
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
+        ntasks = task.resources.processes
+        cpus_per_task = task.resources.cores // ntasks
         name = task.cmd.short_name
         sbatch = ['sbatch',
                   f'--partition={nodename}',
                   f'--job-name={name}',
                   f'--time={ceil(task.resources.tmax / 60)}',
-                  f'--ntasks={task.resources.cores}',
+                  f'--ntasks={ntasks}',
+                  f'--cpus-per-task={cpus_per_task}',
                   f'--nodes={nodes}',
                   f'--chdir={task.folder}',
                   f'--output={name}.%j.out',
