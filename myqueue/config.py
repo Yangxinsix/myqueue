@@ -12,7 +12,9 @@ from typing import Any
 class Configuration:
     def __init__(self,
                  scheduler: str,
+                 *,
                  nodes: list[tuple[str, dict[str, Any]]] = None,
+                 serial_python: str = 'python3',
                  parallel_python: str = 'python3',
                  mpiexec: str = 'mpiexec',
                  extra_args: list[str] = None,
@@ -25,6 +27,7 @@ class Configuration:
         """
         self.scheduler = scheduler
         self.nodes = nodes or []
+        self.serial_python = serial_python
         self.parallel_python = parallel_python
         self.mpiexec = mpiexec
         self.extra_args = extra_args or []
