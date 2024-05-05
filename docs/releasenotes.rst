@@ -11,6 +11,8 @@ Release notes
 Next release
 ============
 
+* SLURM jobs will now be submitted with ``--cpus-per-task`` set to the correct
+  value.
 * The ``MYQUEUE_TASK_ID`` environment variable will now be set to
   the task ID so that running tasks can inspect it.
 
