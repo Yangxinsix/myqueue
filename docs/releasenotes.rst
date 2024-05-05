@@ -15,6 +15,7 @@ Next release
   value.
 * The ``MYQUEUE_TASK_ID`` environment variable will now be set to
   the task ID so that running tasks can inspect it.
+* New configuration variable for :ref:`serial_python`.
 
 
 Version 24.1.0

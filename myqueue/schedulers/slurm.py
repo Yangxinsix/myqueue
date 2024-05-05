@@ -47,6 +47,8 @@ class SLURM(Scheduler):
                 mpiexec += ' ' + nodedct['mpiargs']
             cmd = mpiexec + ' ' + cmd.replace('python3',
                                               self.config.parallel_python)
+        else:
+            cmd = cmd.replace('python3', self.config.serial_python)
 
         # Use bash for the script
         script = '#!/bin/bash -l\n'

@@ -50,6 +50,10 @@ The configuration file uses Python syntax to define a dictionary called
      - :ref:`parallel_python`
      - ``str``
      - ``'python3'``
+   * - ``serial_python``
+     - :ref:`serial_python`
+     - ``str``
+     - ``'python3'``
    * - ``extra_args``
      - :ref:`extra_args`
      - ``list[str]``
@@ -184,6 +188,16 @@ For MPI4PY_, you don't need an MPI-enabled interpreter.
 .. _MPI4PY: https://mpi4py.readthedocs.io/en/stable/index.html
 .. _ASAP: https://wiki.fysik.dtu.dk/asap
 .. _GPAW: https://wiki.fysik.dtu.dk/gpaw
+
+
+.. _serial_python:
+
+Serial Python interpreter
+=========================
+
+By defaul, ``python3`` is used as the Python interpreter for serial jobs.
+Use the ``serial_python`` configuration variable if you want to set it to
+something else.
 
 
 .. _extra_args:
