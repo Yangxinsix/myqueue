@@ -133,15 +133,15 @@ Resources
 
 A resource specification has the form::
 
-    cores[:nodename][:processes]:tmax[:weight]
+    cores[:processes][:nodename]:tmax[:weight]
 
 * ``cores``: Number of cores to reserve.
 
-* ``nodename``: Node-name
-  (defaults to best match in :ref:`the list of node-types <nodes>`).
-
 * ``processes``: Number of MPI processes to start
   (defaults to number of cores).
+
+* ``nodename``: Node-name
+  (defaults to best match in :ref:`the list of node-types <nodes>`).
 
 * ``tmax``: Maximum time (use *s*, *m*, *h* and *d* for seconds, minutes,
   hours and days respectively).

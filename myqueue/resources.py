@@ -71,6 +71,10 @@ class Resources:
         if processes == 0:
             self.processes = self.cores
         else:
+            if processes > self.cores:
+                raise ValueError(
+                    'Bad resource string: Number of processes '
+                    f'bigger than number of cores!  See {RESOURCES_URL}')
             self.processes = processes
 
     def set_default_weight(self, weight: float) -> None:

@@ -241,11 +241,18 @@ def _main(arguments: list[str] = None) -> int:
 
         if cmd in ['resubmit', 'submit']:
             a('-R', '--resources',
-              help='Examples: "8:1h", 8 cores for 1 hour. '
+              metavar='c[:p][:n]:t[:w]',
+              help='Where c=cores, p=processes, n=nodename, t=tmax and '
+              'w=weight.  Number of cores and tmax must always be specified. '
+              'Examples: "8:1h", 8 cores for 1 hour. '
               'Use "m" for minutes, '
               '"h" for hours and "d" for days. '
               '"16:1:30m": 16 cores, 1 process, half an hour. '
-              '"1:xeon40:5m":  1 core on "xeon40" for 5 minutes.')
+              '"40:xeon40:5m": 40 cores on "xeon40" for 5 minutes. '
+              '"40:1:xeon40:5m": 40 cores and 1 process on "xeon40" '
+              'for 5 minutes. '
+              '"40:1:xeon40:5m:0.5": same as previous, but with a weight '
+              'of 0.5.')
             a('-w', '--workflow', action='store_true',
               help='Write <task-name>.state file when task has finished.')
             a('-X', '--extra-scheduler-args', action='append', default=[],
