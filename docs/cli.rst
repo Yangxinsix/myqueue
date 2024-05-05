@@ -129,7 +129,7 @@ Submit: Submit task(s) to queue
 -------------------------------
 
 usage: mq submit [-h] [-d DEPENDENCIES] [-n NAME] [--restart N]
-                 [--max-tasks MAX_TASKS] [-R RESOURCES] [-w]
+                 [--max-tasks MAX_TASKS] [-R c[:p][:n]:t[:w]] [-w]
                  [-X EXTRA_SCHEDULER_ARGS] [-z] [-v] [-q] [-T]
                  task [folder ...]
 
@@ -155,11 +155,16 @@ options:
                         number of nodes for a task that runs out of memory.
   --max-tasks MAX_TASKS
                         Maximum number of tasks to submit.
-  -R RESOURCES, --resources RESOURCES
-                        Examples: "8:1h", 8 cores for 1 hour. Use "m" for
-                        minutes, "h" for hours and "d" for days. "16:1:30m":
-                        16 cores, 1 process, half an hour. "1:xeon40:5m": 1
-                        core on "xeon40" for 5 minutes.
+  -R c[:p][:n]:t[:w], --resources c[:p][:n]:t[:w]
+                        Where c=cores, p=processes, n=nodename, t=tmax and
+                        w=weight. Number of cores and tmax must always be
+                        specified. Examples: "8:1h", 8 cores for 1 hour. Use
+                        "m" for minutes, "h" for hours and "d" for days.
+                        "16:1:30m": 16 cores, 1 process, half an hour.
+                        "40:xeon40:5m": 40 cores on "xeon40" for 5 minutes.
+                        "40:1:xeon40:5m": 40 cores and 1 process on "xeon40"
+                        for 5 minutes. "40:1:xeon40:5m:0.5": same as previous,
+                        but with a weight of 0.5.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
                         Extra arguments for scheudler. Example: -X bla-bla.
@@ -177,9 +182,9 @@ options:
 Resubmit: Resubmit done, failed or timed-out tasks
 --------------------------------------------------
 
-usage: mq resubmit [-h] [--keep] [-R RESOURCES] [-w] [-X EXTRA_SCHEDULER_ARGS]
-                   [-s qhrdFCTMaA] [-i ID] [-n NAME] [-e ERROR] [-z] [-v] [-q]
-                   [-T] [-r]
+usage: mq resubmit [-h] [--keep] [-R c[:p][:n]:t[:w]] [-w]
+                   [-X EXTRA_SCHEDULER_ARGS] [-s qhrdFCTMaA] [-i ID] [-n NAME]
+                   [-e ERROR] [-z] [-v] [-q] [-T] [-r]
                    [folder ...]
 
 Resubmit done, failed or timed-out tasks.
@@ -194,11 +199,16 @@ folder:
 options:
   -h, --help            show this help message and exit
   --keep                Do not remove old tasks.
-  -R RESOURCES, --resources RESOURCES
-                        Examples: "8:1h", 8 cores for 1 hour. Use "m" for
-                        minutes, "h" for hours and "d" for days. "16:1:30m":
-                        16 cores, 1 process, half an hour. "1:xeon40:5m": 1
-                        core on "xeon40" for 5 minutes.
+  -R c[:p][:n]:t[:w], --resources c[:p][:n]:t[:w]
+                        Where c=cores, p=processes, n=nodename, t=tmax and
+                        w=weight. Number of cores and tmax must always be
+                        specified. Examples: "8:1h", 8 cores for 1 hour. Use
+                        "m" for minutes, "h" for hours and "d" for days.
+                        "16:1:30m": 16 cores, 1 process, half an hour.
+                        "40:xeon40:5m": 40 cores on "xeon40" for 5 minutes.
+                        "40:1:xeon40:5m": 40 cores and 1 process on "xeon40"
+                        for 5 minutes. "40:1:xeon40:5m:0.5": same as previous,
+                        but with a weight of 0.5.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
                         Extra arguments for scheudler. Example: -X bla-bla.
