@@ -10,8 +10,11 @@ script describes the tasks, their requirements and dependencies.
 
 Example from real life:
 
-* `Workflow for C2DB project
-  <https://cmr.fysik.dtu.dk/c2db/c2db.html#workflow>`__
+* Workflow for testing a `GPAW exercise
+  <https://wiki.fysik.dtu.dk/gpaw/summerschools/summerschool22/
+  catalysis/catalysis.html>`__:
+  `agts.py <https://gitlab.com/gpaw/gpaw/-/blob/master/doc/summerschools/
+  summerschool22/catalysis/agts.py>`__
 
 
 Simple example
