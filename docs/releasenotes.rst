@@ -14,6 +14,13 @@ Next release
 * ...
 
 
+Version 24.5.1
+==============
+
+* Fixed a problem with multinode jobs with 1 process
+  (:issue:`58`, :mr:`144`).
+
+
 Version 24.5.0
 ==============
 

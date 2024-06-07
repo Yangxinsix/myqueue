@@ -15,8 +15,25 @@ class SLURM(Scheduler):
         nodelist = self.config.nodes
         nodes, nodename, nodedct = task.resources.select(nodelist)
 
-        ntasks = task.resources.processes
-        cpus_per_task = task.resources.cores // ntasks
+        env = []
+
+        cmd = str(task.cmd)
+
+        if task.resources.processes == 1:
+            cmd = cmd.replace('python3', self.config.serial_python)
+            ntasks = task.resources.cores
+            cpus_per_task = 1
+        else:
+            if 'OMP_NUM_THREADS' not in os.environ:
+                env.append(('OMP_NUM_THREADS', '1'))
+            mpiexec = self.config.mpiexec
+            if 'mpiargs' in nodedct:
+                mpiexec += ' ' + nodedct['mpiargs']
+            cmd = mpiexec + ' ' + cmd.replace('python3',
+                                              self.config.parallel_python)
+            ntasks = task.resources.processes
+            cpus_per_task = task.resources.cores // ntasks
+
         name = task.cmd.short_name
         sbatch = ['sbatch',
                   f'--partition={nodename}',
@@ -35,20 +52,6 @@ class SLURM(Scheduler):
         if task.dtasks:
             ids = ':'.join(str(tsk.id) for tsk in task.dtasks)
             sbatch.append(f'--dependency=afterok:{ids}')
-
-        env = []
-
-        cmd = str(task.cmd)
-        if task.resources.processes > 1:
-            if 'OMP_NUM_THREADS' not in os.environ:
-                env.append(('OMP_NUM_THREADS', '1'))
-            mpiexec = self.config.mpiexec
-            if 'mpiargs' in nodedct:
-                mpiexec += ' ' + nodedct['mpiargs']
-            cmd = mpiexec + ' ' + cmd.replace('python3',
-                                              self.config.parallel_python)
-        else:
-            cmd = cmd.replace('python3', self.config.serial_python)
 
         # Use bash for the script
         script = '#!/bin/bash -l\n'
