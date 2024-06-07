@@ -93,10 +93,13 @@ def pprint(tasks: list[Task],
 
     try:
         N = os.get_terminal_size().columns
-        cut = max(0, N - sum(L + 1 for L, c in zip(lengths, columns)
-                             if c != 'e'))
     except OSError:
-        cut = 999999
+        pass
+    else:
+        n = sum(lengths) + len(lengths)
+        if n > N:
+            lengths = fit_to_termial_size(
+                N, lines, {c: L for c, L in zip(columns, lengths)})
 
     use_color = sys.stdout.isatty() and 'MYQUEUE_TESTING' not in os.environ
 
@@ -108,9 +111,7 @@ def pprint(tasks: list[Task],
         for i, words in enumerate(lines):
             words2 = []
             for word, c, L in zip(words, columns, lengths):
-                if c == 'e':
-                    word = word[:cut]
-                elif c in 'At':
+                if c in 'At':
                     word = word.rjust(L)
                 else:
                     word = word.ljust(L)
@@ -129,3 +130,44 @@ def pprint(tasks: list[Task],
         count['total'] = len(tasks)
         print(', '.join(f'{colored(state) if use_color else state}: {n}'
                         for state, n in count.items()))
+
+
+def fit_to_termial_size(N: int,
+                        lines: list[list[str]],
+                        lengths: dict[str, int]
+                        ) -> list[int]:
+    n = sum(lengths.values()) + len(lengths)
+    ne = lengths.get('e', 0)
+    if ne > 20:
+        for i, c in enumerate(lengths):
+            if c == 'e':
+                break
+        for words in lines:
+            word = words[i]
+            if len(word) > 20:
+                words[i] = word[:19] + '…'
+        lengths['e'] = 20
+        n -= ne - 20
+    if n > N:
+        m = sum(L for c, L in lengths.items() if c != 'e' and L > 10)
+        new_lengths = []
+        for c, L in lengths.items():
+            if c != 'e' and L > 10:
+                L = max(10, int(L / m * (N - n)))
+                lengths[c] = L
+            else:
+                L = 0
+            new_lengths.append(L)
+        new_lengths
+        for words in lines:
+            words[:] = [cut(word, L) for word, L in zip(words, new_lengths)]
+
+    return list(lengths.values())
+
+
+def cut(word, L):
+    if L and len(word) > L:
+        l1 = L // 2
+        l2 = L - l1 - 1
+        return word[:l1] + '…' + word[-l2:]
+    return word
