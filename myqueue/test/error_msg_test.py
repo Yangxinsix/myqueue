@@ -29,7 +29,7 @@ Some of the step tasks have been OOM Killed.
 err3 = """\
 slurmstepd: error: _get_joules_task: can't get info from slurmd
 Traceback (most recent call last):
-  File "/home/niflheim/jensj/venv2/gpaw/doc/tutorialsexercises/magnetic/iron/../../electronic/dos/pdos.py", line 10, in <module>
+  File "/home/.../iron/../../electronic/dos/pdos.py", line 10, in <module>
     energies, ldos = calc.get_orbital_ldos(a=0, spin=0, angular=c, width=0.4)
                      ^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'ASECalculator' object has no attribute 'get_orbital_ldos'
