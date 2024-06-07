@@ -34,6 +34,9 @@ def parse_stderr(text: str) -> tuple[str, bool]:
             break
 
     for line in lines:
+        if 'Error:' in line:
+            return line, oom
+    for line in lines:
         ll = line.lower()
         if 'error' in ll:
             return line, oom
