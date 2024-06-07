@@ -136,6 +136,14 @@ def fit_to_termial_size(N: int,
                         lines: list[list[str]],
                         lengths: dict[str, int]
                         ) -> list[int]:
+    """Reduce width of columns to fit inside N characters.
+
+    >>> lines = [['0123456789abcdef', '0123456789']]
+    >>> fit_to_termial_size(20, lines, {'a': 16, 'b': 10})
+    [10, 10]
+    >>> lines
+    [['01234…cdef', '0123456789']]
+    """
     n = sum(lengths.values()) + len(lengths)
     ne = lengths.get('e', 0)
     if ne > 20:
@@ -166,6 +174,11 @@ def fit_to_termial_size(N: int,
 
 
 def cut(word, L):
+    """Cut string to length L.
+
+    >>> cut('123456789', 5)
+    '12…89'
+    """
     if L and len(word) > L:
         l1 = L // 2
         l2 = L - l1 - 1
