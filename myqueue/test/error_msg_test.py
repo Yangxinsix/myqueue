@@ -1,6 +1,7 @@
+import pytest
 from myqueue.errors import parse_stderr
 
-txt = """
+err1 = """
 L00: Traceback (most recent call last):
 ...
 L17: ModuleNotFoundError: No module named 'gpaw.bz_tools'
@@ -12,8 +13,25 @@ e>
 [x069] Set MCA ... "orte_base_help_aggregate" to 0 to see all help / error msg
 """
 
+err2 = """\
+-------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpiexec noticed that process rank 73 with PID 4058 on node a042 exited on \
+signal 9 (Killed).
+--------------------------------------------------------------------------
+slurmstepd: error: Detected 3 oom_kill events in StepId=7351576.batch. \
+Some of the step tasks have been OOM Killed.
+"""
 
-def test_niflheim_error():
-    err, oom = parse_stderr(txt)
-    assert not oom
-    assert err == "L17: ModuleNotFoundError: No module named 'gpaw.bz_tools'"
+
+@pytest.mark.parametrize(
+    'err, line, oom',
+    [(err1, 'L17: ModuleNotFoundError:', False),
+     (err2, 'slurmstepd: error: Detected 3 oom_kill events', True)])
+def test_niflheim_error(err, line, oom):
+    line1, oom1 = parse_stderr(err)
+    assert oom1 == oom
+    assert line1.startswith(line)

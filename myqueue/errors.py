@@ -23,12 +23,13 @@ def parse_stderr(text: str) -> tuple[str, bool]:
     for line in lines[::-1]:
         ll = line.lower()
         if any(x in ll for x in ['error:', 'memoryerror', 'malloc',
-                                 'memory limit', 'oom-kill',
+                                 'memory limit', 'oom-kill', 'oom_kill',
                                  'out of memory', 'assertionerror']):
             oom = (ll.endswith('memory limit at some point.') or
                    'malloc' in ll or
                    line.startswith('MemoryError') or
                    'oom-kill' in ll or
+                   'oom_kill' in ll or
                    line.endswith('out of memory'))
             break
 
