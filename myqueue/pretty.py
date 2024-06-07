@@ -134,46 +134,34 @@ def pprint(tasks: list[Task],
 
 def fit_to_termial_size(N: int,
                         lines: list[list[str]],
-                        lengths: dict[str, int]
+                        widths: list[int],
                         ) -> list[int]:
     """Reduce width of columns to fit inside N characters.
 
     >>> lines = [['0123456789abcdef', '0123456789']]
-    >>> fit_to_termial_size(20, lines, {'a': 16, 'b': 10})
+    >>> fit_to_termial_size(20, lines)
     [10, 10]
     >>> lines
     [['01234…cdef', '0123456789']]
     """
-    n = sum(lengths.values()) + len(lengths)
-    ne = lengths.get('e', 0)
-    if ne > 20:
-        for i, c in enumerate(lengths):
-            if c == 'e':
-                break
-        for words in lines:
-            word = words[i]
-            if len(word) > 20:
-                words[i] = word[:19] + '…'
-        lengths['e'] = 20
-        n -= ne - 20
-    if n > N:
-        m = sum(L for c, L in lengths.items() if c != 'e' and L > 10)
-        new_lengths = []
-        for c, L in lengths.items():
-            if c != 'e' and L > 10:
-                L = max(10, int(L / m * (N - n)))
+    w = sum(widths) + len(widths)
+    if w > N:
+        m = sum(L for L in widths if L > 20)
+        cutoffs = []
+        for L in lengths:
+            if L > 20:
+                L = max(20, int(L / m * (w - N)))
                 lengths[c] = L
             else:
                 L = 0
             new_lengths.append(L)
-        new_lengths
         for words in lines:
             words[:] = [cut(word, L) for word, L in zip(words, new_lengths)]
 
     return list(lengths.values())
 
 
-def cut(word, L):
+def cut(word: str, L: int) -> str:
     """Cut string to length L.
 
     >>> cut('123456789', 5)
