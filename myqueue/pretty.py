@@ -139,7 +139,7 @@ def fit_to_termial_size(N: int,
     >>> lines = [['0123456789abcdef', '0123456789']]
     >>> fit_to_termial_size(20, lines, [16, 10])
     >>> lines
-    [['01234…cdef', '0123456789']]
+    [['012345…bcdef', '0123456789']]
     """
     L0 = 12
     w = sum(widths) + len(widths)
