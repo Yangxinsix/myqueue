@@ -98,8 +98,7 @@ def pprint(tasks: list[Task],
     else:
         n = sum(lengths) + len(lengths)
         if n > N:
-            lengths = fit_to_termial_size(
-                N, lines, {c: L for c, L in zip(columns, lengths)})
+            fit_to_termial_size(N, lines, lengths)
 
     use_color = sys.stdout.isatty() and 'MYQUEUE_TESTING' not in os.environ
 
@@ -134,31 +133,25 @@ def pprint(tasks: list[Task],
 
 def fit_to_termial_size(N: int,
                         lines: list[list[str]],
-                        widths: list[int],
-                        ) -> list[int]:
+                        widths: list[int]) -> None:
     """Reduce width of columns to fit inside N characters.
 
     >>> lines = [['0123456789abcdef', '0123456789']]
-    >>> fit_to_termial_size(20, lines)
-    [10, 10]
+    >>> fit_to_termial_size(20, lines, [16, 10])
     >>> lines
     [['01234…cdef', '0123456789']]
     """
+    L0 = 12
     w = sum(widths) + len(widths)
     if w > N:
-        m = sum(L for L in widths if L > 20)
-        cutoffs = []
-        for L in lengths:
-            if L > 20:
-                L = max(20, int(L / m * (w - N)))
-                lengths[c] = L
-            else:
-                L = 0
-            new_lengths.append(L)
-        for words in lines:
-            words[:] = [cut(word, L) for word, L in zip(words, new_lengths)]
-
-    return list(lengths.values())
+        m = sum(L + 1 for L in widths if L > L0)
+        x = (N - w + m) / m
+        for i, L in enumerate(widths):
+            if L > L0:
+                L = max(L0, int(x * L))
+                widths[i] = L
+                for words in lines:
+                    words[i] = cut(words[i], L)
 
 
 def cut(word: str, L: int) -> str:
@@ -167,7 +160,7 @@ def cut(word: str, L: int) -> str:
     >>> cut('123456789', 5)
     '12…89'
     """
-    if L and len(word) > L:
+    if len(word) > L:
         l1 = L // 2
         l2 = L - l1 - 1
         return word[:l1] + '…' + word[-l2:]
