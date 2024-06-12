@@ -92,7 +92,7 @@ def pprint(tasks: list[Task],
                    for length, title in zip(lengths, lines[0])]
 
     try:
-        N = os.get_terminal_size().columns
+        N = os.get_terminal_size().columns - 1
     except OSError:
         pass
     else:
@@ -144,16 +144,17 @@ def fit_to_termial_size(N: int,
     L0 = 12
     w = sum(widths) + len(widths)
     if w > N:
-        m = sum(L + 1 for L in widths if L > L0)
-        if m == 0:
-            return
-        x = (N - w + m) / m
         for i, L in enumerate(widths):
             if L > L0:
-                L = max(L0, int(x * L))
-                widths[i] = L
+                m = sum(L + 1 for L in widths[i:] if L > L0)
+                if m == 0:
+                    return
+                x = (N - w + m) / m
+                Lnew = max(L0, int(x * (L + 1)) - 1)
+                w -= L - Lnew
+                widths[i] = Lnew
                 for words in lines:
-                    words[i] = cut(words[i], L)
+                    words[i] = cut(words[i], Lnew)
 
 
 def cut(word: str, L: int) -> str:
