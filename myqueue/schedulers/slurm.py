@@ -34,6 +34,9 @@ class SLURM(Scheduler):
             ntasks = task.resources.processes
             cpus_per_task = task.resources.cores // ntasks
 
+        if not os.access(task.folder, os.W_OK | os.X_OK):
+            raise IOError(f'{task.folder} folder not writeable!')
+
         name = task.cmd.short_name
         sbatch = ['sbatch',
                   f'--partition={nodename}',
