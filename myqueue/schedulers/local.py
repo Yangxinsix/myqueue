@@ -1,15 +1,17 @@
 from __future__ import annotations
-import asyncio
+
 import pickle
 import socket
+import subprocess
+import threading
 from functools import partial
 from typing import Any
 
-from myqueue.schedulers import Scheduler
-from myqueue.task import Task
 from myqueue.config import Configuration
-from myqueue.states import State
 from myqueue.queue import Queue
+from myqueue.schedulers import Scheduler
+from myqueue.states import State
+from myqueue.task import Task
 
 
 class LocalSchedulerError(Exception):
@@ -84,84 +86,51 @@ class Server:
             self.next_id = 1 + maxid
 
         self.tasks: dict[int, Task] = {}
-        self.processes: dict[int, asyncio.subprocess.Process] = {}
-        self.aiotasks: dict[int, asyncio.Task] = {}
+        self.running: dict[int, Job] = {}
         self.folder = self.config.home / '.myqueue'
 
-    def start(self) -> None:
+    def run(self) -> None:
         """Start server and wait for cammands."""
-        try:
-            asyncio.run(self._start())
-        except asyncio.exceptions.CancelledError:
-            pass
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', self.port))
+            s.listen(1)
+            conn, addr = s.accept()
+            with conn:
+                print('Connected by', addr)
+                while True:
+                    data = conn.recv(1024)
+                    cmd, *args = pickle.loads(data)
+                    print('COMMAND:', cmd, *args)
+                    if cmd == 'stop':
+                        break
+                    result = getattr(self, cmd)(args)
+                    conn.sendall(pickle.dumps(('ok', result)))
+                    self.kick()
 
-    async def _start(self) -> None:
-        for _ in range(5):
-            try:
-                self.server = await asyncio.start_server(
-                    self.recv, '127.0.0.1', self.port)
-            except OSError:
-                self.port -= 1
-            else:
-                break
-        else:  # no break
-            raise OSError('Could not find unused port!')
+    def submit(self, task):
+        task.id = self.next_id
+        task.state = State.queued
+        print([d.id for d in task.dtasks])
+        assert all(t.id in self.tasks for t in task.dtasks)
+        task.deps = [t.dname for t in task.dtasks]
+        self.tasks[task.id] = task
+        self.next_id += 1
+        return task.id
 
-        print('Port:', self.port)
+    def list(self):
+        return list(self.tasks)
 
-        async with self.server:  # type: ignore
-            await self.server.serve_forever()
-            await self.server.wait_closed()
-
-    async def recv(self, reader: Any, writer: Any) -> None:
-        """Recieve command from client."""
-        data = await reader.read(4096)
-        cmd, *args = pickle.loads(data)
-        print('COMMAND:', cmd, *args, [(task.id,
-                                        [d.id for d in task.dtasks])
-                                       for task in self.tasks.values()])
-        result: Any
-        if cmd == 'stop':
-            for aiotask in self.aiotasks.values():
-                await aiotask
-            self.server.close()
-            print('BYE')
-            return
-        elif cmd == 'submit':
-            task = args[0]
-            task.id = self.next_id
-            task.state = State.queued
-            print([d.id for d in task.dtasks])
-            if all(t.id in self.tasks for t in task.dtasks):
-                task.deps = [t.dname for t in task.dtasks]
-                self.tasks[task.id] = task
-            self.next_id += 1
-            result = task.id
-        elif cmd == 'list':
-            result = list(self.tasks)
-        elif cmd == 'cancel':
-            id = args[0]
-            if id in self.processes:
-                self.terminate(id)
-            elif id in self.tasks:
-                task = self.tasks[id]
-                task.state = State.CANCELED
-                self.cancel_dependents(task)
-            result = None
-        else:
-            1 / 0
-        writer.write(pickle.dumps(('ok', result)))
-        await writer.drain()
-        writer.close()
-        self.kick()
-        print('JOBS:', list(self.tasks))
+    def cancel(self, id):
+        if id in self.processes:
+            self.terminate(id)
+        elif id in self.tasks:
+            task = self.tasks[id]
+            task.state = State.CANCELED
+            self.cancel_dependents(task)
+        return None
 
     def kick(self) -> None:
         """Check if a new task should be started."""
-        self.aiotasks = {id: aiotask
-                         for id, aiotask in self.aiotasks.items()
-                         if not aiotask.done()}
-
         for task in self.tasks.values():
             if task.state == State.running:
                 return
@@ -173,11 +142,11 @@ class Server:
             return
 
         print('START', task.id)
-        aiotask = asyncio.create_task(self.run(task))
+        self.running[task.id] = self.start(task))
         self.aiotasks[task.id] = aiotask
         # aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
 
-    async def run(self, task: Task) -> None:
+    def start(self, task: Task) -> None:
         """Run a task."""
         out = f'{task.cmd.short_name}.{task.id}.out'
         err = f'{task.cmd.short_name}.{task.id}.err'
@@ -190,8 +159,15 @@ class Server:
                                         self.config.parallel_python)
         cmd = f'{cmd} 2> {err} > {out}'
 
-        proc = await asyncio.create_subprocess_shell(
-            cmd, cwd=task.folder)
+        proc = subprocess.Popen(cmd, shell=True, cwd=task.folder)
+
+        x = p.communicate(timeout=1)
+    print(x)
+    t = threading.Thread(target=f)
+    t.start()
+    print(P)
+    t.join()
+    print(P)
 
         self.processes[task.id] = proc
 
@@ -245,5 +221,10 @@ class Server:
             self.tasks[id].state = state
 
 
+
+class Job:
+    ...
+
+
 if __name__ == '__main__':
-    asyncio.run(Server(Configuration.read())._start())
+    Server(Configuration.read()).run()
