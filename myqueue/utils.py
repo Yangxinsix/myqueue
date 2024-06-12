@@ -15,20 +15,6 @@ from typing import IO, Any, Generator
 
 from myqueue.config import Configuration
 
-try:
-    from functools import cached_property
-except ImportError:
-    def cached_property(method):  # type: ignore
-        """Quick'n'dirty implementation of cached_property coming in 3.8."""
-        name = f'__{method.__name__}'
-
-        def new_method(self):  # type: ignore
-            if not hasattr(self, name):
-                setattr(self, name, method(self))
-            return getattr(self, name)
-
-        return property(new_method)
-
 
 def mqhome() -> Path:
     """Don't use "~/" when testing."""

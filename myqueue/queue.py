@@ -14,9 +14,12 @@ from __future__ import annotations
 import sqlite3
 import sys
 import time
+from functools import cached_property
 from pathlib import Path
 from types import TracebackType
 from typing import Iterable, Iterator, Sequence
+
+from typing_extensions import LiteralString
 
 from myqueue.config import Configuration
 from myqueue.migration import migrate
@@ -24,8 +27,7 @@ from myqueue.schedulers import Scheduler, get_scheduler
 from myqueue.selection import Selection
 from myqueue.states import State
 from myqueue.task import Task, create_task
-from myqueue.utils import Lock, cached_property, normalize_folder, plural
-from typing_extensions import LiteralString
+from myqueue.utils import Lock, normalize_folder, plural
 
 VERSION = 11
 
