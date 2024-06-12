@@ -142,7 +142,7 @@ class Server:
             return
 
         print('START', task.id)
-        self.running[task.id] = self.start(task))
+        self.running[task.id] = self.start(task)
         self.aiotasks[task.id] = aiotask
         # aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
 
@@ -160,27 +160,17 @@ class Server:
         cmd = f'{cmd} 2> {err} > {out}'
 
         proc = subprocess.Popen(cmd, shell=True, cwd=task.folder)
+        thread = threading.Thread(target=self.target, args=(proc, task.id))
+        self.running[task.id] = (proc, thread)
+        thread.start()
 
-        x = p.communicate(timeout=1)
-    print(x)
-    t = threading.Thread(target=f)
-    t.start()
-    print(P)
-    t.join()
-    print(P)
-
-        self.processes[task.id] = proc
-
-        loop = asyncio.get_event_loop()
+    def target(self, proc, id):
+        task = self.tasks[id]
         tmax = task.resources.tmax
-        handle = loop.call_later(tmax, self.terminate, task.id)
+        proc.communicate(timeout=tmax)
         task.state = State.running
-        (self.folder / f'local-{task.id}-0').write_text('')  # running
-
-        await proc.wait()
+        (self.folder / f'local-{id}-0').write_text('')  # running
         print('END', task.id, proc.returncode)
-        handle.cancel()
-
         del self.tasks[task.id]
         del self.processes[task.id]
 
@@ -219,11 +209,6 @@ class Server:
         if proc and proc.returncode is None:
             proc.terminate()
             self.tasks[id].state = state
-
-
-
-class Job:
-    ...
 
 
 if __name__ == '__main__':
