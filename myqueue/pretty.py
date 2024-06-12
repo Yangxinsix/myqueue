@@ -145,6 +145,8 @@ def fit_to_termial_size(N: int,
     w = sum(widths) + len(widths)
     if w > N:
         m = sum(L + 1 for L in widths if L > L0)
+        if m == 0:
+            return
         x = (N - w + m) / m
         for i, L in enumerate(widths):
             if L > L0:
