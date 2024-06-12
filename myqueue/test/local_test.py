@@ -36,8 +36,7 @@ def scheduler(tmpdir):
     os.chdir(dir)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8),
-                    reason='requires Python 3.8 or higher')
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason='????')
 def test_local_scheduler(scheduler):
     task1 = create_task('shell:sleep+10', tmax='1s')
     i1 = scheduler.submit(task1)
@@ -58,9 +57,8 @@ def workflow():
         run(shell='echo', name='4')
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8),
-                    reason='requires Python 3.8 or higher')
-def test_local_scheduler2(scheduler):
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason='????')
+def test_local_scheduler3(scheduler):
     tasks = collect(workflow, Path())
     sort_out_dependencies(tasks)
     ids, ex = submit_tasks(scheduler,

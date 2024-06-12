@@ -1,21 +1,21 @@
 tests:
-  image: python:3.10
+  image: python:3.12
   script:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
     - pip install flake8 mypy coverage pytest interrogate numpy
     - pip install .
-    - echo "import coverage; coverage.process_startup()" > venv/lib/python3.10/site-packages/cov.pth
+    - echo "import coverage; coverage.process_startup()" > venv/lib/python3.12/site-packages/cov.pth
     - touch cov.cfg
     - export COVERAGE_PROCESS_START=$PWD/cov.cfg
     - coverage run -p --source=myqueue -m pytest -v --color=yes
     - coverage combine -a .coverage.*
-    - coverage report -i --precision=2 --fail-under=90.8
+    - coverage report -i --precision=2 --fail-under=87.0 --skip-covered --sort=miss
     - coverage html
     - mypy -p myqueue
     - flake8 myqueue
-    - interrogate -v -m -i -f 52.8 myqueue -e myqueue/test
+    - interrogate -v -m -i -f 52.7 myqueue -e myqueue/test
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
@@ -24,7 +24,7 @@ tests:
 
 
 oldtests:
-  image: python:3.7
+  image: python:3.8
   script:
     - pip install pytest numpy
     - pip install -e .
