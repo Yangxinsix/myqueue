@@ -103,7 +103,7 @@ class Server:
                     print('COMMAND:', cmd, *args)
                     if cmd == 'stop':
                         break
-                    result = getattr(self, cmd)(args)
+                    result = getattr(self, cmd)(*args)
                     conn.sendall(pickle.dumps(('ok', result)))
                     self.kick()
 
