@@ -5,6 +5,7 @@ import socket
 import subprocess
 import threading
 from functools import partial
+from queue import Queue
 from typing import Any
 
 from myqueue.config import Configuration
@@ -88,9 +89,12 @@ class Server:
         self.tasks: dict[int, Task] = {}
         self.running: dict[int, Job] = {}
         self.folder = self.config.home / '.myqueue'
+        self.queue = Queue()
+        self.loop_thread = threading.Thread(target=self.loop)
 
     def run(self) -> None:
         """Start server and wait for cammands."""
+        self.loop_thread.start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', self.port))
             s.listen(1)
@@ -101,11 +105,12 @@ class Server:
                     data = conn.recv(1024)
                     cmd, *args = pickle.loads(data)
                     print('COMMAND:', cmd, *args)
-                    if cmd == 'stop':
-                        break
                     result = getattr(self, cmd)(*args)
                     conn.sendall(pickle.dumps(('ok', result)))
-                    self.kick()
+                    self.queue.put(cmd)
+                    if cmd == 'stop':
+                        break
+        self.loop_thread.join()
 
     def submit(self, task):
         task.id = self.next_id
@@ -129,8 +134,14 @@ class Server:
             self.cancel_dependents(task)
         return None
 
-    def kick(self) -> None:
+    def ĺoop(self) -> None:
         """Check if a new task should be started."""
+        cmd = ''
+        while cmd != 'stop':
+            cmd = self.queue.get()
+            self.kick()
+
+    def kick(self):
         for task in self.tasks.values():
             if task.state == State.running:
                 return
