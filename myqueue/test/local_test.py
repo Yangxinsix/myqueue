@@ -1,6 +1,5 @@
 from __future__ import annotations
 import os
-import sys
 import threading
 import time
 from pathlib import Path
@@ -24,7 +23,7 @@ def scheduler(tmpdir):
     config = Configuration('local', home=home)
     os.chdir(tmpdir)
     server = Server(config, port=port)
-    thread = threading.Thread(target=server.start)
+    thread = threading.Thread(target=server.run)
     thread.start()
     scheduler = LocalScheduler(config)
     import time
@@ -36,7 +35,6 @@ def scheduler(tmpdir):
     os.chdir(dir)
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 12), reason='????')
 def test_local_scheduler(scheduler):
     task1 = create_task('shell:sleep+10', tmax='1s')
     i1 = scheduler.submit(task1)
@@ -57,7 +55,6 @@ def workflow():
         run(shell='echo', name='4')
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 12), reason='????')
 def test_local_scheduler3(scheduler):
     tasks = collect(workflow, Path())
     sort_out_dependencies(tasks)
