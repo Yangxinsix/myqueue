@@ -11,7 +11,10 @@ Release notes
 Next release
 ============
 
-* ...
+* We now check that the task-folder is writable.
+* Output from ``mq list`` is now shortened to fit the text-terminal width:
+  ``verylongword`` -> ``ver…ord``.
+* Local scheduler can now run more than one task at a time.
 
 
 Version 24.5.1
