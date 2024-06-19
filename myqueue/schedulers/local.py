@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import pickle
 import socket
 import subprocess
@@ -240,4 +241,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    Server(Configuration.read()).run()
+    Server(Configuration.read(), cores=int(sys.argv[1])).run()
