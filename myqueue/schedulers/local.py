@@ -5,7 +5,7 @@ import socket
 import subprocess
 import threading
 from functools import partial
-from queue import Queue
+from queue import Queue as FIFOQueue
 from typing import Any
 
 from myqueue.config import Configuration
@@ -61,8 +61,12 @@ class LocalScheduler(Scheduler):
             s.sendall(b)
             if args[0] == 'stop':
                 return
+            print(len(b))
             b = b''.join(iter(partial(s.recv, 4096), b''))
+            #b = s.recv(4096)
+            print(len(b))
         status, result = pickle.loads(b)
+        print(status, result)
         if status != 'ok':
             raise LocalSchedulerError(status)
         return result
@@ -87,29 +91,32 @@ class Server:
             self.next_id = 1 + maxid
 
         self.tasks: dict[int, Task] = {}
-        self.running: dict[int, Job] = {}
+        self.running: dict[int, tuple[threading.Thread, int]] = {}
         self.folder = self.config.home / '.myqueue'
-        self.queue = Queue()
+        self.queue = FIFOQueue()
         self.loop_thread = threading.Thread(target=self.loop)
 
     def run(self) -> None:
-        """Start server and wait for cammands."""
+        """Start server and wait for commands."""
         self.loop_thread.start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            print('BIND ...')
             s.bind(('', self.port))
             s.listen(1)
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
+            while True:
+                conn, addr = s.accept()
+                with conn:
+                    print('Connected by', addr)
                     data = conn.recv(1024)
                     cmd, *args = pickle.loads(data)
                     print('COMMAND:', cmd, *args)
                     result = getattr(self, cmd)(*args)
+                    print('RESULT:', result)
                     conn.sendall(pickle.dumps(('ok', result)))
                     self.queue.put(cmd)
                     if cmd == 'stop':
                         break
+                    print('++++')
         self.loop_thread.join()
 
     def submit(self, task):
@@ -134,14 +141,23 @@ class Server:
             self.cancel_dependents(task)
         return None
 
-    def ĺoop(self) -> None:
+    def loop(self) -> None:
         """Check if a new task should be started."""
         cmd = ''
         while cmd != 'stop':
             cmd = self.queue.get()
+            print('LOOP:', cmd)
             self.kick()
 
     def kick(self):
+        remove = []
+        for id, (proc, thread) in self.running.items():
+            if id not in self.tasks:
+                thread.join()
+                remove.append(id)
+        for id in remove:
+            del self.running[id]
+
         for task in self.tasks.values():
             if task.state == State.running:
                 return
@@ -153,9 +169,7 @@ class Server:
             return
 
         print('START', task.id)
-        self.running[task.id] = self.start(task)
-        self.aiotasks[task.id] = aiotask
-        # aiotask.add_done_callback(lambda t: self.aiotasks.pop(task.id))
+        self.start(task)
 
     def start(self, task: Task) -> None:
         """Run a task."""
@@ -171,19 +185,19 @@ class Server:
         cmd = f'{cmd} 2> {err} > {out}'
 
         proc = subprocess.Popen(cmd, shell=True, cwd=task.folder)
-        thread = threading.Thread(target=self.target, args=(proc, task.id))
+        thread = threading.Thread(target=self.target, args=(task.id,))
         self.running[task.id] = (proc, thread)
         thread.start()
 
-    def target(self, proc, id):
+    def target(self, id):
         task = self.tasks[id]
         tmax = task.resources.tmax
-        proc.communicate(timeout=tmax)
         task.state = State.running
         (self.folder / f'local-{id}-0').write_text('')  # running
+        proc, thread = self.running[id]
+        proc.communicate(timeout=tmax)
         print('END', task.id, proc.returncode)
         del self.tasks[task.id]
-        del self.processes[task.id]
 
         if proc.returncode == 0:
             for t in self.tasks.values():
@@ -199,7 +213,7 @@ class Server:
 
         (self.folder / f'local-{task.id}-{state}').write_text('')
 
-        self.kick()
+        self.queue.put('join')
 
     def _cancel_dependents(self, task: Task) -> None:
         for job in self.tasks.values():
