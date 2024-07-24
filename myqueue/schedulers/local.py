@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import sys
+import os
 import pickle
 import socket
 import subprocess
@@ -54,9 +54,9 @@ class LocalScheduler(Scheduler):
                 s.connect(('127.0.0.1', self.port))
             except ConnectionRefusedError:
                 raise ConnectionRefusedError(
-                    'Local scheduler not responding.  '
-                    'Please start it with:\n\n'
-                    '    python3 -m myqueue.schedulers.local')
+                    'This machine will, will not communicate!  '
+                    'Please start a local scheduler with:\n\n'
+                    '    python3 -m myqueue.schedulers.local\n')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
@@ -241,4 +241,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    Server(Configuration.read(), cores=int(sys.argv[1])).run()
+    Server(Configuration.read(), cores=os.cpu_count()).run()

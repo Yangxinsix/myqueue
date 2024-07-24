@@ -152,7 +152,6 @@ class Queue:
                 f'INSERT INTO tasks VALUES ({q})',
                 [task.to_sql(root) for task in tasks])
             con.executemany('INSERT INTO dependencies VALUES (?, ?)', deps)
-            print('INSERT', q, task.id)
 
     def sql(self,
             statement: LiteralString,
@@ -288,12 +287,10 @@ class Queue:
                         ctime: float,
                         path: Path) -> None:
         """Update single task."""
-        print('UPDATE', id, newstate)
         try:
             (user,), = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
         except ValueError:
             print(f'No such task: {id}, {newstate}', file=sys.stderr)
-            #path.unlink()
             return
 
         if user != self.config.user:

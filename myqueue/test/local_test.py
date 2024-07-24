@@ -58,6 +58,7 @@ def test_local_scheduler_000(scheduler):
 
 
 def test_local_scheduler(scheduler):
+    scheduler, config = scheduler
     task1 = create_task('shell:sleep+10', tmax='1s')
     i1 = scheduler.submit(task1)
     assert i1 == 1
@@ -78,6 +79,7 @@ def workflow():
 
 
 def test_local_scheduler3(scheduler):
+    scheduler, config = scheduler
     tasks = collect(workflow, Path())
     sort_out_dependencies(tasks)
     ids, ex = submit_tasks(scheduler,

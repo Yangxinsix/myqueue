@@ -22,6 +22,7 @@ class Task:
     """Task object.
 
     Parameters
+            print('INSERT', q, task.id)
     ----------
 
     cmd: :class:`myqueue.commands.Command`
@@ -90,7 +91,6 @@ class Task:
         return f'{self.cmd.name}.{self.id}'
 
     def running_time(self, t: float = None) -> float:
-        print('........', self.id, self.state)
         if self.state in ['CANCELED', 'queued', 'hold']:
             dt = 0.0
         elif self.state == 'running':
@@ -98,7 +98,6 @@ class Task:
             dt = t - self.trunning
         else:
             dt = self.tstop - self.trunning
-            print(dt)
         return dt
 
     def words(self) -> list[str]:
