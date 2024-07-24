@@ -22,7 +22,6 @@ class Task:
     """Task object.
 
     Parameters
-            print('INSERT', q, task.id)
     ----------
 
     cmd: :class:`myqueue.commands.Command`

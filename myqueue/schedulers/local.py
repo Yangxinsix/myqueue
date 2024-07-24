@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import os
 import pickle
 import socket
 import subprocess
 import threading
 from functools import partial
+from multiprocessing import cpu_count
 from queue import Queue as FIFOQueue
 from typing import Any
 
@@ -241,4 +241,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    Server(Configuration.read(), cores=os.cpu_count()).run()
+    Server(Configuration.read(), cores=cpu_count()).run()
