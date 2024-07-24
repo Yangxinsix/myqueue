@@ -5,6 +5,7 @@ import socket
 import subprocess
 import threading
 from functools import partial
+from multiprocessing import cpu_count
 from queue import Queue as FIFOQueue
 from typing import Any
 
@@ -53,9 +54,9 @@ class LocalScheduler(Scheduler):
                 s.connect(('127.0.0.1', self.port))
             except ConnectionRefusedError:
                 raise ConnectionRefusedError(
-                    'Local scheduler not responding.  '
-                    'Please start it with:\n\n'
-                    '    python3 -m myqueue.schedulers.local')
+                    'This machine will, will not communicate!  '
+                    'Please start a local scheduler with:\n\n'
+                    '    python3 -m myqueue.schedulers.local\n')
             b = pickle.dumps(args)
             assert len(b) < 4096
             s.sendall(b)
@@ -79,6 +80,7 @@ class Server:
                  cores: int = 1,
                  port: int = 39999) -> None:
         self.config = config
+        self.cores = cores
         self.port = port
 
         with Queue(config) as queue:
@@ -162,17 +164,22 @@ class Server:
         for id in remove:
             del self.running[id]
 
+        free = self.cores
         for task in self.tasks.values():
             if task.state == State.running:
+                free -= task.resources.cores
+            if free <= 0:
                 return
 
         for task in self.tasks.values():
-            if task.state == State.queued and not task.deps:
-                break
-        else:  # no break
-            return
-
-        self.start(task)
+            ok = (task.state == State.queued and
+                  not task.deps and
+                  task.resources.cores <= free)
+            if ok:
+                self.start(task)
+                free -= task.resources.cores
+                if free <= 0:
+                    return
 
     def start(self, task: Task) -> None:
         """Run a task."""
@@ -234,4 +241,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    Server(Configuration.read()).run()
+    Server(Configuration.read(), cores=cpu_count()).run()

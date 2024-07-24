@@ -291,7 +291,6 @@ class Queue:
             (user,), = self.sql('SELECT user FROM tasks WHERE id = ?', [id])
         except ValueError:
             print(f'No such task: {id}, {newstate}', file=sys.stderr)
-            path.unlink()
             return
 
         if user != self.config.user:

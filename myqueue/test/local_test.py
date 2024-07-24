@@ -11,7 +11,7 @@ from myqueue.schedulers.local import LocalScheduler, Server
 from myqueue.submitting import submit_tasks
 from myqueue.task import create_task
 from myqueue.workflow import collect, run
-from myqueue.queue import sort_out_dependencies
+from myqueue.queue import sort_out_dependencies, Queue
 
 
 @pytest.fixture(scope='function')
@@ -29,13 +29,36 @@ def scheduler(tmpdir):
     import time
     time.sleep(0.5)
     scheduler.port = server.port
-    yield scheduler
+    yield scheduler, config
     scheduler.send('stop')
     thread.join()
     os.chdir(dir)
 
 
+def test_local_scheduler_000(scheduler):
+    scheduler, config = scheduler
+    task1 = create_task('shell:echo', tmax='1s')
+    i1 = scheduler.submit(task1)
+    assert i1 == 1
+    task2 = create_task('shell:echo')
+    i2 = scheduler.submit(task2)
+    task1.id = i1
+    task2.id = i2
+    print(i1, i2)
+    q = Queue(config)
+    with q:
+        q.add(task1, task2)
+    while ids := scheduler.get_ids():
+        print(ids)
+    q = Queue(config)
+    with q:
+        print('QQQQQQQQQ', q)
+        for t in q.tasks(''):
+            print('TASK:', t)
+
+
 def test_local_scheduler(scheduler):
+    scheduler, config = scheduler
     task1 = create_task('shell:sleep+10', tmax='1s')
     i1 = scheduler.submit(task1)
     assert i1 == 1
@@ -56,6 +79,7 @@ def workflow():
 
 
 def test_local_scheduler3(scheduler):
+    scheduler, config = scheduler
     tasks = collect(workflow, Path())
     sort_out_dependencies(tasks)
     ids, ex = submit_tasks(scheduler,

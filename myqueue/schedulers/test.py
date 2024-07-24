@@ -83,7 +83,7 @@ class TestScheduler(Scheduler):
             cmd = f'MYQUEUE_TEST_NPROCESSES={n} ' + cmd
         cmd = f'cd {task.folder} && {cmd} 2> {err} > {out}'
         activation_script = self.activation_script
-        if activation_script:
+        if str(activation_script).startswith('/tmp/pytest-of-'):
             cmd = f'. {activation_script} && ' + cmd
         (self.folder / f'test-{task.id}-0').write_text('')
         tmax = task.resources.tmax
