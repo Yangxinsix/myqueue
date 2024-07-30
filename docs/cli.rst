@@ -167,7 +167,7 @@ options:
                         but with a weight of 0.5.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
-                        Extra arguments for scheudler. Example: -X bla-bla.
+                        Extra arguments for scheduler. Example: -X bla-bla.
                         For arguments that start with a dash, leave out the
                         space: -X--gres=gpu:4 or -X=--gres=gpu:4. Can be used
                         multiple times.
@@ -211,7 +211,7 @@ options:
                         but with a weight of 0.5.
   -w, --workflow        Write <task-name>.state file when task has finished.
   -X EXTRA_SCHEDULER_ARGS, --extra-scheduler-args EXTRA_SCHEDULER_ARGS
-                        Extra arguments for scheudler. Example: -X bla-bla.
+                        Extra arguments for scheduler. Example: -X bla-bla.
                         For arguments that start with a dash, leave out the
                         space: -X--gres=gpu:4 or -X=--gres=gpu:4. Can be used
                         multiple times.
