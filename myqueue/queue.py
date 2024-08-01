@@ -49,7 +49,8 @@ CREATE TABLE tasks (
     trunning REAL,
     tstop REAL,
     error TEXT,
-    user TEXT);
+    user TEXT,
+    script_commands TEXT);
 CREATE TABLE dependencies (
     id INTEGER,
     did INTEGER,
