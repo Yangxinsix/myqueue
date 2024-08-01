@@ -11,6 +11,7 @@
 MyQueue
 =======
 
+This software is copied from https://gitlab.com/myqueue/myqueue.
 MyQueue is a tool for submitting and keeping track of tasks running on a
 cluster of computers. It uses SLURM_, PBS_ or LSF_ as a backend and makes
 handling of tasks easy. It has a command-line interface called *mq* with a
