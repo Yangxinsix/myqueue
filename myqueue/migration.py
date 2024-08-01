@@ -32,7 +32,7 @@ def migrate(jsonfile: Path, con: Connection) -> None:
             deps.append((task.id, ids[dep]))
 
     with con:
-        q = ', '.join('?' * 17)
+        q = ', '.join('?' * 18)
         con.executemany(
             f'INSERT INTO tasks VALUES ({q})',
             [task.to_sql(root) for task in tasks])

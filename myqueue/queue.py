@@ -146,7 +146,7 @@ class Queue:
                 deps.append((task.id, dep.id))
 
         root = self.folder.parent
-        q = ', '.join('?' * 17)
+        q = ', '.join('?' * 18)
         with self.connection as con:
             con.executemany(
                 f'INSERT INTO tasks VALUES ({q})',
