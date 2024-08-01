@@ -235,7 +235,7 @@ class Task:
                     tstop=tstop,
                     error=error,
                     user=user,
-                    script_commands=script_commands)
+                    script_commands=[] if not script_commands else script_commands.split('\n'))
 
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:
