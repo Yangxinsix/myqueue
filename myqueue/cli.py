@@ -260,6 +260,10 @@ def _main(arguments: list[str] = None) -> int:
               '-X bla-bla.  For arguments that start with a dash, '
               'leave out the space: -X--gres=gpu:4 or -X=--gres=gpu:4. '
               'Can be used multiple times.')
+            a('-S', '--script-commands', action='append', default=[],
+              help='Add extra commands into job submitting script. Example: '
+              '-S "export CUDA_VISIBLE_DEVICES=1"'
+              'Can be used multiple times.')
 
         if cmd == 'modify':
             a('-E', '--email', default='u', metavar='STATES',

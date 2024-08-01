@@ -59,6 +59,9 @@ class SLURM(Scheduler):
         # Use bash for the script
         script = '#!/bin/bash -l\n'
 
+        # Add script commands
+        script = self.get_script_commands(task, script)
+
         # Add environment variables
         if len(env) > 0:
             script += '\n'.join(f'export {name}={val}' for name, val in env)

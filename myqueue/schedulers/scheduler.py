@@ -61,3 +61,11 @@ class Scheduler:
     def get_config(self, queue: str = '') -> tuple[list[tuple[str, int, str]],
                                                    list[str]]:
         raise NotImplementedError
+    
+    def get_script_commands(self, task: Task, script: str) -> str:
+        script_commands = task.script_commands
+        if isinstance(script_commands, str):
+            script += script_commands
+        elif isinstance(script_commands, list):
+            script += '\n'.join(script_commands)
+        return script

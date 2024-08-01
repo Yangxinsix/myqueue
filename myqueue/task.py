@@ -57,7 +57,8 @@ class Task:
                  tqueued: float = 0.0,
                  trunning: float = 0.0,
                  tstop: float = 0.0,
-                 user: str = ''):
+                 user: str = '',
+                 script_commands: list[str] = [],):
 
         self.cmd = cmd
         self.resources = resources
@@ -79,6 +80,7 @@ class Task:
         self.tstop = tstop
 
         self.user = user or os.environ.get('USER', 'root')
+        self.script_commands = script_commands
 
         self.dname = folder / cmd.name
         self.dtasks: list[Task] = []
@@ -175,7 +177,9 @@ class Task:
             'trunning': self.trunning,
             'tstop': self.tstop,
             'error': self.error,
-            'user': self.user}
+            'user': self.user,
+            'script_commands': self.script_commands,
+            }
 
     def to_sql(self,
                root: Path) -> tuple[int, str, str, str, str,
@@ -204,14 +208,15 @@ class Task:
                 self.trunning,
                 self.tstop,
                 self.error,
-                self.user)
+                self.user,
+                self.script_commands)
 
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
         (id, folder, state, name, cmd,
          resources, restart, workflow, deps, weight,
          notifications, creates, tqueued, trunning, tstop,
-         error, user) = row
+         error, user, script_commands) = row
         resources = Resources(**json.loads(resources))
         assert resources.weight == weight
         return Task(id=id,
@@ -229,7 +234,8 @@ class Task:
                     trunning=trunning,
                     tstop=tstop,
                     error=error,
-                    user=user)
+                    user=user,
+                    script_commands=script_commands)
 
     @staticmethod
     def fromdict(dct: dict[str, Any], root: Path) -> Task:

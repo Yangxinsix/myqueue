@@ -343,7 +343,8 @@ class Runner:
             processes: int = None,
             restart: int = None,
             weight: float = None,
-            folder: Path | str = '.') -> RunHandle:
+            folder: Path | str = '.',
+            script_commands: list[str] = []) -> RunHandle:
         """Run or submit a task.
 
         The type of task is specifyed by one and only one of the arguments
@@ -408,6 +409,7 @@ class Runner:
                            Path(folder).absolute(),
                            resource_kwargs.pop('restart'),  # type: ignore
                            creates=creates,
+                           script_commands=script_commands,
                            **resource_kwargs)
 
         if self.target:
@@ -504,6 +506,7 @@ def create_task(function: Callable = None,
                 folder: Path = Path('.'),
                 restart: int = 0,
                 creates: list[str] = [],
+                script_commands: list[str] = [],
                 **resource_kwargs: Any) -> Task:
     """Create a Task object."""
     if sum(arg is not None
@@ -547,7 +550,8 @@ def create_task(function: Callable = None,
                 folder=folder,
                 restart=restart,
                 workflow=True,
-                creates=creates)
+                creates=creates,
+                script_commands=script_commands)
 
     if function and not any(isinstance(thing, Result)
                             for thing in list(args) + list(kwargs.values())):
