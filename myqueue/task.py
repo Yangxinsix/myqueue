@@ -185,7 +185,7 @@ class Task:
                root: Path) -> tuple[int, str, str, str, str,
                                     str, int, bool, str, float,
                                     str, str, float, float, float,
-                                    str, str]:
+                                    str, str, str]:
         folder = str(self.folder.relative_to(root))
         if folder == '.':
             folder = './'
@@ -209,7 +209,7 @@ class Task:
                 self.tstop,
                 self.error,
                 self.user,
-                self.script_commands)
+                '\n'.join(self.script_commands))
 
     @staticmethod
     def from_sql_row(row: tuple, root: Path) -> Task:
