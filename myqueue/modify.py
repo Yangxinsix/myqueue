@@ -44,10 +44,13 @@ def modify(queue: Queue,
         if not db_only:
             for task in tasks:
                 operation(task.id)
+        
+        old_states = [task.state for task in tasks]
 
         with queue.connection as con:
             con.executemany(
                 f'UPDATE tasks SET state = "{newstate.value}" WHERE id = ?',
                 [(task.id,) for task in tasks])
 
-    print(f'{oldstate} -> {newstate}: {len(tasks)}')
+    for old_state, task in zip(old_states, tasks):
+        print(f'Task {task.id}: state changed from {old_state} -> {task.state}')
