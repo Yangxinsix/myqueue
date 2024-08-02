@@ -27,17 +27,18 @@ def modify(queue: Queue,
 
     if newstate == State.undefined:
         return
+    
+    if not db_only:
+        if newstate == State.queued:
+            oldstate = State.hold
+            operation = queue.scheduler.release_hold
+        else:
+            assert newstate == State.hold
+            oldstate = State.queued
+            operation = queue.scheduler.hold
 
-    if newstate == State.queued:
-        oldstate = State.hold
-        operation = queue.scheduler.release_hold
-    else:
-        # assert newstate == State.hold
-        oldstate = State.queued
-        operation = queue.scheduler.hold
-
-    if any(task.state != oldstate for task in tasks):
-        raise ValueError(f'Initial state must be: {oldstate}!')
+        if any(task.state != oldstate for task in tasks):
+            raise ValueError(f'Initial state must be: {oldstate}!')
 
     if not queue.dry_run:
         if not db_only:
