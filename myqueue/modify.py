@@ -53,4 +53,4 @@ def modify(queue: Queue,
                 [(task.id,) for task in tasks])
 
     for old_state, task in zip(old_states, tasks):
-        print(f'Task {task.id}: state changed from {old_state} -> {task.state}')
+        print(f'Task {task.id}: state changed from {old_state} -> {newstate}')
