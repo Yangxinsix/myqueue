@@ -271,6 +271,8 @@ def _main(arguments: list[str] = None) -> int:
               'states (one or more of the letters: rdFCTMA).')
             a('-N', '--new-state', default='u',
               help='New state (one of the letters: qhrdFCTM).')
+            a('-D', '--database-only', action='store_true',
+              help='Change states of tasks to new state only in queue.sqlite3.')
 
         if cmd == 'workflow':
             a('script', help='Submit tasks from workflow script.')
@@ -593,7 +595,7 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
         elif args.command == 'modify':
             from myqueue.modify import modify
             state = State(args.new_state)
-            modify(queue, selection, state, State.str2states(args.email))
+            modify(queue, selection, state, State.str2states(args.email), args.database_only)
 
         elif args.command == 'workflow':
             from myqueue.submitting import submit

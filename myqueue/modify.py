@@ -9,7 +9,8 @@ from myqueue.states import State
 def modify(queue: Queue,
            selection: Selection,
            newstate: State,
-           email: set[State]) -> None:
+           email: set[State],
+           db_only: bool=False) -> None:
     """Modify task(s)."""
     tasks = queue.select(selection)
 
@@ -31,7 +32,7 @@ def modify(queue: Queue,
         oldstate = State.hold
         operation = queue.scheduler.release_hold
     else:
-        assert newstate == State.hold
+        # assert newstate == State.hold
         oldstate = State.queued
         operation = queue.scheduler.hold
 
@@ -39,8 +40,9 @@ def modify(queue: Queue,
         raise ValueError(f'Initial state must be: {oldstate}!')
 
     if not queue.dry_run:
-        for task in tasks:
-            operation(task.id)
+        if not db_only:
+            for task in tasks:
+                operation(task.id)
 
         with queue.connection as con:
             con.executemany(
