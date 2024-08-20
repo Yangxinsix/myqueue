@@ -585,7 +585,8 @@ def run(args: argparse.Namespace, is_test: bool) -> None:
                              folder=str(folder),
                              deps=args.dependencies,
                              workflow=args.workflow,
-                             restart=args.restart)
+                             restart=args.restart,
+                             script_commands=args.script_commands)
                         for folder in folders]
 
             submit(queue, newtasks,
