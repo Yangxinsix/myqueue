@@ -81,9 +81,9 @@ class SLURM(Scheduler):
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
-        with open(task.folder / 'debug.txt', 'w') as f:
-            f.write(script)
-            f.write('\n  '.join(['#SBATCH ' + s for s in sbatch]))
+#        with open(task.folder / 'debug.txt', 'w') as f:
+#            f.write(script)
+#            f.write('\n  '.join(['#SBATCH ' + s for s in sbatch]))
         if dry_run:
             if verbose:
                 print(' \\\n    '.join(sbatch))
