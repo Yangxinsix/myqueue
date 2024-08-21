@@ -66,6 +66,6 @@ class Scheduler:
         script_commands = task.script_commands
         if isinstance(script_commands, str):
             script += script_commands
-        elif isinstance(script_commands, list):
+        else:
             script += '\n'.join(script_commands)
-        return script
+        return script + '\n'

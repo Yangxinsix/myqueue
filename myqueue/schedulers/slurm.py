@@ -24,8 +24,8 @@ class SLURM(Scheduler):
             ntasks = task.resources.cores
             cpus_per_task = 1
         else:
-            if 'OMP_NUM_THREADS' not in os.environ:
-                env.append(('OMP_NUM_THREADS', '1'))
+#            if 'OMP_NUM_THREADS' not in os.environ:
+#                env.append(('OMP_NUM_THREADS', '1'))
             mpiexec = self.config.mpiexec
             if 'mpiargs' in nodedct:
                 mpiexec += ' ' + nodedct['mpiargs']
@@ -57,7 +57,7 @@ class SLURM(Scheduler):
             sbatch.append(f'--dependency=afterok:{ids}')
 
         # Use bash for the script
-        script = '#!/bin/bash -l\n'
+        script = '#!/bin/bash\n'
 
         # Add script commands
         script = self.get_script_commands(task, script)
@@ -81,10 +81,14 @@ class SLURM(Scheduler):
             ' touch $mq-1) || \\\n'
             '(touch $mq-2; exit 1)\n')
 
+        with open(task.folder / 'debug.txt', 'w') as f:
+            f.write(script)
+            f.write('\n  '.join(['#SBATCH ' + s for s in sbatch]))
         if dry_run:
             if verbose:
                 print(' \\\n    '.join(sbatch))
                 print(script)
+                print(task.script_commands)
             return 1
 
         # Use a clean set of environment variables without any MPI stuff:

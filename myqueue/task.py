@@ -346,7 +346,8 @@ def create_task(cmd: str,
                 weight: float = -1.0,
                 folder: str = '',
                 restart: int = 0,
-                creates: list[str] = []) -> Task:
+                creates: list[str] = [],
+                script_commands: list[str] = [],) -> Task:
     """Create a Task object.
 
     ::
@@ -433,7 +434,8 @@ def create_task(cmd: str,
                 restart=restart,
                 workflow=workflow,
                 folder=path,
-                creates=creates)
+                creates=creates,
+                script_commands=script_commands)
 
 
 task = create_task
